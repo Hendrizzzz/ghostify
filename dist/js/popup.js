@@ -12,7 +12,6 @@ const ELEMENT_MAP = {
     'ig-typing': 'igTyping',
     'ig-seen': 'igSeen',
     'ig-story': 'igStory',
-    // msg-typing removed - always on
     'msg-seen': 'msgSeen',
     'msg-story': 'msgStory'
 };
@@ -91,7 +90,7 @@ function saveSettings() {
         igTyping: document.getElementById('ig-typing')?.checked ?? true,
         igSeen: document.getElementById('ig-seen')?.checked ?? true,
         igStory: document.getElementById('ig-story')?.checked ?? true,
-        msgTyping: true, // Always on - can't be toggled
+        msgTyping: true,
         msgSeen: document.getElementById('msg-seen')?.checked ?? true,
         msgStory: document.getElementById('msg-story')?.checked ?? true
     };

@@ -175,6 +175,7 @@
                     const moduleName = args[0];
                     if (typeof moduleName === 'string' && !processedModules.has(moduleName)) {
                         if (shouldProcessModule(moduleName)) {
+                            console.log('👻 [MODULE] Intercepting: ' + moduleName);
                             processedModules.add(moduleName);
                             const originalFactory = args[2];
                             let factory = applySourceReplacements(originalFactory, moduleName);
