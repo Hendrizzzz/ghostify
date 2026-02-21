@@ -1,5 +1,5 @@
 {
-    "version": "1.0.3",
+    "version": "2.0.0",
     "killSwitch": [],
     "patterns": {
         "igTyping": [
@@ -48,7 +48,6 @@
         "msgSeen": [
             "mark_read",
             "mark_seen",
-            "seen_state",
             "thread_seen",
             "DirectMarkAsSeen",
             "MarkAsSeen",
@@ -56,11 +55,7 @@
             "PolarisDirectMarkAsSeenMutation",
             "DirectSeenMutation",
             "seenByViewer",
-            "updateLastSeenAt",
-            "\"label\":\"3\"",
-            "\"label\":\"5\"",
-            "viewed_state",
-            "last_activity_at"
+            "updateLastSeenAt"
         ],
         "msgStory": [
             "StoriesUpdateSeenMutation",

@@ -1,35 +1,27 @@
-# Dependencies
 node_modules/
 
-# Build artifacts
 *.zip
 
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Logs
 *.log
 npm-debug.log*
 
-# Environment
 .env
 .env.local
 
-# Raw assets (Design files)
 _raw_assets/
 *.psd
 *.ai
 *.sketch
 *.fig
 
-# Temporary files
 *.tmp
 *.temp
