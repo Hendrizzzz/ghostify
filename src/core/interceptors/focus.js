@@ -66,11 +66,9 @@ export function hookVisibility() {
 
                     if (type === 'blur' || type === 'focus' || type === 'focusin' || type === 'focusout') {
                         if (this === window || this === document || (e && (e.target === window || e.target === document))) {
-                            if (isDebugMode()) console.log(`👻 [EVENT BLOCK] ${type} on window/document swallowed.`);
                             return;
                         }
                     } else {
-                        if (isDebugMode()) console.log(`👻 [EVENT BLOCK] ${type} swallowed.`);
                         return;
                     }
                 }

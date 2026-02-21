@@ -20,7 +20,6 @@ export function hookWebSocket() {
         if (checkHardBlock(data)) return;
         const blockType = shouldBlock(data);
         if (blockType) {
-            console.log('🚫👻 [' + blockType + '] WS Blocked');
             return;
         }
         return originalWSSend.apply(this, arguments);
@@ -33,7 +32,6 @@ export function hookWebSocket() {
             if (checkHardBlock(data)) return;
             const blockType = shouldBlock(data);
             if (blockType) {
-                console.log('🚫👻 [' + blockType + '] WS Blocked');
                 return;
             }
             return boundSend(data);

@@ -54,23 +54,9 @@ export function shouldBlock(data, url = '') {
         ? (decode(data).substring(0, 15000) + ' ' + url).toLowerCase()
         : (decode(data) + ' ' + url).toLowerCase();
 
-    if (isDebugMode()) {
-        if (str.includes('seen') || str.includes('read') || str.includes('typing') || str.includes('presence')) {
-            console.groupCollapsed('🕵️ Ghostify Inspector');
-            console.log('URL:', url);
-            console.log('Payload:', str.substring(0, 5000));
-            console.groupEnd();
-        }
-    }
 
-    if (isFacebookDotCom && !isLargePayload && str.length < 20000) {
-        if (url.includes('graphql')) {
-            console.log('👻 [NET-GQL] len=' + str.length + ' | TAIL: ' + str.substring(str.length - 800));
-        } else if (str.includes('read') || str.includes('seen') || str.includes('mark') ||
-            str.includes('thread') || str.includes('label') || str.includes('watermark')) {
-            console.log('👻 [NET] ' + (url ? url.substring(0, 80) : 'WS') + ' | ' + str.substring(0, 400));
-        }
-    }
+
+
 
     if (isFacebookDotCom && SETTINGS.msgSeen && !isKilled('msgSeen') && url.includes('/api/graphql')) {
         if (
@@ -86,7 +72,6 @@ export function shouldBlock(data, url = '') {
             str.includes('act_thread_id') ||
             str.includes('ebmessagemetadataquery')
         ) {
-            console.log('🚫👻 [FB_GRAPHQL_SEEN] Blocked: ' + str.substring(str.length - 200));
             return 'FB_GRAPHQL_SEEN';
         }
     }
