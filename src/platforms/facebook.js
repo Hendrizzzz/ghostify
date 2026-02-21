@@ -1,4 +1,4 @@
-import { isFacebookDotCom, SETTINGS, isKilled } from '../config.js';
+import { isFacebookDotCom, SETTINGS, isKilled, isDebugMode } from '../config.js';
 
 let inVideoArea = false;
 let isAnyVideoPlaying = false;
@@ -26,10 +26,43 @@ export function startFacebookProtection() {
     window.HTMLMediaElement.prototype.play = function () {
         if (SETTINGS.msgSeen && !isKilled('msgSeen')) {
             isAnyVideoPlaying = true;
-            allowFocusUntil = Date.now() + 1500;
+            allowFocusUntil = Date.now() + 2000;
         }
         return originalPlay.apply(this, arguments);
     };
+
+    const observer = new MutationObserver((mutations) => {
+        if (!SETTINGS.msgSeen || isKilled('msgSeen')) return;
+        const videos = document.getElementsByTagName('video');
+        for (let i = 0; i < videos.length; i++) {
+            const vid = videos[i];
+            if (!vid.dataset.ghostifyHooked) {
+                vid.dataset.ghostifyHooked = "true";
+
+                vid.addEventListener('playing', () => {
+                    isAnyVideoPlaying = true;
+                    allowFocusUntil = Date.now() + 2000;
+                });
+
+                vid.addEventListener('play', () => {
+                    allowFocusUntil = Date.now() + 2000;
+                });
+
+                let container = vid;
+                for (let j = 0; j < 4; j++) {
+                    if (container.parentElement) container = container.parentElement;
+                }
+
+                const grantFocus = () => {
+                    allowFocusUntil = Date.now() + 2000;
+                };
+
+                container.addEventListener('click', grantFocus, true);
+                container.addEventListener('pointerdown', grantFocus, true);
+            }
+        }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
 
     const trackInteraction = (e) => {
         if (!SETTINGS.msgSeen || isKilled('msgSeen')) return;
@@ -69,7 +102,7 @@ export function startFacebookProtection() {
             }
         }
 
-        if (!hoveringVid && !hoveringChat) {
+        if (!hoveringVid) {
             const videos = document.getElementsByTagName('video');
             for (let i = 0; i < videos.length; i++) {
                 const vid = videos[i];
@@ -93,17 +126,19 @@ export function startFacebookProtection() {
         inVideoArea = hoveringVid;
         inChatHover = hoveringVid ? false : hoveringChat;
 
-        if (e.type === 'mousedown') {
+        if (e.type !== 'mouseover') {
             if (hoveringVid || !hoveringChat) {
-                allowFocusUntil = Date.now() + 1500;
+                allowFocusUntil = Date.now() + 2000;
             } else {
                 allowFocusUntil = 0;
             }
         }
     };
 
-    window.addEventListener('mouseover', trackInteraction, { capture: true, passive: true });
-    window.addEventListener('mousedown', trackInteraction, { capture: true, passive: true });
+    const eventsToTrack = ['mouseover', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'click', 'touchstart', 'touchend'];
+    eventsToTrack.forEach(evt => {
+        window.addEventListener(evt, trackInteraction, { capture: true, passive: true });
+    });
 }
 
 function isFacebookChatFocused() {
@@ -138,7 +173,6 @@ export function getFacebookSpoofState() {
         const now = Date.now();
         if (now - lastSpoofLog > 3000) {
             lastSpoofLog = now;
-            console.log('👻 [SPOOF] facebook.com | ACTIVE (Chat Force)');
         }
         return 'unfocused';
     }
@@ -150,7 +184,6 @@ export function getFacebookSpoofState() {
     const now = Date.now();
     if (now - lastSpoofLog > 3000) {
         lastSpoofLog = now;
-        console.log('👻 [SPOOF] facebook.com | ALWAYS ON (Default Shield)');
     }
     return 'unfocused';
 }

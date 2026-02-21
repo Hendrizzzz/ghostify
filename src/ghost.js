@@ -36,12 +36,10 @@ import { startInstagramProtection } from './platforms/instagram.js';
             if (CONFIG.killSwitch) {
                 CONFIG.killSwitch.forEach(f => KILLED_FEATURES.add(f));
             }
-            if (isDebugMode()) console.log('👻 Config Updated:', CONFIG);
         }
 
         if (event.data.type === 'GHOSTIFY_SETTINGS_UPDATE') {
             Object.assign(SETTINGS, event.data.settings);
-            if (isDebugMode()) console.log('👻 Settings Updated:', SETTINGS);
         }
     });
 
@@ -53,10 +51,5 @@ import { startInstagramProtection } from './platforms/instagram.js';
     startFacebookProtection();
     startInstagramProtection();
 
-    console.log('👻 Ghostify v2.0 Modular Core Active');
-    if (isDebugMode()) {
-        console.log('👻 Ghostify Active - Debug Mode ON');
-        console.log('   To disable: localStorage.removeItem("GHOSTIFY_DEBUG")');
-    }
 
 })();

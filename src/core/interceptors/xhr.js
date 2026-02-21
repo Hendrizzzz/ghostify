@@ -16,14 +16,12 @@ export function hookXHR() {
 
         if (isFacebookDotCom && SETTINGS.msgSeen && !isKilled('msgSeen')) {
             if (url.includes('ebmessagemetadataquery') || finalBody.includes('ebmessagemetadataquery')) {
-                console.log(`🚫👻 [HARD BLOCK FB_GRAPHQL_SEEN] XHR Dropped!`);
                 return;
             }
         }
 
         const blockType = shouldBlock(body, this._ghostifyUrl || '');
         if (blockType) {
-            if (isDebugMode()) console.log(`🚫 [${blockType}] XHR Blocked`);
             return;
         }
         return originalXhrSend.apply(this, arguments);

@@ -11,7 +11,6 @@ export function hookFetch() {
             const finalUrl = url.toLowerCase();
             const finalBody = (typeof body === 'string' ? body : JSON.stringify(body || {})).toLowerCase();
             if (finalUrl.includes('ebmessagemetadataquery') || finalBody.includes('ebmessagemetadataquery')) {
-                console.log(`🚫👻 [HARD BLOCK FB_GRAPHQL_SEEN] Fetch Dropped!`);
                 return new Response('{"data":{"ebmessagemetadataquery":null}}', {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' }
@@ -21,7 +20,6 @@ export function hookFetch() {
 
         const blockType = shouldBlock(body, url);
         if (blockType) {
-            if (isDebugMode()) console.log(`🚫 [${blockType}] Fetch Blocked`);
             return new Response('{"status":"ok"}', {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
@@ -34,7 +32,6 @@ export function hookFetch() {
     navigator.sendBeacon = function (url, data) {
         const blockType = shouldBlock(data, url);
         if (blockType) {
-            if (isDebugMode()) console.log(`🚫 [${blockType}] Beacon Blocked`);
             return true;
         }
         return originalBeacon.apply(this, arguments);

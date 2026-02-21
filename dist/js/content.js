@@ -1,4 +1,5 @@
 (() => {
+  // src/content.js
   var GITHUB_CONFIG_URL = "https://raw.githubusercontent.com/Hendrizzzz/Ghostify/refs/heads/main/dist/config/patterns.json";
   var FALLBACK_CONFIG = {
     version: "0.0.0",
