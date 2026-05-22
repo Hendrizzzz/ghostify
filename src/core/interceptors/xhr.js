@@ -21,7 +21,7 @@ export function hookXHR() {
     };
 
     XMLHttpRequest.prototype.send = function (body) {
-        const blockType = shouldBlock(body, this._ghostifyUrl || '');
+        const blockType = shouldBlock(body, this._ghostifyUrl || '', { method: this._ghostifyMethod || 'GET' });
         traceNetwork('xhr', this._ghostifyUrl || '', body, blockType);
         traceMessengerObservation('xhr', this._ghostifyUrl || '', body, blockType);
         if (blockType) {

@@ -12,8 +12,9 @@ export function hookFetch() {
     window.fetch = async function (input, init) {
         const url = getFetchUrl(input);
         const body = await getFetchBody(input, init);
+        const method = getFetchMethod(input, init);
 
-        const blockType = shouldBlock(body, url);
+        const blockType = shouldBlock(body, url, { method });
         traceNetwork('fetch', url, body, blockType);
         traceMessengerObservation('fetch', url, body, blockType);
         if (blockType) {
@@ -26,7 +27,7 @@ export function hookFetch() {
     const originalBeacon = navigator.sendBeacon;
     if (typeof originalBeacon === 'function') {
         navigator.sendBeacon = function (url, data) {
-            const blockType = shouldBlock(data, getFetchUrl(url));
+            const blockType = shouldBlock(data, getFetchUrl(url), { method: 'POST' });
             traceNetwork('beacon', getFetchUrl(url), data, blockType);
             traceMessengerObservation('beacon', getFetchUrl(url), data, blockType);
             if (blockType) return true;
@@ -35,6 +36,13 @@ export function hookFetch() {
     }
 
     markGhostifyHook('fetch.hooked', { hasBeacon: typeof originalBeacon === 'function' });
+}
+
+function getFetchMethod(input, init) {
+    if (init && typeof init.method === 'string') return init.method;
+    if (typeof Request !== 'undefined' && input instanceof Request && input.method) return input.method;
+    if (input && typeof input.method === 'string') return input.method;
+    return 'GET';
 }
 
 function getFetchUrl(input) {

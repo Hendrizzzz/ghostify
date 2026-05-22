@@ -7,11 +7,11 @@
     const isFacebookDotCom = isHost(hostname, "facebook.com");
     const isMessengerDotCom = isHost(hostname, "messenger.com");
     const isMessenger = isMessengerDotCom || isFacebookDotCom;
-    const settingsKey = isInstagram ? "igTyping" : "msgTyping";
-    if (!isMessenger && !isInstagram) return;
+    const settingsKey = "msgTyping";
+    if (!isMessenger) return;
     if (window.__GHOSTIFY_LS_TYPING_PATCH__) return;
     window.__GHOSTIFY_LS_TYPING_PATCH__ = true;
-    const DIAGNOSTIC_VERSION = "2026-05-23-seen-module-sanitize-26";
+    const DIAGNOSTIC_VERSION = "2026-05-23-instagram-direct-27";
     const observeSalt = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     const observeStartMs = Date.now();
     markPatchStatus("messenger_patch.init", {

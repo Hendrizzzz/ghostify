@@ -42,7 +42,6 @@
         },
         {
             "matches": [
-                "https://*.instagram.com/*",
                 "https://*.messenger.com/*",
                 "https://*.facebook.com/*"
             ],

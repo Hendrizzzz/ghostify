@@ -16,7 +16,7 @@ const DEBUG_TERMS = [
 
 const PAGE_HASH_SALT = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 const PAGE_START_MS = Date.now();
-const DIAGNOSTIC_VERSION = '2026-05-23-seen-module-sanitize-26';
+const DIAGNOSTIC_VERSION = '2026-05-23-instagram-direct-27';
 
 const MESSENGER_OBSERVE_TERMS = [
     'sendtypingindicator',

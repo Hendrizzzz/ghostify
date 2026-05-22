@@ -700,10 +700,142 @@
       "act_thread_id"
     ]);
   }
-  function shouldBlock(data, url = "") {
+  function stripInstagramUserAuthoredText(text) {
+    return String(text || "").replace(/((?:^|[&\s"{,])(?:text|message|item_text|client_context_message|reply_text|comment_text)\s*[=:]\s*)("[^"]*"|[^&\s,}]+)/gi, "$1<user_text>").replace(/((?:^|[&\s"{,])(?:text|message|item_text|client_context_message|reply_text|comment_text)"\s*:\s*)("[^"]*"|[^,}]+)/gi, "$1<user_text>");
+  }
+  function hasInstagramDirectContext(str, urlString) {
+    return includesAny(`${str} ${urlString}`, [
+      "direct_v2",
+      "/direct/",
+      "directthread",
+      "direct_thread",
+      "polarisdirect",
+      "xdt_direct",
+      "instagramdirect",
+      "thread_id",
+      "threadid",
+      "thread_pk",
+      "inbox"
+    ]);
+  }
+  function isInstagramDirectTypingWrite(str, urlString) {
+    if (includesAny(urlString, [
+      "/direct_v2/threads/broadcast/typing",
+      "/direct_v2/threads/typing"
+    ]) || urlString.includes("/direct_v2/threads/") && urlString.includes("/typing")) {
+      return true;
+    }
+    if (!hasInstagramDirectContext(str, urlString)) return false;
+    const hasWriteContext = includesAny(str, [
+      "mutation",
+      "fb_api_req_friendly_name",
+      "direct_v2",
+      "thread_id",
+      "threadid",
+      "thread_pk",
+      "recipient_id",
+      "recipientid"
+    ]);
+    return hasWriteContext && includesAny(str, [
+      "sendtypingindicator",
+      "send_typing_indicator",
+      "typingindicatorstoredprocedure",
+      "directsendtyping",
+      "direct_send_typing",
+      "igdsendtyping",
+      "typing_indicator",
+      "is_typing",
+      "typing_on",
+      "is_composing"
+    ]);
+  }
+  function isInstagramDirectMessageSendEndpoint(urlString) {
+    return includesAny(urlString, [
+      "/direct_v2/threads/broadcast/text",
+      "/direct_v2/threads/broadcast/link",
+      "/direct_v2/threads/broadcast/media",
+      "/direct_v2/threads/broadcast/photo",
+      "/direct_v2/threads/broadcast/video",
+      "/direct_v2/threads/broadcast/voice",
+      "/direct_v2/threads/broadcast/reel_share",
+      "/direct_v2/threads/broadcast/story_share",
+      "/direct_v2/threads/broadcast/profile",
+      "/direct_v2/threads/broadcast/hashtag",
+      "/direct_v2/threads/broadcast/location"
+    ]);
+  }
+  function isInstagramDirectSeenWrite(str, urlString) {
+    if (includesAny(urlString, [
+      "/direct_v2/threads/seen",
+      "/direct_v2/threads/mark_seen",
+      "/direct_v2/threads/mark_read"
+    ]) || urlString.includes("/direct_v2/threads/") && includesAny(urlString, ["/seen", "mark_seen", "mark_read"])) {
+      return true;
+    }
+    if (!hasInstagramDirectContext(str, urlString)) return false;
+    const hasWriteContext = includesAny(str, [
+      "mutation",
+      "fb_api_req_friendly_name",
+      "direct_v2",
+      "thread_id",
+      "threadid",
+      "thread_pk",
+      "item_id",
+      "itemid",
+      "watermark",
+      "timestamp"
+    ]);
+    return hasWriteContext && includesAny(str, [
+      "directmarkasseen",
+      "directthreadmarkitemsseen",
+      "polarisdirectmarkasseenmutation",
+      "directseenmutation",
+      "usepolarismarkthreadseenmutation",
+      "useigdmarkthreadasreadmutation",
+      "markthreadseenmutation",
+      "markthreadasreadmutation",
+      "markdirectthreadseen",
+      "mark_direct_thread_seen",
+      "mark_seen",
+      "mark_read",
+      "thread_seen",
+      "markasseen"
+    ]);
+  }
+  function isInstagramDirectSafeRequest(str, urlString, method) {
+    if (!hasInstagramDirectContext(str, urlString)) return false;
+    if (isInstagramDirectMessageSendEndpoint(urlString)) return true;
+    if (isInstagramDirectTypingWrite(str, urlString) || isInstagramDirectSeenWrite(str, urlString) || isInstagramStorySeenWrite(str)) {
+      return false;
+    }
+    if (includesAny(urlString, [
+      "/direct_v2/inbox",
+      "/direct_v2/threads/",
+      "/direct_v2/threads/broadcast/"
+    ])) {
+      return true;
+    }
+    if ((method === "GET" || method === "HEAD") && includesAny(urlString, [
+      "/api/graphql",
+      "/direct_v2/"
+    ])) {
+      return true;
+    }
+    if (isGraphQLRequest(str, urlString) && includesAny(str, [
+      "direct",
+      "inbox",
+      "thread"
+    ])) {
+      return true;
+    }
+    return (str.includes("cursor") || urlString.includes("cursor") || str.includes("query_hash") || str.includes("doc_id")) && includesAny(str, ["direct", "inbox", "thread"]);
+  }
+  function shouldBlock(data, url = "", options = {}) {
     const urlString = String(url || "");
     if (isStaticAsset(urlString)) return null;
-    const str = `${decode(data)} ${urlString}`.toLowerCase();
+    const method = String(options.method || "").toUpperCase();
+    const decodedBody = decode(data).toLowerCase();
+    const str = `${decodedBody} ${urlString}`.toLowerCase();
     const isFacebookPage = isFacebookDotCom && !isMessengerDotCom;
     if (isFacebookPage) {
       if (SETTINGS.msgSeen && !isKilled("msgSeen") && isGraphQLRequest(str, urlString) && isFacebookGraphQLMessengerSeenWrite(str)) {
@@ -739,22 +871,31 @@
       return null;
     }
     if (isInstagram) {
-      const storyViewerLookup = isInstagramStoryViewerLookup(str);
-      if (SETTINGS.igTyping && !isKilled("igTyping") && matchesPattern(str, PATTERNS.igTyping)) {
+      const instagramMatchText = `${stripInstagramUserAuthoredText(decodedBody)} ${urlString}`.toLowerCase();
+      const storyViewerLookup = isInstagramStoryViewerLookup(instagramMatchText);
+      if (isInstagramDirectMessageSendEndpoint(urlString)) return null;
+      if (SETTINGS.igTyping && !isKilled("igTyping") && isInstagramDirectTypingWrite(instagramMatchText, urlString)) {
         return "IG_TYPING";
       }
-      if (SETTINGS.igStory && !isKilled("igStory") && isInstagramStorySeenWrite(str)) {
+      if (SETTINGS.igStory && !isKilled("igStory") && isInstagramStorySeenWrite(instagramMatchText)) {
         return "IG_STORY";
       }
-      if (SETTINGS.igStory && !isKilled("igStory") && !storyViewerLookup && matchesPattern(str, PATTERNS.igStory)) {
-        return "IG_STORY";
-      }
-      if (SETTINGS.igSeen && !isKilled("igSeen") && matchesPattern(str, PATTERNS.igSeen)) {
+      if (SETTINGS.igSeen && !isKilled("igSeen") && isInstagramDirectSeenWrite(instagramMatchText, urlString)) {
         return "IG_SEEN";
       }
-      if (str.includes("cursor") || urlString.includes("cursor")) return null;
-      if (str.includes("query_hash")) return null;
-      if (str.includes("doc_id")) return null;
+      if (isInstagramDirectSafeRequest(instagramMatchText, urlString, method)) return null;
+      if (SETTINGS.igStory && !isKilled("igStory") && !storyViewerLookup && matchesPattern(instagramMatchText, PATTERNS.igStory)) {
+        return "IG_STORY";
+      }
+      if (SETTINGS.igTyping && !isKilled("igTyping") && matchesPattern(instagramMatchText, PATTERNS.igTyping)) {
+        return "IG_TYPING";
+      }
+      if (SETTINGS.igSeen && !isKilled("igSeen") && matchesPattern(instagramMatchText, PATTERNS.igSeen)) {
+        return "IG_SEEN";
+      }
+      if (instagramMatchText.includes("cursor") || urlString.includes("cursor")) return null;
+      if (instagramMatchText.includes("query_hash")) return null;
+      if (instagramMatchText.includes("doc_id")) return null;
       return null;
     }
     return null;
@@ -778,7 +919,7 @@
   ];
   var PAGE_HASH_SALT = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   var PAGE_START_MS = Date.now();
-  var DIAGNOSTIC_VERSION = "2026-05-23-seen-module-sanitize-26";
+  var DIAGNOSTIC_VERSION = "2026-05-23-instagram-direct-27";
   var MESSENGER_OBSERVE_TERMS = [
     "sendtypingindicator",
     "lssendtypingindicator",
@@ -1409,7 +1550,8 @@
     window.fetch = async function(input, init) {
       const url = getFetchUrl(input);
       const body = await getFetchBody(input, init);
-      const blockType = shouldBlock(body, url);
+      const method = getFetchMethod(input, init);
+      const blockType = shouldBlock(body, url, { method });
       traceNetwork("fetch", url, body, blockType);
       traceMessengerObservation("fetch", url, body, blockType);
       if (blockType) {
@@ -1420,7 +1562,7 @@
     const originalBeacon = navigator.sendBeacon;
     if (typeof originalBeacon === "function") {
       navigator.sendBeacon = function(url, data) {
-        const blockType = shouldBlock(data, getFetchUrl(url));
+        const blockType = shouldBlock(data, getFetchUrl(url), { method: "POST" });
         traceNetwork("beacon", getFetchUrl(url), data, blockType);
         traceMessengerObservation("beacon", getFetchUrl(url), data, blockType);
         if (blockType) return true;
@@ -1428,6 +1570,12 @@
       };
     }
     markGhostifyHook("fetch.hooked", { hasBeacon: typeof originalBeacon === "function" });
+  }
+  function getFetchMethod(input, init) {
+    if (init && typeof init.method === "string") return init.method;
+    if (typeof Request !== "undefined" && input instanceof Request && input.method) return input.method;
+    if (input && typeof input.method === "string") return input.method;
+    return "GET";
   }
   function getFetchUrl(input) {
     if (typeof input === "string") return input;
@@ -1486,7 +1634,7 @@
       return originalXhrOpen.apply(this, arguments);
     };
     XMLHttpRequest.prototype.send = function(body) {
-      const blockType = shouldBlock(body, this._ghostifyUrl || "");
+      const blockType = shouldBlock(body, this._ghostifyUrl || "", { method: this._ghostifyMethod || "GET" });
       traceNetwork("xhr", this._ghostifyUrl || "", body, blockType);
       traceMessengerObservation("xhr", this._ghostifyUrl || "", body, blockType);
       if (blockType) {
@@ -1529,13 +1677,17 @@
     if (storyEnabled && isStorySurface()) {
       return "unfocused";
     }
-    if (seenEnabled) {
+    if (seenEnabled && !isDirectSurface()) {
       return "unfocused";
     }
     return null;
   }
   function isStorySurface() {
     return window.location.pathname.startsWith("/stories/");
+  }
+  function isDirectSurface() {
+    const path = window.location.pathname;
+    return path === "/direct/" || path.startsWith("/direct/");
   }
 
   // src/platforms/messenger.js

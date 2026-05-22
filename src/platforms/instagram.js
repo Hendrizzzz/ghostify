@@ -14,7 +14,7 @@ export function getInstagramSpoofState() {
         return 'unfocused';
     }
 
-    if (seenEnabled) {
+    if (seenEnabled && !isDirectSurface()) {
         return 'unfocused';
     }
 
@@ -23,4 +23,9 @@ export function getInstagramSpoofState() {
 
 function isStorySurface() {
     return window.location.pathname.startsWith('/stories/');
+}
+
+function isDirectSurface() {
+    const path = window.location.pathname;
+    return path === '/direct/' || path.startsWith('/direct/');
 }
