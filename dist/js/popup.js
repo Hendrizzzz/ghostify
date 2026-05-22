@@ -12,6 +12,7 @@ const ELEMENT_MAP = {
     'ig-typing': 'igTyping',
     'ig-seen': 'igSeen',
     'ig-story': 'igStory',
+    'msg-typing': 'msgTyping',
     'msg-seen': 'msgSeen',
     'msg-story': 'msgStory'
 };
@@ -20,7 +21,6 @@ const ELEMENT_MAP = {
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     attachEventListeners();
-    attachRefreshButton();
 
     const manifestData = chrome.runtime.getManifest();
     const versionSpan = document.getElementById('version-number');
@@ -51,46 +51,12 @@ function attachEventListeners() {
     });
 }
 
-
-function attachRefreshButton() {
-    const refreshBtn = document.getElementById('refresh-fb');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', async () => {
-            refreshBtn.classList.add('spinning');
-
-            const tabs = await chrome.tabs.query({});
-            const fbTabs = tabs.filter(tab =>
-                tab.url && (
-                    tab.url.includes('facebook.com') ||
-                    tab.url.includes('messenger.com')
-                )
-            );
-
-            for (const tab of fbTabs) {
-                chrome.tabs.reload(tab.id);
-            }
-
-            setTimeout(() => {
-                refreshBtn.classList.remove('spinning');
-            }, 600);
-
-            if (fbTabs.length === 0) {
-                refreshBtn.style.background = 'rgba(239, 68, 68, 0.2)';
-                setTimeout(() => {
-                    refreshBtn.style.background = '';
-                }, 1000);
-            }
-        });
-    }
-}
-
-
 function saveSettings() {
     const settings = {
         igTyping: document.getElementById('ig-typing')?.checked ?? true,
         igSeen: document.getElementById('ig-seen')?.checked ?? true,
         igStory: document.getElementById('ig-story')?.checked ?? true,
-        msgTyping: true,
+        msgTyping: document.getElementById('msg-typing')?.checked ?? true,
         msgSeen: document.getElementById('msg-seen')?.checked ?? true,
         msgStory: document.getElementById('msg-story')?.checked ?? true
     };

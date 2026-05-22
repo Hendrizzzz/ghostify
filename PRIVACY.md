@@ -14,13 +14,13 @@ The Extension operates entirely locally on your device ("client-side"). All data
 
 ### 2.1. Permissions Justification
 To function correctly, the Extension requires specific permissions:
-*   **Host Permissions (`*://*.instagram.com/*`, etc.):** This is required to inject the content script that intercepts specific network requests (e.g., `mark_seen`) before they leave your browser. This interception happens locally.
+*   **Host Permissions (`https://*.instagram.com/*`, etc.):** This is required to inject the content script that intercepts specific network requests (e.g., `mark_seen`) before they leave your browser. This interception happens locally.
 *   **Storage Permission:** Used to save your preferences (e.g., "Hide Seen: ON") locally in your browser's `chrome.storage.local`.
 
-## 3. Remote Configuration
-The Extension utilizes a "Remote Configuration" feature to maintain functionality when third-party platforms update their code.
-*   **How it works:** The Extension periodically fetches a static JSON configuration file from a public GitHub repository.
-*   **Data transmitted:** This process is a one-way `GET` request. No user data, identifiers, or usage statistics are sent to GitHub during this process.
+## 3. Configuration
+The Extension uses configuration files bundled with the installed extension package.
+*   **How it works:** Blocking patterns are shipped locally and updated through extension releases.
+*   **Data transmitted:** No configuration fetch is made to a third-party server.
 
 ## 4. Third-Party Accounts
 This Extension interacts with third-party websites (Instagram, Facebook, Messenger). We are not affiliated with Meta Platforms, Inc. The Extension does not bypass authentication or gain access to your account credentials. You are subject to the Terms of Service and Privacy Policy of the respective platforms while using them.

@@ -1,417 +1,1553 @@
 (() => {
   // src/config.js
   var SETTINGS = {
-    msgSeen: true,
-    igSeen: true,
     igTyping: true,
-    igStory: false
+    igSeen: true,
+    igStory: true,
+    msgTyping: true,
+    msgSeen: true,
+    msgStory: true
   };
   var KILLED_FEATURES = /* @__PURE__ */ new Set();
-  var hostname = window.location.hostname;
-  var isFacebookDotCom = hostname.includes("facebook");
-  var isMessengerDotCom = hostname.includes("messenger");
+  var SETTINGS_READY = false;
+  var hostname = window.location.hostname.toLowerCase();
+  function isHost(domain) {
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+  }
+  var isFacebookDotCom = isHost("facebook.com");
+  var isMessengerDotCom = isHost("messenger.com");
   var isMessenger = isFacebookDotCom || isMessengerDotCom;
-  var isInstagram = hostname.includes("instagram");
+  var isInstagram = isHost("instagram.com");
   function isKilled(feature) {
     return KILLED_FEATURES.has(feature);
   }
+  function markSettingsReady() {
+    SETTINGS_READY = true;
+  }
 
   // src/utils/network.js
-  var PATTERNS = {
-    igTyping: [],
-    igSeen: [],
-    igStory: [],
-    msgTyping: [],
-    msgSeen: [],
-    msgStory: []
+  var DEFAULT_PATTERNS = {
+    igTyping: [
+      "indicate_activity",
+      "typing_indicator",
+      "activity_indicator",
+      "is_typing",
+      "direct_v2/threads/broadcast/typing",
+      "direct_v2/threads/typing",
+      "sendtypingindicator",
+      "send_typing_indicator",
+      "typing_on",
+      "is_composing"
+    ],
+    igSeen: [
+      "mark_read",
+      "mark_seen",
+      "thread_seen",
+      "directmarkasseen",
+      "markasseen",
+      "directthreadmarkitemsseen",
+      "polarisdirectmarkasseenmutation",
+      "directseenmutation",
+      "usepolarismarkthreadseenmutation",
+      "useigdmarkthreadasreadmutation"
+    ],
+    igStory: [
+      "storiesupdateseenmutation",
+      "polarisstoriesseenmutation",
+      "usepolarisstoriesv3seenmutation",
+      "reelmediaseen",
+      "storiesupdateseen",
+      "seenstoriesupdatemutation",
+      "polarisapireelseenmutation",
+      "xdt_mark_story_reel_seen",
+      "26997980659837802",
+      "polarisapiforcestoryseenmutation",
+      "xdt_api__v1__stories__reel__seen",
+      "9647304595318258",
+      "api/v1/stories/reel/seen",
+      "stories/reel/seen",
+      "mark_story_seen",
+      "update_seen_for_reel",
+      "reel_seen",
+      "stories_update_seen",
+      "mark_story_read"
+    ],
+    msgTyping: [
+      "indicate_activity",
+      "typing_indicator",
+      "activity_indicator",
+      "is_typing",
+      "sendtypingindicator",
+      "send_typing_indicator",
+      "sendchatstate",
+      "send_chat_state",
+      "ajax/messaging/typ.php",
+      "ajax/chat/typ.php",
+      "ajax/mercury/typ.php",
+      "thread_typing",
+      "orca_typing_notifications",
+      "is_composing",
+      "iscomposing",
+      "composing",
+      "chat_state",
+      "chatstate",
+      "typing_status",
+      "typingstate",
+      "securetypingstate",
+      "mawsecuretypingstate",
+      "typingindicatorstoredprocedure",
+      "istyping",
+      "send_type"
+    ],
+    msgSeen: [
+      "mark_read",
+      "mark_seen",
+      "thread_seen",
+      "directmarkasseen",
+      "markasseen",
+      "directthreadmarkitemsseen",
+      "polarisdirectmarkasseenmutation",
+      "directseenmutation",
+      "seenbyviewer",
+      "updatelastseenat",
+      "updatelastreadwatermark",
+      "sendreadreceipt",
+      "lssendreadreceipt",
+      "readreceipt",
+      "read_receipt",
+      "readreceiptmutation",
+      "lsupdatethreadreadwatermark",
+      "lsupdatelastreadwatermark",
+      "last_read_watermark",
+      "lastreadwatermark",
+      "read_watermark",
+      "readwatermark",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt",
+      "lsmarkthreadread",
+      "mwmarkthreadread",
+      "markasread",
+      "change_read_status"
+    ],
+    msgStory: [
+      "storiesupdateseenmutation",
+      "polarisstoriesseenmutation",
+      "usepolarisstoriesv3seenmutation",
+      "reelmediaseen",
+      "storiesupdateseen",
+      "seenstoriesupdatemutation",
+      "mark_story_seen",
+      "update_seen_for_reel",
+      "reel_seen",
+      "stories_update_seen",
+      "mark_story_read"
+    ]
   };
+  var PATTERN_KEYS = Object.keys(DEFAULT_PATTERNS);
+  var MAX_PATTERNS_PER_FEATURE = 50;
+  var MAX_PATTERN_LENGTH = 96;
+  var PATTERNS = clonePatterns(DEFAULT_PATTERNS);
   function updatePatterns(newPatterns) {
-    PATTERNS = newPatterns;
+    PATTERNS = mergePatterns(DEFAULT_PATTERNS, newPatterns);
   }
-  function decode(data) {
+  function clonePatterns(patterns) {
+    return Object.fromEntries(PATTERN_KEYS.map((key) => [key, [...patterns[key]]]));
+  }
+  function mergePatterns(defaults, incoming) {
+    const merged = clonePatterns(defaults);
+    if (!incoming || typeof incoming !== "object") return merged;
+    for (const key of PATTERN_KEYS) {
+      const remotePatterns = sanitizePatternList(incoming[key]);
+      if (!remotePatterns.length) continue;
+      const existing = new Set(merged[key]);
+      for (const pattern of remotePatterns) existing.add(pattern);
+      merged[key] = [...existing].slice(0, MAX_PATTERNS_PER_FEATURE);
+    }
+    return merged;
+  }
+  function sanitizePatternList(patterns) {
+    if (!Array.isArray(patterns)) return [];
+    return patterns.filter((pattern) => typeof pattern === "string").map((pattern) => pattern.trim().toLowerCase()).filter((pattern) => pattern && pattern.length <= MAX_PATTERN_LENGTH).filter((pattern) => !/[|^$()[\]{}+?\\]/.test(pattern)).slice(0, MAX_PATTERNS_PER_FEATURE);
+  }
+  function decode(data, limit = 15e3) {
     if (!data) return "";
     try {
-      if (typeof data === "string") return data;
-      if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
-        return new TextDecoder().decode(data);
+      if (typeof data === "string") return withDecodedText(data, limit);
+      if (data instanceof ArrayBuffer) {
+        return withDecodedText(new TextDecoder().decode(data.slice(0, limit)), limit);
+      }
+      if (ArrayBuffer.isView(data)) {
+        const view = new Uint8Array(data.buffer, data.byteOffset, Math.min(data.byteLength, limit));
+        return withDecodedText(new TextDecoder().decode(view), limit);
       }
       if (typeof URLSearchParams !== "undefined" && data instanceof URLSearchParams) {
-        try {
-          return decodeURIComponent(data.toString());
-        } catch (e) {
-          return data.toString();
-        }
+        return withDecodedText(data.toString(), limit);
       }
       if (typeof FormData !== "undefined" && data instanceof FormData) {
         let text = "";
         for (const pair of data.entries()) {
-          if (typeof pair[1] === "string") text += pair[0] + "=" + pair[1] + "&";
+          if (typeof pair[1] === "string") {
+            text += `${pair[0]}=${pair[1]}&`;
+            if (text.length >= limit) return text.slice(0, limit);
+          }
         }
-        return text;
+        return withDecodedText(text, limit);
       }
-      if (typeof data === "object") return JSON.stringify(data);
+      if (typeof data === "object") return withDecodedText(JSON.stringify(data), limit);
     } catch (e) {
       return "";
     }
     return "";
   }
+  function withDecodedText(text, limit) {
+    const raw = String(text || "").slice(0, limit);
+    try {
+      const decoded = decodeURIComponent(raw.replace(/\+/g, " "));
+      if (decoded && decoded !== raw) {
+        return `${raw} ${decoded}`.slice(0, limit * 2);
+      }
+    } catch (e) {
+    }
+    return raw;
+  }
   function matchesPattern(str, patternList) {
     if (!patternList || !Array.isArray(patternList)) return false;
-    return patternList.some((pattern) => {
-      if (pattern.includes("|") || pattern.startsWith("^") || pattern.endsWith("$")) {
-        try {
-          const regex = new RegExp(pattern, "i");
-          return regex.test(str);
-        } catch (e) {
-          return false;
-        }
-      }
-      return str.toLowerCase().includes(pattern.toLowerCase());
-    });
+    return patternList.some((pattern) => str.includes(pattern));
+  }
+  function includesAny(str, terms) {
+    return terms.some((term) => str.includes(term));
+  }
+  function hasExplicitStorySeenSignal(str) {
+    return includesAny(str, [
+      "storiesupdateseenmutation",
+      "polarisstoriesseenmutation",
+      "usepolarisstoriesv3seenmutation",
+      "reelmediaseen",
+      "storiesupdateseen",
+      "seenstoriesupdatemutation",
+      "mark_story_seen",
+      "update_seen_for_reel",
+      "reel_seen",
+      "stories_update_seen",
+      "mark_story_read"
+    ]);
+  }
+  function isInstagramStoryViewerLookup(str) {
+    if (hasExplicitStorySeenSignal(str)) return false;
+    return includesAny(str, [
+      "stories_viewer",
+      "story_viewer",
+      "story_viewers",
+      "reel_media_viewers",
+      "reel_viewers",
+      "viewer_list",
+      "viewers_list",
+      "seen_by",
+      "seenby"
+    ]);
+  }
+  function hasFacebookMessengerContext(str) {
+    return includesAny(str, [
+      "messenger",
+      "message",
+      "messages",
+      "messaging",
+      "cometmessenger",
+      "mwchat",
+      "mailbox",
+      "inbox",
+      "maw",
+      "lsplatform",
+      "thread_key",
+      "threadkey",
+      "thread_fbid",
+      "threadfbid",
+      "thread_id",
+      "threadid",
+      "recipient_id",
+      "message_thread",
+      "act_thread_id"
+    ]);
+  }
+  function hasMessengerReadReceiptSignal(str) {
+    return hasMessengerReadReceiptWriteSignal(str) || includesAny(str, [
+      "last_read_watermark",
+      "lastreadwatermark",
+      "last_read_watermark_ts",
+      "lastreadwatermarkts",
+      "read_watermark",
+      "readwatermark",
+      "watermarktimestamp",
+      "watermark_timestamp",
+      "seenbyviewer",
+      "seen_by_viewer"
+    ]);
+  }
+  function hasMessengerReadReceiptWriteSignal(str) {
+    return includesAny(str, [
+      "markthreadasread",
+      "mark_thread_read",
+      "markthreadreadmutation",
+      "markthreadread",
+      "markread",
+      "mark_read",
+      "markseen",
+      "mark_seen",
+      "threadseen",
+      "thread_seen",
+      "change_read_status",
+      "updatelastseenat",
+      "updatelastreadwatermark",
+      "sendreadreceipt",
+      "lssendreadreceipt",
+      "readreceiptmutation",
+      "readreceipt",
+      "read_receipt",
+      "lsupdatethreadreadwatermark",
+      "lsmarkthreadread",
+      "mwmarkthreadread",
+      "lsupdatelastreadwatermark",
+      "markasread",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt"
+    ]);
+  }
+  function hasReadReceiptWriteContext(str) {
+    return hasReadReceiptOperationContext(str) && (hasMessengerThreadContext(str) || hasReadReceiptWatermarkContext(str));
+  }
+  function hasReadReceiptOperationContext(str) {
+    return includesAny(str, [
+      "mutation",
+      "procedure",
+      "storedprocedure",
+      "ls_req",
+      "/ls_req",
+      "issue_new_task",
+      "issuenewtask"
+    ]);
+  }
+  function hasMessengerThreadContext(str) {
+    return includesAny(str, [
+      "thread_key",
+      "threadkey",
+      "thread_fbid",
+      "threadfbid",
+      "thread_id",
+      "threadid",
+      "recipient_id",
+      "message_thread",
+      "act_thread_id"
+    ]);
+  }
+  function hasReadReceiptWatermarkContext(str) {
+    return includesAny(str, [
+      "last_read_watermark",
+      "lastreadwatermark",
+      "last_read_watermark_ts",
+      "lastreadwatermarkts",
+      "read_watermark",
+      "readwatermark",
+      "watermarktimestamp",
+      "watermark_timestamp",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt"
+    ]);
+  }
+  function isMessengerReadReceiptWrite(str, urlString) {
+    if (isLegacyMessengerReadEndpoint(urlString)) return true;
+    if (isMessengerRealtimeReadBridgeWrite(str, urlString)) return true;
+    if (hasMessengerReadReceiptSignal(str)) {
+      return hasReadReceiptWriteContext(str);
+    }
+    if (!hasReadReceiptWriteContext(str)) return false;
+    const hasReceiptField = includesAny(str, [
+      "last_read_watermark",
+      "lastreadwatermark",
+      "last_read_watermark_ts",
+      "lastreadwatermarkts",
+      "read_watermark",
+      "readwatermark",
+      "watermarktimestamp",
+      "watermark_timestamp",
+      "read_receipt",
+      "readreceipt",
+      "seenbyviewer",
+      "seen_by_viewer",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt"
+    ]);
+    if (!hasReceiptField) return false;
+    return includesAny(str, [
+      "mark_read",
+      "markread",
+      "mark_seen",
+      "markseen",
+      "thread_seen",
+      "threadseen",
+      "change_read_status",
+      "ids["
+    ]);
+  }
+  function isLegacyMessengerReadEndpoint(urlString) {
+    return includesAny(urlString, [
+      "/ajax/mercury/change_read_status.php",
+      "/ajax/mercury/mark_read.php",
+      "/ajax/mercury/mark_seen.php",
+      "/ajax/mercury/mark_thread_read.php",
+      "/ajax/mercury/read_receipts.php",
+      "/ajax/messaging/read_receipts.php",
+      "/ajax/chat/read_receipts.php"
+    ]);
+  }
+  function isMessengerRealtimeReadBridgeWrite(str, urlString) {
+    if (!isMessengerRealtimeTransport(urlString)) return false;
+    if (str.includes("delivery_receipt") && !hasMessengerReadReceiptWriteSignal(str)) return false;
+    if (!hasMessengerReadReceiptWriteSignal(str) && !hasRealtimeReadWatermarkWriteSignal(str)) return false;
+    return includesAny(str, [
+      "markthread",
+      "markread",
+      "mark_read",
+      "markseen",
+      "mark_seen",
+      "markasread",
+      "readreceipt",
+      "read_receipt",
+      "lastreadwatermark",
+      "last_read_watermark",
+      "last_read_watermark_ts",
+      "lastreadwatermarkts",
+      "read_watermark",
+      "readwatermark",
+      "watermarktimestamp",
+      "watermark_timestamp",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt",
+      "sendreadreceipt",
+      "lsmarkthreadread",
+      "lsupdatethreadreadwatermark",
+      "mwmarkthreadread",
+      "change_read_status"
+    ]);
+  }
+  function hasRealtimeReadWatermarkWriteSignal(str) {
+    if (str.includes("send_type") && !hasMessengerReadReceiptWriteSignal(str)) return false;
+    const hasWatermark = includesAny(str, [
+      "last_read_watermark",
+      "lastreadwatermark",
+      "last_read_watermark_ts",
+      "lastreadwatermarkts",
+      "read_watermark",
+      "readwatermark",
+      "watermarktimestamp",
+      "watermark_timestamp",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt"
+    ]);
+    if (!hasWatermark) return false;
+    return includesAny(str, [
+      "markthread",
+      "markread",
+      "mark_read",
+      "markasread",
+      "sendreadreceipt",
+      "readreceipt",
+      "read_receipt",
+      "lsupdatethreadreadwatermark",
+      "lsupdatelastreadwatermark",
+      "updatelastreadwatermark",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt",
+      "ls_req",
+      "/ls_req",
+      "issue_new_task",
+      "issuenewtask",
+      "storedprocedure",
+      "procedure"
+    ]);
+  }
+  function isMessengerRealtimeTransport(urlString) {
+    return urlString.includes("/ws/realtime") || urlString.includes("/ws/streamcontroller") || urlString.includes("/ws/rpsignaling") || urlString.includes("edge-chat.messenger.com/chat") || urlString.includes("edge-chat.facebook.com/chat");
+  }
+  function isMessengerTypingWrite(str, urlString) {
+    if (urlString.includes("/ajax/messaging/typ.php") || urlString.includes("/ajax/chat/typ.php") || urlString.includes("/ajax/mercury/typ.php")) {
+      return true;
+    }
+    if (!matchesPattern(str, PATTERNS.msgTyping)) return false;
+    if (includesAny(str, [
+      "sendtypingindicator",
+      "send_typing_indicator",
+      "send_typing",
+      "sendchatstatefromcomposer",
+      "sendchatstate",
+      "send_chat_state",
+      "chat_state",
+      "chatstate",
+      "typing_status",
+      "typingindicatorstoredprocedure",
+      "securetypingstate",
+      "mawsecuretypingstate",
+      "typingstate",
+      "thread_typing",
+      "orca_typing_notifications",
+      "indicate_activity",
+      "activity_indicator"
+    ])) {
+      return hasMessengerTypingContext(str);
+    }
+    return hasMessengerTypingContext(str) && includesAny(str, [
+      "is_typing",
+      "istyping",
+      "typing_on",
+      "typing_indicator",
+      "typing_status",
+      "typingstate",
+      "securetypingstate",
+      "mawsecuretypingstate",
+      "is_composing",
+      "iscomposing",
+      "composing",
+      "chatstate",
+      "send_typing",
+      "send_typing_indicator",
+      "send_chat_state",
+      "sendchatstate"
+    ]);
+  }
+  function hasMessengerTypingContext(str) {
+    return hasMessengerThreadContext(str) || includesAny(str, [
+      "composer",
+      "ls_req",
+      "/ls_req",
+      "issue_new_task",
+      "issuenewtask"
+    ]);
+  }
+  function isInstagramStorySeenWrite(str) {
+    if (includesAny(str, [
+      "polarisapireelseenmutation",
+      "xdt_mark_story_reel_seen",
+      "26997980659837802",
+      "polarisapiforcestoryseenmutation",
+      "xdt_api__v1__stories__reel__seen",
+      "9647304595318258",
+      "api/v1/stories/reel/seen",
+      "stories/reel/seen",
+      "forceseenstoryid"
+    ])) {
+      return true;
+    }
+    return includesAny(str, ["viewseenat"]) && includesAny(str, ["reelmediaid", "reelmediaownerid", "reelmediatakenat", "reelid"]);
+  }
+  function isStaticAsset(url) {
+    return /\.(mp4|jpg|jpeg|png|webp|gif|mp3|wav|m4a|aac|css|js|mjs|woff2?)($|\?)/i.test(url) || url.includes("static.xx.fbcdn.net/") || url.includes("/rsrc.php") || url.includes("/ajax/bootloader-endpoint/");
+  }
+  function isFacebookExplicitMessengerSeenWrite(str, urlString) {
+    if (urlString.includes("/ajax/mercury/change_read_status.php")) return true;
+    if (isMessengerRealtimeReadBridgeWrite(str, urlString)) return true;
+    if (isGraphQLRequest(str, urlString)) return false;
+    if (!hasStrictFacebookMessengerWriteContext(str) && !isMessengerRealtimeTransport(urlString)) return false;
+    const hasExplicitWrite = includesAny(str, [
+      "markthreadasread",
+      "mark_thread_read",
+      "markthreadreadmutation",
+      "lsmarkthreadread",
+      "mwmarkthreadread",
+      "lssendreadreceipt",
+      "sendreadreceipt",
+      "send_read_receipt",
+      "readreceiptmutation",
+      "lsupdatethreadreadwatermark",
+      "lsupdatelastreadwatermark",
+      "updatelastreadwatermark",
+      "change_read_status"
+    ]);
+    if (!hasExplicitWrite) return false;
+    return includesAny(str, [
+      "mutation",
+      "procedure",
+      "storedprocedure",
+      "ls_req",
+      "/ls_req",
+      "issue_new_task",
+      "issuenewtask",
+      "fb_api_req_friendly_name"
+    ]) || isMessengerRealtimeTransport(urlString);
+  }
+  function isFacebookExplicitMessengerTypingWrite(str, urlString) {
+    if (urlString.includes("/ajax/messaging/typ.php") || urlString.includes("/ajax/chat/typ.php") || urlString.includes("/ajax/mercury/typ.php")) {
+      return true;
+    }
+    if (isGraphQLRequest(str, urlString)) return false;
+    const hasExplicitWrite = includesAny(str, [
+      "sendtypingindicator",
+      "lssendtypingindicator",
+      "lssendtypingindicatorstoredprocedure",
+      "send_typing_indicator",
+      "send_typing",
+      "sendchatstatefromcomposer",
+      "sendchatstate",
+      "send_chat_state",
+      "chat_state",
+      "is_composing",
+      "iscomposing",
+      "composing",
+      "typing_status",
+      "typingindicatorstoredprocedure",
+      "mawsecuretypingstate",
+      "securetypingstate",
+      "typingstate"
+    ]);
+    if (!hasExplicitWrite) return false;
+    return hasStrictFacebookMessengerWriteContext(str) || hasMessengerThreadContext(str) || isMessengerRealtimeTransport(urlString) || includesAny(str, ["composer", "ls_req", "/ls_req", "issue_new_task", "issuenewtask"]);
+  }
+  function isGraphQLRequest(str, urlString) {
+    return urlString.includes("/api/graphql") || str.includes("fb_api_req_friendly_name") || str.includes("doc_id");
+  }
+  function isFacebookGraphQLMessengerSeenWrite(str) {
+    if (isFacebookGraphQLMessengerQuery(str)) return false;
+    const hasNamedWrite = includesAny(str, [
+      "markthreadasread",
+      "mark_thread_read",
+      "markthreadreadmutation",
+      "markthreadread",
+      "lsmarkthreadread",
+      "mwmarkthreadread",
+      "lssendreadreceipt",
+      "sendreadreceipt",
+      "send_read_receipt",
+      "readreceiptmutation",
+      "readreceipt",
+      "read_receipt",
+      "lsupdatethreadreadwatermark",
+      "lsupdatelastreadwatermark",
+      "updatelastreadwatermark",
+      "shouldsendreadreceipt",
+      "should_send_read_receipt"
+    ]);
+    const hasWatermarkWrite = includesAny(str, [
+      "last_read_watermark",
+      "read_watermark",
+      "watermarktimestamp",
+      "watermark_timestamp"
+    ]) && includesAny(str, [
+      "mutation",
+      "ls_req",
+      "/ls_req",
+      "issue_new_task",
+      "issuenewtask",
+      "sendreadreceipt",
+      "readreceipt",
+      "markthread"
+    ]);
+    if (!hasNamedWrite && !hasWatermarkWrite) return false;
+    return hasStrictFacebookMessengerWriteContext(str) || hasMessengerThreadContext(str) || hasReadReceiptWatermarkContext(str);
+  }
+  function isFacebookGraphQLMessengerTypingWrite(str) {
+    if (isFacebookGraphQLMessengerQuery(str)) return false;
+    const hasExplicitWrite = includesAny(str, [
+      "sendtypingindicator",
+      "lssendtypingindicator",
+      "lssendtypingindicatorstoredprocedure",
+      "send_typing_indicator",
+      "send_typing",
+      "sendchatstatefromcomposer",
+      "sendchatstate",
+      "send_chat_state",
+      "chat_state",
+      "is_composing",
+      "iscomposing",
+      "composing",
+      "typing_status",
+      "typingindicatorstoredprocedure",
+      "mawsecuretypingstate",
+      "securetypingstate",
+      "typingstate"
+    ]);
+    if (!hasExplicitWrite) return false;
+    return hasStrictFacebookMessengerWriteContext(str) || hasMessengerThreadContext(str) || includesAny(str, ["composer", "typing_indicator", "chatstate", "typingstate", "typing_status", "maw"]);
+  }
+  function isFacebookGraphQLMessengerQuery(str) {
+    const friendlyName = getFacebookGraphQLFriendlyName(str);
+    if (friendlyName && friendlyName.includes("query") && !friendlyName.includes("mutation")) return true;
+    return includesAny(str, [
+      "ebmessagemetadataquery",
+      "messagehistoryquery",
+      "threadlistquery",
+      "messagelistquery",
+      "searchmessengerquery",
+      "messengerthreadquery",
+      "messengerthreadlistquery",
+      "messengerinboxquery"
+    ]);
+  }
+  function getFacebookGraphQLFriendlyName(str) {
+    const match = String(str || "").match(/fb_api_req_friendly_name=([^&\s]+)/) || String(str || "").match(/"fb_api_req_friendly_name"\s*:\s*"([^"]+)/);
+    return match ? String(match[1] || "").toLowerCase() : "";
+  }
+  function hasStrictFacebookMessengerWriteContext(str) {
+    return includesAny(str, [
+      "cometmessenger",
+      "mwchat",
+      "maw",
+      "lsplatform",
+      "thread_key",
+      "threadkey",
+      "thread_fbid",
+      "threadfbid",
+      "thread_id",
+      "recipient_id",
+      "message_thread",
+      "act_thread_id"
+    ]);
   }
   function shouldBlock(data, url = "") {
-    if (url.match(/\.(mp4|jpg|png|webp|gif|mp3|wav)$/i)) return null;
-    const isLargePayload = data && data.byteLength && data.byteLength > 5e3;
-    const str = isLargePayload ? (decode(data).substring(0, 15e3) + " " + url).toLowerCase() : (decode(data) + " " + url).toLowerCase();
-    if (isFacebookDotCom && SETTINGS.msgSeen && !isKilled("msgSeen") && url.includes("/api/graphql")) {
-      if (str.includes("markthreadasread") || str.includes("mark_thread_read") || str.includes("markread") || str.includes("markseen") || str.includes("mark_read") || str.includes("mark_seen") || str.includes("read_watermark") || str.includes("last_read_watermark") || str.includes("read_receipt") || str.includes("act_thread_id") || str.includes("ebmessagemetadataquery")) {
-        return "FB_GRAPHQL_SEEN";
+    const urlString = String(url || "");
+    if (isStaticAsset(urlString)) return null;
+    const str = `${decode(data)} ${urlString}`.toLowerCase();
+    const isFacebookPage = isFacebookDotCom && !isMessengerDotCom;
+    if (isFacebookPage) {
+      if (SETTINGS.msgSeen && !isKilled("msgSeen") && isGraphQLRequest(str, urlString) && isFacebookGraphQLMessengerSeenWrite(str)) {
+        return "MSG_SEEN";
       }
-    }
-    if (isMessenger) {
-      if (str.includes("delivery_receipt")) return null;
-      if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
-        if (str.includes("messagelist_message_impression") || str.includes("verify_threads_activity_status") || str.includes("armadillo_thread_id") && str.includes("impression") || str.includes("in_thread_banner_fetch_activity_banners_queue") || str.includes("read_receipt")) {
-          return "MSG_SEEN";
-        }
-        if (str.includes("last_read_watermark_ts") && !str.includes("send_type")) {
-          return "MSG_SEEN";
-        }
-        if (matchesPattern(str, PATTERNS.msgSeen)) {
-          return "MSG_SEEN";
-        }
+      if (SETTINGS.msgSeen && !isKilled("msgSeen") && isFacebookExplicitMessengerSeenWrite(str, urlString)) {
+        return "MSG_SEEN";
       }
-      if (SETTINGS.msgTyping && !isKilled("msgTyping") && matchesPattern(str, PATTERNS.msgTyping)) {
+      if (SETTINGS.msgTyping && !isKilled("msgTyping") && isGraphQLRequest(str, urlString) && isFacebookGraphQLMessengerTypingWrite(str)) {
         return "MSG_TYPING";
       }
-      if (SETTINGS.msgStory && !isKilled("msgStory") && matchesPattern(str, PATTERNS.msgStory)) {
+      if (SETTINGS.msgTyping && !isKilled("msgTyping") && isFacebookExplicitMessengerTypingWrite(str, urlString)) {
+        return "MSG_TYPING";
+      }
+      if (SETTINGS.msgStory && !isKilled("msgStory") && hasExplicitStorySeenSignal(str) && matchesPattern(str, PATTERNS.msgStory)) {
+        return "MSG_STORY";
+      }
+      return null;
+    }
+    if (isMessenger) {
+      if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
+        if (isMessengerReadReceiptWrite(str, urlString)) {
+          return "MSG_SEEN";
+        }
+      }
+      if (str.includes("delivery_receipt") && !hasMessengerReadReceiptSignal(str)) return null;
+      if (SETTINGS.msgTyping && !isKilled("msgTyping") && (!isFacebookPage || hasFacebookMessengerContext(str)) && isMessengerTypingWrite(str, urlString)) {
+        return "MSG_TYPING";
+      }
+      if (SETTINGS.msgStory && !isKilled("msgStory") && (!isFacebookPage || hasExplicitStorySeenSignal(str)) && matchesPattern(str, PATTERNS.msgStory)) {
         return "MSG_STORY";
       }
       return null;
     }
     if (isInstagram) {
-      if (str.includes("cursor") || url.includes("cursor")) {
-        return null;
-      }
-      if (str.includes("query_hash") || str.includes("doc_id") && !str.includes("mutation") && !str.includes("mark_seen") && !str.includes("mark_read") && !str.includes("thread_seen")) {
-        return null;
-      }
-      if (isLargePayload && !str.includes("seen") && !str.includes("mark_read")) {
-        return null;
-      }
+      const storyViewerLookup = isInstagramStoryViewerLookup(str);
       if (SETTINGS.igTyping && !isKilled("igTyping") && matchesPattern(str, PATTERNS.igTyping)) {
         return "IG_TYPING";
       }
-      if (SETTINGS.igStory && !isKilled("igStory") && matchesPattern(str, PATTERNS.igStory)) {
+      if (SETTINGS.igStory && !isKilled("igStory") && isInstagramStorySeenWrite(str)) {
+        return "IG_STORY";
+      }
+      if (SETTINGS.igStory && !isKilled("igStory") && !storyViewerLookup && matchesPattern(str, PATTERNS.igStory)) {
         return "IG_STORY";
       }
       if (SETTINGS.igSeen && !isKilled("igSeen") && matchesPattern(str, PATTERNS.igSeen)) {
         return "IG_SEEN";
       }
+      if (str.includes("cursor") || urlString.includes("cursor")) return null;
+      if (str.includes("query_hash")) return null;
+      if (str.includes("doc_id")) return null;
       return null;
     }
     return null;
   }
 
-  // src/core/interceptors/websocket.js
-  function hookWebSocket() {
-    const OriginalWebSocket = window.WebSocket;
-    const originalWSSend = OriginalWebSocket.prototype.send;
-    function checkHardBlock(data) {
-      if (!(isFacebookDotCom && SETTINGS.msgSeen && !isKilled("msgSeen"))) return false;
-      try {
-        const raw = data instanceof ArrayBuffer || ArrayBuffer.isView(data) ? new TextDecoder().decode(data) : typeof data === "string" ? data : "";
-        if (raw.includes("read_receipt")) return true;
-        if (raw.includes("last_read_watermark_ts") && !raw.includes("send_type")) return true;
-      } catch (e) {
+  // src/utils/debug.js
+  var DEBUG_TERMS = [
+    "api/graphql",
+    "stories",
+    "story",
+    "reel",
+    "seen",
+    "direct_v2",
+    "typing",
+    "indicate_activity",
+    "sendtyping",
+    "sendchatstate",
+    "typ.php",
+    "mqtt",
+    "edge-chat"
+  ];
+  var PAGE_HASH_SALT = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  var PAGE_START_MS = Date.now();
+  var DIAGNOSTIC_VERSION = "2026-05-23-seen-module-sanitize-26";
+  var MESSENGER_OBSERVE_TERMS = [
+    "sendtypingindicator",
+    "lssendtypingindicator",
+    "lssendtypingindicatorstoredprocedure",
+    "sendchatstate",
+    "send_chat_state",
+    "sendchatstatefromcomposer",
+    "mawsecuretypingstate",
+    "securetypingstate",
+    "typingindicatorstoredprocedure",
+    "is_typing",
+    "istyping",
+    "typing_indicator",
+    "typing_on",
+    "send_typing",
+    "send_typing_indicator",
+    "thread_typing",
+    "orca_typing_notifications",
+    "indicate_activity",
+    "activity_indicator",
+    "composer",
+    "markthreadasread",
+    "mark_thread_read",
+    "markthreadreadmutation",
+    "markthreadread",
+    "markread",
+    "markasread",
+    "mark_read",
+    "markseen",
+    "mark_seen",
+    "thread_seen",
+    "threadseen",
+    "change_read_status",
+    "updatelastseenat",
+    "updatelastreadwatermark",
+    "sendreadreceipt",
+    "lssendreadreceipt",
+    "readreceiptmutation",
+    "readreceipt",
+    "lsupdatethreadreadwatermark",
+    "lsmarkthreadread",
+    "mwmarkthreadread",
+    "lsupdatelastreadwatermark",
+    "last_read_watermark",
+    "last_read_watermark_ts",
+    "read_watermark",
+    "watermarktimestamp",
+    "watermark_timestamp",
+    "shouldsendreadreceipt",
+    "seenbyviewer",
+    "seen_by_viewer",
+    "read_receipt",
+    "delivery_receipt",
+    "deliveryreceipt",
+    "delivery_receipts",
+    "message_delivered",
+    "markdelivered",
+    "ls_req",
+    "issue_new_task",
+    "issuenewtask",
+    "thread_key",
+    "thread_fbid",
+    "act_thread_id",
+    "api/graphql",
+    "ajax/messaging/typ.php",
+    "ajax/chat/typ.php",
+    "ajax/mercury/change_read_status.php",
+    "mqtt",
+    "edge-chat"
+  ];
+  function markGhostifyHook(name, details = {}) {
+    var _a, _b;
+    try {
+      installDebugHelpers();
+      const status = window.__GHOSTIFY_STATUS__ || {
+        version: DIAGNOSTIC_VERSION,
+        host: window.location.hostname,
+        hrefPath: "<redacted>",
+        startedAt: roundedElapsedSeconds(),
+        hooks: {}
+      };
+      status.version = DIAGNOSTIC_VERSION;
+      status.host = window.location.hostname;
+      status.debug = {
+        ghostifyDebug: ((_a = window.localStorage) == null ? void 0 : _a.ghostifyDebug) === "1",
+        ghostifyMessengerObserve: ((_b = window.localStorage) == null ? void 0 : _b.ghostifyMessengerObserve) === "1"
+      };
+      status.hooks[name] = Object.assign({ t: roundedElapsedSeconds() }, details);
+      window.__GHOSTIFY_STATUS__ = status;
+    } catch (e) {
+    }
+  }
+  function traceNetwork(kind, url, body, blockType = null) {
+    if (!isDebugEnabled()) return;
+    const urlString = String(url || "");
+    const bodyText = summarizeBody(body);
+    const haystack = `${urlString} ${bodyText}`.toLowerCase();
+    const terms = DEBUG_TERMS.filter((term) => haystack.includes(term));
+    if (!blockType && !terms.length) return;
+    const event = {
+      t: roundedElapsedSeconds(),
+      kind,
+      blockType,
+      url: redactUrl(urlString),
+      terms
+    };
+    const events = window.__GHOSTIFY_DEBUG_EVENTS__ || [];
+    events.push(event);
+    window.__GHOSTIFY_DEBUG_EVENTS__ = events.slice(-200);
+    try {
+      console.debug("[Ghostify]", event);
+    } catch (e) {
+    }
+  }
+  function traceMessengerObservation(kind, url, body, blockType = null) {
+    if (!isMessengerObservationEnabled()) return;
+    const urlString = String(url || "");
+    const bodyText = summarizeBody(body, 6e3);
+    const haystack = `${urlString} ${bodyText}`.toLowerCase();
+    const terms = MESSENGER_OBSERVE_TERMS.filter((term) => haystack.includes(term));
+    const nearMiss = isMessengerNearMiss(kind, urlString, haystack);
+    if (!blockType && !terms.length && !nearMiss) return;
+    const dataShape = describeDataShape(body, bodyText || urlString);
+    const phase = getCapturePhase();
+    if (shouldThrottleNearMiss(kind, urlString, blockType, terms, dataShape, phase)) return;
+    const event = {
+      v: 1,
+      t: roundedElapsedSeconds(),
+      phase,
+      transport: kind,
+      action: blockType ? "drop" : terms.length ? "allow" : "near_miss",
+      blockType,
+      featureGuess: guessFeature(haystack, blockType),
+      url: redactUrl(urlString),
+      terms,
+      flags: makeObservationFlags(haystack),
+      request: extractRequestMetadata(urlString, bodyText),
+      dataShape,
+      callSite: getCallSite(),
+      redaction: {
+        rawStored: false,
+        idsHashed: true,
+        pageSalted: true
       }
+    };
+    pushObservation(event);
+    try {
+      console.debug("[Ghostify Messenger Observe]", event);
+    } catch (e) {
+    }
+  }
+  function traceMessengerHealth(source, details = {}) {
+    markGhostifyHook(source, details);
+    if (!isMessengerObservationEnabled()) return;
+    const event = {
+      v: 1,
+      t: roundedElapsedSeconds(),
+      phase: getCapturePhase(),
+      transport: "health",
+      action: "hook",
+      blockType: null,
+      featureGuess: "health",
+      source,
+      details: sanitizeDetails(details),
+      redaction: {
+        rawStored: false,
+        idsHashed: true,
+        pageSalted: true
+      }
+    };
+    pushObservation(event);
+    try {
+      console.debug("[Ghostify Messenger Observe]", event);
+    } catch (e) {
+    }
+  }
+  function installDebugHelpers() {
+    try {
+      if (window.__GHOSTIFY_CAPTURE_HELPERS__) return;
+      window.__GHOSTIFY_CAPTURE_HELPERS__ = DIAGNOSTIC_VERSION;
+      window.__GHOSTIFY_OBSERVATION_COUNTS__ = window.__GHOSTIFY_OBSERVATION_COUNTS__ || {};
+      window.__GHOSTIFY_RESET_CAPTURE__ = function(phase = "baseline") {
+        window.__GHOSTIFY_CAPTURE_PHASE__ = String(phase || "baseline").slice(0, 40);
+        window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ = [];
+        window.__GHOSTIFY_DEBUG_EVENTS__ = [];
+        window.__GHOSTIFY_OBSERVATION_COUNTS__ = {};
+        window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = 0;
+        window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = 0;
+        window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = 0;
+        window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
+        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
+        window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
+        pushObservation(createMarkerEvent(`reset:${window.__GHOSTIFY_CAPTURE_PHASE__}`));
+        return `Ghostify capture reset: ${window.__GHOSTIFY_CAPTURE_PHASE__}`;
+      };
+      window.__GHOSTIFY_MARK__ = function(phase) {
+        window.__GHOSTIFY_CAPTURE_PHASE__ = String(phase || "mark").slice(0, 40);
+        pushObservation(createMarkerEvent(window.__GHOSTIFY_CAPTURE_PHASE__));
+        return `Ghostify phase: ${window.__GHOSTIFY_CAPTURE_PHASE__}`;
+      };
+      window.__GHOSTIFY_REPORT__ = function() {
+        return JSON.stringify({
+          status: window.__GHOSTIFY_STATUS__,
+          phase: getCapturePhase(),
+          observations: window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ || [],
+          observationCounts: window.__GHOSTIFY_OBSERVATION_COUNTS__ || {},
+          debugEvents: window.__GHOSTIFY_DEBUG_EVENTS__ || [],
+          blockedWorkerMessages: window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0,
+          sanitizedWorkerMessages: window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0,
+          facebookUnsafeBlocksSkipped: window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0,
+          blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
+          blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
+          sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
+          settings: window.__GHOSTIFY_SETTINGS__
+        }, null, 2);
+      };
+    } catch (e) {
+    }
+  }
+  function createMarkerEvent(label) {
+    return {
+      v: 1,
+      t: roundedElapsedSeconds(),
+      phase: getCapturePhase(),
+      transport: "marker",
+      action: "mark",
+      blockType: null,
+      featureGuess: "marker",
+      label: String(label || "").slice(0, 80),
+      redaction: {
+        rawStored: false,
+        idsHashed: true,
+        pageSalted: true
+      }
+    };
+  }
+  function getCapturePhase() {
+    try {
+      return String(window.__GHOSTIFY_CAPTURE_PHASE__ || "unmarked").slice(0, 40);
+    } catch (e) {
+      return "unmarked";
+    }
+  }
+  function pushObservation(event) {
+    try {
+      const events = window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ || [];
+      events.push(event);
+      window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ = events.slice(-200);
+    } catch (e) {
+    }
+  }
+  function shouldThrottleNearMiss(kind, urlString, blockType, terms, dataShape, phase) {
+    if (blockType || terms.length) return false;
+    const key = [
+      phase || "unmarked",
+      kind,
+      safeEndpointClass(urlString),
+      dataShape.kind,
+      dataShape.approxBytes
+    ].join("|");
+    const counts = window.__GHOSTIFY_OBSERVATION_COUNTS__ || {};
+    counts[key] = (counts[key] || 0) + 1;
+    window.__GHOSTIFY_OBSERVATION_COUNTS__ = counts;
+    return counts[key] > 5;
+  }
+  function safeEndpointClass(urlString) {
+    try {
+      const url = new URL(String(urlString || ""), window.location.href);
+      return `${url.hostname}${url.pathname}`;
+    } catch (e) {
+      return `url:${hashText(urlString)}`;
+    }
+  }
+  function isDebugEnabled() {
+    var _a;
+    try {
+      return ((_a = window.localStorage) == null ? void 0 : _a.ghostifyDebug) === "1";
+    } catch (e) {
       return false;
     }
-    OriginalWebSocket.prototype.send = function(data) {
-      if (checkHardBlock(data)) return;
-      const blockType = shouldBlock(data);
-      if (blockType) {
-        return;
+  }
+  function isMessengerObservationEnabled() {
+    var _a, _b;
+    try {
+      const host = window.location.hostname.toLowerCase();
+      const supportedHost = host === "messenger.com" || host.endsWith(".messenger.com") || host === "facebook.com" || host.endsWith(".facebook.com");
+      return supportedHost && ((_a = window.localStorage) == null ? void 0 : _a.ghostifyDebug) === "1" && ((_b = window.localStorage) == null ? void 0 : _b.ghostifyMessengerObserve) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  function isMessengerNearMiss(kind, urlString, haystack) {
+    if (!isMessengerHost()) return false;
+    if (kind === "websocket") return true;
+    const safeUrl = String(urlString || "").toLowerCase();
+    return safeUrl.includes("/api/graphql") || safeUrl.includes("/ajax/") || safeUrl.includes("/ls_req") || haystack.includes("fb_api_req_friendly_name") || haystack.includes("doc_id") || haystack.includes("comet") || haystack.includes("messenger") || haystack.includes("maw") || haystack.includes("lsplatform") || haystack.includes("mwchat");
+  }
+  function isMessengerHost() {
+    try {
+      const host = window.location.hostname.toLowerCase();
+      return host === "messenger.com" || host.endsWith(".messenger.com") || host === "facebook.com" || host.endsWith(".facebook.com");
+    } catch (e) {
+      return false;
+    }
+  }
+  function summarizeBody(body, limit = 2e3) {
+    try {
+      if (!body) return "";
+      if (typeof body === "string") return withDecodedText2(body, limit);
+      if (body instanceof URLSearchParams) return withDecodedText2(body.toString(), limit);
+      if (body instanceof ArrayBuffer) return decodeBytes(new Uint8Array(body.slice(0, limit)), limit);
+      if (ArrayBuffer.isView(body)) {
+        return decodeBytes(new Uint8Array(body.buffer, body.byteOffset, Math.min(body.byteLength, limit)), limit);
       }
-      return originalWSSend.apply(this, arguments);
-    };
-    window.WebSocket = function(url, protocols) {
-      const ws = protocols ? new OriginalWebSocket(url, protocols) : new OriginalWebSocket(url);
-      const boundSend = ws.send.bind(ws);
-      ws.send = function(data) {
-        if (checkHardBlock(data)) return;
-        const blockType = shouldBlock(data);
-        if (blockType) {
-          return;
+      if (body instanceof FormData) {
+        let text = "";
+        for (const [key, value] of body.entries()) {
+          text += `${key}=${typeof value === "string" ? value : "[file]"}&`;
+          if (text.length >= limit) break;
         }
-        return boundSend(data);
-      };
-      return ws;
+        return withDecodedText2(text, limit);
+      }
+    } catch (e) {
+    }
+    return "";
+  }
+  function withDecodedText2(value, limit) {
+    const raw = String(value || "").slice(0, limit);
+    try {
+      const decoded = decodeURIComponent(raw.replace(/\+/g, " "));
+      return decoded && decoded !== raw ? `${raw} ${decoded}`.slice(0, limit * 2) : raw;
+    } catch (e) {
+      return raw;
+    }
+  }
+  function decodeBytes(bytes, limit) {
+    try {
+      return withDecodedText2(new TextDecoder().decode(bytes), limit);
+    } catch (e) {
+      return "";
+    }
+  }
+  function guessFeature(haystack, blockType) {
+    if (blockType) return blockType;
+    if (haystack.includes("delivery_receipt")) return "delivery";
+    if (haystack.includes("typing") || haystack.includes("sendchatstate") || haystack.includes("typ.php")) {
+      return "typing";
+    }
+    if (haystack.includes("readreceipt") || haystack.includes("read_receipt") || haystack.includes("read_watermark") || haystack.includes("markthreadasread") || haystack.includes("markasread") || haystack.includes("mark_read") || haystack.includes("mark_seen") || haystack.includes("thread_seen")) {
+      return "seen";
+    }
+    return "unknown";
+  }
+  function makeObservationFlags(haystack) {
+    return {
+      hasGraphQL: haystack.includes("api/graphql") || haystack.includes("doc_id"),
+      hasLSRequest: haystack.includes("ls_req") || haystack.includes("issue_new_task") || haystack.includes("issuenewtask"),
+      hasThreadTarget: haystack.includes("thread_key") || haystack.includes("threadkey") || haystack.includes("thread_fbid") || haystack.includes("threadfbid") || haystack.includes("thread_id") || haystack.includes("threadid") || haystack.includes("recipient_id") || haystack.includes("message_thread") || haystack.includes("act_thread_id"),
+      hasWatermark: haystack.includes("read_watermark") || haystack.includes("readwatermark") || haystack.includes("last_read_watermark") || haystack.includes("lastreadwatermark") || haystack.includes("watermarktimestamp"),
+      hasTypingState: haystack.includes("is_typing") || haystack.includes("istyping") || haystack.includes("typing_indicator") || haystack.includes("typing_status") || haystack.includes("typing_on") || haystack.includes("sendchatstate") || haystack.includes("chatstate"),
+      hasDeliveryReceipt: haystack.includes("delivery_receipt"),
+      hasReadReceipt: haystack.includes("readreceipt") || haystack.includes("read_receipt") || haystack.includes("sendreadreceipt") || haystack.includes("markthreadasread"),
+      hasLegacyTypingEndpoint: haystack.includes("ajax/messaging/typ.php") || haystack.includes("ajax/chat/typ.php"),
+      hasLegacyReadEndpoint: haystack.includes("ajax/mercury/change_read_status.php")
     };
-    window.WebSocket.prototype = OriginalWebSocket.prototype;
-    Object.assign(window.WebSocket, OriginalWebSocket);
+  }
+  function extractRequestMetadata(urlString, bodyText) {
+    const metadata = {};
+    try {
+      const url = new URL(urlString, window.location.href);
+      metadata.path = url.pathname;
+      assignMetadataValue(metadata, "fb_api_req_friendly_name", url.searchParams.get("fb_api_req_friendly_name"));
+      assignMetadataValue(metadata, "doc_id", url.searchParams.get("doc_id"));
+    } catch (e) {
+    }
+    for (const key of ["fb_api_req_friendly_name", "doc_id"]) {
+      const value = extractParam(bodyText, key);
+      assignMetadataValue(metadata, key, value);
+    }
+    return metadata;
+  }
+  function extractParam(text, key) {
+    try {
+      const match = String(text || "").match(new RegExp(`${key}=([^&\\s]+)`, "i"));
+      return match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  function describeBody(body) {
+    if (!body) return "empty";
+    if (typeof body === "string") return "string";
+    if (body instanceof URLSearchParams) return "urlsearchparams";
+    if (body instanceof FormData) return "formdata";
+    if (body instanceof ArrayBuffer) return "arraybuffer";
+    if (ArrayBuffer.isView(body)) return "typedarray";
+    if (typeof body === "object") return "object";
+    return typeof body;
+  }
+  function describeDataShape(body, hashSource) {
+    const shape = {
+      kind: describeBody(body),
+      approxBytes: estimateLength(body, String(hashSource || "")),
+      hash: hashText(hashSource || "")
+    };
+    try {
+      if (body instanceof ArrayBuffer) {
+        addBinaryShape(shape, new Uint8Array(body));
+      } else if (ArrayBuffer.isView(body)) {
+        addBinaryShape(shape, new Uint8Array(body.buffer, body.byteOffset, body.byteLength));
+      } else if (Array.isArray(body)) {
+        shape.arrayLength = body.length;
+        shape.itemKinds = body.slice(0, 8).map(describeBody);
+      } else if (body && typeof body === "object" && !(body instanceof URLSearchParams) && !(body instanceof FormData)) {
+        let keyCount = 0;
+        const keyHashes = [];
+        for (const key of Object.keys(body)) {
+          keyCount += 1;
+          if (keyHashes.length < 8) keyHashes.push(hashText(key));
+        }
+        shape.keyCount = keyCount;
+        shape.keyHashes = keyHashes;
+      }
+    } catch (e) {
+    }
+    return shape;
+  }
+  function addBinaryShape(shape, bytes) {
+    shape.byteLength = bytes.byteLength;
+    shape.prefix8Hash = hashBytes(bytes, 8);
+    shape.prefix32Hash = hashBytes(bytes, 32);
+  }
+  function hashBytes(bytes, limit) {
+    let text = "";
+    const length = Math.min(bytes.byteLength, limit);
+    for (let i = 0; i < length; i++) {
+      text += String.fromCharCode(bytes[i]);
+    }
+    return hashText(text);
+  }
+  function estimateLength(body, bodyText) {
+    try {
+      if (!body) return 0;
+      if (typeof body === "string") return body.length;
+      if (body instanceof URLSearchParams) return body.toString().length;
+      if (body instanceof ArrayBuffer) return body.byteLength;
+      if (ArrayBuffer.isView(body)) return body.byteLength;
+      return bodyText.length;
+    } catch (e) {
+      return 0;
+    }
+  }
+  function getCallSite() {
+    try {
+      const stack = new Error().stack;
+      if (!stack) return [];
+      return stack.split("\n").slice(3, 8).map(sanitizeStackLine).filter(Boolean);
+    } catch (e) {
+      return [];
+    }
+  }
+  function sanitizeStackLine(line) {
+    const value = String(line || "").trim();
+    if (!value) return "";
+    return value.replace(/https?:\/\/[^\s)]+/g, (match) => {
+      try {
+        const url = new URL(match);
+        const file = url.pathname.split("/").filter(Boolean).pop() || url.hostname;
+        return `${url.hostname}/${file}`;
+      } catch (e) {
+        return `url:${hashText(match)}`;
+      }
+    }).slice(0, 180);
+  }
+  function hashText(text) {
+    const input = `${PAGE_HASH_SALT}:${String(text || "")}`;
+    let hash = 2166136261;
+    for (let i = 0; i < input.length; i++) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  }
+  function redactMetadataValue(key, value) {
+    const normalized = String(value || "").slice(0, 160);
+    if (key === "fb_api_req_friendly_name" && /^[A-Za-z0-9_.$:-]{1,120}$/.test(normalized)) {
+      return normalized;
+    }
+    return `hash:${hashText(normalized)}`;
+  }
+  function sanitizeDetails(details) {
+    const output = {};
+    if (!details || typeof details !== "object") return output;
+    for (const [key, value] of Object.entries(details)) {
+      if (value == null || typeof value === "boolean" || typeof value === "number") {
+        output[key] = value;
+      } else {
+        output[key] = String(value).slice(0, 80);
+      }
+    }
+    return output;
+  }
+  function assignMetadataValue(metadata, key, value) {
+    if (!value) return;
+    if (key === "doc_id") {
+      if (!metadata.doc_id_hash) metadata.doc_id_hash = redactMetadataValue(key, value);
+      return;
+    }
+    if (!metadata[key]) metadata[key] = redactMetadataValue(key, value);
+  }
+  function roundedElapsedSeconds() {
+    return Math.round((Date.now() - PAGE_START_MS) / 1e3);
+  }
+  function redactUrl(urlString) {
+    try {
+      const url = new URL(urlString, window.location.href);
+      const keptParams = new URLSearchParams();
+      const friendlyName = url.searchParams.get("fb_api_req_friendly_name");
+      const docId = url.searchParams.get("doc_id");
+      if (friendlyName) keptParams.set("fb_api_req_friendly_name", redactMetadataValue("fb_api_req_friendly_name", friendlyName));
+      if (docId) keptParams.set("doc_id_hash", redactMetadataValue("doc_id", docId));
+      const query = keptParams.toString();
+      return `${url.origin}${url.pathname}${query ? `?${query}` : ""}`;
+    } catch (e) {
+      return `unparseable-url:${hashText(urlString)}`;
+    }
+  }
+
+  // src/core/interceptors/websocket.js
+  function hookWebSocket() {
+    var _a;
+    if (window.__GHOSTIFY_WEBSOCKET_HOOKED__) return;
+    window.__GHOSTIFY_WEBSOCKET_HOOKED__ = true;
+    const OriginalWebSocket = window.WebSocket;
+    const originalPrototypeSend = (_a = OriginalWebSocket == null ? void 0 : OriginalWebSocket.prototype) == null ? void 0 : _a.send;
+    const socketUrls = /* @__PURE__ */ new WeakMap();
+    markGhostifyHook("websocket.install", { hasWebSocket: typeof OriginalWebSocket === "function" });
+    if (typeof OriginalWebSocket !== "function") return;
+    function shouldDrop(data, url) {
+      const blockType = shouldBlock(data, url);
+      traceNetwork("websocket", url, data, blockType);
+      traceMessengerObservation("websocket", url, data, blockType);
+      if (isMessengerDotCom) return blockType === "MSG_SEEN" || blockType === "MSG_TYPING";
+      return !!blockType;
+    }
+    if (typeof originalPrototypeSend === "function") {
+      OriginalWebSocket.prototype.send = function(data) {
+        const socketUrl = socketUrls.get(this) || this.url || "";
+        if (shouldDrop(data, socketUrl)) return;
+        return originalPrototypeSend.apply(this, arguments);
+      };
+      try {
+        Object.defineProperty(OriginalWebSocket.prototype.send, "__ghostifyWebSocketSendWrapped", {
+          value: true,
+          configurable: true
+        });
+      } catch (e) {
+      }
+    }
+    if (isMessengerDotCom) {
+      markGhostifyHook("websocket.hooked", {
+        messengerDotCom: true,
+        prototypeSend: typeof originalPrototypeSend === "function",
+        constructorProxy: false
+      });
+      return;
+    }
+    const WebSocketProxy = new Proxy(OriginalWebSocket, {
+      construct(target, args, newTarget) {
+        const ws = Reflect.construct(target, args, newTarget);
+        socketUrls.set(ws, String(args[0] || ""));
+        return ws;
+      },
+      apply(target, thisArg, args) {
+        const ws = Reflect.apply(target, thisArg, args);
+        try {
+          socketUrls.set(ws, String(args[0] || ""));
+        } catch (e) {
+        }
+        return ws;
+      }
+    });
+    window.WebSocket = WebSocketProxy;
+    markGhostifyHook("websocket.hooked", {
+      messengerDotCom: isMessengerDotCom,
+      prototypeSend: typeof originalPrototypeSend === "function",
+      constructorProxy: true
+    });
+  }
+
+  // src/utils/responses.js
+  function createBlockedPayload(blockType, url, body) {
+    const decoded = decode(body).toLowerCase();
+    const isGraphQL = String(url || "").includes("/api/graphql") || decoded.includes("fb_api_req_friendly_name") || decoded.includes("doc_id");
+    if (!isGraphQL) {
+      return { status: "ok", blocked: blockType };
+    }
+    if (String(url || "").includes("facebook.com/api/graphql") && (blockType === "MSG_SEEN" || blockType === "MSG_TYPING")) {
+      return { data: {} };
+    }
+    if (blockType === "IG_STORY") {
+      if (decoded.includes("xdt_api__v1__stories__reel__seen") || decoded.includes("polarisapiforcestoryseenmutation") || decoded.includes("9647304595318258")) {
+        return {
+          data: {
+            xdt_api__v1__stories__reel__seen: {
+              __typename: "XDTEmptyRecord"
+            }
+          }
+        };
+      }
+      return {
+        data: {
+          xdt_mark_story_reel_seen: {
+            __typename: "XDTMarkSeenResponse"
+          }
+        }
+      };
+    }
+    return { data: {} };
   }
 
   // src/core/interceptors/fetch.js
   function hookFetch() {
+    if (window.__GHOSTIFY_FETCH_HOOKED__) return;
+    window.__GHOSTIFY_FETCH_HOOKED__ = true;
     const originalFetch = window.fetch;
+    markGhostifyHook("fetch.install", { hasFetch: typeof originalFetch === "function" });
     window.fetch = async function(input, init) {
-      const url = typeof input === "string" ? input : (input == null ? void 0 : input.url) || "";
-      const body = (init == null ? void 0 : init.body) || "";
-      if (isFacebookDotCom && SETTINGS.msgSeen && !isKilled("msgSeen")) {
-        const finalUrl = url.toLowerCase();
-        const finalBody = (typeof body === "string" ? body : JSON.stringify(body || {})).toLowerCase();
-        if (finalUrl.includes("ebmessagemetadataquery") || finalBody.includes("ebmessagemetadataquery")) {
-          return new Response('{"data":{"ebmessagemetadataquery":null}}', {
-            status: 200,
-            headers: { "Content-Type": "application/json" }
-          });
-        }
-      }
+      const url = getFetchUrl(input);
+      const body = await getFetchBody(input, init);
       const blockType = shouldBlock(body, url);
+      traceNetwork("fetch", url, body, blockType);
+      traceMessengerObservation("fetch", url, body, blockType);
       if (blockType) {
-        return new Response('{"status":"ok"}', {
-          status: 200,
-          headers: { "Content-Type": "application/json" }
-        });
+        return createBlockedFetchResponse(blockType, url, body);
       }
       return originalFetch.apply(this, arguments);
     };
     const originalBeacon = navigator.sendBeacon;
-    navigator.sendBeacon = function(url, data) {
-      const blockType = shouldBlock(data, url);
-      if (blockType) {
-        return true;
+    if (typeof originalBeacon === "function") {
+      navigator.sendBeacon = function(url, data) {
+        const blockType = shouldBlock(data, getFetchUrl(url));
+        traceNetwork("beacon", getFetchUrl(url), data, blockType);
+        traceMessengerObservation("beacon", getFetchUrl(url), data, blockType);
+        if (blockType) return true;
+        return originalBeacon.apply(this, arguments);
+      };
+    }
+    markGhostifyHook("fetch.hooked", { hasBeacon: typeof originalBeacon === "function" });
+  }
+  function getFetchUrl(input) {
+    if (typeof input === "string") return input;
+    if (typeof URL !== "undefined" && input instanceof URL) return input.href;
+    if (typeof Request !== "undefined" && input instanceof Request) return input.url;
+    if (input && typeof input.url === "string") return input.url;
+    return String(input || "");
+  }
+  async function getFetchBody(input, init) {
+    if (init && init.body !== void 0 && init.body !== null) {
+      return readBody(init.body);
+    }
+    if (typeof Request !== "undefined" && input instanceof Request) {
+      try {
+        return await input.clone().text();
+      } catch (e) {
+        return "";
       }
-      return originalBeacon.apply(this, arguments);
-    };
+    }
+    return "";
+  }
+  async function readBody(body) {
+    if (typeof Blob !== "undefined" && body instanceof Blob) {
+      try {
+        return await body.text();
+      } catch (e) {
+        return "";
+      }
+    }
+    return body;
+  }
+  function createBlockedFetchResponse(blockType, url, body) {
+    return createJsonResponse(createBlockedPayload(blockType, url, body));
+  }
+  function createJsonResponse(payload) {
+    return new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 
   // src/core/interceptors/xhr.js
   function hookXHR() {
+    if (window.__GHOSTIFY_XHR_HOOKED__) return;
+    window.__GHOSTIFY_XHR_HOOKED__ = true;
     const originalXhrOpen = XMLHttpRequest.prototype.open;
     const originalXhrSend = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function(method, url) {
+    markGhostifyHook("xhr.install", {
+      hasOpen: typeof originalXhrOpen === "function",
+      hasSend: typeof originalXhrSend === "function"
+    });
+    XMLHttpRequest.prototype.open = function(method, url, async) {
+      this._ghostifyMethod = method || "GET";
       this._ghostifyUrl = url;
+      this._ghostifyAsync = async !== false;
       return originalXhrOpen.apply(this, arguments);
     };
     XMLHttpRequest.prototype.send = function(body) {
-      const url = (this._ghostifyUrl || "").toLowerCase();
-      const finalBody = (typeof body === "string" ? body : JSON.stringify(body || {})).toLowerCase();
-      if (isFacebookDotCom && SETTINGS.msgSeen && !isKilled("msgSeen")) {
-        if (url.includes("ebmessagemetadataquery") || finalBody.includes("ebmessagemetadataquery")) {
-          return;
-        }
-      }
       const blockType = shouldBlock(body, this._ghostifyUrl || "");
+      traceNetwork("xhr", this._ghostifyUrl || "", body, blockType);
+      traceMessengerObservation("xhr", this._ghostifyUrl || "", body, blockType);
       if (blockType) {
-        return;
+        return sendSyntheticJson(this, createBlockedPayload(blockType, this._ghostifyUrl || "", body));
       }
       return originalXhrSend.apply(this, arguments);
     };
+    function sendSyntheticJson(xhr, payload) {
+      const body = JSON.stringify(payload);
+      const dataUrl = `data:application/json;charset=utf-8,${encodeURIComponent(body)}`;
+      try {
+        originalXhrOpen.call(xhr, "GET", dataUrl, xhr._ghostifyAsync !== false);
+        return originalXhrSend.call(xhr);
+      } catch (e) {
+        return void 0;
+      }
+    }
+    markGhostifyHook("xhr.hooked", { ok: true });
   }
 
   // src/platforms/facebook.js
-  var inVideoArea = false;
-  var isAnyVideoPlaying = false;
-  var inChatHover = false;
-  var allowFocusUntil = 0;
-  var lastSpoofLog = 0;
   function startFacebookProtection() {
-    if (!isFacebookDotCom) return;
-    setInterval(() => {
-      if (!SETTINGS.msgSeen || isKilled("msgSeen")) return;
-      let playing = false;
-      const videos = document.getElementsByTagName("video");
-      for (let i = 0; i < videos.length; i++) {
-        if (!videos[i].paused && !videos[i].ended && videos[i].currentTime > 0) {
-          playing = true;
-          break;
-        }
-      }
-      isAnyVideoPlaying = playing;
-    }, 200);
-    const originalPlay = window.HTMLMediaElement.prototype.play;
-    window.HTMLMediaElement.prototype.play = function() {
-      if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
-        isAnyVideoPlaying = true;
-        allowFocusUntil = Date.now() + 2e3;
-      }
-      return originalPlay.apply(this, arguments);
-    };
-    const observer = new MutationObserver((mutations) => {
-      if (!SETTINGS.msgSeen || isKilled("msgSeen")) return;
-      const videos = document.getElementsByTagName("video");
-      for (let i = 0; i < videos.length; i++) {
-        const vid = videos[i];
-        if (!vid.dataset.ghostifyHooked) {
-          vid.dataset.ghostifyHooked = "true";
-          vid.addEventListener("playing", () => {
-            isAnyVideoPlaying = true;
-            allowFocusUntil = Date.now() + 2e3;
-          });
-          vid.addEventListener("play", () => {
-            allowFocusUntil = Date.now() + 2e3;
-          });
-          let container = vid;
-          for (let j = 0; j < 4; j++) {
-            if (container.parentElement) container = container.parentElement;
-          }
-          const grantFocus = () => {
-            allowFocusUntil = Date.now() + 2e3;
-          };
-          container.addEventListener("click", grantFocus, true);
-          container.addEventListener("pointerdown", grantFocus, true);
-        }
-      }
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    const trackInteraction = (e) => {
-      if (!SETTINGS.msgSeen || isKilled("msgSeen")) return;
-      let path = e.composedPath ? e.composedPath() : [];
-      let hoveringVid = false;
-      let hoveringChat = false;
-      for (let i = 0; i < path.length; i++) {
-        let el = path[i];
-        if (el.nodeType === 1) {
-          if (!hoveringVid && (el.tagName === "VIDEO" || el.getAttribute("data-video-id"))) {
-            hoveringVid = true;
-          }
-          if (!hoveringChat) {
-            let style = window.getComputedStyle(el);
-            if (style.position === "fixed" && el.getBoundingClientRect().top > window.innerHeight / 2 && el.getBoundingClientRect().width < 450) {
-              hoveringChat = true;
-            }
-            let dataPagelet = el.getAttribute("data-pagelet");
-            let role = el.getAttribute("role");
-            let ariaLabel = el.getAttribute("aria-label");
-            let dataTestid = el.getAttribute("data-testid");
-            if (dataPagelet && (dataPagelet.includes("Chat") || dataPagelet.includes("MWJewel") || dataPagelet.includes("Messenger"))) {
-              hoveringChat = true;
-            }
-            if (role === "dialog" || role === "complementary" || role === "button") {
-              if (ariaLabel && (ariaLabel.includes("Messenger") || ariaLabel.includes("Chat") || ariaLabel.includes("conversation"))) {
-                hoveringChat = true;
-              }
-            }
-            if (dataTestid && dataTestid.includes("messenger")) {
-              hoveringChat = true;
-            }
-          }
-        }
-      }
-      if (!hoveringVid) {
-        const videos = document.getElementsByTagName("video");
-        for (let i = 0; i < videos.length; i++) {
-          const vid = videos[i];
-          let container = vid;
-          for (let j = 0; j < 4; j++) {
-            if (container.parentElement) container = container.parentElement;
-          }
-          const rect = container.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            if (e.clientX >= rect.left - 150 && e.clientX <= rect.right + 150 && e.clientY >= rect.top - 150 && e.clientY <= rect.bottom + 150) {
-              hoveringVid = true;
-              break;
-            }
-          }
-        }
-      }
-      inVideoArea = hoveringVid;
-      inChatHover = hoveringVid ? false : hoveringChat;
-      if (e.type !== "mouseover") {
-        if (hoveringVid || !hoveringChat) {
-          allowFocusUntil = Date.now() + 2e3;
-        } else {
-          allowFocusUntil = 0;
-        }
-      }
-    };
-    const eventsToTrack = ["mouseover", "mousedown", "mouseup", "pointerdown", "pointerup", "click", "touchstart", "touchend"];
-    eventsToTrack.forEach((evt) => {
-      window.addEventListener(evt, trackInteraction, { capture: true, passive: true });
-    });
-  }
-  function isFacebookChatFocused() {
-    if (inChatHover) return true;
-    if (window.location.pathname.startsWith("/messages")) return true;
-    let el = document.activeElement;
-    while (el) {
-      if (el.nodeType === 1) {
-        let style = window.getComputedStyle(el);
-        if (style.position === "fixed" && el.getBoundingClientRect().top > window.innerHeight / 2 && el.getBoundingClientRect().width < 450) return true;
-        let dataPagelet = el.getAttribute("data-pagelet");
-        let ariaLabel = el.getAttribute("aria-label");
-        if (dataPagelet && (dataPagelet.includes("Chat") || dataPagelet.includes("MWJewel") || dataPagelet.includes("Messenger"))) return true;
-        let role = el.getAttribute("role");
-        if (role === "dialog" || role === "complementary") {
-          if (ariaLabel && (ariaLabel.includes("Messenger") || ariaLabel.includes("Chat") || ariaLabel.includes("conversation"))) return true;
-        }
-      }
-      el = el.parentElement;
-    }
-    return false;
+    window.__GHOSTIFY_FACEBOOK_PROTECTION__ = true;
   }
   function getFacebookSpoofState() {
-    if (!SETTINGS.msgSeen || isKilled("msgSeen")) return null;
-    if (isFacebookChatFocused()) {
-      allowFocusUntil = 0;
-      const now2 = Date.now();
-      if (now2 - lastSpoofLog > 3e3) {
-        lastSpoofLog = now2;
-      }
+    if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
       return "unfocused";
     }
-    if (isAnyVideoPlaying || inVideoArea || Date.now() < allowFocusUntil) {
-      return "video";
-    }
-    const now = Date.now();
-    if (now - lastSpoofLog > 3e3) {
-      lastSpoofLog = now;
-    }
-    return "unfocused";
+    return null;
   }
 
   // src/platforms/instagram.js
-  var isScrolling = false;
-  var scrollTimeout = null;
   function startInstagramProtection() {
-    if (!isInstagram) return;
-    window.addEventListener("scroll", () => {
-      isScrolling = true;
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        isScrolling = false;
-      }, 150);
-    }, true);
+    return isInstagram;
   }
   function getInstagramSpoofState() {
-    if (!SETTINGS.igSeen || isKilled("igSeen")) return null;
-    if (isScrolling) {
-      return false;
+    const seenEnabled = SETTINGS.igSeen && !isKilled("igSeen");
+    const storyEnabled = SETTINGS.igStory && !isKilled("igStory");
+    if (!seenEnabled && !storyEnabled) return null;
+    if (storyEnabled && isStorySurface()) {
+      return "unfocused";
     }
-    return "unfocused";
+    if (seenEnabled) {
+      return "unfocused";
+    }
+    return null;
+  }
+  function isStorySurface() {
+    return window.location.pathname.startsWith("/stories/");
   }
 
   // src/platforms/messenger.js
   function getMessengerSpoofState() {
-    if (isMessengerDotCom && SETTINGS.msgSeen && !isKilled("msgSeen")) {
+    if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
       return "unfocused";
     }
     return null;
   }
 
   // src/core/interceptors/focus.js
+  var FOCUS_EVENTS = ["visibilitychange", "webkitvisibilitychange", "blur", "focus", "focusin", "focusout"];
   function shouldSpoofVisibility() {
     if (isMessengerDotCom) {
       const state = getMessengerSpoofState();
@@ -428,96 +1564,155 @@
     return false;
   }
   function hookVisibility() {
+    if (window.__GHOSTIFY_VISIBILITY_HOOKED__) return;
+    window.__GHOSTIFY_VISIBILITY_HOOKED__ = true;
     const originalHasFocus = document.hasFocus.bind(document);
+    const originalVisibilityState = getPropertyDescriptor("visibilityState");
+    const originalHidden = getPropertyDescriptor("hidden");
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+    const wrappedListeners = /* @__PURE__ */ new WeakMap();
     Object.defineProperty(document, "hasFocus", {
       value: function() {
         const spoof = shouldSpoofVisibility();
         if (spoof === "hidden" || spoof === "unfocused") return false;
         return originalHasFocus();
-      }
+      },
+      configurable: true
     });
     Object.defineProperty(document, "visibilityState", {
       get: function() {
         const spoof = shouldSpoofVisibility();
         if (spoof === "hidden") return "hidden";
-        return "visible";
-      }
+        return (originalVisibilityState == null ? void 0 : originalVisibilityState.get) ? originalVisibilityState.get.call(document) : "visible";
+      },
+      configurable: true
     });
     Object.defineProperty(document, "hidden", {
       get: function() {
         const spoof = shouldSpoofVisibility();
         if (spoof === "hidden") return true;
-        return false;
-      }
+        return (originalHidden == null ? void 0 : originalHidden.get) ? originalHidden.get.call(document) : false;
+      },
+      configurable: true
     });
-    const origAddEvt = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function(type, listener, opt) {
-      if (["visibilitychange", "webkitvisibilitychange", "blur", "focus", "focusin", "focusout"].includes(type)) {
-        const wrappedListener = function(e) {
-          const spoof = shouldSpoofVisibility();
-          if (spoof) {
-            if (spoof === "video") {
-              if (type === "blur" || type === "focus" || type === "focusin" || type === "focusout") {
-                if (this === window || this === document || e && (e.target === window || e.target === document)) {
-                  return;
-                }
-              }
-              return listener.call(this, e);
-            }
-            if (type === "blur" || type === "focus" || type === "focusin" || type === "focusout") {
-              if (this === window || this === document || e && (e.target === window || e.target === document)) {
-                return;
-              }
-            } else {
-              return;
-            }
-          }
-          return listener.call(this, e);
-        };
-        return origAddEvt.call(this, type, wrappedListener, opt);
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+      if (!FOCUS_EVENTS.includes(type) || !listener) {
+        return originalAddEventListener.call(this, type, listener, options);
       }
-      return origAddEvt.call(this, type, listener, opt);
+      const wrapped = getWrappedListener(type, listener, wrappedListeners);
+      return originalAddEventListener.call(this, type, wrapped, options);
     };
+    EventTarget.prototype.removeEventListener = function(type, listener, options) {
+      const wrapped = FOCUS_EVENTS.includes(type) ? findWrappedListener(type, listener, wrappedListeners) : null;
+      return originalRemoveEventListener.call(this, type, wrapped || listener, options);
+    };
+  }
+  function getPropertyDescriptor(prop) {
+    let proto = Document.prototype;
+    while (proto) {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, prop);
+      if (descriptor) return descriptor;
+      proto = Object.getPrototypeOf(proto);
+    }
+    return null;
+  }
+  function getWrappedListener(type, listener, wrappedListeners) {
+    let typeMap = wrappedListeners.get(listener);
+    if (!typeMap) {
+      typeMap = /* @__PURE__ */ new Map();
+      wrappedListeners.set(listener, typeMap);
+    }
+    if (typeMap.has(type)) return typeMap.get(type);
+    const wrapped = function(event) {
+      const spoof = shouldSpoofVisibility();
+      if (spoof) {
+        if (type === "blur" || type === "focus" || type === "focusin" || type === "focusout") {
+          if (this === window || this === document || event && (event.target === window || event.target === document)) {
+            return;
+          }
+        } else if (spoof === "hidden") {
+          return;
+        }
+      }
+      if (typeof listener === "function") {
+        return listener.call(this, event);
+      }
+      if (listener && typeof listener.handleEvent === "function") {
+        return listener.handleEvent.call(listener, event);
+      }
+    };
+    typeMap.set(type, wrapped);
+    return wrapped;
+  }
+  function findWrappedListener(type, listener, wrappedListeners) {
+    var _a;
+    if (!listener) return null;
+    return ((_a = wrappedListeners.get(listener)) == null ? void 0 : _a.get(type)) || null;
   }
 
   // src/ghost.js
   (function() {
     "use strict";
-    if (isMessenger) {
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((r) => r.unregister());
-        });
-        Object.defineProperty(navigator, "serviceWorker", {
-          value: {
-            register: () => new Promise(() => {
-            }),
-            getRegistrations: () => Promise.resolve([]),
-            ready: new Promise(() => {
-            })
-          }
-        });
-      }
+    if (window.__GHOSTIFY_GHOST_HOOKED__) return;
+    window.__GHOSTIFY_GHOST_HOOKED__ = true;
+    traceMessengerHealth("ghost.init", {
+      world: "MAIN",
+      readyState: document.readyState
+    });
+    if (isFacebookDotCom && !isMessengerDotCom && window.top !== window) {
+      traceMessengerHealth("facebook.child_frame_reduced", { reason: "network_hooks_only" });
     }
+    window.postMessage({
+      type: "GHOSTIFY_SETTINGS_REQUEST",
+      source: "GHOSTIFY_PAGE"
+    }, "*");
     window.addEventListener("message", (event) => {
       if (event.source !== window) return;
+      if (!event.data || event.data.source !== "GHOSTIFY_EXTENSION") return;
       if (event.data.type === "GHOSTIFY_CONFIG_UPDATE") {
         const CONFIG = event.data.config;
-        updatePatterns(CONFIG.patterns);
-        KILLED_FEATURES.clear();
-        if (CONFIG.killSwitch) {
-          CONFIG.killSwitch.forEach((f) => KILLED_FEATURES.add(f));
-        }
+        updatePatterns(CONFIG == null ? void 0 : CONFIG.patterns);
+        updateKillSwitch(CONFIG == null ? void 0 : CONFIG.killSwitch);
       }
       if (event.data.type === "GHOSTIFY_SETTINGS_UPDATE") {
-        Object.assign(SETTINGS, event.data.settings);
+        const settings = normalizeSettings(event.data.settings);
+        if (settings) {
+          Object.assign(SETTINGS, settings);
+          markSettingsReady();
+          traceMessengerHealth("settings.update", {
+            msgSeen: SETTINGS.msgSeen,
+            msgTyping: SETTINGS.msgTyping
+          });
+        }
       }
     });
-    hookVisibility();
     hookWebSocket();
+    if (isInstagram || isMessengerDotCom || isFacebookDotCom) {
+      hookVisibility();
+    }
     hookFetch();
     hookXHR();
     startFacebookProtection();
     startInstagramProtection();
   })();
+  function normalizeSettings(settings) {
+    if (!settings || typeof settings !== "object") return null;
+    const normalized = {};
+    for (const key of Object.keys(SETTINGS)) {
+      if (typeof settings[key] === "boolean") {
+        normalized[key] = settings[key];
+      }
+    }
+    return Object.keys(normalized).length ? normalized : null;
+  }
+  function updateKillSwitch(killSwitch) {
+    KILLED_FEATURES.clear();
+    if (!Array.isArray(killSwitch)) return;
+    for (const feature of killSwitch) {
+      if (typeof feature === "string") {
+        KILLED_FEATURES.add(feature);
+      }
+    }
+  }
 })();

@@ -1,43 +1,69 @@
-import { isFacebookDotCom, SETTINGS, isKilled } from '../../config.js';
 import { shouldBlock } from '../../utils/network.js';
+import { markGhostifyHook, traceMessengerObservation, traceNetwork } from '../../utils/debug.js';
+import { isMessengerDotCom } from '../../config.js';
 
 export function hookWebSocket() {
-    const OriginalWebSocket = window.WebSocket;
-    const originalWSSend = OriginalWebSocket.prototype.send;
+    if (window.__GHOSTIFY_WEBSOCKET_HOOKED__) return;
+    window.__GHOSTIFY_WEBSOCKET_HOOKED__ = true;
 
-    function checkHardBlock(data) {
-        if (!(isFacebookDotCom && SETTINGS.msgSeen && !isKilled('msgSeen'))) return false;
-        try {
-            const raw = (data instanceof ArrayBuffer || ArrayBuffer.isView(data))
-                ? new TextDecoder().decode(data) : (typeof data === 'string' ? data : '');
-            if (raw.includes('read_receipt')) return true;
-            if (raw.includes('last_read_watermark_ts') && !raw.includes('send_type')) return true;
-        } catch (e) { }
-        return false;
+    const OriginalWebSocket = window.WebSocket;
+    const originalPrototypeSend = OriginalWebSocket?.prototype?.send;
+    const socketUrls = new WeakMap();
+    markGhostifyHook('websocket.install', { hasWebSocket: typeof OriginalWebSocket === 'function' });
+
+    if (typeof OriginalWebSocket !== 'function') return;
+
+    function shouldDrop(data, url) {
+        const blockType = shouldBlock(data, url);
+        traceNetwork('websocket', url, data, blockType);
+        traceMessengerObservation('websocket', url, data, blockType);
+        if (isMessengerDotCom) return blockType === 'MSG_SEEN' || blockType === 'MSG_TYPING';
+        return !!blockType;
     }
 
-    OriginalWebSocket.prototype.send = function (data) {
-        if (checkHardBlock(data)) return;
-        const blockType = shouldBlock(data);
-        if (blockType) {
-            return;
-        }
-        return originalWSSend.apply(this, arguments);
-    };
-
-    window.WebSocket = function (url, protocols) {
-        const ws = protocols ? new OriginalWebSocket(url, protocols) : new OriginalWebSocket(url);
-        const boundSend = ws.send.bind(ws);
-        ws.send = function (data) {
-            if (checkHardBlock(data)) return;
-            const blockType = shouldBlock(data);
-            if (blockType) {
-                return;
-            }
-            return boundSend(data);
+    if (typeof originalPrototypeSend === 'function') {
+        OriginalWebSocket.prototype.send = function (data) {
+            const socketUrl = socketUrls.get(this) || this.url || '';
+            if (shouldDrop(data, socketUrl)) return;
+            return originalPrototypeSend.apply(this, arguments);
         };
-        return ws;
-    };
-    window.WebSocket.prototype = OriginalWebSocket.prototype;
-    Object.assign(window.WebSocket, OriginalWebSocket);
+
+        try {
+            Object.defineProperty(OriginalWebSocket.prototype.send, '__ghostifyWebSocketSendWrapped', {
+                value: true,
+                configurable: true
+            });
+        } catch (e) { }
+    }
+
+    if (isMessengerDotCom) {
+        markGhostifyHook('websocket.hooked', {
+            messengerDotCom: true,
+            prototypeSend: typeof originalPrototypeSend === 'function',
+            constructorProxy: false
+        });
+        return;
+    }
+
+    const WebSocketProxy = new Proxy(OriginalWebSocket, {
+        construct(target, args, newTarget) {
+            const ws = Reflect.construct(target, args, newTarget);
+            socketUrls.set(ws, String(args[0] || ''));
+            return ws;
+        },
+        apply(target, thisArg, args) {
+            const ws = Reflect.apply(target, thisArg, args);
+            try {
+                socketUrls.set(ws, String(args[0] || ''));
+            } catch (e) { }
+            return ws;
+        }
+    });
+
+    window.WebSocket = WebSocketProxy;
+    markGhostifyHook('websocket.hooked', {
+        messengerDotCom: isMessengerDotCom,
+        prototypeSend: typeof originalPrototypeSend === 'function',
+        constructorProxy: true
+    });
 }

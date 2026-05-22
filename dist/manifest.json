@@ -6,14 +6,12 @@
     "author": "Hendrizzzz",
     "permissions": [
         "storage",
-        "scripting",
         "declarativeNetRequest"
     ],
     "host_permissions": [
-        "*://*.instagram.com/*",
-        "*://*.messenger.com/*",
-        "*://*.facebook.com/*",
-        "https://raw.githubusercontent.com/*"
+        "https://*.instagram.com/*",
+        "https://*.messenger.com/*",
+        "https://*.facebook.com/*"
     ],
     "background": {
         "service_worker": "background.js"
@@ -30,39 +28,56 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.instagram.com/*",
-                "*://*.messenger.com/*",
-                "*://*.facebook.com/*"
+                "https://*.instagram.com/*",
+                "https://*.messenger.com/*",
+                "https://*.facebook.com/*"
             ],
             "js": [
                 "js/content.js"
             ],
             "run_at": "document_start",
-            "world": "ISOLATED"
+            "world": "ISOLATED",
+            "all_frames": true,
+            "match_origin_as_fallback": true
         },
         {
             "matches": [
-                "*://*.instagram.com/*",
-                "*://*.messenger.com/*",
-                "*://*.facebook.com/*"
+                "https://*.instagram.com/*",
+                "https://*.messenger.com/*",
+                "https://*.facebook.com/*"
+            ],
+            "js": [
+                "js/messenger_patch.js"
+            ],
+            "run_at": "document_start",
+            "world": "MAIN",
+            "all_frames": true,
+            "match_origin_as_fallback": true
+        },
+        {
+            "matches": [
+                "https://*.instagram.com/*",
+                "https://*.messenger.com/*",
+                "https://*.facebook.com/*"
             ],
             "js": [
                 "js/ghost.js"
             ],
             "run_at": "document_start",
-            "world": "MAIN"
+            "world": "MAIN",
+            "all_frames": true,
+            "match_origin_as_fallback": true
         }
     ],
     "web_accessible_resources": [
         {
             "resources": [
-                "config/patterns.json",
-                "js/messenger_patch.js"
+                "config/patterns.json"
             ],
             "matches": [
-                "*://*.instagram.com/*",
-                "*://*.messenger.com/*",
-                "*://*.facebook.com/*"
+                "https://*.instagram.com/*",
+                "https://*.messenger.com/*",
+                "https://*.facebook.com/*"
             ]
         }
     ]

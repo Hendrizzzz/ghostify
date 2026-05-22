@@ -1,24 +1,30 @@
 export const SETTINGS = {
-    msgSeen: true,
-    igSeen: true,
     igTyping: true,
-    igStory: false
+    igSeen: true,
+    igStory: true,
+    msgTyping: true,
+    msgSeen: true,
+    msgStory: true
 };
 
-export const IG_BLOCKED_STORY_URLS = new Set();
-export const IG_BLOCKED_UNSENT_URLS = new Set();
 export const KILLED_FEATURES = new Set();
+export let SETTINGS_READY = false;
 
-const hostname = window.location.hostname;
-export const isFacebookDotCom = hostname.includes('facebook');
-export const isMessengerDotCom = hostname.includes('messenger');
+const hostname = window.location.hostname.toLowerCase();
+
+function isHost(domain) {
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+}
+
+export const isFacebookDotCom = isHost('facebook.com');
+export const isMessengerDotCom = isHost('messenger.com');
 export const isMessenger = isFacebookDotCom || isMessengerDotCom;
-export const isInstagram = hostname.includes('instagram');
+export const isInstagram = isHost('instagram.com');
 
 export function isKilled(feature) {
     return KILLED_FEATURES.has(feature);
 }
 
-export function isDebugMode() {
-    return localStorage.getItem('GHOSTIFY_DEBUG') === 'true';
+export function markSettingsReady() {
+    SETTINGS_READY = true;
 }

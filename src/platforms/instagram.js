@@ -1,25 +1,26 @@
 import { isInstagram, SETTINGS, isKilled } from '../config.js';
 
-let isScrolling = false;
-let scrollTimeout = null;
-
 export function startInstagramProtection() {
-    if (!isInstagram) return;
-
-    window.addEventListener('scroll', () => {
-        isScrolling = true;
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            isScrolling = false;
-        }, 150);
-    }, true);
+    return isInstagram;
 }
 
 export function getInstagramSpoofState() {
-    if (!SETTINGS.igSeen || isKilled('igSeen')) return null;
+    const seenEnabled = SETTINGS.igSeen && !isKilled('igSeen');
+    const storyEnabled = SETTINGS.igStory && !isKilled('igStory');
 
-    if (isScrolling) {
-        return false;
+    if (!seenEnabled && !storyEnabled) return null;
+
+    if (storyEnabled && isStorySurface()) {
+        return 'unfocused';
     }
-    return 'unfocused';
+
+    if (seenEnabled) {
+        return 'unfocused';
+    }
+
+    return null;
+}
+
+function isStorySurface() {
+    return window.location.pathname.startsWith('/stories/');
 }

@@ -1,10 +1,11 @@
 {
   "name": "ghostify",
   "version": "2.0.0",
-  "description": "<div align=\"center\">",
+  "description": "Privacy controls for Instagram, Facebook, and Messenger.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node build.js",
+    "test": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -12,7 +13,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Hendrizzzz/Ghostify/issues"
   },
