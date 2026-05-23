@@ -3,71 +3,87 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=300">
+    <meta name="viewport" content="width=320">
     <title>Ghostify</title>
     <link rel="stylesheet" href="css/popup.css">
 </head>
 
 <body>
-    <div class="header">
-        <img src="icons/icon32.png" alt="" class="header-icon">
-        <div class="header-text">
+    <main class="popup-shell" aria-label="Ghostify privacy controls">
+        <header class="header">
+            <img src="icons/icon32.png" alt="" class="header-icon">
             <h1>Ghostify</h1>
-            <p>Privacy controls for social media</p>
-        </div>
-    </div>
+        </header>
 
-    <div class="platform">
-        <div class="platform-label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="2" width="20" height="20" rx="5" />
-                <circle cx="12" cy="12" r="4" />
-            </svg>
-            Instagram
-        </div>
-        <div class="card">
-            <div class="row">
-                <span class="row-label">Hide Typing</span>
-                <label class="switch"><input type="checkbox" id="ig-typing"><span class="track"></span></label>
+        <section class="platform" aria-labelledby="instagram-heading">
+            <div class="platform-label" id="instagram-heading">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="5" />
+                    <circle cx="12" cy="12" r="4" />
+                </svg>
+                <span>Instagram</span>
             </div>
-            <div class="row">
-                <span class="row-label">Hide Seen</span>
-                <label class="switch"><input type="checkbox" id="ig-seen"><span class="track"></span></label>
+            <div class="card">
+                <div class="row">
+                    <span class="row-label">
+                        <span class="feature-icon seen-icon" aria-hidden="true"></span>
+                        <span>Seen</span>
+                    </span>
+                    <label class="switch" aria-label="Hide Instagram seen receipts"><input type="checkbox" id="ig-seen"><span class="track"></span></label>
+                </div>
+                <div class="row">
+                    <span class="row-label">
+                        <span class="feature-icon typing-icon" aria-hidden="true"></span>
+                        <span>Typing</span>
+                    </span>
+                    <label class="switch" aria-label="Hide Instagram typing indicator"><input type="checkbox" id="ig-typing"><span class="track"></span></label>
+                </div>
+                <div class="row">
+                    <span class="row-label">
+                        <span class="feature-icon story-icon" aria-hidden="true"></span>
+                        <span>Stories</span>
+                    </span>
+                    <label class="switch" aria-label="Hide Instagram story views"><input type="checkbox" id="ig-story"><span class="track"></span></label>
+                </div>
             </div>
-            <div class="row">
-                <span class="row-label">Hide Story Views</span>
-                <label class="switch"><input type="checkbox" id="ig-story"><span class="track"></span></label>
-            </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="platform">
-        <div class="platform-label">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-            </svg>
-            Messenger / Facebook
-        </div>
-        <div class="card">
-            <div class="row">
-                <span class="row-label">Hide Typing</span>
-                <label class="switch"><input type="checkbox" id="msg-typing"><span class="track"></span></label>
+        <section class="platform" aria-labelledby="messenger-heading">
+            <div class="platform-label" id="messenger-heading">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.915 1.455 5.515 3.73 7.214V22l3.408-1.87c.91.252 1.872.389 2.862.389 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2Zm.995 12.468-2.547-2.716-4.97 2.716 5.468-5.804 2.608 2.716 4.91-2.716-5.469 5.804Z" />
+                </svg>
+                <span>Messenger / Facebook</span>
             </div>
+            <div class="card">
+                <div class="row">
+                    <span class="row-label">
+                        <span class="feature-icon seen-icon" aria-hidden="true"></span>
+                        <span>Seen</span>
+                    </span>
+                    <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
+                </div>
+                <div class="row">
+                    <span class="row-label">
+                        <span class="feature-icon typing-icon" aria-hidden="true"></span>
+                        <span>Typing</span>
+                    </span>
+                    <label class="switch" aria-label="Hide Messenger and Facebook typing indicator"><input type="checkbox" id="msg-typing"><span class="track"></span></label>
+                </div>
+                <div class="row">
+                    <span class="row-label">
+                        <span class="feature-icon story-icon" aria-hidden="true"></span>
+                        <span>Stories</span>
+                    </span>
+                    <label class="switch" aria-label="Hide Messenger and Facebook story views"><input type="checkbox" id="msg-story"><span class="track"></span></label>
+                </div>
+            </div>
+        </section>
 
-            <div class="row">
-                <span class="row-label">Hide Seen</span>
-                <label class="switch"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
-            </div>
-            <div class="row">
-                <span class="row-label">Hide Story Views</span>
-                <label class="switch"><input type="checkbox" id="msg-story"><span class="track"></span></label>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <span id="version-number"></span>
-    </div>
+        <footer class="footer">
+            <span id="version-number"></span>
+        </footer>
+    </main>
 
     <script src="js/popup.js"></script>
 </body>
