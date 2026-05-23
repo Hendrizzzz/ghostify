@@ -1,4 +1,4 @@
-import { shouldBlock } from '../../utils/network.js';
+import { sanitizeMessengerNetworkPayload, shouldBlock } from '../../utils/network.js';
 import { markGhostifyHook, traceMessengerObservation, traceNetwork } from '../../utils/debug.js';
 import { createBlockedPayload } from '../../utils/responses.js';
 
@@ -21,13 +21,18 @@ export function hookXHR() {
     };
 
     XMLHttpRequest.prototype.send = function (body) {
-        const blockType = shouldBlock(body, this._ghostifyUrl || '', { method: this._ghostifyMethod || 'GET' });
-        traceNetwork('xhr', this._ghostifyUrl || '', body, blockType);
-        traceMessengerObservation('xhr', this._ghostifyUrl || '', body, blockType);
+        const url = this._ghostifyUrl || '';
+        const method = this._ghostifyMethod || 'GET';
+        const sanitized = sanitizeMessengerNetworkPayload(body, url, { method });
+        const inspectBody = sanitized.changed ? sanitized.data : body;
+        const blockType = shouldBlock(inspectBody, url, { method });
+        traceNetwork('xhr', url, inspectBody, blockType);
+        traceMessengerObservation('xhr', url, inspectBody, blockType);
         if (blockType) {
-            return sendSyntheticJson(this, createBlockedPayload(blockType, this._ghostifyUrl || '', body));
+            return sendSyntheticJson(this, createBlockedPayload(blockType, url, inspectBody));
         }
 
+        if (sanitized.changed) return originalXhrSend.call(this, sanitized.data);
         return originalXhrSend.apply(this, arguments);
     };
 

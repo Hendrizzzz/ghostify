@@ -1,4 +1,4 @@
-import { shouldBlock } from '../../utils/network.js';
+import { sanitizeMessengerNetworkPayload, shouldBlock } from '../../utils/network.js';
 import { markGhostifyHook, traceMessengerObservation, traceNetwork } from '../../utils/debug.js';
 import { isMessengerDotCom } from '../../config.js';
 
@@ -13,18 +13,24 @@ export function hookWebSocket() {
 
     if (typeof OriginalWebSocket !== 'function') return;
 
-    function shouldDrop(data, url) {
-        const blockType = shouldBlock(data, url);
-        traceNetwork('websocket', url, data, blockType);
-        traceMessengerObservation('websocket', url, data, blockType);
-        if (isMessengerDotCom) return blockType === 'MSG_SEEN' || blockType === 'MSG_TYPING';
-        return !!blockType;
+    function inspectSend(data, url) {
+        const sanitized = sanitizeMessengerNetworkPayload(data, url);
+        const inspectData = sanitized.changed ? sanitized.data : data;
+        const blockType = shouldBlock(inspectData, url);
+        traceNetwork('websocket', url, inspectData, blockType);
+        traceMessengerObservation('websocket', url, inspectData, blockType);
+        return {
+            data: inspectData,
+            drop: isMessengerDotCom ? blockType === 'MSG_SEEN' || blockType === 'MSG_TYPING' : !!blockType
+        };
     }
 
     if (typeof originalPrototypeSend === 'function') {
         OriginalWebSocket.prototype.send = function (data) {
             const socketUrl = socketUrls.get(this) || this.url || '';
-            if (shouldDrop(data, socketUrl)) return;
+            const inspected = inspectSend(data, socketUrl);
+            if (inspected.drop) return;
+            if (inspected.data !== data) return originalPrototypeSend.call(this, inspected.data);
             return originalPrototypeSend.apply(this, arguments);
         };
 
