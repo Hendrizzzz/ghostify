@@ -38,8 +38,30 @@ class FakeXHR {
 }
 
 function FakeEventTarget() { }
-FakeEventTarget.prototype.addEventListener = function () { };
-FakeEventTarget.prototype.removeEventListener = function () { };
+FakeEventTarget.prototype.addEventListener = function (type, listener) {
+    if (!listener) return;
+    this.__listeners = this.__listeners || {};
+    this.__listeners[type] = this.__listeners[type] || [];
+    this.__listeners[type].push(listener);
+};
+FakeEventTarget.prototype.removeEventListener = function (type, listener) {
+    const listeners = this.__listeners?.[type];
+    if (!listeners) return;
+    const index = listeners.indexOf(listener);
+    if (index >= 0) listeners.splice(index, 1);
+};
+FakeEventTarget.prototype.dispatchEvent = function (event) {
+    const targetEvent = event || {};
+    targetEvent.target = targetEvent.target || this;
+    for (const listener of this.__listeners?.[targetEvent.type] || []) {
+        if (typeof listener === 'function') {
+            listener.call(this, targetEvent);
+        } else if (listener && typeof listener.handleEvent === 'function') {
+            listener.handleEvent.call(listener, targetEvent);
+        }
+    }
+    return true;
+};
 
 class FakeRequest {
     constructor(input, init = {}) {
@@ -73,6 +95,8 @@ class FakeRequest {
 }
 
 function FakeDocument() { }
+FakeDocument.prototype = Object.create(FakeEventTarget.prototype);
+FakeDocument.prototype.constructor = FakeDocument;
 Object.defineProperty(FakeDocument.prototype, 'visibilityState', {
     get() { return 'visible'; },
     configurable: true
@@ -252,6 +276,42 @@ const messengerMessageRequestsQuery = `fb_api_req_friendly_name=MWMessageRequest
     cursor: 'redacted-cursor'
 }))}`;
 
+const lsMessageRequestThreadListLoad = JSON.stringify({
+    issue_new_task: true,
+    tasks: [{
+        label: 'MWMessageRequestsThreadListPaginationQuery',
+        queue_name: 'mwchat_fetch_thread_list',
+        payload: {
+            folder: 'message_requests',
+            thread_key: { thread_fbid: 'redacted-thread' },
+            cursor: 'redacted-cursor',
+            last_read_watermark: 1779530000000
+        }
+    }]
+});
+
+const lsMessageRequestLoadWithFalseReceiptFlag = JSON.stringify({
+    issue_new_task: true,
+    tasks: [{
+        label: 'MWMessageRequestsThreadListPaginationQuery',
+        queue_name: 'mwchat_fetch_thread_list',
+        payload: {
+            folder: 'message_requests',
+            thread_key: { thread_fbid: 'redacted-thread' },
+            should_send_read_receipt: false
+        }
+    }]
+});
+
+const messageRequestRoutePreloadMutationShape =
+    `fb_api_req_friendly_name=CometMessengerMessageRequestsRoutePreloadMutation&doc_id=redacted-doc&variables=${encodeURIComponent(JSON.stringify({
+        folder: 'message_requests',
+        thread_id: 'redacted-thread',
+        cursor: 'redacted-cursor',
+        last_read_watermark: 1779530000000,
+        route_name: 'message_requests'
+    }))}`;
+
 const facebookVideoAdGraphQL = `fb_api_req_friendly_name=CometVideoPlayerAdBreakQuery&doc_id=redacted-doc&variables=${encodeURIComponent(JSON.stringify({
     video_id: 'redacted-video',
     player_state: 'ad_break',
@@ -346,17 +406,15 @@ const instagramStorySeenMediaGraphQLWithDocId = JSON.stringify({
 });
 
 function makeGhostPage(page = {}, settings = {}) {
-    const listeners = {};
     const fetchCalls = [];
     const document = new FakeDocument();
     document.readyState = 'complete';
     document.hasFocus = () => true;
-    document.addEventListener = function () { };
 
     class PageFakeWebSocket extends FakeWebSocket { }
     class PageFakeXHR extends FakeXHR { }
 
-    const window = {
+    const window = Object.assign(Object.create(FakeEventTarget.prototype), {
         location: {
             hostname: page.hostname || 'www.messenger.com',
             pathname: page.pathname || '/t/123',
@@ -365,14 +423,8 @@ function makeGhostPage(page = {}, settings = {}) {
             href: page.href || `https://${page.hostname || 'www.messenger.com'}${page.pathname || '/t/123'}${page.search || ''}${page.hash || ''}`
         },
         document,
-        addEventListener(type, listener) {
-            listeners[type] = listeners[type] || [];
-            listeners[type].push(listener);
-        },
         postMessage(message) {
-            for (const listener of listeners.message || []) {
-                listener({ source: window, data: message });
-            }
+            window.dispatchEvent({ type: 'message', source: window, data: message, target: window });
         },
         fetch: async (input, init) => {
             fetchCalls.push({ input, init });
@@ -390,7 +442,7 @@ function makeGhostPage(page = {}, settings = {}) {
         ArrayBuffer,
         URLSearchParams,
         FormData: class { }
-    };
+    });
     window.window = window;
 
     const context = {
@@ -972,6 +1024,60 @@ async function testMessageRequestsAndInboxQueriesAreAllowed() {
         'allowed',
         'Facebook message-request GraphQL queries must not be treated as read receipts'
     );
+
+    assert.strictEqual(
+        await fetchOutcome(messengerWindow, lsMessageRequestThreadListLoad),
+        'allowed',
+        'Messenger.com LS message-request thread-list loads must not be treated as read receipts'
+    );
+    assert.strictEqual(
+        websocketOutcome(messengerWindow, lsMessageRequestThreadListLoad),
+        'allowed',
+        'Messenger.com WebSocket message-request thread-list loads must not be dropped'
+    );
+    assert.strictEqual(
+        xhrSend(messengerWindow, lsMessageRequestThreadListLoad).result,
+        'sent',
+        'Messenger.com XHR message-request thread-list loads must not be replaced with synthetic JSON'
+    );
+
+    assert.strictEqual(
+        await fetchOutcome(messengerWindow, lsMessageRequestLoadWithFalseReceiptFlag),
+        'allowed',
+        'Messenger.com message-request loads with should_send_read_receipt=false must stay allowed'
+    );
+    assert.strictEqual(
+        websocketOutcome(messengerWindow, lsMessageRequestLoadWithFalseReceiptFlag),
+        'allowed',
+        'Messenger.com WebSocket message-request loads with should_send_read_receipt=false must stay allowed'
+    );
+
+    assert.strictEqual(
+        await fetchOutcomeAt(messengerWindow, '/api/graphql/', messageRequestRoutePreloadMutationShape),
+        'allowed',
+        'Messenger.com message-request route preload mutation-shaped loads must stay allowed'
+    );
+    assert.strictEqual(
+        await fetchOutcomeAt(facebookWindow, '/api/graphql/', messageRequestRoutePreloadMutationShape),
+        'allowed',
+        'Facebook message-request route preload mutation-shaped loads must stay allowed'
+    );
+
+    const patchContext = makeMessengerPatchPage();
+    const workerResult = workerOutcome(patchContext, JSON.parse(lsMessageRequestLoadWithFalseReceiptFlag));
+    assert.strictEqual(
+        workerResult.result,
+        'worker-sent',
+        'Messenger patch worker bridge must forward message-request loads with should_send_read_receipt=false'
+    );
+    assert.strictEqual(workerResult.blocked, 0);
+    const portResult = portOutcome(patchContext, JSON.parse(lsMessageRequestThreadListLoad));
+    assert.strictEqual(
+        portResult.result,
+        'port-sent',
+        'Messenger patch MessagePort bridge must forward message-request thread-list loads'
+    );
+    assert.strictEqual(portResult.blocked, 0);
 }
 
 async function testVideoAdAndMediaTrafficIsAllowed() {
@@ -1100,52 +1206,136 @@ async function testPrivacyWritesStillBlockWithRequestOrMediaContext() {
 }
 
 function testFacebookWatchDoesNotSpoofFocus() {
-    const facebookWatchWindow = makeGhostPage({
-        hostname: 'www.facebook.com',
-        pathname: '/watch',
-        href: 'https://www.facebook.com/watch'
-    });
+    const cases = [
+        ['www.facebook.com', '/watch', true, 'Facebook Watch/video surfaces must keep native focus so ads and players can progress'],
+        ['www.facebook.com', '/', true, 'General Facebook feed surfaces must keep native focus so in-feed video ads can progress'],
+        ['www.facebook.com', '/messages/t/redacted-thread', false, 'Facebook messaging surfaces should still spoof focus for read privacy'],
+        ['www.facebook.com', '/messages/requests', true, 'Facebook message-request inbox must keep native focus so requests hydrate'],
+        ['www.facebook.com', '/messages/requests/t/redacted-thread', true, 'Facebook message-request threads must keep native focus so chats load'],
+        ['www.facebook.com', '/messages/message-requests', true, 'Facebook message-request alias routes must keep native focus'],
+        ['www.facebook.com', '/messages/message_requests', true, 'Facebook underscored message-request alias routes must keep native focus'],
+        ['www.messenger.com', '/t/redacted-thread', false, 'Messenger.com conversation routes should still spoof focus for read privacy'],
+        ['www.messenger.com', '/requests', true, 'Messenger.com request inbox must keep native focus so requests hydrate'],
+        ['www.messenger.com', '/requests/t/redacted-thread', true, 'Messenger.com message-request conversation routes must keep native focus so chats load'],
+        ['www.messenger.com', '/message-requests/t/redacted-thread', true, 'Messenger.com message-request alias routes must keep native focus'],
+        ['www.messenger.com', '/message_requests/t/redacted-thread', true, 'Messenger.com underscored message-request alias routes must keep native focus']
+    ];
 
+    for (const [hostname, pathname, expectedFocus, message] of cases) {
+        const window = makeGhostPage({
+            hostname,
+            pathname,
+            href: `https://${hostname}${pathname}`
+        });
+
+        assert.strictEqual(window.document.hasFocus(), expectedFocus, message);
+        assert.strictEqual(window.document.visibilityState, 'visible', `${message}: visibilityState should remain visible`);
+        assert.strictEqual(window.document.hidden, false, `${message}: document.hidden should remain false`);
+    }
+}
+
+function countDeliveredFocusEvents(window) {
+    let delivered = 0;
+    const listener = () => {
+        delivered += 1;
+    };
+
+    window.addEventListener('focus', listener);
+    window.addEventListener('blur', listener);
+    window.document.addEventListener('focusin', listener);
+    window.document.addEventListener('focusout', listener);
+
+    window.dispatchEvent({ type: 'focus', target: window });
+    window.dispatchEvent({ type: 'blur', target: window });
+    window.document.dispatchEvent({ type: 'focusin', target: window.document });
+    window.document.dispatchEvent({ type: 'focusout', target: window.document });
+
+    return delivered;
+}
+
+function testMessageRequestRoutesDoNotSuppressFocusEvents() {
+    const messengerThreadWindow = makeGhostPage({
+        hostname: 'www.messenger.com',
+        pathname: '/t/redacted-thread',
+        href: 'https://www.messenger.com/t/redacted-thread'
+    });
     assert.strictEqual(
-        facebookWatchWindow.document.hasFocus(),
-        true,
-        'Facebook Watch/video surfaces must keep native focus so ads and players can progress'
+        countDeliveredFocusEvents(messengerThreadWindow),
+        0,
+        'Messenger.com normal thread routes should suppress focus events for read privacy'
     );
 
-    const facebookFeedWindow = makeGhostPage({
-        hostname: 'www.facebook.com',
-        pathname: '/',
-        href: 'https://www.facebook.com/'
+    const messengerRequestWindow = makeGhostPage({
+        hostname: 'www.messenger.com',
+        pathname: '/requests/t/redacted-thread',
+        href: 'https://www.messenger.com/requests/t/redacted-thread'
     });
-
     assert.strictEqual(
-        facebookFeedWindow.document.hasFocus(),
-        true,
-        'General Facebook feed surfaces must keep native focus so in-feed video ads can progress'
+        countDeliveredFocusEvents(messengerRequestWindow),
+        4,
+        'Messenger.com request routes must not suppress focus events needed by the request loader'
     );
 
-    const facebookMessagesWindow = makeGhostPage({
+    const facebookThreadWindow = makeGhostPage({
         hostname: 'www.facebook.com',
         pathname: '/messages/t/redacted-thread',
         href: 'https://www.facebook.com/messages/t/redacted-thread'
     });
-
     assert.strictEqual(
-        facebookMessagesWindow.document.hasFocus(),
-        false,
-        'Facebook messaging surfaces should still spoof focus for read privacy'
+        countDeliveredFocusEvents(facebookThreadWindow),
+        0,
+        'Facebook normal message routes should suppress focus events for read privacy'
     );
 
+    const facebookRequestWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/messages/requests/t/redacted-thread',
+        href: 'https://www.facebook.com/messages/requests/t/redacted-thread'
+    });
+    assert.strictEqual(
+        countDeliveredFocusEvents(facebookRequestWindow),
+        4,
+        'Facebook request routes must not suppress focus events needed by the request loader'
+    );
+}
+
+function testMessageRequestSpaRouteChangesRestoreNativeFocus() {
     const messengerWindow = makeGhostPage({
         hostname: 'www.messenger.com',
         pathname: '/t/redacted-thread',
         href: 'https://www.messenger.com/t/redacted-thread'
     });
-
+    assert.strictEqual(messengerWindow.document.hasFocus(), false);
+    messengerWindow.location.pathname = '/requests/t/redacted-thread';
+    messengerWindow.location.href = 'https://www.messenger.com/requests/t/redacted-thread';
     assert.strictEqual(
         messengerWindow.document.hasFocus(),
-        false,
-        'Messenger.com conversation routes should still spoof focus for read privacy'
+        true,
+        'Messenger SPA transition into request routes must restore native focus'
+    );
+    assert.strictEqual(
+        countDeliveredFocusEvents(messengerWindow),
+        4,
+        'Messenger SPA transition into request routes must stop suppressing focus events'
+    );
+
+    const facebookWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/messages/t/redacted-thread',
+        href: 'https://www.facebook.com/messages/t/redacted-thread'
+    });
+    assert.strictEqual(facebookWindow.document.hasFocus(), false);
+    facebookWindow.location.pathname = '/messages/requests/t/redacted-thread';
+    facebookWindow.location.href = 'https://www.facebook.com/messages/requests/t/redacted-thread';
+    assert.strictEqual(
+        facebookWindow.document.hasFocus(),
+        true,
+        'Facebook SPA transition into request routes must restore native focus'
+    );
+    assert.strictEqual(
+        countDeliveredFocusEvents(facebookWindow),
+        4,
+        'Facebook SPA transition into request routes must stop suppressing focus events'
     );
 }
 
@@ -1170,6 +1360,8 @@ function testFacebookWatchDoesNotSpoofFocus() {
     await testVideoAdAndMediaTrafficIsAllowed();
     await testPrivacyWritesStillBlockWithRequestOrMediaContext();
     testFacebookWatchDoesNotSpoofFocus();
+    testMessageRequestRoutesDoNotSuppressFocusEvents();
+    testMessageRequestSpaRouteChangesRestoreNativeFocus();
     console.log('messenger send-stability regression tests passed');
 })().catch(error => {
     console.error(error);

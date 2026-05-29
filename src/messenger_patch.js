@@ -241,6 +241,7 @@
     function shouldBlockSeenText(text) {
         if (!window.__ghostify_shouldBlockMessengerSeen()) return false;
         if (!text) return false;
+        if (isMessageRequestHydrationText(text)) return false;
 
         if (isFacebookDotCom && !isMessengerDotCom) {
             return shouldBlockFacebookSeenText(text);
@@ -266,6 +267,7 @@
     }
 
     function shouldBlockFacebookSeenText(text) {
+        if (isMessageRequestHydrationText(text)) return false;
         if (isFacebookMessengerReadOnlyQueryText(text)) return false;
         if (text.includes('delivery_receipt') && !hasReadReceiptWriteIntent(text)) return false;
 
@@ -469,6 +471,86 @@
         return hasStrictReadReceiptWriteCommand(text) ||
             text.includes('readreceipt') ||
             text.includes('read_receipt');
+    }
+
+    function hasTruthyBridgeField(text, fields) {
+        return fields.some(field => {
+            const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`(?:^|[&\\s"{,])${escaped}"?\\s*[:=]\\s*(?:"?(?:true|1)"?)`).test(text);
+        });
+    }
+
+    function includesStandaloneBridgeTerm(text, terms) {
+        return terms.some(term => {
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`(?:^|[^a-z0-9_])${escaped}(?:$|[^a-z0-9_])`).test(text);
+        });
+    }
+
+    function hasExplicitBridgeReadWriteCommand(text) {
+        return text.includes('markthreadasread') ||
+            text.includes('mark_thread_read') ||
+            text.includes('markthreadreadmutation') ||
+            text.includes('markthreadread') ||
+            text.includes('lsmarkthreadread') ||
+            text.includes('mwmarkthreadread') ||
+            text.includes('lssendreadreceipt') ||
+            text.includes('readreceiptmutation') ||
+            text.includes('lsupdatethreadreadwatermark') ||
+            text.includes('lsupdatelastreadwatermark') ||
+            text.includes('updatelastreadwatermark') ||
+            text.includes('update_last_read_watermark') ||
+            text.includes('change_read_status') ||
+            includesStandaloneBridgeTerm(text, [
+                'sendreadreceipt',
+                'send_read_receipt'
+            ]) ||
+            hasTruthyBridgeField(text, [
+                'shouldsendreadreceipt',
+                'should_send_read_receipt',
+                'sendreadreceipt',
+                'send_read_receipt',
+                'readreceipt',
+                'read_receipt',
+                'markread',
+                'mark_read',
+                'markseen',
+                'mark_seen',
+                'markasread',
+                'mark_as_read',
+                'threadseen',
+                'thread_seen',
+                'seenbyviewer',
+                'seen_by_viewer'
+            ]);
+    }
+
+    function isMessageRequestHydrationText(text) {
+        const hasRequestContext = text.includes('message_requests') ||
+            text.includes('message request') ||
+            text.includes('message_request') ||
+            text.includes('messagerequests') ||
+            text.includes('message-requests') ||
+            text.includes('/requests');
+        if (!hasRequestContext) return false;
+        if (hasExplicitBridgeReadWriteCommand(text)) return false;
+
+        return text.includes('fb_api_req_friendly_name') ||
+            text.includes('doc_id') ||
+            text.includes('ls_req') ||
+            text.includes('/ls_req') ||
+            text.includes('issue_new_task') ||
+            text.includes('issuenewtask') ||
+            text.includes('threadlist') ||
+            text.includes('thread_list') ||
+            text.includes('messagerequestsquery') ||
+            text.includes('routepreload') ||
+            text.includes('route_preload') ||
+            text.includes('fetch_thread_list') ||
+            text.includes('mwchat_fetch_thread_list') ||
+            text.includes('folder') ||
+            text.includes('pagination') ||
+            text.includes('cursor');
     }
 
     function hasStrictReadReceiptWriteCommand(text) {

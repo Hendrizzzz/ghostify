@@ -237,6 +237,13 @@
       });
     });
   }
+  function includesStandaloneTerm(str, terms) {
+    const text = String(str || "");
+    return terms.some((term) => {
+      const escaped = escapeRegExp(term);
+      return new RegExp(`(?:^|[^a-z0-9_])${escaped}(?:$|[^a-z0-9_])`).test(text);
+    });
+  }
   function hasExplicitStorySeenSignal(str) {
     return includesAny(str, [
       "storiesupdateseenmutation",
@@ -436,9 +443,80 @@
       "typing_indicator"
     ]);
   }
+  function hasMessageRequestContext(str, urlString = "") {
+    const text = `${str} ${urlString}`;
+    return includesAny(text, [
+      "message_requests",
+      "message request",
+      "message_request",
+      "messagerequests",
+      "message-requests",
+      "/requests"
+    ]);
+  }
+  function hasExplicitMessengerReadWriteCommand(str) {
+    return includesAny(str, [
+      "markthreadasread",
+      "mark_thread_read",
+      "markthreadreadmutation",
+      "markthreadread",
+      "lsmarkthreadread",
+      "mwmarkthreadread",
+      "lssendreadreceipt",
+      "readreceiptmutation",
+      "lsupdatethreadreadwatermark",
+      "lsupdatelastreadwatermark",
+      "updatelastreadwatermark",
+      "update_last_read_watermark",
+      "change_read_status"
+    ]) || includesStandaloneTerm(str, [
+      "sendreadreceipt",
+      "send_read_receipt"
+    ]) || hasTruthyField(str, [
+      "shouldsendreadreceipt",
+      "should_send_read_receipt",
+      "sendreadreceipt",
+      "send_read_receipt",
+      "readreceipt",
+      "read_receipt",
+      "markread",
+      "mark_read",
+      "markseen",
+      "mark_seen",
+      "markasread",
+      "mark_as_read",
+      "threadseen",
+      "thread_seen",
+      "seenbyviewer",
+      "seen_by_viewer"
+    ]);
+  }
+  function isMessageRequestHydrationRequest(str, urlString, method) {
+    if (!hasMessageRequestContext(str, urlString)) return false;
+    if (hasExplicitMessengerReadWriteCommand(str)) return false;
+    return isGraphQLRequest(str, urlString) || isMessengerRealtimeTransport(urlString) || includesAny(str, [
+      "ls_req",
+      "/ls_req",
+      "issue_new_task",
+      "issuenewtask",
+      "threadlist",
+      "thread_list",
+      "messagerequestsquery",
+      "routepreload",
+      "route_preload",
+      "fetch_thread_list",
+      "mwchat_fetch_thread_list",
+      "folder",
+      "pagination",
+      "cursor"
+    ]) || method === "GET" || method === "HEAD";
+  }
   function isMessengerReadReceiptWrite(str, urlString) {
     if (isLegacyMessengerReadEndpoint(urlString)) return true;
+    if (hasMessengerMessageSendIntent(str)) return false;
     if (isMessengerRealtimeReadBridgeWrite(str, urlString)) return true;
+    if (isMessengerSendWithBundledReadWatermark(str)) return false;
+    if (isMessageRequestHydrationRequest(str, urlString, "")) return false;
     if (hasMessengerReadReceiptSignal(str)) {
       return hasReadReceiptWriteContext(str);
     }
@@ -546,6 +624,270 @@
       "issuenewtask",
       "storedprocedure",
       "procedure"
+    ]);
+  }
+  function isMessengerSendWithBundledReadWatermark(str) {
+    if (!str.includes("send_type")) return false;
+    if (!hasReadReceiptWatermarkContext(str)) return false;
+    if (hasMessengerReadReceiptWriteSignal(str)) return false;
+    return hasReadReceiptOperationContext(str) && hasMessengerThreadContext(str);
+  }
+  function hasMessengerMessageSendIntent(str) {
+    if (!hasMessengerThreadContext(str)) return false;
+    const hasSendOperationName = includesAny(str, [
+      "send_message",
+      "sendmessage",
+      "message_send",
+      "messagesend",
+      "messenger_send_message",
+      "messengersendmessage",
+      "sendmessagemutation",
+      "messengersendmessagemutation"
+    ]);
+    const hasClientMessageId = includesAny(str, [
+      "offline_threading_id",
+      "offlinethreadingid",
+      "client_message_id",
+      "clientmessageid",
+      "client_mutation_id",
+      "clientmutationid",
+      "otid"
+    ]);
+    const hasMessagePayload = includesAny(str, [
+      '"message"',
+      "%22message%22",
+      "message:",
+      "message=",
+      '"text"',
+      "%22text%22",
+      "text:",
+      "text=",
+      "body",
+      "attachment",
+      "sticker",
+      "media"
+    ]);
+    if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || str.includes("send_type"))) return true;
+    return str.includes("send_type") && hasClientMessageId && hasMessagePayload;
+  }
+  function hasMessengerDeliveryAckIntent(str) {
+    if (!hasMessengerThreadContext(str)) return false;
+    if (hasMessengerMessageSendIntent(str)) return true;
+    if (hasMessengerReadReceiptWriteSignal(str)) return false;
+    return includesAny(str, [
+      "delivery_receipt",
+      "deliveryreceipt",
+      "delivery_receipts",
+      "message_delivered",
+      "messagedelivered",
+      "markdelivered",
+      "mark_delivered"
+    ]);
+  }
+  function sanitizeMessengerNetworkPayload(data, url = "", options = {}) {
+    if (!isMessenger) return { data, changed: false };
+    if (!shouldSanitizeMessengerNetworkPayload()) return { data, changed: false };
+    if (typeof URLSearchParams !== "undefined" && data instanceof URLSearchParams) {
+      return sanitizeMessengerUrlSearchParams(data, String(url || "").toLowerCase(), options);
+    }
+    if (typeof data !== "string") return { data, changed: false };
+    const trimmed = data.trim();
+    if (!trimmed) {
+      return { data, changed: false };
+    }
+    if (trimmed[0] !== "{" && trimmed[0] !== "[") {
+      return sanitizeMessengerUrlEncodedPayload(data, String(url || "").toLowerCase(), options);
+    }
+    try {
+      const parsed = JSON.parse(trimmed);
+      const sanitized = sanitizeMessengerNetworkValue(parsed, String(url || "").toLowerCase(), options);
+      if (!sanitized.changed || sanitized.blockedAll) return { data, changed: false };
+      try {
+        if (typeof window !== "undefined") {
+          window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0) + 1;
+        }
+      } catch (e) {
+      }
+      return { data: JSON.stringify(sanitized.value), changed: true };
+    } catch (e) {
+      return { data, changed: false };
+    }
+  }
+  function sanitizeMessengerUrlSearchParams(params, urlString, options = {}) {
+    try {
+      const next = new URLSearchParams(params.toString());
+      const changed = sanitizeMessengerUrlSearchParamsInPlace(next, urlString, options);
+      return changed ? { data: next, changed: true } : { data: params, changed: false };
+    } catch (e) {
+      return { data: params, changed: false };
+    }
+  }
+  function sanitizeMessengerUrlEncodedPayload(data, urlString, options = {}) {
+    if (typeof URLSearchParams === "undefined") return { data, changed: false };
+    try {
+      const params = new URLSearchParams(data);
+      const changed = sanitizeMessengerUrlSearchParamsInPlace(params, urlString, options);
+      if (!changed) return { data, changed: false };
+      return { data: params.toString(), changed: true };
+    } catch (e) {
+      return { data, changed: false };
+    }
+  }
+  function sanitizeMessengerUrlSearchParamsInPlace(params, urlString, options = {}) {
+    let changed = false;
+    let removedPrivacyOnlyEntry = false;
+    const entries = [...params.entries()];
+    const nextEntries = [];
+    for (const [key, value] of entries) {
+      const trimmedValue = String(value || "").trim();
+      if (!trimmedValue || trimmedValue[0] !== "{" && trimmedValue[0] !== "[") {
+        nextEntries.push([key, value]);
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(trimmedValue);
+        const sanitized = sanitizeMessengerNetworkValue(parsed, urlString, options);
+        if (!sanitized.changed) {
+          nextEntries.push([key, value]);
+          continue;
+        }
+        if (sanitized.blockedAll) {
+          removedPrivacyOnlyEntry = true;
+          changed = true;
+          continue;
+        }
+        nextEntries.push([key, JSON.stringify(sanitized.value)]);
+        changed = true;
+      } catch (e) {
+        nextEntries.push([key, value]);
+      }
+    }
+    if (removedPrivacyOnlyEntry) {
+      const retainedText = nextEntries.map(([, value]) => decode(value)).join(" ").toLowerCase();
+      if (!hasMessengerMessageSendIntent(retainedText) && !hasMessengerDeliveryAckIntent(retainedText)) {
+        return false;
+      }
+    }
+    if (changed) {
+      for (const key of new Set(entries.map(([entryKey]) => entryKey))) {
+        params.delete(key);
+      }
+      for (const [key, value] of nextEntries) {
+        params.append(key, value);
+      }
+    }
+    if (changed) recordMessengerNetworkSanitization();
+    return changed;
+  }
+  function recordMessengerNetworkSanitization() {
+    try {
+      if (typeof window !== "undefined") {
+        window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0) + 1;
+      }
+    } catch (e) {
+    }
+  }
+  function shouldSanitizeMessengerNetworkPayload() {
+    return SETTINGS.msgSeen && !isKilled("msgSeen") || SETTINGS.msgTyping && !isKilled("msgTyping");
+  }
+  function sanitizeMessengerNetworkValue(value, urlString, options, depth = 0) {
+    if (!value || depth > 8) {
+      return { value, changed: false, blockedAll: false };
+    }
+    if (Array.isArray(value)) {
+      let changed = false;
+      const next = [];
+      for (const item of value) {
+        const itemText = decode(item).toLowerCase();
+        if (isMessengerPrivacyOnlyNetworkWrite(itemText, urlString, options)) {
+          changed = true;
+          continue;
+        }
+        const sanitizedItem = sanitizeMessengerNetworkValue(item, urlString, options, depth + 1);
+        if (sanitizedItem.blockedAll) {
+          changed = true;
+          continue;
+        }
+        changed = changed || sanitizedItem.changed;
+        next.push(sanitizedItem.value);
+      }
+      return {
+        value: changed ? next : value,
+        changed,
+        blockedAll: changed && next.length === 0
+      };
+    }
+    if (typeof value === "object") {
+      const ownText = decode(value).toLowerCase();
+      if (isMessengerPrivacyOnlyNetworkWrite(ownText, urlString, options)) {
+        return { value: void 0, changed: true, blockedAll: true };
+      }
+      let changed = false;
+      const clone = {};
+      for (const key of Object.keys(value)) {
+        const child = value[key];
+        const sanitizedChild = sanitizeMessengerNetworkValue(child, urlString, options, depth + 1);
+        if (sanitizedChild.blockedAll) {
+          changed = true;
+          continue;
+        }
+        changed = changed || sanitizedChild.changed;
+        clone[key] = sanitizedChild.value;
+      }
+      return {
+        value: changed ? clone : value,
+        changed,
+        blockedAll: changed && Object.keys(clone).length === 0
+      };
+    }
+    return { value, changed: false, blockedAll: false };
+  }
+  function isMessengerPrivacyOnlyNetworkWrite(str, urlString, options) {
+    if (!str) return false;
+    if (hasMessengerMessageSendIntent(str) || hasMessengerDeliveryAckIntent(str)) return false;
+    if (SETTINGS.msgSeen && !isKilled("msgSeen") && isMessengerReadReceiptNetworkTask(str, urlString, options)) {
+      return true;
+    }
+    if (SETTINGS.msgTyping && !isKilled("msgTyping") && isMessengerTypingNetworkTask(str, urlString)) {
+      return true;
+    }
+    return false;
+  }
+  function isMessengerReadReceiptNetworkTask(str, urlString, options) {
+    if (isMessengerReadReceiptWrite(str, urlString)) return true;
+    if (!hasMessengerThreadContext(str)) return false;
+    const hasTaskEnvelope = includesAny(str, [
+      "label",
+      "queue_name",
+      "queuename",
+      "payload",
+      "tasks"
+    ]);
+    if (!hasTaskEnvelope && !hasReadReceiptOperationContext(str)) return false;
+    return hasMessengerReadReceiptWriteSignal(str);
+  }
+  function isMessengerTypingNetworkTask(str, urlString) {
+    if (isMessengerTypingWrite(str, urlString)) return true;
+    if (!hasMessengerThreadContext(str)) return false;
+    const hasTaskEnvelope = includesAny(str, [
+      "label",
+      "queue_name",
+      "queuename",
+      "payload",
+      "tasks"
+    ]);
+    if (!hasTaskEnvelope && !hasReadReceiptOperationContext(str)) return false;
+    return includesAny(str, [
+      "sendchatstate",
+      "send_chat_state",
+      "sendchatstatefromcomposer",
+      "typingindicatorstoredprocedure",
+      "sendtypingindicator",
+      "send_typing_indicator",
+      "typing_indicator",
+      "chatstate",
+      "is_typing",
+      "istyping"
     ]);
   }
   function isMessengerRealtimeTransport(urlString) {
@@ -1116,6 +1458,7 @@
     const str = `${decodedBody} ${urlString}`.toLowerCase();
     const isFacebookPage = isFacebookDotCom && !isMessengerDotCom;
     if (isFacebookPage) {
+      if (isMessageRequestHydrationRequest(str, urlString, method)) return null;
       if (SETTINGS.msgSeen && !isKilled("msgSeen") && isGraphQLRequest(str, urlString) && isFacebookGraphQLMessengerSeenWrite(str)) {
         return "MSG_SEEN";
       }
@@ -1136,6 +1479,9 @@
       return null;
     }
     if (isMessenger) {
+      if (hasMessengerMessageSendIntent(str)) return null;
+      if (hasMessengerDeliveryAckIntent(str)) return null;
+      if (isMessageRequestHydrationRequest(str, urlString, method)) return null;
       if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
         if (isMessengerReadReceiptWrite(str, urlString)) {
           return "MSG_SEEN";
@@ -1745,17 +2091,23 @@
     const socketUrls = /* @__PURE__ */ new WeakMap();
     markGhostifyHook("websocket.install", { hasWebSocket: typeof OriginalWebSocket === "function" });
     if (typeof OriginalWebSocket !== "function") return;
-    function shouldDrop(data, url) {
-      const blockType = shouldBlock(data, url);
-      traceNetwork("websocket", url, data, blockType);
-      traceMessengerObservation("websocket", url, data, blockType);
-      if (isMessengerDotCom) return blockType === "MSG_SEEN" || blockType === "MSG_TYPING";
-      return !!blockType;
+    function inspectSend(data, url) {
+      const sanitized = sanitizeMessengerNetworkPayload(data, url);
+      const inspectData = sanitized.changed ? sanitized.data : data;
+      const blockType = shouldBlock(inspectData, url);
+      traceNetwork("websocket", url, inspectData, blockType);
+      traceMessengerObservation("websocket", url, inspectData, blockType);
+      return {
+        data: inspectData,
+        drop: isMessengerDotCom ? blockType === "MSG_SEEN" || blockType === "MSG_TYPING" : !!blockType
+      };
     }
     if (typeof originalPrototypeSend === "function") {
       OriginalWebSocket.prototype.send = function(data) {
         const socketUrl = socketUrls.get(this) || this.url || "";
-        if (shouldDrop(data, socketUrl)) return;
+        const inspected = inspectSend(data, socketUrl);
+        if (inspected.drop) return;
+        if (inspected.data !== data) return originalPrototypeSend.call(this, inspected.data);
         return originalPrototypeSend.apply(this, arguments);
       };
       try {
@@ -1838,21 +2190,35 @@
       const url = getFetchUrl(input);
       const body = await getFetchBody(input, init);
       const method = getFetchMethod(input, init);
-      const blockType = shouldBlock(body, url, { method });
-      traceNetwork("fetch", url, body, blockType);
-      traceMessengerObservation("fetch", url, body, blockType);
+      const sanitized = sanitizeMessengerNetworkPayload(body, url, { method });
+      const inspectBody = sanitized.changed ? sanitized.data : body;
+      const blockType = shouldBlock(inspectBody, url, { method });
+      traceNetwork("fetch", url, inspectBody, blockType);
+      traceMessengerObservation("fetch", url, inspectBody, blockType);
       if (blockType) {
-        return createBlockedFetchResponse(blockType, url, body);
+        return createBlockedFetchResponse(blockType, url, inspectBody);
+      }
+      if (sanitized.changed) {
+        if (init && init.body !== void 0) {
+          return originalFetch.call(this, input, { ...init, body: sanitized.data });
+        }
+        if (typeof Request !== "undefined" && input instanceof Request) {
+          return originalFetch.call(this, cloneRequestWithBody(input, sanitized.data));
+        }
       }
       return originalFetch.apply(this, arguments);
     };
     const originalBeacon = navigator.sendBeacon;
     if (typeof originalBeacon === "function") {
       navigator.sendBeacon = function(url, data) {
-        const blockType = shouldBlock(data, getFetchUrl(url), { method: "POST" });
-        traceNetwork("beacon", getFetchUrl(url), data, blockType);
-        traceMessengerObservation("beacon", getFetchUrl(url), data, blockType);
+        const fetchUrl = getFetchUrl(url);
+        const sanitized = sanitizeMessengerNetworkPayload(data, fetchUrl, { method: "POST" });
+        const inspectData = sanitized.changed ? sanitized.data : data;
+        const blockType = shouldBlock(inspectData, fetchUrl, { method: "POST" });
+        traceNetwork("beacon", fetchUrl, inspectData, blockType);
+        traceMessengerObservation("beacon", fetchUrl, inspectData, blockType);
         if (blockType) return true;
+        if (sanitized.changed) return originalBeacon.call(this, url, sanitized.data);
         return originalBeacon.apply(this, arguments);
       };
     }
@@ -1894,6 +2260,28 @@
     }
     return body;
   }
+  function cloneRequestWithBody(request, body) {
+    try {
+      return new Request(request, { body });
+    } catch (e) {
+      try {
+        return new Request(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body,
+          mode: request.mode,
+          credentials: request.credentials,
+          cache: request.cache,
+          redirect: request.redirect,
+          referrer: request.referrer,
+          integrity: request.integrity,
+          keepalive: request.keepalive
+        });
+      } catch (err) {
+        return request;
+      }
+    }
+  }
   function createBlockedFetchResponse(blockType, url, body) {
     return createJsonResponse(createBlockedPayload(blockType, url, body));
   }
@@ -1921,12 +2309,17 @@
       return originalXhrOpen.apply(this, arguments);
     };
     XMLHttpRequest.prototype.send = function(body) {
-      const blockType = shouldBlock(body, this._ghostifyUrl || "", { method: this._ghostifyMethod || "GET" });
-      traceNetwork("xhr", this._ghostifyUrl || "", body, blockType);
-      traceMessengerObservation("xhr", this._ghostifyUrl || "", body, blockType);
+      const url = this._ghostifyUrl || "";
+      const method = this._ghostifyMethod || "GET";
+      const sanitized = sanitizeMessengerNetworkPayload(body, url, { method });
+      const inspectBody = sanitized.changed ? sanitized.data : body;
+      const blockType = shouldBlock(inspectBody, url, { method });
+      traceNetwork("xhr", url, inspectBody, blockType);
+      traceMessengerObservation("xhr", url, inspectBody, blockType);
       if (blockType) {
-        return sendSyntheticJson(this, createBlockedPayload(blockType, this._ghostifyUrl || "", body));
+        return sendSyntheticJson(this, createBlockedPayload(blockType, url, inspectBody));
       }
+      if (sanitized.changed) return originalXhrSend.call(this, sanitized.data);
       return originalXhrSend.apply(this, arguments);
     };
     function sendSyntheticJson(xhr, payload) {
@@ -1947,6 +2340,7 @@
     window.__GHOSTIFY_FACEBOOK_PROTECTION__ = true;
   }
   function getFacebookSpoofState() {
+    if (isFacebookMessageRequestSurface()) return null;
     if (!isFacebookMessagingSurface()) return null;
     if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
       return "unfocused";
@@ -1961,6 +2355,14 @@
     if (path.startsWith("/messages") || path.startsWith("/messenger")) return true;
     if (search.includes("sk=messages") || hash.includes("messages")) return true;
     return false;
+  }
+  function isFacebookMessageRequestSurface() {
+    var _a, _b, _c;
+    const path = String(((_a = window.location) == null ? void 0 : _a.pathname) || "").toLowerCase();
+    const search = String(((_b = window.location) == null ? void 0 : _b.search) || "").toLowerCase();
+    const hash = String(((_c = window.location) == null ? void 0 : _c.hash) || "").toLowerCase();
+    const route = `${path} ${search} ${hash}`;
+    return route.includes("/messages/requests") || route.includes("/messages/message-requests") || route.includes("/messages/message_requests") || route.includes("folder=message_requests") || route.includes("message_requests");
   }
 
   // src/platforms/instagram.js
@@ -1989,10 +2391,16 @@
 
   // src/platforms/messenger.js
   function getMessengerSpoofState() {
+    if (isMessengerMessageRequestSurface()) return null;
     if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
       return "unfocused";
     }
     return null;
+  }
+  function isMessengerMessageRequestSurface() {
+    var _a;
+    const path = String(((_a = window.location) == null ? void 0 : _a.pathname) || "").toLowerCase();
+    return path.startsWith("/requests") || path.startsWith("/message-requests") || path.startsWith("/message_requests");
   }
 
   // src/core/interceptors/focus.js
