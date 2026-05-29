@@ -492,6 +492,22 @@ function makeGhostPage(page = {}, settings = {}) {
     const document = new FakeDocument();
     document.readyState = 'complete';
     document.hasFocus = () => true;
+    if (page.facebookMessengerPopoverOpen || page.facebookMiniChatOpen) {
+        document.querySelector = (selector) => {
+            const text = String(selector || '');
+            if (page.facebookMessengerPopoverOpen) {
+                if (text.includes('aria-label="Messenger"')) return {};
+                if (text.includes('aria-label="Chats"')) return {};
+            }
+            if (page.facebookMiniChatOpen) {
+                if (text.includes('aria-label="Minimize chat"')) return {};
+                if (text.includes('aria-label="Close chat"')) return {};
+                if (text.includes('role="textbox"')) return {};
+                if (text.includes('aria-label^="Write to"')) return {};
+            }
+            return null;
+        };
+    }
 
     class PageFakeWebSocket extends FakeWebSocket { }
     class PageFakeXHR extends FakeXHR { }
@@ -1873,6 +1889,52 @@ function testFacebookWatchDoesNotSpoofFocus() {
     }
 }
 
+function testFacebookFeedMessengerSurfacesSpoofFocus() {
+    const popoverWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMessengerPopoverOpen: true
+    });
+    assert.strictEqual(
+        popoverWindow.document.hasFocus(),
+        false,
+        'Facebook feed Messenger popover with unread chats should spoof focus before opening an unread mini-chat'
+    );
+    assert.strictEqual(
+        popoverWindow.document.visibilityState,
+        'visible',
+        'Facebook feed Messenger popover should only spoof focus, not visibility, so feed media does not get hidden'
+    );
+    assert.strictEqual(
+        popoverWindow.document.hidden,
+        false,
+        'Facebook feed Messenger popover should not mark the whole feed hidden'
+    );
+
+    const miniChatWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    assert.strictEqual(
+        miniChatWindow.document.hasFocus(),
+        false,
+        'Facebook feed floating mini-chat should spoof focus so opening unread messages does not send seen receipts'
+    );
+    assert.strictEqual(
+        miniChatWindow.document.visibilityState,
+        'visible',
+        'Facebook feed floating mini-chat should not hide the page from video/ad playback'
+    );
+    assert.strictEqual(
+        miniChatWindow.document.hidden,
+        false,
+        'Facebook feed floating mini-chat should not set document.hidden'
+    );
+}
+
 function testInstagramMediaSurfacesDoNotSpoofFocus() {
     const cases = [
         ['/', 'Instagram feed must keep native focus so in-feed videos and ads can play'],
@@ -2275,6 +2337,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     await testVideoAdAndMediaTrafficIsAllowed();
     await testPrivacyWritesStillBlockWithRequestOrMediaContext();
     testFacebookWatchDoesNotSpoofFocus();
+    testFacebookFeedMessengerSurfacesSpoofFocus();
     testInstagramMediaSurfacesDoNotSpoofFocus();
     testMessageRequestRoutesDoNotSuppressFocusEvents();
     testMawProxyRejectsUntrustedMessageRequestGrace();

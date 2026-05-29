@@ -2524,7 +2524,22 @@
     const hash = String(((_c = window.location) == null ? void 0 : _c.hash) || "").toLowerCase();
     if (path.startsWith("/messages") || path.startsWith("/messenger")) return true;
     if (search.includes("sk=messages") || hash.includes("messages")) return true;
+    if (isFacebookFeedMessengerSurface()) return true;
     return false;
+  }
+  function isFacebookFeedMessengerSurface() {
+    const hasMessengerPopover = hasDomElement('[role="dialog"][aria-label="Messenger"]') && hasDomElement('[role="grid"][aria-label="Chats"]');
+    if (hasMessengerPopover) return true;
+    const hasMiniChatChrome = hasDomElement('[aria-label="Minimize chat"]') || hasDomElement('[aria-label="Close chat"]');
+    if (!hasMiniChatChrome) return false;
+    return hasDomElement('[role="textbox"][contenteditable="true"]') || hasDomElement('[aria-label^="Write to"]') || hasDomElement('[aria-label^="Messages in conversation"]') || hasDomElement('[aria-label^="Conversation titled"]');
+  }
+  function hasDomElement(selector) {
+    try {
+      return typeof (document == null ? void 0 : document.querySelector) === "function" && !!document.querySelector(selector);
+    } catch (e) {
+      return false;
+    }
   }
   function isFacebookMessageRequestSurface() {
     var _a, _b, _c;

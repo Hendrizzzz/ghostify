@@ -108,8 +108,34 @@ function isFacebookMessagingSurface() {
 
     if (path.startsWith('/messages') || path.startsWith('/messenger')) return true;
     if (search.includes('sk=messages') || hash.includes('messages')) return true;
+    if (isFacebookFeedMessengerSurface()) return true;
 
     return false;
+}
+
+function isFacebookFeedMessengerSurface() {
+    const hasMessengerPopover =
+        hasDomElement('[role="dialog"][aria-label="Messenger"]') &&
+        hasDomElement('[role="grid"][aria-label="Chats"]');
+    if (hasMessengerPopover) return true;
+
+    const hasMiniChatChrome =
+        hasDomElement('[aria-label="Minimize chat"]') ||
+        hasDomElement('[aria-label="Close chat"]');
+    if (!hasMiniChatChrome) return false;
+
+    return hasDomElement('[role="textbox"][contenteditable="true"]') ||
+        hasDomElement('[aria-label^="Write to"]') ||
+        hasDomElement('[aria-label^="Messages in conversation"]') ||
+        hasDomElement('[aria-label^="Conversation titled"]');
+}
+
+function hasDomElement(selector) {
+    try {
+        return typeof document?.querySelector === 'function' && !!document.querySelector(selector);
+    } catch (e) {
+        return false;
+    }
 }
 
 function isFacebookMessageRequestSurface() {
