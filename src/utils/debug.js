@@ -327,7 +327,9 @@ function isMessengerObservationEnabled() {
         const supportedHost = host === 'messenger.com' ||
             host.endsWith('.messenger.com') ||
             host === 'facebook.com' ||
-            host.endsWith('.facebook.com');
+            host.endsWith('.facebook.com') ||
+            host === 'fbsbx.com' ||
+            host.endsWith('.fbsbx.com');
 
         return supportedHost &&
             window.localStorage?.ghostifyDebug === '1' &&
@@ -360,7 +362,9 @@ function isMessengerHost() {
         return host === 'messenger.com' ||
             host.endsWith('.messenger.com') ||
             host === 'facebook.com' ||
-            host.endsWith('.facebook.com');
+            host.endsWith('.facebook.com') ||
+            host === 'fbsbx.com' ||
+            host.endsWith('.fbsbx.com');
     } catch (e) {
         return false;
     }

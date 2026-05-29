@@ -9,9 +9,7 @@ export function startMessengerProtection() {
     const markRequestIntent = (event) => {
         if (isMessageRequestNavigationTarget(event?.target)) {
             const until = Date.now() + REQUEST_NATIVE_GRACE_MS;
-            window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ = until;
-            window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = until;
-            emitNativeFocusSignals();
+            activateRequestNativeGrace(until);
         }
     };
 
@@ -32,6 +30,12 @@ export function getMessengerSpoofState() {
     }
 
     return null;
+}
+
+function activateRequestNativeGrace(until) {
+    window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ = until;
+    window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = until;
+    emitNativeFocusSignals();
 }
 
 function hasRecentMessageRequestIntent() {

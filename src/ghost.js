@@ -1,4 +1,4 @@
-import { KILLED_FEATURES, SETTINGS, isFacebookDotCom, isMessengerDotCom, isInstagram, markSettingsReady } from './config.js';
+import { KILLED_FEATURES, SETTINGS, isFacebookDotCom, isFacebookMessengerProxy, isMessengerDotCom, isInstagram, markSettingsReady } from './config.js';
 import { updatePatterns } from './utils/network.js';
 import { hookWebSocket } from './core/interceptors/websocket.js';
 import { hookFetch } from './core/interceptors/fetch.js';
@@ -52,7 +52,7 @@ import { traceMessengerHealth } from './utils/debug.js';
     });
 
     hookWebSocket();
-    if (isInstagram || isMessengerDotCom || isFacebookDotCom) {
+    if (isInstagram || isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy) {
         hookVisibility();
     }
     hookFetch();

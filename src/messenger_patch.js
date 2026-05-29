@@ -4,7 +4,9 @@
     const isInstagram = isHost(hostname, 'instagram.com');
     const isFacebookDotCom = isHost(hostname, 'facebook.com');
     const isMessengerDotCom = isHost(hostname, 'messenger.com');
-    const isMessenger = isMessengerDotCom || isFacebookDotCom;
+    const isFacebookMessengerProxy = hostname === 'www.fbsbx.com' &&
+        String(window.location.pathname || '').toLowerCase().startsWith('/maw_proxy_page');
+    const isMessenger = isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy;
     const settingsKey = 'msgTyping';
     if (!isMessenger) return;
     if (window.__GHOSTIFY_LS_TYPING_PATCH__) return;
@@ -16,6 +18,7 @@
         isMessenger,
         isMessengerDotCom,
         isFacebookDotCom,
+        isFacebookMessengerProxy,
         readyState: document.readyState
     });
 
@@ -169,7 +172,7 @@
         if (!text) return false;
         text = stripFalseyPrivacyFields(text);
 
-        if (isFacebookDotCom && !isMessengerDotCom) {
+        if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
             return shouldBlockFacebookTypingText(text);
         }
 
@@ -245,7 +248,7 @@
         text = stripFalseyPrivacyFields(text);
         if (isMessageRequestHydrationText(text)) return false;
 
-        if (isFacebookDotCom && !isMessengerDotCom) {
+        if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
             return shouldBlockFacebookSeenText(text);
         }
 
@@ -1177,7 +1180,7 @@
             tracePostMessageObservation(kind, message, blockType, text);
 
             if (blockType) {
-                if (blockType === 'MSG_SEEN' && (isMessengerDotCom || isFacebookDotCom)) {
+                if (blockType === 'MSG_SEEN' && (isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy)) {
                     const sanitizedSeen = sanitizeSeenBridgeMessage(message);
                     if (sanitizedSeen.changed) {
                         if (sanitizedSeen.blockedAll) {
@@ -1199,7 +1202,7 @@
                     }
                 }
 
-                if (isFacebookDotCom && !isMessengerDotCom) {
+                if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
                     if (isSafeFacebookBridgeBlock(blockType, text)) {
                         window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
                         tracePostMessageOutcome(kind, blockType, 'drop');
@@ -2175,7 +2178,7 @@
     }
 
     function shouldPatchLocalReadReceiptModules() {
-        return isInstagram;
+        return isInstagram || ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom);
     }
 
     function shouldLeaveLocalReadReceiptModuleUnpatched(isLocalReadReceiptModule) {

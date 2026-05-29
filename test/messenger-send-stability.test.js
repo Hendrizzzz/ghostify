@@ -1162,6 +1162,18 @@ async function testMessageRequestsAndInboxQueriesAreAllowed() {
         'Facebook message-request GraphQL queries must not be treated as read receipts'
     );
 
+    const facebookProxyWindow = makeGhostPage({
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    });
+    assert.strictEqual(
+        await fetchOutcomeAt(facebookProxyWindow, '/api/graphql/', messengerMessageRequestsQuery),
+        'allowed',
+        'Facebook MAW proxy message-request GraphQL queries must not be treated as read receipts'
+    );
+
     assert.strictEqual(
         await fetchOutcome(messengerWindow, lsMessageRequestThreadListLoad),
         'allowed',
@@ -1276,6 +1288,13 @@ function testMessengerPatchRequestRouteModulesHydrateUntouched() {
             hostname: 'www.facebook.com',
             pathname: '/messages/requests/t/redacted-thread',
             href: 'https://www.facebook.com/messages/requests/t/redacted-thread'
+        },
+        {
+            label: 'Facebook MAW proxy',
+            hostname: 'www.fbsbx.com',
+            pathname: '/maw_proxy_page/',
+            search: '?__cci=redacted',
+            href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
         }
     ]) {
         const context = makeMessengerPatchPage({}, page);
@@ -1413,6 +1432,172 @@ function testMessengerPatchLocalReadModulesStayUntouchedAfterRequestSpaNavigatio
             `${page.label} stale local read modules must not block request hydration after SPA navigation`
         );
     }
+}
+
+function testFacebookNormalThreadLocalReadModulesAreSanitized() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/messages/t/redacted-thread',
+        href: 'https://www.facebook.com/messages/t/redacted-thread'
+    });
+    const calls = [];
+    const module = registerMessengerModule(
+        context,
+        'LSUpdateThreadReadWatermark',
+        function (_a, _b, _c, _d, moduleObject) {
+            moduleObject.exports.default = function (payload) {
+                calls.push(payload);
+                return 'read-updated';
+            };
+        }
+    );
+    const normalReadPayload = {
+        thread_key: { thread_fbid: 'redacted-thread' },
+        last_read_watermark: 1779530000000,
+        should_send_read_receipt: true,
+        readReceiptMutation: { should_send_read_receipt: true }
+    };
+
+    assert.strictEqual(module.exports.default(normalReadPayload), 'read-updated');
+    assert.strictEqual(calls.length, 1);
+    assert.notStrictEqual(
+        calls[0],
+        normalReadPayload,
+        'Facebook normal message-thread local read modules must receive a sanitized clone'
+    );
+    assert.strictEqual(calls[0].should_send_read_receipt, false);
+    assert.strictEqual(calls[0].readReceiptMutation, null);
+    assert.strictEqual(
+        context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
+        1,
+        'Facebook normal message-thread local read modules must increment sanitization'
+    );
+    assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
+}
+
+function testFacebookMawProxyLocalReadModulesAreSanitized() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    });
+    const calls = [];
+    const module = registerMessengerModule(
+        context,
+        'LSUpdateThreadReadWatermark',
+        function (_a, _b, _c, _d, moduleObject) {
+            moduleObject.exports.default = function (payload) {
+                calls.push(payload);
+                return 'proxy-read-updated';
+            };
+        }
+    );
+    const normalReadPayload = {
+        thread_key: { thread_fbid: 'redacted-thread' },
+        last_read_watermark: 1779530000000,
+        should_send_read_receipt: true,
+        readReceiptMutation: { should_send_read_receipt: true }
+    };
+
+    assert.strictEqual(module.exports.default(normalReadPayload), 'proxy-read-updated');
+    assert.strictEqual(calls.length, 1);
+    assert.notStrictEqual(
+        calls[0],
+        normalReadPayload,
+        'Facebook MAW proxy local read modules must receive a sanitized clone'
+    );
+    assert.strictEqual(calls[0].should_send_read_receipt, false);
+    assert.strictEqual(calls[0].readReceiptMutation, null);
+    assert.strictEqual(
+        context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
+        1,
+        'Facebook MAW proxy local read modules must increment sanitization'
+    );
+    assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
+}
+
+async function testFacebookMawProxyNetworkReadReceiptsAreBlocked() {
+    const window = makeGhostPage({
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    });
+
+    assert.strictEqual(
+        await fetchOutcome(window, messengerReadReceipt),
+        'MSG_SEEN',
+        'Facebook MAW proxy fetch read-receipt writes must be blocked'
+    );
+    assert.strictEqual(
+        websocketOutcome(window, messengerReadReceipt),
+        'blocked',
+        'Facebook MAW proxy WebSocket read-receipt writes must be blocked'
+    );
+}
+
+function testNonMawFbsbxPagesAreNotTreatedAsMessenger() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.fbsbx.com',
+        pathname: '/cdn/redacted',
+        href: 'https://www.fbsbx.com/cdn/redacted'
+    });
+    const calls = [];
+    const module = registerMessengerModule(
+        context,
+        'LSUpdateThreadReadWatermark',
+        function (_a, _b, _c, _d, moduleObject) {
+            moduleObject.exports.default = function (payload) {
+                calls.push(payload);
+                return 'non-maw-read-updated';
+            };
+        }
+    );
+    const payload = {
+        thread_key: { thread_fbid: 'redacted-thread' },
+        should_send_read_receipt: true,
+        readReceiptMutation: { should_send_read_receipt: true }
+    };
+
+    assert.strictEqual(module.exports.default(payload), 'non-maw-read-updated');
+    assert.strictEqual(calls[0], payload, 'non-MAW fbsbx pages must not get Messenger module patching');
+
+    const window = makeGhostPage({
+        hostname: 'www.fbsbx.com',
+        pathname: '/cdn/redacted',
+        href: 'https://www.fbsbx.com/cdn/redacted'
+    });
+    assert.strictEqual(
+        window.document.hasFocus(),
+        true,
+        'non-MAW fbsbx pages must not get Messenger focus spoofing'
+    );
+}
+
+function testManifestInjectsIntoFacebookMawProxyFrames() {
+    const manifest = JSON.parse(fs.readFileSync('dist/manifest.json', 'utf8'));
+    const proxyMatch = 'https://www.fbsbx.com/*';
+
+    assert(
+        manifest.host_permissions.includes(proxyMatch),
+        'manifest host_permissions must include Facebook MAW proxy frames'
+    );
+
+    for (const script of ['js/content.js', 'js/messenger_patch.js', 'js/ghost.js']) {
+        const entry = manifest.content_scripts.find(candidate => candidate.js.includes(script));
+        assert(entry, `manifest must include content_script entry for ${script}`);
+        assert(
+            entry.matches.includes(proxyMatch),
+            `${script} must inject into Facebook MAW proxy frames`
+        );
+    }
+
+    const resources = manifest.web_accessible_resources || [];
+    assert(
+        resources.some(entry => (entry.matches || []).includes(proxyMatch)),
+        'web_accessible_resources must allow config reads from Facebook MAW proxy frames'
+    );
 }
 
 function testMessengerPatchRequestRouteExplicitModulesStayProtected() {
@@ -1659,6 +1844,7 @@ function testFacebookWatchDoesNotSpoofFocus() {
         ['www.facebook.com', '/messages/requests/t/redacted-thread', true, 'Facebook message-request threads must keep native focus so chats load'],
         ['www.facebook.com', '/messages/message-requests', true, 'Facebook message-request alias routes must keep native focus'],
         ['www.facebook.com', '/messages/message_requests', true, 'Facebook underscored message-request alias routes must keep native focus'],
+        ['www.fbsbx.com', '/maw_proxy_page/', false, 'Facebook MAW proxy frames should spoof focus for read privacy'],
         ['www.messenger.com', '/t/redacted-thread', false, 'Messenger.com conversation routes should still spoof focus for read privacy'],
         ['www.messenger.com', '/requests', true, 'Messenger.com request inbox must keep native focus so requests hydrate'],
         ['www.messenger.com', '/requests/t/redacted-thread', true, 'Messenger.com message-request conversation routes must keep native focus so chats load'],
@@ -1792,6 +1978,57 @@ function testMessageRequestRoutesDoNotSuppressFocusEvents() {
         countDeliveredFocusEvents(facebookRequestWindow),
         4,
         'Facebook request routes must not suppress focus events needed by the request loader'
+    );
+
+    const facebookProxyWindow = makeGhostPage({
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    });
+    assert.strictEqual(
+        countDeliveredFocusEvents(facebookProxyWindow),
+        0,
+        'Facebook MAW proxy frames should suppress focus events for read privacy'
+    );
+}
+
+function testMawProxyRejectsUntrustedMessageRequestGrace() {
+    const facebookProxyWindow = makeGhostPage({
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    });
+    assert.strictEqual(
+        facebookProxyWindow.document.hasFocus(),
+        false,
+        'Facebook MAW proxy frames should start spoofed on normal message surfaces'
+    );
+
+    let focusSignals = 0;
+    facebookProxyWindow.addEventListener('focus', () => { focusSignals += 1; });
+    facebookProxyWindow.document.addEventListener('visibilitychange', () => { focusSignals += 1; });
+    facebookProxyWindow.document.addEventListener('focusin', () => { focusSignals += 1; });
+
+    facebookProxyWindow.dispatchEvent({
+        type: 'message',
+        data: {
+            source: 'GHOSTIFY_PAGE',
+            type: 'GHOSTIFY_MESSAGE_REQUEST_NATIVE_GRACE',
+            until: Date.now() + 15000
+        }
+    });
+
+    assert.strictEqual(
+        facebookProxyWindow.document.hasFocus(),
+        false,
+        'Facebook MAW proxy must ignore message-request grace without the extension nonce'
+    );
+    assert.strictEqual(
+        focusSignals,
+        0,
+        'Facebook MAW proxy must not emit native focus signals for untrusted grace messages'
     );
 }
 
@@ -2029,12 +2266,18 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     await testMessageRequestsAndInboxQueriesAreAllowed();
     testMessengerPatchRequestRouteModulesHydrateUntouched();
     testMessengerPatchLocalReadModulesStayUntouchedAfterRequestSpaNavigation();
+    testFacebookNormalThreadLocalReadModulesAreSanitized();
+    testFacebookMawProxyLocalReadModulesAreSanitized();
+    await testFacebookMawProxyNetworkReadReceiptsAreBlocked();
+    testNonMawFbsbxPagesAreNotTreatedAsMessenger();
+    testManifestInjectsIntoFacebookMawProxyFrames();
     testMessengerPatchRequestRouteExplicitModulesStayProtected();
     await testVideoAdAndMediaTrafficIsAllowed();
     await testPrivacyWritesStillBlockWithRequestOrMediaContext();
     testFacebookWatchDoesNotSpoofFocus();
     testInstagramMediaSurfacesDoNotSpoofFocus();
     testMessageRequestRoutesDoNotSuppressFocusEvents();
+    testMawProxyRejectsUntrustedMessageRequestGrace();
     testMessageRequestSpaRouteChangesRestoreNativeFocus();
     testMessageRequestClicksTemporarilyRestoreNativeFocus();
     await testMessageRequestClickGraceKeepsTransportAndBridgeNative();

@@ -11,12 +11,14 @@
   var KILLED_FEATURES = /* @__PURE__ */ new Set();
   var SETTINGS_READY = false;
   var hostname = window.location.hostname.toLowerCase();
+  var pathname = window.location.pathname.toLowerCase();
   function isHost(domain) {
     return hostname === domain || hostname.endsWith(`.${domain}`);
   }
   var isFacebookDotCom = isHost("facebook.com");
   var isMessengerDotCom = isHost("messenger.com");
-  var isMessenger = isFacebookDotCom || isMessengerDotCom;
+  var isFacebookMessengerProxy = hostname === "www.fbsbx.com" && pathname.startsWith("/maw_proxy_page");
+  var isMessenger = isFacebookDotCom || isMessengerDotCom || isFacebookMessengerProxy;
   var isInstagram = isHost("instagram.com");
   function isKilled(feature) {
     return KILLED_FEATURES.has(feature);
@@ -1925,7 +1927,7 @@
     var _a, _b;
     try {
       const host = window.location.hostname.toLowerCase();
-      const supportedHost = host === "messenger.com" || host.endsWith(".messenger.com") || host === "facebook.com" || host.endsWith(".facebook.com");
+      const supportedHost = host === "messenger.com" || host.endsWith(".messenger.com") || host === "facebook.com" || host.endsWith(".facebook.com") || host === "fbsbx.com" || host.endsWith(".fbsbx.com");
       return supportedHost && ((_a = window.localStorage) == null ? void 0 : _a.ghostifyDebug) === "1" && ((_b = window.localStorage) == null ? void 0 : _b.ghostifyMessengerObserve) === "1";
     } catch (e) {
       return false;
@@ -1940,7 +1942,7 @@
   function isMessengerHost() {
     try {
       const host = window.location.hostname.toLowerCase();
-      return host === "messenger.com" || host.endsWith(".messenger.com") || host === "facebook.com" || host.endsWith(".facebook.com");
+      return host === "messenger.com" || host.endsWith(".messenger.com") || host === "facebook.com" || host.endsWith(".facebook.com") || host === "fbsbx.com" || host.endsWith(".fbsbx.com");
     } catch (e) {
       return false;
     }
@@ -2443,9 +2445,7 @@
     const markRequestIntent = (event) => {
       if (isFacebookMessageRequestNavigationTarget(event == null ? void 0 : event.target)) {
         const until = Date.now() + REQUEST_NATIVE_GRACE_MS;
-        window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ = until;
-        window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = until;
-        emitNativeFocusSignals();
+        activateRequestNativeGrace(until);
       }
     };
     document.addEventListener("pointerdown", markRequestIntent, true);
@@ -2463,6 +2463,11 @@
       return "unfocused";
     }
     return null;
+  }
+  function activateRequestNativeGrace(until) {
+    window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ = until;
+    window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = until;
+    emitNativeFocusSignals();
   }
   function hasRecentMessageRequestIntent() {
     return Math.max(
@@ -2568,9 +2573,7 @@
     const markRequestIntent = (event) => {
       if (isMessageRequestNavigationTarget(event == null ? void 0 : event.target)) {
         const until = Date.now() + REQUEST_NATIVE_GRACE_MS2;
-        window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ = until;
-        window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = until;
-        emitNativeFocusSignals2();
+        activateRequestNativeGrace2(until);
       }
     };
     document.addEventListener("pointerdown", markRequestIntent, true);
@@ -2587,6 +2590,11 @@
       return "unfocused";
     }
     return null;
+  }
+  function activateRequestNativeGrace2(until) {
+    window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ = until;
+    window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = until;
+    emitNativeFocusSignals2();
   }
   function hasRecentMessageRequestIntent2() {
     return Math.max(
@@ -2648,7 +2656,7 @@
   // src/core/interceptors/focus.js
   var FOCUS_EVENTS = ["visibilitychange", "webkitvisibilitychange", "blur", "focus", "focusin", "focusout"];
   function shouldSpoofVisibility() {
-    if (isMessengerDotCom) {
+    if (isMessengerDotCom || isFacebookMessengerProxy) {
       const state = getMessengerSpoofState();
       if (state !== null) return state;
     }
@@ -2787,7 +2795,7 @@
       }
     });
     hookWebSocket();
-    if (isInstagram || isMessengerDotCom || isFacebookDotCom) {
+    if (isInstagram || isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy) {
       hookVisibility();
     }
     hookFetch();

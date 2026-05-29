@@ -1,4 +1,4 @@
-import { isFacebookDotCom, isMessengerDotCom, isInstagram } from '../../config.js';
+import { isFacebookDotCom, isFacebookMessengerProxy, isMessengerDotCom, isInstagram } from '../../config.js';
 import { getFacebookSpoofState } from '../../platforms/facebook.js';
 import { getInstagramSpoofState } from '../../platforms/instagram.js';
 import { getMessengerSpoofState } from '../../platforms/messenger.js';
@@ -6,7 +6,7 @@ import { getMessengerSpoofState } from '../../platforms/messenger.js';
 const FOCUS_EVENTS = ['visibilitychange', 'webkitvisibilitychange', 'blur', 'focus', 'focusin', 'focusout'];
 
 function shouldSpoofVisibility() {
-    if (isMessengerDotCom) {
+    if (isMessengerDotCom || isFacebookMessengerProxy) {
         const state = getMessengerSpoofState();
         if (state !== null) return state;
     }
