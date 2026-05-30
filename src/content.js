@@ -1,5 +1,5 @@
 const FALLBACK_CONFIG = {
-    version: "2.0.0",
+    version: "2.0.1",
     killSwitch: [],
     patterns: {
         igTyping: ['indicate_activity', 'typing_indicator', 'activity_indicator', 'is_typing', 'direct_v2/threads/broadcast/typing', 'direct_v2/threads/typing', 'sendtypingindicator', 'send_typing_indicator', 'typing_on', 'is_composing'],

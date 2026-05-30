@@ -13,6 +13,7 @@
     if (window.__GHOSTIFY_LS_TYPING_PATCH__) return;
     window.__GHOSTIFY_LS_TYPING_PATCH__ = true;
     const DIAGNOSTIC_VERSION = "2026-05-23-instagram-direct-27";
+    const SAFE_READ_WATERMARK_DIGIT = "1";
     const observeSalt = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     const observeStartMs = Date.now();
     markPatchStatus("messenger_patch.init", {
@@ -78,6 +79,7 @@
       "lsupdatelastreadwatermark",
       "last_read_watermark",
       "last_read_watermark_ts",
+      "last_seen_time_ms",
       "read_watermark",
       "watermarktimestamp",
       "watermark_timestamp",
@@ -205,9 +207,11 @@
       if (isMessageRequestHydrationText(text)) return false;
       if (isFacebookMessengerReadOnlyQueryText(text)) return false;
       if (text.includes("delivery_receipt") && !hasReadReceiptWriteIntent(text)) return false;
+      if (isFacebookRealtimeReadReceiptTask(text)) return true;
+      if (isFacebookLocalBridgeReadReceiptCommand(text)) return true;
       const hasWatermarkWrite = hasReadWatermarkTarget(text) && (text.includes("ls_req") || text.includes("issue_new_task") || text.includes("issuenewtask") || text.includes("storedprocedure") || text.includes("procedure") || text.includes("sendreadreceipt") || text.includes("readreceipt") || text.includes("markthread"));
       if (!hasExplicitSeenWriteIntent(text) && !hasWatermarkWrite) return false;
-      return hasFacebookMessengerWriteContext(text) && (hasMessengerThreadTarget(text) || hasReadWatermarkTarget(text));
+      return hasFacebookMessengerWriteContext(text) && (hasMessengerThreadTarget(text) || hasReadWatermarkTarget(text)) || hasStrictReadReceiptWriteCommand(text) && hasReadReceiptCommandTarget(text);
     }
     function hasExplicitTypingWriteIntent(text) {
       text = stripFalseyPrivacyFields(text);
@@ -270,6 +274,28 @@
         "shouldsendreadreceipt",
         "should_send_read_receipt",
         "change_read_status"
+      ]);
+    }
+    function isFacebookLocalBridgeReadReceiptCommand(text) {
+      text = stripFalseyPrivacyFields(text);
+      if (isFacebookMessengerReadOnlyQueryText(text)) return false;
+      if (hasMessengerMessageSendIntentText(text)) return false;
+      return includesAnyText(text, [
+        "markthreadasread",
+        "mark_thread_read",
+        "markthreadreadmutation",
+        "markthreadread",
+        "lsmarkthreadread",
+        "mwmarkthreadread",
+        "markasread",
+        "mark_as_read"
+      ]) && includesAnyText(text, [
+        "readreceipt",
+        "read_receipt",
+        "sendreadreceipt",
+        "send_read_receipt",
+        "shouldsendreadreceipt",
+        "should_send_read_receipt"
       ]);
     }
     function includesAnyText(text, needles) {
@@ -374,10 +400,10 @@
       return text.includes("thread_key") || text.includes("threadkey") || text.includes("thread_fbid") || text.includes("threadfbid") || text.includes("thread_id") || text.includes("threadid") || text.includes("recipient_id") || text.includes("message_thread") || text.includes("act_thread_id");
     }
     function hasReadWatermarkTarget(text) {
-      return text.includes("last_read_watermark") || text.includes("lastreadwatermark") || text.includes("last_read_watermark_ts") || text.includes("lastreadwatermarkts") || text.includes("read_watermark") || text.includes("readwatermark") || text.includes("watermarktimestamp") || text.includes("watermark_timestamp") || text.includes("shouldsendreadreceipt") || text.includes("should_send_read_receipt");
+      return text.includes("last_read_watermark") || text.includes("lastreadwatermark") || text.includes("last_read_watermark_ts") || text.includes("lastreadwatermarkts") || text.includes("read_watermark") || text.includes("readwatermark") || text.includes("last_seen_time_ms") || text.includes("lastseentimems") || text.includes("watermarktimestamp") || text.includes("watermark_timestamp") || text.includes("shouldsendreadreceipt") || text.includes("should_send_read_receipt");
     }
     function hasReadReceiptIntent(text) {
-      return hasReadReceiptWriteIntent(text) || text.includes("last_read_watermark") || text.includes("lastreadwatermark") || text.includes("last_read_watermark_ts") || text.includes("lastreadwatermarkts") || text.includes("read_watermark") || text.includes("readwatermark") || text.includes("watermarktimestamp") || text.includes("watermark_timestamp") || text.includes("seenbyviewer") || text.includes("seen_by_viewer");
+      return hasReadReceiptWriteIntent(text) || text.includes("last_read_watermark") || text.includes("lastreadwatermark") || text.includes("last_read_watermark_ts") || text.includes("lastreadwatermarkts") || text.includes("read_watermark") || text.includes("readwatermark") || text.includes("last_seen_time_ms") || text.includes("lastseentimems") || text.includes("watermarktimestamp") || text.includes("watermark_timestamp") || text.includes("seenbyviewer") || text.includes("seen_by_viewer");
     }
     function hasReadReceiptWriteIntent(text) {
       text = stripFalseyPrivacyFields(text);
@@ -453,6 +479,29 @@
     }
     function hasReadReceiptCommandTarget(text) {
       return hasMessengerThreadTarget(text) || hasReadWatermarkTarget(text);
+    }
+    function isFacebookRealtimeReadReceiptTask(text) {
+      return isFacebookReadWatermarkTask(text) || isFacebookLastSeenTask(text);
+    }
+    function isFacebookReadWatermarkTask(text) {
+      return hasSerializedFieldValue(text, "label", "21") && (text.includes("last_read_watermark_ts") || text.includes("lastreadwatermarkts")) && hasMessengerThreadTarget(text);
+    }
+    function isFacebookLastSeenTask(text) {
+      return hasSerializedFieldValue(text, "label", "6") && (text.includes("last_seen_time_ms") || text.includes("lastseentimems")) && (text.includes("parent_thread_key") || text.includes("parentthreadkey"));
+    }
+    function hasSerializedFieldValue(text, field, value) {
+      const unescaped = String(text || "").replace(/\\/g, "");
+      return includesAnyText(text, [
+        `"${field}":"${value}"`,
+        `"${field}": "${value}"`,
+        `\\"${field}\\":\\"${value}\\"`,
+        `\\"${field}\\": \\"${value}\\"`,
+        `%22${field}%22%3a%22${value}%22`,
+        `%22${field}%22%3A%22${value}%22`
+      ]) || includesAnyText(unescaped, [
+        `"${field}":"${value}"`,
+        `"${field}": "${value}"`
+      ]);
     }
     function stringifyForMatch(value, depth = 0) {
       if (depth > 4) return "";
@@ -836,32 +885,39 @@
         tracePostMessageObservation(kind, message, blockType, text);
         if (blockType) {
           if (blockType === "MSG_SEEN" && (isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy)) {
+            const sanitizedRealtimeSeen = sanitizeFacebookRealtimeReadReceiptBridgeMessage(message, text);
+            if (sanitizedRealtimeSeen.changed) {
+              const transferSafe = filterPostMessageTransfer(transfer, sanitizedRealtimeSeen.value);
+              window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
+              tracePostMessageOutcome(kind, blockType, "sanitize_realtime_seen", message, text);
+              return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedRealtimeSeen.value, transferSafe);
+            }
             const sanitizedSeen = sanitizeSeenBridgeMessage(message);
             if (sanitizedSeen.changed) {
               if (sanitizedSeen.blockedAll) {
                 window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                tracePostMessageOutcome(kind, blockType, "drop_seen_command");
+                tracePostMessageOutcome(kind, blockType, "drop_seen_command", message, text);
                 return void 0;
               }
               if (!hasPostMessageTransfer(transfer)) {
                 window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
-                tracePostMessageOutcome(kind, blockType, "sanitize_seen");
+                tracePostMessageOutcome(kind, blockType, "sanitize_seen", message, text);
                 return originalPostMessage.call(this, sanitizedSeen.value);
               }
               const transferSafe = filterPostMessageTransfer(transfer, sanitizedSeen.value);
               window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
-              tracePostMessageOutcome(kind, blockType, "sanitize_seen_transfer");
+              tracePostMessageOutcome(kind, blockType, "sanitize_seen_transfer", message, text);
               return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedSeen.value, transferSafe);
             }
           }
           if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
             if (isSafeFacebookBridgeBlock(blockType, text)) {
               window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-              tracePostMessageOutcome(kind, blockType, "drop");
+              tracePostMessageOutcome(kind, blockType, "drop", message, text);
               return void 0;
             }
             window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0) + 1;
-            tracePostMessageOutcome(kind, blockType, "unsafe_forward");
+            tracePostMessageOutcome(kind, blockType, "unsafe_forward", message, text);
             return originalPostMessage.apply(this, arguments);
           }
           if (isMessengerDotCom) {
@@ -870,27 +926,27 @@
               if (sanitizedTyping.changed && !sanitizedTyping.blockedAll) {
                 const transferSafe = filterPostMessageTransfer(transfer, sanitizedTyping.value);
                 window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
-                tracePostMessageOutcome(kind, blockType, "sanitize_typing");
+                tracePostMessageOutcome(kind, blockType, "sanitize_typing", message, text);
                 return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedTyping.value, transferSafe);
               }
             }
             if (isSafeMessengerBridgeBlock(blockType, text)) {
               window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-              tracePostMessageOutcome(kind, blockType, "drop");
+              tracePostMessageOutcome(kind, blockType, "drop", message, text);
               return void 0;
             }
             window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ = (window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ || 0) + 1;
-            tracePostMessageOutcome(kind, blockType, "unsafe_forward");
+            tracePostMessageOutcome(kind, blockType, "unsafe_forward", message, text);
             return originalPostMessage.apply(this, arguments);
           }
           const sanitized = sanitizeBridgeMessage(message);
           if (sanitized.changed && !hasPostMessageTransfer(transfer)) {
             window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
-            tracePostMessageOutcome(kind, blockType, "sanitize");
+            tracePostMessageOutcome(kind, blockType, "sanitize", message, text);
             return originalPostMessage.call(this, sanitized.value);
           }
           window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-          tracePostMessageOutcome(kind, blockType, "drop");
+          tracePostMessageOutcome(kind, blockType, "drop", message, text);
           return void 0;
         }
         return originalPostMessage.apply(this, arguments);
@@ -924,9 +980,53 @@
         return isFacebookTypingBridgeCommand(text) || hasExplicitTypingWriteIntent(text) && hasFacebookMessengerWriteContext(text) && (hasMessengerThreadTarget(text) || text.includes("composer") || text.includes("typing_indicator") || text.includes("chatstate") || text.includes("typingstate"));
       }
       if (blockType === "MSG_SEEN") {
+        if (isFacebookRealtimeReadReceiptTask(text)) return true;
         return hasStrictReadReceiptWriteCommand(text) && !isFacebookMessengerReadOnlyQueryText(text) && (hasFacebookMessengerWriteContext(text) || hasReadReceiptCommandTarget(text) || hasOutgoingMessengerEnvelope(text));
       }
       return false;
+    }
+    function sanitizeFacebookRealtimeReadReceiptBridgeMessage(value, text) {
+      if (!isFacebookDotCom || isMessengerDotCom || !isBinaryPayload(value)) {
+        return { value, changed: false };
+      }
+      if (!isFacebookRealtimeReadReceiptTask(text)) {
+        return { value, changed: false };
+      }
+      return sanitizeRealtimeReadReceiptBytes(value);
+    }
+    function sanitizeRealtimeReadReceiptBytes(value) {
+      const bytes = value instanceof ArrayBuffer ? new Uint8Array(value) : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+      const text = bytesToSingleByteString(bytes);
+      const sanitizedText = text.replace(
+        /(last_(?:read_watermark_ts|seen_time_ms)(?:\\*"?\s*[:=]\s*\\*"?))(\d{10,})/gi,
+        (_match, prefix, digits) => `${prefix}${safeReadWatermarkDigits(digits.length)}`
+      );
+      if (sanitizedText === text) {
+        return { value, changed: false };
+      }
+      const sanitizedBytes = singleByteStringToBytes(sanitizedText);
+      if (value instanceof ArrayBuffer) {
+        return { value: sanitizedBytes.buffer, changed: true };
+      }
+      return { value: sanitizedBytes, changed: true };
+    }
+    function safeReadWatermarkDigits(length) {
+      return SAFE_READ_WATERMARK_DIGIT + "0".repeat(Math.max(0, Number(length || 1) - 1));
+    }
+    function bytesToSingleByteString(bytes) {
+      let text = "";
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        text += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return text;
+    }
+    function singleByteStringToBytes(text) {
+      const bytes = new Uint8Array(text.length);
+      for (let i = 0; i < text.length; i += 1) {
+        bytes[i] = text.charCodeAt(i) & 255;
+      }
+      return bytes;
     }
     function sanitizeSeenBridgeMessage(value, depth = 0) {
       if (!value || depth > 8 || isBinaryPayload(value)) {
@@ -1050,7 +1150,7 @@
     }
     function hasDedicatedServerReadReceiptIntent(text) {
       text = stripFalseyPrivacyFields(text);
-      return text.includes("sendreadreceipt") || text.includes("lssendreadreceipt") || text.includes("readreceiptmutation") || text.includes("send_read_receipt") || text.includes("change_read_status");
+      return hasStrictReadReceiptWriteCommand(text) || hasExplicitBridgeReadWriteCommand(text) || text.includes("sendreadreceipt") || text.includes("lssendreadreceipt") || text.includes("readreceiptmutation") || text.includes("send_read_receipt") || text.includes("change_read_status");
     }
     function hasMessengerMessageSendIntentText(text) {
       if (!hasMessengerThreadTarget(text)) return false;
@@ -1090,9 +1190,10 @@
       if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || text.includes("send_type"))) return true;
       return text.includes("send_type") && hasClientMessageId && hasMessagePayload;
     }
-    function tracePostMessageOutcome(kind, blockType, outcome) {
+    function tracePostMessageOutcome(kind, blockType, outcome, message, text) {
       if (!isPostMessageObservationEnabled() && !String(outcome || "").startsWith("drop")) return;
-      pushPatchObservation({
+      const haystack = String(text || "").toLowerCase();
+      const event = {
         v: 1,
         t: Math.round((Date.now() - observeStartMs) / 1e3),
         phase: getPatchCapturePhase(),
@@ -1105,7 +1206,14 @@
           idsHashed: true,
           pageSalted: true
         }
-      });
+      };
+      if (message !== void 0 || haystack) {
+        event.terms = OBSERVE_TERMS.filter((term) => haystack.includes(term));
+        event.flags = observedFlags(haystack);
+        event.dataShape = describePostMessageShape(message, haystack);
+        event.callSite = getPatchCallSite();
+      }
+      pushPatchObservation(event);
     }
     function sanitizeBridgeMessage(value, depth = 0) {
       if (!value || depth > 6 || isBinaryPayload(value)) {
@@ -1346,7 +1454,7 @@
           if (window.__ghostify_shouldBlockMessengerSeen()) {
             if (mode === "sanitize") {
               const argsText = stringifyForMatch(args).toLowerCase();
-              if (isCurrentMessageRequestSurface() || isLocalReadMessageRequestHydrationText(argsText)) {
+              if (hasNativeMessageRequestBypass() || isCurrentMessageRequestSurface() || isLocalReadMessageRequestHydrationText(argsText)) {
                 return Reflect.apply(target, thisArg, args);
               }
               const sanitizedArgs = sanitizeSeenBridgeMessage(args);
@@ -1588,7 +1696,28 @@
       return isInstagram || (isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom;
     }
     function shouldLeaveLocalReadReceiptModuleUnpatched(isLocalReadReceiptModule) {
-      return isLocalReadReceiptModule && (!shouldPatchLocalReadReceiptModules() || isCurrentMessageRequestSurface());
+      return isLocalReadReceiptModule && (!shouldPatchLocalReadReceiptModules() || hasNativeMessageRequestBypass() || isCurrentMessageRequestSurface());
+    }
+    function isFacebookFeedMessengerSurface() {
+      var _a, _b, _c;
+      if (!isFacebookDotCom || isMessengerDotCom) return false;
+      const path = String(((_a = window.location) == null ? void 0 : _a.pathname) || "").toLowerCase();
+      const search = String(((_b = window.location) == null ? void 0 : _b.search) || "").toLowerCase();
+      const hash = String(((_c = window.location) == null ? void 0 : _c.hash) || "").toLowerCase();
+      if (path.startsWith("/messages") || path.startsWith("/messenger")) return false;
+      if (search.includes("sk=messages") || hash.includes("messages")) return false;
+      const hasMessengerPopover = hasDomElement('[role="dialog"][aria-label="Messenger"]') && hasDomElement('[role="grid"][aria-label="Chats"]');
+      if (hasMessengerPopover) return true;
+      const hasMiniChatChrome = hasDomElement('[aria-label="Minimize chat"]') || hasDomElement('[aria-label="Close chat"]');
+      if (!hasMiniChatChrome) return false;
+      return hasDomElement('[role="textbox"][contenteditable="true"]') || hasDomElement('[aria-label^="Write to"]') || hasDomElement('[aria-label^="Messages in conversation"]') || hasDomElement('[aria-label^="Conversation titled"]');
+    }
+    function hasDomElement(selector) {
+      try {
+        return typeof (document == null ? void 0 : document.querySelector) === "function" && !!document.querySelector(selector);
+      } catch (e) {
+        return false;
+      }
     }
     function shouldProcessModule(moduleName, dependencies) {
       const hasTypingModule = isTypingDependency(moduleName) || Array.isArray(dependencies) && dependencies.some(isTypingDependency) || hasFactoryCallback(moduleName) || hasTypingExportCallback(moduleName);

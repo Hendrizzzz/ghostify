@@ -38,7 +38,7 @@ export function hookVisibility() {
     Object.defineProperty(document, 'hasFocus', {
         value: function () {
             const spoof = shouldSpoofVisibility();
-            if (spoof === 'hidden' || spoof === 'unfocused') return false;
+            if (spoof === 'hidden' || spoof === 'unfocused' || spoof === 'unfocused-passive') return false;
             return originalHasFocus();
         },
         configurable: true
@@ -99,7 +99,8 @@ function getWrappedListener(type, listener, wrappedListeners) {
     const wrapped = function (event) {
         const spoof = shouldSpoofVisibility();
         if (spoof) {
-            if (type === 'blur' || type === 'focus' || type === 'focusin' || type === 'focusout') {
+            const suppressFocusEvents = spoof === 'hidden' || spoof === 'unfocused';
+            if (suppressFocusEvents && (type === 'blur' || type === 'focus' || type === 'focusin' || type === 'focusout')) {
                 if (this === window || this === document || (event && (event.target === window || event.target === document))) {
                     return;
                 }

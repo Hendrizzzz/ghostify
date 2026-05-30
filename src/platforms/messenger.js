@@ -1,4 +1,4 @@
-import { SETTINGS, isKilled } from '../config.js';
+import { SETTINGS, isFacebookMessengerProxy, isKilled } from '../config.js';
 
 const REQUEST_NATIVE_GRACE_MS = 15000;
 
@@ -26,6 +26,7 @@ export function getMessengerSpoofState() {
     if (isMessengerMessageRequestSurface()) return null;
 
     if (SETTINGS.msgSeen && !isKilled('msgSeen')) {
+        if (isFacebookMessengerProxy) return 'unfocused-passive';
         return 'unfocused';
     }
 

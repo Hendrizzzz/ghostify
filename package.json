@@ -1,11 +1,11 @@
 {
   "name": "ghostify",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Privacy controls for Instagram, Facebook, and Messenger.",
   "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "test": "npm run build"
+    "test": "npm run build && node test/messenger-send-stability.test.js"
   },
   "repository": {
     "type": "git",

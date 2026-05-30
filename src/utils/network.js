@@ -439,6 +439,8 @@ function hasReadReceiptWatermarkContext(str) {
         'lastreadwatermarkts',
         'read_watermark',
         'readwatermark',
+        'last_seen_time_ms',
+        'lastseentimems',
         'watermarktimestamp',
         'watermark_timestamp',
         'shouldsendreadreceipt',
@@ -675,6 +677,8 @@ function isMessengerRealtimeReadBridgeWrite(str, urlString) {
         'lastreadwatermarkts',
         'read_watermark',
         'readwatermark',
+        'last_seen_time_ms',
+        'lastseentimems',
         'watermarktimestamp',
         'watermark_timestamp',
         'shouldsendreadreceipt',
@@ -697,6 +701,8 @@ function hasRealtimeReadWatermarkWriteSignal(str) {
         'lastreadwatermarkts',
         'read_watermark',
         'readwatermark',
+        'last_seen_time_ms',
+        'lastseentimems',
         'watermarktimestamp',
         'watermark_timestamp',
         'shouldsendreadreceipt',
@@ -704,6 +710,7 @@ function hasRealtimeReadWatermarkWriteSignal(str) {
     ]);
 
     if (!hasWatermark) return false;
+    if (isRealtimeReadReceiptLabelTask(str)) return true;
 
     return includesAny(str, [
         'markthread',
@@ -718,12 +725,39 @@ function hasRealtimeReadWatermarkWriteSignal(str) {
         'updatelastreadwatermark',
         'shouldsendreadreceipt',
         'should_send_read_receipt',
-        'ls_req',
-        '/ls_req',
-        'issue_new_task',
-        'issuenewtask',
-        'storedprocedure',
-        'procedure'
+        'storedprocedure'
+    ]);
+}
+
+function isRealtimeReadReceiptLabelTask(str) {
+    return isRealtimeReadWatermarkLabelTask(str) ||
+        isRealtimeLastSeenLabelTask(str);
+}
+
+function isRealtimeReadWatermarkLabelTask(str) {
+    return hasSerializedFieldValue(str, 'label', '21') &&
+        includesAny(str, ['last_read_watermark_ts', 'lastreadwatermarkts']) &&
+        hasMessengerThreadContext(str);
+}
+
+function isRealtimeLastSeenLabelTask(str) {
+    return hasSerializedFieldValue(str, 'label', '6') &&
+        includesAny(str, ['last_seen_time_ms', 'lastseentimems']) &&
+        includesAny(str, ['parent_thread_key', 'parentthreadkey']);
+}
+
+function hasSerializedFieldValue(str, field, value) {
+    const unescaped = String(str || '').replace(/\\/g, '');
+    return includesAny(str, [
+        `"${field}":"${value}"`,
+        `"${field}": "${value}"`,
+        `\\"${field}\\":\\"${value}\\"`,
+        `\\"${field}\\": \\"${value}\\"`,
+        `%22${field}%22%3a%22${value}%22`,
+        `%22${field}%22%3A%22${value}%22`
+    ]) || includesAny(unescaped, [
+        `"${field}":"${value}"`,
+        `"${field}": "${value}"`
     ]);
 }
 
@@ -1045,6 +1079,7 @@ function isMessengerTypingNetworkTask(str, urlString) {
 
 function isMessengerRealtimeTransport(urlString) {
     return urlString.includes('/ws/realtime') ||
+        urlString.includes('/ws/lightspeed') ||
         urlString.includes('/ws/streamcontroller') ||
         urlString.includes('/ws/rpsignaling') ||
         urlString.includes('edge-chat.messenger.com/chat') ||
