@@ -2,14 +2,14 @@ import { motion } from 'motion/react';
 import { GhostMark } from './GhostSVG';
 
 const CHECK = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+  <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
     <circle cx="7" cy="7" r="6.5" stroke="rgba(91,173,106,0.35)" />
     <path d="M4 7l2 2 4-4" stroke="#5BAD6A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const DASH = () => (
-  <span style={{ fontFamily: 'var(--g-mono)', fontSize: 11, color: 'rgba(240,230,210,0.18)' }}>—</span>
+  <span style={{ fontFamily: 'var(--g-mono)', fontSize: 13, color: 'rgba(240,230,210,0.18)' }}>—</span>
 );
 
 /* Evidence chips — small artifact fragments showing a suppressed signal */
@@ -23,7 +23,7 @@ function EvidenceChip({ text, accent = false }: { text: string; accent?: boolean
       borderRadius: 4,
     }}>
       {accent && <GhostMark size={9} />}
-      <span style={{ fontFamily: 'var(--g-mono)', fontSize: 9, color: accent ? 'rgba(196,72,48,0.7)' : 'rgba(240,230,210,0.32)', letterSpacing: '0.02em' }}>
+      <span style={{ fontFamily: 'var(--g-mono)', fontSize: 10, color: accent ? 'rgba(196,72,48,0.7)' : 'rgba(240,230,210,0.32)', letterSpacing: '0.02em' }}>
         {text}
       </span>
     </div>
@@ -33,19 +33,19 @@ function EvidenceChip({ text, accent = false }: { text: string; accent?: boolean
 /* Messenger artifact fragment */
 function MessengerFragment() {
   return (
-    <div style={{ background: '#18202E', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 280 }}>
+    <div style={{ background: '#18202E', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 340 }}>
       <div style={{ padding: '8px 11px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 7 }}>
-        <div style={{ width: 22, height: 22, borderRadius: 11, background: '#0082FB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: 'white', fontFamily: 'var(--g-sans)' }}>M</div>
+        <div style={{ width: 24, height: 24, borderRadius: 12, background: '#0082FB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', fontFamily: 'var(--g-sans)' }}>M</div>
         <div>
-          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 11, fontWeight: 600, color: 'white' }}>Maria Santos</div>
-          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 9.5, color: 'rgba(255,255,255,0.32)' }}>Active now</div>
+          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 12.5, fontWeight: 600, color: 'white' }}>Maria Santos</div>
+          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 10.5, color: 'rgba(255,255,255,0.32)' }}>Active now</div>
         </div>
       </div>
       <div style={{ padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ alignSelf: 'flex-end', padding: '5px 9px', borderRadius: '11px 3px 11px 11px', background: '#0082FB', fontFamily: 'var(--g-sans)', fontSize: 11, color: 'white', lineHeight: 1.4 }}>
+        <div style={{ alignSelf: 'flex-end', padding: '6px 10px', borderRadius: '11px 3px 11px 11px', background: '#0082FB', fontFamily: 'var(--g-sans)', fontSize: 12, color: 'white', lineHeight: 1.4 }}>
           yeah Saturday should work
         </div>
-        <div style={{ alignSelf: 'flex-start', padding: '5px 9px', borderRadius: '3px 11px 11px 11px', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--g-sans)', fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4, maxWidth: '80%' }}>
+        <div style={{ alignSelf: 'flex-start', padding: '6px 10px', borderRadius: '3px 11px 11px 11px', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--g-sans)', fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4, maxWidth: '80%' }}>
           wait are you free this weekend??
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, alignSelf: 'flex-end' }}>
@@ -60,16 +60,16 @@ function MessengerFragment() {
 /* Facebook artifact fragment — matches FeaturesSection TypingScene */
 function FacebookFragment() {
   return (
-    <div style={{ background: '#18202E', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 280 }}>
+    <div style={{ background: '#18202E', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 340 }}>
       <div style={{ padding: '8px 11px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 7 }}>
-        <div style={{ width: 22, height: 22, borderRadius: 11, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: 'white', fontFamily: 'var(--g-sans)' }}>D</div>
+        <div style={{ width: 24, height: 24, borderRadius: 12, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', fontFamily: 'var(--g-sans)' }}>D</div>
         <div>
-          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 11, fontWeight: 600, color: 'white' }}>David Park</div>
-          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 9.5, color: 'rgba(255,255,255,0.32)' }}>Active now</div>
+          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 12.5, fontWeight: 600, color: 'white' }}>David Park</div>
+          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 10.5, color: 'rgba(255,255,255,0.32)' }}>Active now</div>
         </div>
       </div>
       <div style={{ padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ alignSelf: 'flex-start', padding: '5px 9px', borderRadius: '3px 11px 11px 11px', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--g-sans)', fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4, maxWidth: '82%' }}>
+        <div style={{ alignSelf: 'flex-start', padding: '6px 10px', borderRadius: '3px 11px 11px 11px', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--g-sans)', fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4, maxWidth: '82%' }}>
           did you read my last message?
         </div>
         {/* Typing indicator (right-aligned) — blocked by Ghostify */}
@@ -84,7 +84,7 @@ function FacebookFragment() {
         </div>
         {/* Composer with text being typed */}
         <div style={{ height: 28, borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', padding: '0 11px', display: 'flex', alignItems: 'center', marginTop: 2 }}>
-          <span style={{ fontFamily: 'var(--g-sans)', fontSize: 10.5, color: 'rgba(255,255,255,0.45)' }}>ok let me find it—</span>
+          <span style={{ fontFamily: 'var(--g-sans)', fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>ok let me find it—</span>
           <span style={{ display: 'inline-block', width: 1, height: 11, background: '#1877F2', marginLeft: 1, animation: 'ghostBlink 1s ease-in-out infinite' }} />
         </div>
       </div>
@@ -95,21 +95,21 @@ function FacebookFragment() {
 /* Instagram artifact fragment */
 function InstagramFragment() {
   return (
-    <div style={{ background: '#000', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', maxWidth: 280 }}>
+    <div style={{ background: '#000', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', maxWidth: 340 }}>
       {/* Story ring */}
       <div style={{ padding: '8px 11px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 26, height: 26, borderRadius: 13, background: 'linear-gradient(135deg, #833AB4, #C13584, #F56040)', padding: 2 }}>
           <div style={{ width: '100%', height: '100%', borderRadius: 11, background: '#C13584', border: '1.5px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: 'white', fontFamily: 'var(--g-sans)' }}>Y</div>
         </div>
         <div>
-          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 11, fontWeight: 600, color: 'white' }}>yuki.photo</div>
-          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 9.5, color: 'rgba(255,255,255,0.32)' }}>story · 3h ago</div>
+          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 12.5, fontWeight: 600, color: 'white' }}>yuki.photo</div>
+          <div style={{ fontFamily: 'var(--g-sans)', fontSize: 10.5, color: 'rgba(255,255,255,0.32)' }}>story · 3h ago</div>
         </div>
       </div>
       <div style={{ padding: '8px 11px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {/* Story thumbnail */}
-        <div style={{ height: 56, borderRadius: 6, background: 'linear-gradient(155deg, rgba(131,58,180,0.5) 0%, rgba(193,53,132,0.45) 55%, rgba(245,96,64,0.38) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: 'var(--g-display)', fontSize: 14, fontStyle: 'italic', color: 'rgba(255,255,255,0.6)', fontWeight: 300 }}>golden hour</span>
+        <div style={{ height: 64, borderRadius: 6, background: 'linear-gradient(155deg, rgba(131,58,180,0.5) 0%, rgba(193,53,132,0.45) 55%, rgba(245,96,64,0.38) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontFamily: 'var(--g-display)', fontSize: 15, fontStyle: 'italic', color: 'rgba(255,255,255,0.6)', fontWeight: 300 }}>golden hour</span>
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <EvidenceChip text="story view held" accent />
@@ -161,14 +161,14 @@ export function PlatformSection() {
       {/* Top hairline */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(240,230,210,0.06) 20%, rgba(240,230,210,0.06) 80%, transparent)' }} />
 
-      <div style={{ padding: '0 clamp(28px, 4vw, 56px)', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
+      <div className="platform-inner" style={{ padding: '0 clamp(28px, 4vw, 56px)', maxWidth: 1380, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
         {/* Heading */}
         <div style={{ marginBottom: 'clamp(36px, 5vw, 56px)' }}>
-          <div style={{ fontFamily: 'var(--g-mono)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--g-dim)', marginBottom: 12 }}>
+          <div style={{ fontFamily: 'var(--g-mono)', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--g-dim)', marginBottom: 12 }}>
             Compatibility
           </div>
-          <h2 style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(1.4rem, 2.2vw, 1.9rem)', fontWeight: 500, color: 'var(--g-white)', margin: 0, lineHeight: 1.2, letterSpacing: 0 }}>
+          <h2 style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(1.65rem, 2.6vw, 2.25rem)', fontWeight: 500, color: 'var(--g-white)', margin: 0, lineHeight: 1.16, letterSpacing: 0 }}>
             One layer. Three surfaces.
           </h2>
         </div>
@@ -179,12 +179,19 @@ export function PlatformSection() {
           {/* Left: compatibility matrix */}
           <div>
             {/* Column headers */}
-            <div style={{ display: 'grid', gridTemplateColumns: '120px repeat(3, 1fr) 1.4fr', gap: 0, marginBottom: 0 }}>
+            <div className="platform-matrix-row platform-matrix-head" style={{ display: 'grid', gridTemplateColumns: '136px repeat(3, 1fr) 1.4fr', gap: 0, marginBottom: 0 }}>
               <div />
-              {['Read receipts', 'Typing', 'Story views'].map((col) => (
-                <div key={col} style={{ padding: '10px 8px', fontFamily: 'var(--g-mono)', fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(240,230,210,0.28)', textAlign: 'center' }}>{col}</div>
+              {[
+                { label: 'Read receipts', short: 'Read' },
+                { label: 'Typing', short: 'Type' },
+                { label: 'Story views', short: 'Story' },
+              ].map((col) => (
+                <div key={col.label} style={{ padding: '10px 8px', fontFamily: 'var(--g-mono)', fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(240,230,210,0.3)', textAlign: 'center' }}>
+                  <span className="platform-head-full">{col.label}</span>
+                  <span className="platform-head-short">{col.short}</span>
+                </div>
               ))}
-              <div style={{ padding: '10px 8px', fontFamily: 'var(--g-mono)', fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(240,230,210,0.28)' }}>Notes</div>
+              <div style={{ padding: '10px 8px', fontFamily: 'var(--g-mono)', fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(240,230,210,0.3)' }}>Notes</div>
             </div>
 
             {/* Header underline */}
@@ -199,11 +206,11 @@ export function PlatformSection() {
                 viewport={{ once: true, margin: '-30px' }}
                 transition={{ duration: 0.4, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: '120px repeat(3, 1fr) 1.4fr', gap: 0, borderBottom: '1px solid rgba(240,230,210,0.06)', alignItems: 'center' }}>
+                <div className="platform-matrix-row" style={{ display: 'grid', gridTemplateColumns: '136px repeat(3, 1fr) 1.4fr', gap: 0, borderBottom: '1px solid rgba(240,230,210,0.06)', alignItems: 'center' }}>
                   {/* Platform name */}
                   <div style={{ padding: 'clamp(14px, 1.8vw, 20px) 0', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 6, height: 6, borderRadius: 3, background: row.color, flexShrink: 0 }} />
-                    <span style={{ fontFamily: 'var(--g-sans)', fontSize: 13.5, fontWeight: 500, color: 'var(--g-white)', letterSpacing: 0 }}>{row.name}</span>
+                    <span className="platform-name" style={{ fontFamily: 'var(--g-sans)', fontSize: 15.5, fontWeight: 500, color: 'var(--g-white)', letterSpacing: 0 }}>{row.name}</span>
                   </div>
                   {/* Check cells */}
                   {[row.read, row.typing, row.story].map((val, ci) => (
@@ -212,7 +219,7 @@ export function PlatformSection() {
                     </div>
                   ))}
                   {/* Notes */}
-                  <div style={{ padding: 'clamp(14px, 1.8vw, 20px) 8px', fontFamily: 'var(--g-mono)', fontSize: 9.5, color: 'rgba(240,230,210,0.28)', letterSpacing: '0.02em', lineHeight: 1.5 }}>
+                  <div className="platform-notes-cell" style={{ padding: 'clamp(14px, 1.8vw, 20px) 8px', fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'rgba(240,230,210,0.32)', letterSpacing: '0.02em', lineHeight: 1.5 }}>
                     {row.notes}
                   </div>
                 </div>
@@ -220,7 +227,7 @@ export function PlatformSection() {
             ))}
 
             {/* Footer note */}
-            <p style={{ fontFamily: 'var(--g-mono)', fontSize: 9.5, color: 'rgba(240,230,210,0.2)', margin: '18px 0 0', letterSpacing: '0.02em', lineHeight: 1.7 }}>
+            <p style={{ fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'rgba(240,230,210,0.24)', margin: '18px 0 0', letterSpacing: '0.02em', lineHeight: 1.7 }}>
               Controls are applied locally per browser tab.<br />
               Story view coverage varies by platform version.
             </p>
@@ -243,7 +250,7 @@ export function PlatformSection() {
         </div>
 
         {/* Disclaimer */}
-        <p style={{ fontFamily: 'var(--g-mono)', fontSize: 9, color: 'rgba(240,230,210,0.16)', marginTop: 'clamp(28px, 4vw, 48px)', letterSpacing: '0.03em', lineHeight: 1.8, maxWidth: 600 }}>
+        <p style={{ fontFamily: 'var(--g-mono)', fontSize: 10, color: 'rgba(240,230,210,0.18)', marginTop: 'clamp(28px, 4vw, 48px)', letterSpacing: '0.03em', lineHeight: 1.8, maxWidth: 680 }}>
           Ghostify is not affiliated with Meta, Facebook, Messenger, or Instagram. Platform names are used as factual compatibility descriptors only.
         </p>
       </div>
@@ -253,8 +260,60 @@ export function PlatformSection() {
           .platform-layout { grid-template-columns: 1fr !important; }
           .platform-fragments { display: grid !important; grid-template-columns: 1fr 1fr !important; }
         }
+        @media (max-width: 480px) {
+          .platform-inner {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+          .platform-matrix-row {
+            grid-template-columns: minmax(86px, 0.9fr) repeat(3, minmax(34px, 0.38fr)) minmax(82px, 0.85fr) !important;
+          }
+          .platform-matrix-head > div {
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+            font-size: 8px !important;
+          }
+          .platform-name {
+            font-size: 14px !important;
+          }
+          .platform-notes-cell {
+            overflow-wrap: anywhere !important;
+          }
+        }
         @media (max-width: 560px) {
           .platform-fragments { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 360px) {
+          .platform-inner {
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+          .platform-matrix-row {
+            grid-template-columns: minmax(94px, 1fr) repeat(3, 26px) minmax(54px, 0.75fr) !important;
+          }
+          .platform-name {
+            font-size: 13px !important;
+          }
+          .platform-matrix-head > div {
+            font-size: 7px !important;
+            letter-spacing: 0.01em !important;
+            line-height: 1.1 !important;
+          }
+          .platform-head-full {
+            display: none !important;
+          }
+          .platform-head-short {
+            display: inline !important;
+          }
+          .platform-notes-cell {
+            padding-left: 4px !important;
+            padding-right: 0 !important;
+            font-size: 8px !important;
+            line-height: 1.35 !important;
+          }
+        }
+        .platform-head-short {
+          display: none;
         }
       `}</style>
     </section>

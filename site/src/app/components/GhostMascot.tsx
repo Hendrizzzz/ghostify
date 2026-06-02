@@ -9,14 +9,19 @@ const EVENT_PHRASES: Record<string, string> = {
   'feature-off': 'that one went through.',
 };
 
-const FRICTION  = 0.88;
-const GRAVITY   = 0.25;
-const BOUNCE    = 0.26;
-const MIN_SPEED = 0.35;
+const FRICTION  = 0.955;
+const GRAVITY   = 0.18;
+const BOUNCE    = 0.68;
+const MIN_SPEED = 0.16;
+const THROW_POWER = 24;
+const MAX_THROW_SPEED = 42;
 const GHOST_W   = 64;
 const GHOST_H   = 64;
 const GLIDE_K   = 0.045;
 const BUBBLE_W  = 200;
+const BUBBLE_MIN_W = 158;
+const DANCE_DURATION_MS = 1740;
+const TYPING_SETTLE_MS = 420;
 const IDLE_MESSAGE_MS = 5200;
 const IDLE_PROMPT_MS  = 14000;
 const IDLE_PHRASES = [
@@ -26,43 +31,90 @@ const IDLE_PHRASES = [
   'Messenger, Facebook, Instagram.',
   "move me. i'll settle.",
 ];
+const THROW_PHRASES = [
+  'nice throw.',
+  'good toss.',
+  'whee. local-only flight.',
+  'that had range.',
+];
 
 export function GhostMascot() {
   const [displayPos, setDisplayPos]   = useState({ x: -200, y: -200 });
   const [message, setMessage]         = useState<string | null>(null);
   const [isFlying, setIsFlying]       = useState(false);
-  const [isDancing, setIsDancing]     = useState(false);
+  const [typingMotion, setTypingMotion] = useState<'idle' | 'burst' | 'active' | 'settling'>('idle');
   const [bubbleBelow, setBubbleBelow] = useState(false);
   const [bubbleLeft, setBubbleLeft]   = useState<number>(0);
+  const [bubbleWidth, setBubbleWidth] = useState<number>(BUBBLE_W);
   const [mounted, setMounted]         = useState(false);
 
   const pos           = useRef({ x: 200, y: 200 });
   const vel           = useRef({ x: 0, y: 0 });
   const isDragging    = useRef(false);
+  const lastPointerAt = useRef(0);
   const dragOffset    = useRef({ x: 0, y: 0 });
   const lastPointers  = useRef<{ x: number; y: number; t: number }[]>([]);
   const rafRef        = useRef<number>();
   const msgTimer      = useRef<ReturnType<typeof setTimeout>>();
+  const danceTimer    = useRef<ReturnType<typeof setTimeout>>();
+  const settleTimer   = useRef<ReturnType<typeof setTimeout>>();
   const idleTimer     = useRef<ReturnType<typeof setInterval>>();
   const idlePhase     = useRef(Math.random() * Math.PI * 2);
   const idleT         = useRef(0);
   const idlePhrase    = useRef(0);
   const lastTouched   = useRef(Date.now());
   const ghostRef      = useRef<HTMLDivElement>(null);
+  const typingActive  = useRef(false);
+  const typingBurstUntil = useRef(0);
 
   // Hold-center state
   const isHoldingCenter  = useRef(false);
   const holdCenterUntil  = useRef(0);
   const centerTarget     = useRef({ x: 0, y: 0 });
 
+  const safeMascotPos = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    if (vw <= 640) {
+      const x = vw - GHOST_W - 14;
+      const y = Math.min(vh - GHOST_H - 16, Math.max(318, vh * 0.8));
+
+      return {
+        x: Math.max(12, x),
+        y: Math.max(140, y),
+      };
+    }
+
+    const rightInset = vw <= 640 ? 18 : 88;
+    const minY = vw <= 640 ? 150 : 112;
+    const preferredY = vw <= 640 ? vh * 0.3 : vh * 0.22;
+
+    return {
+      x: Math.max(16, Math.min(vw - GHOST_W - 16, vw - GHOST_W - rightInset)),
+      y: Math.max(minY, Math.min(vh - GHOST_H - 88, preferredY)),
+    };
+  }, []);
+
   const updateBubblePos = useCallback((px: number, py: number) => {
     const vw = window.innerWidth;
     const margin = 14;
-    let left = px + GHOST_W / 2 - BUBBLE_W / 2;
-    left = Math.max(margin, Math.min(vw - BUBBLE_W - margin, left));
+    const width = Math.min(BUBBLE_W, Math.max(BUBBLE_MIN_W, vw - margin * 2));
+    let left = px + GHOST_W / 2 - width / 2;
+    left = Math.max(margin, Math.min(vw - width - margin, left));
     setBubbleLeft(left);
-    setBubbleBelow(py < 110);
+    setBubbleWidth(width);
+    setBubbleBelow(py < 112);
   }, []);
+
+  const parkAtSafeEdge = useCallback(() => {
+    const next = safeMascotPos();
+    pos.current = next;
+    vel.current = { x: 0, y: 0 };
+    isHoldingCenter.current = false;
+    setIsFlying(false);
+    setDisplayPos(next);
+    updateBubblePos(next.x, next.y);
+  }, [safeMascotPos, updateBubblePos]);
 
   const showMessage = useCallback((msg: string, duration = IDLE_MESSAGE_MS) => {
     clearTimeout(msgTimer.current);
@@ -77,19 +129,83 @@ export function GhostMascot() {
     return rect.top < window.innerHeight * 0.75 && rect.bottom > window.innerHeight * 0.2;
   }, []);
 
-  const glideToCenter = useCallback(() => {
-    const cx = window.innerWidth / 2 - GHOST_W / 2;
-    const cy = Math.max(80, window.innerHeight * 0.38 - GHOST_H / 2);
+  const glideToHeroCallout = useCallback((type: string) => {
+    const parked = window.innerWidth <= 640 ? safeMascotPos() : null;
+    const heroBrowser = document.querySelector<HTMLElement>('[data-hero-cursor]')?.parentElement;
+    const rect = heroBrowser?.getBoundingClientRect();
+    const useHeroSpot = !parked && rect && rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+    const demoBrowser = document.querySelector<HTMLElement>('.demo-browser');
+    const demoRect = demoBrowser?.getBoundingClientRect();
+    const useDemoSpot = !parked && !useHeroSpot && demoRect && demoRect.width > 0 && demoRect.height > 0 && demoRect.bottom > 0 && demoRect.top < window.innerHeight;
+    const xRatio = type === 'story-view' ? 0.72 : 0.68;
+    const yRatio = type === 'story-view' ? 0.3 : 0.28;
+    const demoYMax = Math.max(170, window.innerHeight - GHOST_H - 96);
+    const cx = parked
+      ? parked.x
+      : useHeroSpot
+        ? rect.left + rect.width * xRatio - GHOST_W / 2
+        : useDemoSpot
+          ? demoRect.left + demoRect.width * (type === 'story-view' ? 0.78 : 0.82) - GHOST_W / 2
+        : window.innerWidth / 2 - GHOST_W / 2;
+    const cy = parked
+      ? parked.y
+      : useHeroSpot
+        ? rect.top + rect.height * yRatio - GHOST_H / 2
+        : useDemoSpot
+          ? Math.max(170, Math.min(demoYMax, demoRect.top - GHOST_H - 28))
+        : Math.max(170, window.innerHeight * 0.32 - GHOST_H / 2);
+    const maxX = window.innerWidth - GHOST_W - 16;
+    const maxY = window.innerHeight - GHOST_H - 16;
     centerTarget.current  = { x: cx, y: cy };
+    centerTarget.current = {
+      x: Math.max(16, Math.min(maxX, centerTarget.current.x)),
+      y: Math.max(useHeroSpot ? 64 : 150, Math.min(maxY, centerTarget.current.y)),
+    };
     isHoldingCenter.current = true;
     holdCenterUntil.current = Date.now() + 5800;
-  }, []);
+  }, [safeMascotPos]);
 
   const extendHoldCenter = useCallback((ms = 5500) => {
     if (isHoldingCenter.current) {
       holdCenterUntil.current = Math.max(holdCenterUntil.current, Date.now() + ms);
     }
   }, []);
+
+  const settleTypingMotion = useCallback(() => {
+    clearTimeout(danceTimer.current);
+    clearTimeout(settleTimer.current);
+    setTypingMotion('settling');
+    settleTimer.current = setTimeout(() => setTypingMotion('idle'), TYPING_SETTLE_MS);
+  }, []);
+
+  const startTypingMotion = useCallback(() => {
+    typingActive.current = true;
+    typingBurstUntil.current = Date.now() + DANCE_DURATION_MS;
+    clearTimeout(danceTimer.current);
+    clearTimeout(settleTimer.current);
+    setTypingMotion('burst');
+    danceTimer.current = setTimeout(() => {
+      if (typingActive.current) setTypingMotion('active');
+      else settleTypingMotion();
+    }, DANCE_DURATION_MS);
+  }, [settleTypingMotion]);
+
+  const continueTypingMotion = useCallback(() => {
+    if (!typingActive.current) {
+      startTypingMotion();
+      return;
+    }
+    clearTimeout(settleTimer.current);
+    extendHoldCenter(2200);
+  }, [extendHoldCenter, startTypingMotion]);
+
+  const stopTypingMotion = useCallback(() => {
+    if (!typingActive.current && Date.now() >= typingBurstUntil.current) return;
+    typingActive.current = false;
+    const remainingBurst = Math.max(0, typingBurstUntil.current - Date.now());
+    clearTimeout(danceTimer.current);
+    danceTimer.current = setTimeout(settleTypingMotion, remainingBurst);
+  }, [settleTypingMotion]);
 
   // RAF physics + hold-center glide
   const tick = useCallback(() => {
@@ -135,7 +251,7 @@ export function GhostMascot() {
           if (pos.current.y >= vh) {
             pos.current.y   = vh;
             vel.current.y  *= -BOUNCE;
-            vel.current.x  *= 0.72;
+            vel.current.x  *= 0.86;
           }
 
           setDisplayPos({ x: pos.current.x, y: pos.current.y });
@@ -160,7 +276,7 @@ export function GhostMascot() {
 
   useEffect(() => {
     setMounted(true);
-    pos.current = { x: window.innerWidth * 0.78, y: window.innerHeight * 0.22 };
+    pos.current = safeMascotPos();
     setDisplayPos({ x: pos.current.x, y: pos.current.y });
     updateBubblePos(pos.current.x, pos.current.y);
 
@@ -170,10 +286,46 @@ export function GhostMascot() {
 
     return () => {
       clearTimeout(msgTimer.current);
+      clearTimeout(danceTimer.current);
+      clearTimeout(settleTimer.current);
       clearInterval(idleTimer.current);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [tick, showMessage, updateBubblePos]);
+  }, [safeMascotPos, tick, showMessage, updateBubblePos]);
+
+  useEffect(() => {
+    const moveToSafeEdge = (clearBubble = false) => {
+      if (isDragging.current) return;
+      if (clearBubble) {
+        clearTimeout(msgTimer.current);
+        setMessage(null);
+      }
+      stopTypingMotion();
+      parkAtSafeEdge();
+    };
+
+    const onResize = () => {
+      if (Date.now() - lastTouched.current < 900) return;
+      moveToSafeEdge(false);
+    };
+
+    const onAnchorJump = () => {
+      lastTouched.current = Date.now();
+      moveToSafeEdge(true);
+    };
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('hashchange', onAnchorJump);
+    window.addEventListener('popstate', onAnchorJump);
+    window.addEventListener('ghostify:anchor-jump', onAnchorJump);
+    if (window.location.hash) window.setTimeout(onAnchorJump, 0);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('hashchange', onAnchorJump);
+      window.removeEventListener('popstate', onAnchorJump);
+      window.removeEventListener('ghostify:anchor-jump', onAnchorJump);
+    };
+  }, [parkAtSafeEdge, stopTypingMotion]);
 
   useEffect(() => {
     idleTimer.current = setInterval(() => {
@@ -194,15 +346,34 @@ export function GhostMascot() {
     const handler = (e: Event) => {
       const type = (e as CustomEvent<{ type: string }>).detail?.type;
       if (!type) return;
+
+      if (type === 'typing' || type === 'typing-start') {
+        if (!isHoldingCenter.current && !heroIsVisible()) glideToHeroCallout(type);
+        extendHoldCenter(5500);
+        startTypingMotion();
+        showMessage(EVENT_PHRASES.typing, 4000);
+        return;
+      }
+
+      if (type === 'typing-active') {
+        continueTypingMotion();
+        return;
+      }
+
+      if (type === 'typing-stop') {
+        stopTypingMotion();
+        return;
+      }
+
       const phrase = EVENT_PHRASES[type];
       if (!phrase) return;
 
-      if (type === 'typing') {
-        extendHoldCenter(5500);
-        setIsDancing(true);
-        setTimeout(() => setIsDancing(false), 1400);
+      if ((type === 'chat-open' || type === 'story-view') && window.innerWidth <= 640) {
+        stopTypingMotion();
+        parkAtSafeEdge();
       } else if (type === 'chat-open' || type === 'story-view') {
-        glideToCenter();
+        stopTypingMotion();
+        glideToHeroCallout(type);
       }
 
       showMessage(phrase, 4000);
@@ -210,34 +381,35 @@ export function GhostMascot() {
 
     window.addEventListener('ghostify:mascot', handler);
     return () => window.removeEventListener('ghostify:mascot', handler);
-  }, [showMessage, glideToCenter, extendHoldCenter]);
+  }, [showMessage, glideToHeroCallout, extendHoldCenter, parkAtSafeEdge, heroIsVisible, startTypingMotion, continueTypingMotion, stopTypingMotion]);
 
-  // Pointer drag
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault();
+  const beginDragAt = useCallback((clientX: number, clientY: number, timeStamp: number) => {
     lastTouched.current = Date.now();
     isDragging.current = true;
     isHoldingCenter.current = false;
-    dragOffset.current = { x: e.clientX - pos.current.x, y: e.clientY - pos.current.y };
-    lastPointers.current = [{ x: e.clientX, y: e.clientY, t: e.timeStamp }];
-    ghostRef.current?.setPointerCapture(e.pointerId);
+    dragOffset.current = { x: clientX - pos.current.x, y: clientY - pos.current.y };
+    lastPointers.current = [{ x: clientX, y: clientY, t: timeStamp }];
     setIsFlying(false);
+    typingActive.current = false;
+    clearTimeout(danceTimer.current);
+    clearTimeout(settleTimer.current);
+    setTypingMotion('idle');
     clearTimeout(msgTimer.current);
     setMessage(null);
   }, []);
 
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const dragAt = useCallback((clientX: number, clientY: number, timeStamp: number) => {
     if (!isDragging.current) return;
-    const nx = e.clientX - dragOffset.current.x;
-    const ny = e.clientY - dragOffset.current.y;
+    const nx = clientX - dragOffset.current.x;
+    const ny = clientY - dragOffset.current.y;
     pos.current = { x: nx, y: ny };
     setDisplayPos({ x: nx, y: ny });
     updateBubblePos(nx, ny);
-    lastPointers.current.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
+    lastPointers.current.push({ x: clientX, y: clientY, t: timeStamp });
     if (lastPointers.current.length > 6) lastPointers.current.shift();
   }, [updateBubblePos]);
 
-  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const finishDrag = useCallback(() => {
     if (!isDragging.current) return;
     isDragging.current = false;
     lastTouched.current = Date.now();
@@ -247,16 +419,68 @@ export function GhostMascot() {
       const last = pts[pts.length - 1];
       const prev = pts[Math.max(0, pts.length - 3)];
       const dt = Math.max(last.t - prev.t, 16);
-      vel.current = { x: ((last.x - prev.x) / dt) * 13, y: ((last.y - prev.y) / dt) * 13 };
+      const rawVel = {
+        x: ((last.x - prev.x) / dt) * THROW_POWER,
+        y: ((last.y - prev.y) / dt) * THROW_POWER,
+      };
+      const rawSpeed = Math.sqrt(rawVel.x * rawVel.x + rawVel.y * rawVel.y);
+      const scale = rawSpeed > MAX_THROW_SPEED ? MAX_THROW_SPEED / rawSpeed : 1;
+      vel.current = { x: rawVel.x * scale, y: rawVel.y * scale };
       releasedSpeed = Math.sqrt(vel.current.x * vel.current.x + vel.current.y * vel.current.y);
     }
     lastPointers.current = [];
-    showMessage(releasedSpeed > 0.9 ? 'nice throw.' : 'parked.', 4500);
+    const throwLine = THROW_PHRASES[Math.floor(Math.random() * THROW_PHRASES.length)];
+    showMessage(releasedSpeed > 1.1 ? throwLine : 'parked.', 4500);
   }, [showMessage]);
+
+  // Pointer drag
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    lastPointerAt.current = Date.now();
+    e.preventDefault();
+    beginDragAt(e.clientX, e.clientY, e.timeStamp);
+    ghostRef.current?.setPointerCapture(e.pointerId);
+  }, [beginDragAt]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    lastPointerAt.current = Date.now();
+    dragAt(e.clientX, e.clientY, e.timeStamp);
+  }, [dragAt]);
+
+  const onPointerUp = useCallback(() => {
+    lastPointerAt.current = Date.now();
+    finishDrag();
+  }, [finishDrag]);
+
+  const onMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || Date.now() - lastPointerAt.current < 700) return;
+    e.preventDefault();
+    beginDragAt(e.clientX, e.clientY, e.timeStamp);
+
+    const onWindowMove = (event: MouseEvent) => {
+      dragAt(event.clientX, event.clientY, event.timeStamp);
+    };
+    const onWindowUp = () => {
+      window.removeEventListener('mousemove', onWindowMove);
+      window.removeEventListener('mouseup', onWindowUp);
+      finishDrag();
+    };
+
+    window.addEventListener('mousemove', onWindowMove);
+    window.addEventListener('mouseup', onWindowUp);
+  }, [beginDragAt, dragAt, finishDrag]);
 
   if (!mounted) return null;
 
   const bubbleTopOffset = bubbleBelow ? GHOST_H + 10 : -50;
+  const mascotAnimation = isFlying
+    ? 'none'
+    : typingMotion === 'burst'
+      ? 'ghostOrbit 0.85s ease-in-out 2 both'
+      : typingMotion === 'active'
+        ? 'ghostTypingActive 1.45s ease-in-out infinite'
+        : typingMotion === 'settling'
+          ? `ghostSettle ${TYPING_SETTLE_MS}ms ease-out 1 both`
+          : 'ghostFloat 6.5s ease-in-out infinite';
 
   return (
     <>
@@ -269,7 +493,7 @@ export function GhostMascot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: 'fixed', left: bubbleLeft, top: displayPos.y + bubbleTopOffset, width: BUBBLE_W, zIndex: 10000, pointerEvents: 'none' }}
+            style={{ position: 'fixed', left: bubbleLeft, top: displayPos.y + bubbleTopOffset, width: bubbleWidth, zIndex: 10000, pointerEvents: 'none' }}
           >
             <div style={{ background: 'rgba(20,18,14,0.94)', border: '1px solid rgba(240,235,224,0.13)', borderRadius: 9, padding: '7px 13px', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
               <span style={{ fontFamily: 'var(--g-mono)', fontSize: 11.5, letterSpacing: '0.01em', color: 'rgba(240,235,224,0.9)', display: 'block', textAlign: 'center' }}>
@@ -284,10 +508,12 @@ export function GhostMascot() {
 
       {/* Ghost */}
       <div
+        className="ghost-mascot-shell"
         ref={ghostRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onMouseDown={onMouseDown}
         style={{
           position: 'fixed',
           left: 0,
@@ -300,12 +526,42 @@ export function GhostMascot() {
           touchAction: 'none',
           userSelect: 'none',
           willChange: 'transform',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <div style={{ animation: isDancing ? 'ghostOrbit 0.85s ease-in-out 2' : isFlying ? 'none' : 'ghostFloat 6.5s ease-in-out infinite' }}>
-          <GhostSVG size={GHOST_W} style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.45)) drop-shadow(0 0 2px rgba(240,235,224,0.06))' }} />
+        <div style={{ animation: mascotAnimation }}>
+          <GhostSVG
+            size={GHOST_W}
+            style={{
+              width: 'var(--ghost-mascot-size, 64px)',
+              height: 'var(--ghost-mascot-size, 64px)',
+              filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.45)) drop-shadow(0 0 2px rgba(240,235,224,0.06))',
+            }}
+          />
         </div>
       </div>
+      <style>{`
+        @keyframes ghostTypingActive {
+          0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+          50% { transform: translateY(-4px) rotate(1.1deg) scale(1.012); }
+        }
+        @keyframes ghostSettle {
+          0% { transform: translateY(-2px) rotate(0.35deg) scale(1.006); }
+          100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+        @media (max-width: 480px) {
+          .ghost-mascot-shell {
+            --ghost-mascot-size: 54px;
+          }
+        }
+        @media (max-width: 360px) {
+          .ghost-mascot-shell {
+            --ghost-mascot-size: 44px;
+          }
+        }
+      `}</style>
     </>
   );
 }

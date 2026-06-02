@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GhostMark } from './GhostSVG';
 
 const H = '1px solid rgba(240,230,210,0.06)';
-const FEATURE_SCENE_HEIGHT = 170;
+const FEATURE_SCENE_HEIGHT = 190;
 
 function SceneStage({
   children,
@@ -16,6 +16,7 @@ function SceneStage({
 }) {
   return (
     <div
+      className="feature-scene-stage"
       data-feature-scene={name}
       style={{
         width: '100%',
@@ -52,7 +53,7 @@ function ReadScene() {
   }, []);
 
   return (
-    <div style={{ background: '#18202E', borderRadius: 10, overflow: 'hidden', width: 'min(100%, 288px)', height: 164, position: 'relative', flexShrink: 0 }}>
+    <div style={{ background: '#18202E', borderRadius: 10, overflow: 'hidden', width: 'min(100%, 320px)', height: 182, position: 'relative', flexShrink: 0 }}>
       <AnimatePresence mode="wait">
         {phase === 'list' ? (
           <motion.div
@@ -106,7 +107,7 @@ function ReadScene() {
 
 function TypingScene() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 300, background: '#18202E', borderRadius: 10, padding: '14px 16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 330, background: '#18202E', borderRadius: 10, padding: '16px 18px' }}>
       {/* Chat header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
         <div style={{ width: 26, height: 26, borderRadius: 13, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', fontFamily: 'var(--g-sans)', flexShrink: 0 }}>D</div>
@@ -169,7 +170,7 @@ function StoryScene() {
   ];
 
   return (
-    <div style={{ width: 164, height: 112, position: 'relative', flexShrink: 0 }}>
+    <div style={{ width: 182, height: 124, position: 'relative', flexShrink: 0 }}>
       <AnimatePresence mode="wait">
         {phase === 'rings' ? (
           <motion.div key="rings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
@@ -204,7 +205,7 @@ function StoryScene() {
                 <div key={i} style={{ flex: 1, height: 2, borderRadius: 1, background: i === 0 ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.18)' }} />
               ))}
             </div>
-            <div style={{ height: 88, borderRadius: 9, background: 'linear-gradient(155deg, rgba(131,58,180,0.7) 0%, rgba(193,53,132,0.6) 55%, rgba(245,96,64,0.5) 100%)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ height: 98, borderRadius: 9, background: 'linear-gradient(155deg, rgba(131,58,180,0.7) 0%, rgba(193,53,132,0.6) 55%, rgba(245,96,64,0.5) 100%)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 8, left: 9, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 20, height: 20, borderRadius: 10, background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.5)' }} />
                 <span style={{ fontFamily: 'var(--g-sans)', fontSize: 9.5, fontWeight: 500, color: 'white' }}>yuki.photo</span>
@@ -246,7 +247,7 @@ function ExtensionScene() {
   ];
 
   return (
-    <div style={{ width: 158, background: '#191713', border: '1px solid rgba(240,230,210,0.11)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 10px 32px rgba(0,0,0,0.55)' }}>
+    <div style={{ width: 176, background: '#191713', border: '1px solid rgba(240,230,210,0.11)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 10px 32px rgba(0,0,0,0.55)' }}>
       <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, borderBottom: '1px solid rgba(240,230,210,0.07)', background: '#141210' }}>
         <GhostMark size={14} />
         <span style={{ fontFamily: 'var(--g-sans)', fontSize: 12.5, fontWeight: 500, color: 'var(--g-white)', lineHeight: 1, letterSpacing: 0 }}>Ghostify</span>
@@ -283,10 +284,10 @@ function FeatureCopy({ tag, title, body }: { tag: string; title: string; body: s
       <div style={{ fontFamily: 'var(--g-mono)', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--g-dim)', marginBottom: 10 }}>
         {tag}
       </div>
-      <h3 style={{ fontFamily: 'var(--g-sans)', fontSize: 19, fontWeight: 500, color: 'var(--g-white)', margin: '0 0 10px', lineHeight: 1.2, letterSpacing: 0 }}>
+      <h3 style={{ fontFamily: 'var(--g-sans)', fontSize: 21, fontWeight: 500, color: 'var(--g-white)', margin: '0 0 10px', lineHeight: 1.2, letterSpacing: 0 }}>
         {title}
       </h3>
-      <p style={{ fontFamily: 'var(--g-sans)', fontSize: 14, lineHeight: 1.65, color: 'var(--g-body)', margin: 0 }}>
+      <p style={{ fontFamily: 'var(--g-sans)', fontSize: 15, lineHeight: 1.65, color: 'var(--g-body)', margin: 0 }}>
         {body}
       </p>
     </div>
@@ -406,7 +407,35 @@ export function FeaturesSection() {
           .feat-bottom { grid-template-columns: 1fr !important; }
           .feat-f3 { border-right: none !important; border-bottom: ${H} !important; }
         }
+        @media (max-height: 820px) and (min-width: 901px) {
+          #features > div:first-child {
+            padding-top: 84px !important;
+            padding-bottom: 14px !important;
+          }
+          .feat-cell { padding: 18px 32px !important; gap: 18px !important; }
+          .feat-f1 { gap: 26px !important; }
+          .feature-scene-stage {
+            height: 150px !important;
+            min-height: 150px !important;
+            overflow: visible !important;
+          }
+          .feature-scene-stage > * {
+            transform: scale(0.88);
+            transform-origin: left center;
+          }
+          .feat-cell h3 {
+            font-size: 19px !important;
+            margin-bottom: 8px !important;
+          }
+          .feat-cell p {
+            font-size: 14px !important;
+            line-height: 1.48 !important;
+          }
+        }
         @media (max-width: 480px) {
+          #features > div:first-child {
+            padding-top: 76px !important;
+          }
           .feat-cell { padding: 28px 22px !important; }
         }
       `}</style>

@@ -41,6 +41,19 @@
   --z-popup:    300;
   --z-modal:    1000;
   --z-mascot:   9999;
+
+  /* Desktop scale: nudges the exported design toward the 125% browser-zoom feel. */
+  --font-size: clamp(16.75px, calc(15px + 0.18vw), 18px);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --font-size: 16px;
+  }
+}
+
+html {
+  font-size: var(--font-size);
 }
 
 /* ─── Global reset & body ───────────────────────────────────────── */
@@ -52,10 +65,20 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.snap-start,
+#hero,
+#features,
+#platforms,
+#privacy {
+  scroll-margin-top: 0;
 }
 
 /* ─── Custom scrollbar ──────────────────────────────────────────── */
-::-webkit-scrollbar               { width: 6px; }
+::-webkit-scrollbar               { width: 0; height: 0; display: none; }
 ::-webkit-scrollbar-track         { background: transparent; }
 ::-webkit-scrollbar-thumb         { background: var(--g-surface-3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover   { background: var(--g-surface-2); }
@@ -124,13 +147,14 @@ html, body {
 
 /* ─── Scroll snap — desktop viewport chapters ───────────────────── */
 @media (min-width: 769px) {
-  html {
-    scroll-snap-type: y proximity;
-    scroll-padding-top: 60px;
+  html,
+  body {
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: 0;
   }
   .snap-start {
     scroll-snap-align: start;
-    scroll-snap-stop: normal;
+    scroll-snap-stop: always;
   }
 }
 

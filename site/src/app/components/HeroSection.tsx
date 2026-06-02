@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Chrome, Github, Globe } from 'lucide-react';
 import { GhostMark } from './GhostSVG';
@@ -34,14 +34,26 @@ const P = {
   mfSeenToggle:{ x: 95, y: 54 },   // "Hide Seen" toggle in M/F popup group
 } as const;
 
+type CursorTarget = keyof typeof P;
+
+const CURSOR_ANCHORS: Partial<Record<CursorTarget, { x: number; y: number }>> = {
+  composer: { x: 0.5, y: 0.52 },
+  chatArea: { x: 0.58, y: 0.56 },
+  extIcon: { x: 0.5, y: 0.52 },
+  mfSeenToggle: { x: 0.5, y: 0.5 },
+};
+
 /* ── Demo cursor ─────────────────────────────────────── */
-function DemoCursor({ x, y, clickKey }: { x: number; y: number; clickKey: number }) {
+function DemoCursor({ x, y, clickKey, target }: { x: number; y: number; clickKey: number; target: CursorTarget }) {
   return (
     <div
+      data-hero-cursor
+      data-current-target={target}
+      data-click-key={clickKey}
       style={{
         position: 'absolute',
         left: `${x}%`, top: `${y}%`,
-        transform: 'translate(-3px, -2px)',
+        transform: 'translate(-2px, -2px)',
         transition: 'left 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         zIndex: 50, pointerEvents: 'none',
       }}
@@ -55,7 +67,7 @@ function DemoCursor({ x, y, clickKey }: { x: number; y: number; clickKey: number
           initial={{ scale: 0.2, opacity: 0.85 }}
           animate={{ scale: 3.2, opacity: 0 }}
           transition={{ duration: 0.55, ease: 'easeOut' }}
-          style={{ position: 'absolute', top: -2, left: -2, width: 22, height: 22, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.75)', pointerEvents: 'none' }}
+          style={{ position: 'absolute', top: -9, left: -9, width: 22, height: 22, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.75)', pointerEvents: 'none' }}
         />
       </AnimatePresence>
     </div>
@@ -63,9 +75,9 @@ function DemoCursor({ x, y, clickKey }: { x: number; y: number; clickKey: number
 }
 
 /* ── Visual toggle (display-only, state-driven) ─────── */
-function PopupToggle({ on }: { on: boolean }) {
+function PopupToggle({ on, cursorTarget }: { on: boolean; cursorTarget?: CursorTarget }) {
   return (
-    <div style={{ width: 32, height: 18, borderRadius: 9, backgroundColor: on ? 'var(--g-accent)' : 'rgba(240,230,210,0.14)', position: 'relative', flexShrink: 0, overflow: 'hidden', contain: 'paint', transition: 'background-color 0.42s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+    <div data-cursor-target={cursorTarget} style={{ width: 32, height: 18, borderRadius: 9, backgroundColor: on ? 'var(--g-accent)' : 'rgba(240,230,210,0.14)', position: 'relative', flexShrink: 0, overflow: 'hidden', contain: 'paint', transition: 'background-color 0.42s cubic-bezier(0.16, 1, 0.3, 1)' }}>
       <div style={{ position: 'absolute', top: 3, left: 3, width: 12, height: 12, borderRadius: 6, backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', transform: on ? 'translate3d(14px, 0, 0)' : 'translate3d(0, 0, 0)', transition: 'transform 0.42s cubic-bezier(0.16, 1, 0.3, 1)', willChange: 'transform', backfaceVisibility: 'hidden' }} />
     </div>
   );
@@ -124,7 +136,10 @@ function GhostifyHeroPopup({
                   ].map((item) => (
                     <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 14px' }}>
                       <span style={{ fontFamily: 'var(--g-sans)', fontSize: 11.5, color: 'rgba(240,230,210,0.7)' }}>{item.label}</span>
-                      <PopupToggle on={group.controls[item.key]} />
+                      <PopupToggle
+                        on={group.controls[item.key]}
+                        cursorTarget={group.label === 'Messenger / Facebook' && item.key === 'seen' ? 'mfSeenToggle' : undefined}
+                      />
                     </div>
                   ))}
                   <div style={{ height: 6 }} />
@@ -186,7 +201,7 @@ function MessengerView({
   return (
     <div style={{ height: '100%', display: 'flex', background: '#18202E', overflow: 'hidden' }}>
       {/* Chat list */}
-      <div style={{ width: 196, borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
+      <div className="hero-chat-list hero-chat-list-messenger" style={{ width: 196, borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
         <div style={{ padding: '12px 14px 8px', fontFamily: 'var(--g-sans)', fontSize: 17, fontWeight: 700, color: 'white' }}>Chats</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, padding: '0 6px', overflow: 'hidden' }}>
           {CHATS.map((chat) => {
@@ -194,6 +209,7 @@ function MessengerView({
             return (
               <div
                 key={chat.id}
+                data-cursor-target={chat.id === 'sofia' ? 'sofiaChat' : undefined}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 9, padding: '7px 8px', borderRadius: 8,
                   background: chat.id === activeChatId ? 'rgba(0,130,251,0.15)' : 'transparent',
@@ -234,7 +250,7 @@ function MessengerView({
       </div>
 
       {/* Thread */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="hero-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
           <div style={{ width: 28, height: 28, borderRadius: 14, background: activeChat.color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
             {activeChat.name[0]}
@@ -245,7 +261,7 @@ function MessengerView({
           </div>
         </div>
 
-        <div style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7, overflow: 'hidden' }}>
+        <div data-cursor-target="chatArea" style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7, overflow: 'hidden' }}>
           <AnimatePresence mode="wait">
             <motion.div key={activeChatId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               {messages.map((msg, i) => (
@@ -261,7 +277,7 @@ function MessengerView({
 
         {/* Composer */}
         <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-          <div style={{ height: 34, borderRadius: 17, background: 'rgba(255,255,255,0.07)', padding: '0 13px', fontFamily: 'var(--g-sans)', fontSize: 12.5, color: typingText ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center' }}>
+          <div data-cursor-target="composer" style={{ height: 34, borderRadius: 17, background: 'rgba(255,255,255,0.07)', padding: '0 13px', fontFamily: 'var(--g-sans)', fontSize: 12.5, color: typingText ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center' }}>
             {typingText || (composerFocused ? '' : 'Aa')}
             {(typingText || composerFocused) && <span style={{ display: 'inline-block', width: 1, height: 14, background: '#0082FB', marginLeft: typingText ? 1 : 0, animation: 'ghostBlink 1s ease-in-out infinite', verticalAlign: 'middle' }} />}
           </div>
@@ -348,12 +364,12 @@ function InstagramView({ showStory, igUnreadBadge, activeIgDm }: { showStory: bo
       </AnimatePresence>
 
       {/* Left panel: story row + DM list */}
-      <div style={{ width: 210, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
+      <div className="hero-chat-list hero-chat-list-instagram" style={{ width: 210, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
         {/* Story circles */}
         <div style={{ padding: '8px 8px 6px', display: 'flex', gap: 6, flexShrink: 0 }}>
           {stories.map((s, i) => (
             <div key={s.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 18, padding: s.active ? 2 : 0, background: s.active ? 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #bc1888)' : 'rgba(255,255,255,0.06)' }}>
+              <div data-cursor-target={i === 0 ? 'storyBubble' : undefined} style={{ width: 36, height: 36, borderRadius: 18, padding: s.active ? 2 : 0, background: s.active ? 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #bc1888)' : 'rgba(255,255,255,0.06)' }}>
                 <div style={{ width: '100%', height: '100%', borderRadius: 16, background: s.color, border: s.active ? '1.5px solid #000' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
                   {s.name[0].toUpperCase()}
                 </div>
@@ -368,7 +384,7 @@ function InstagramView({ showStory, igUnreadBadge, activeIgDm }: { showStory: bo
           {dms.map((dm) => {
             const showBadge = dm.unreadCount > 0 && dm.name === 'h.nakano' && igUnreadBadge;
             return (
-              <div key={dm.name} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 6px', borderRadius: 8, background: dm.name === activeIgDm ? 'rgba(255,255,255,0.06)' : 'transparent' }}>
+              <div key={dm.name} data-cursor-target={dm.name === 'h.nakano' ? 'igUnreadDM' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 6px', borderRadius: 8, background: dm.name === activeIgDm ? 'rgba(255,255,255,0.06)' : 'transparent' }}>
                 <div style={{ width: 33, height: 33, borderRadius: 17, background: dm.color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
                   {dm.name[0].toUpperCase()}
                 </div>
@@ -388,7 +404,7 @@ function InstagramView({ showStory, igUnreadBadge, activeIgDm }: { showStory: bo
       </div>
 
       {/* Active thread */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="hero-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '10px 13px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
           <div style={{ width: 28, height: 28, borderRadius: 14, background: activeDm.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>{activeDm.name[0].toUpperCase()}</div>
           <div>
@@ -449,13 +465,13 @@ function FacebookView({ activeChatId, fbUnreadBadge }: { activeChatId: string; f
   return (
     <div style={{ height: '100%', display: 'flex', background: '#18191A', overflow: 'hidden' }}>
       {/* Chat list */}
-      <div style={{ width: 196, borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
+      <div className="hero-chat-list hero-chat-list-facebook" style={{ width: 196, borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
         <div style={{ padding: '12px 14px 8px', fontFamily: 'var(--g-sans)', fontSize: 16, fontWeight: 700, color: 'white' }}>Chats</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, padding: '0 6px', overflow: 'hidden' }}>
           {FB_CHATS.map((chat) => {
             const showBadge = chat.unreadCount && chat.id === 'ryan' && fbUnreadBadge;
             return (
-              <div key={chat.id} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 8px', borderRadius: 8, background: chat.id === activeChatId ? 'rgba(24,119,242,0.14)' : 'transparent', flexShrink: 0 }}>
+              <div key={chat.id} data-cursor-target={chat.id === 'ryan' ? 'fbUnreadDM' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 8px', borderRadius: 8, background: chat.id === activeChatId ? 'rgba(24,119,242,0.14)' : 'transparent', flexShrink: 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <div style={{ width: 33, height: 33, borderRadius: 17, background: chat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
                     {chat.name[0]}
@@ -486,7 +502,7 @@ function FacebookView({ activeChatId, fbUnreadBadge }: { activeChatId: string; f
       </div>
 
       {/* Thread */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="hero-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
           <div style={{ width: 28, height: 28, borderRadius: 14, background: activeChat.color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
             {activeChat.name[0]}
@@ -551,6 +567,49 @@ function HeroBrowserScene() {
   const [fbUnreadBadge, setFbUnreadBadge] = useState(true);
 
   const typingTimer = useRef<ReturnType<typeof setInterval>>();
+  const [cursorTarget, setCursorTarget] = useState<CursorTarget>('rest');
+
+  const resolveCursorTarget = useCallback((target: CursorTarget) => {
+    const fallback = P[target];
+    const root = containerRef.current;
+    const el = root?.querySelector<HTMLElement>(`[data-cursor-target="${target}"]`);
+    if (!root || !el) return fallback;
+
+    const rootRect = root.getBoundingClientRect();
+    const targetRect = el.getBoundingClientRect();
+    if (!rootRect.width || !rootRect.height || !targetRect.width || !targetRect.height) return fallback;
+
+    const anchor = CURSOR_ANCHORS[target] ?? { x: 0.5, y: 0.5 };
+    const x = ((targetRect.left - rootRect.left + targetRect.width * anchor.x) / rootRect.width) * 100;
+    const y = ((targetRect.top - rootRect.top + targetRect.height * anchor.y) / rootRect.height) * 100;
+
+    return {
+      x: Math.max(0.75, Math.min(99.25, x)),
+      y: Math.max(0.75, Math.min(99.25, y)),
+    };
+  }, []);
+
+  const moveCursor = useCallback((target: CursorTarget) => {
+    setCursorTarget(target);
+    setCursorPos(resolveCursorTarget(target));
+    requestAnimationFrame(() => setCursorPos(resolveCursorTarget(target)));
+    window.setTimeout(() => setCursorPos(resolveCursorTarget(target)), 80);
+  }, [resolveCursorTarget]);
+
+  useEffect(() => {
+    const syncCursorToLayout = () => setCursorPos(resolveCursorTarget(cursorTarget));
+    window.addEventListener('resize', syncCursorToLayout);
+    return () => window.removeEventListener('resize', syncCursorToLayout);
+  }, [cursorTarget, resolveCursorTarget]);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setCursorPos(resolveCursorTarget(cursorTarget)));
+    const timer = window.setTimeout(() => setCursorPos(resolveCursorTarget(cursorTarget)), 90);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
+  }, [activeChatId, activeIgDm, activePlatform, composerFocused, cursorTarget, fbActiveChatId, popupOpen, resolveCursorTarget]);
 
   // Autoplay loop — restarts when heroVisible changes to true
   useEffect(() => {
@@ -560,6 +619,7 @@ function HeroBrowserScene() {
       setComposerFocused(false);
       setShowStory(false);
       clearInterval(typingTimer.current);
+      dispatchMascot('typing-stop');
       return;
     }
 
@@ -571,19 +631,27 @@ function HeroBrowserScene() {
     const startTyping = (text: string, speed = 90) => {
       clearInterval(typingTimer.current);
       setTypingText('');
+      dispatchMascot('typing-start');
       let i = 0;
       typingTimer.current = setInterval(() => {
         i++;
         setTypingText(text.slice(0, i));
+        dispatchMascot('typing-active');
         if (i >= text.length) clearInterval(typingTimer.current);
       }, speed);
     };
 
     const startDeleting = (speed = 55) => {
       clearInterval(typingTimer.current);
+      dispatchMascot('typing-active');
       typingTimer.current = setInterval(() => {
         setTypingText(prev => {
-          if (prev.length <= 1) { clearInterval(typingTimer.current); return ''; }
+          dispatchMascot('typing-active');
+          if (prev.length <= 1) {
+            clearInterval(typingTimer.current);
+            dispatchMascot('typing-stop');
+            return '';
+          }
           return prev.slice(0, -1);
         });
       }, speed);
@@ -606,33 +674,34 @@ function HeroBrowserScene() {
       setTypingText('');
       setComposerFocused(false);
       setShowStory(false);
-      setCursorPos(P.rest);
+      moveCursor('rest');
       setMsControls({ seen: true, typing: true, story: true });
       setUnreadBadges({ sofia: true });
       setIgUnreadBadge(true);
       setFbUnreadBadge(true);
+      dispatchMascot('typing-stop');
 
       /* ── Beat 1: Open Ghostify popup ─────────────── */
       // Start on Jamie's chat (the fling), cursor moves to extension icon
-      t(1200, () => setCursorPos(P.extIcon));
-      t(2200, () => { setPopupOpen(true); setClickKey(k => k + 1); });
+      t(1200, () => moveCursor('extIcon'));
+      t(2500, () => { setPopupOpen(true); setClickKey(k => k + 1); });
       // popup open ~2s — user sees all controls are ON
 
       /* ── Beat 2: Close popup, open Sofia's chat ──── */
       // Sofia = GF, 3 unread. Badge stays because Ghostify holds the receipt
       // Cursor is already at extIcon — click it again to dismiss the popup
-      t(4200, () => setClickKey(k => k + 1));          // click ext icon
-      t(4350, () => setPopupOpen(false));              // popup closes
-      t(4800, () => setCursorPos(P.chatArea));          // cursor drifts into chat area
-      t(5700, () => setCursorPos(P.sofiaChat));
-      t(6500, () => {
+      t(4500, () => setClickKey(k => k + 1));          // click ext icon
+      t(4650, () => setPopupOpen(false));              // popup closes
+      t(5100, () => moveCursor('chatArea'));           // cursor drifts into chat area
+      t(6000, () => moveCursor('sofiaChat'));
+      t(6800, () => {
         setActiveChatId('sofia');
         setClickKey(k => k + 1);
         dispatchMascot('chat-open'); // "seen stayed back."
       });
 
       /* ── Beat 3: Type then DELETE in Sofia's composer ─ */
-      t(9500, () => setCursorPos(P.composer));
+      t(9500, () => moveCursor('composer'));
       t(COMPOSER_FOCUS_AT, () => {
         setComposerFocused(true);
         setClickKey(k => k + 1);
@@ -640,7 +709,6 @@ function HeroBrowserScene() {
       t(TYPING_START_AT, () => {
         setComposerFocused(true);
         startTyping(TYPING_TEXT, 90);
-        dispatchMascot('typing'); // "typing stayed quiet."
       });
       // Typing finishes at ~10000 + TYPING_MS — pause before deleting
       t(TYPING_START_AT + TYPING_MS + 1000, () => startDeleting(55));
@@ -649,15 +717,16 @@ function HeroBrowserScene() {
         clearInterval(typingTimer.current);
         setTypingText('');
         setComposerFocused(false);
-        setCursorPos(P.chatArea); // rest in chat area first
+        moveCursor('chatArea'); // rest in chat area first
+        dispatchMascot('typing-stop');
       });
-      t(TYPING_START_AT + TYPING_MS + DELETING_MS + 2800, () => setCursorPos(P.igTab)); // then drift to tab
+      t(TYPING_START_AT + TYPING_MS + DELETING_MS + 2800, () => moveCursor('igTab')); // then drift to tab
 
       const afterDelete = TYPING_START_AT + TYPING_MS + DELETING_MS + 3600;
 
       /* ── Beat 4: Instagram — click unread DM ──────── */
       t(afterDelete,        () => { setActivePlat('instagram'); setClickKey(k => k + 1); });
-      t(afterDelete + 1200, () => setCursorPos(P.igUnreadDM));
+      t(afterDelete + 1200, () => moveCursor('igUnreadDM'));
       t(afterDelete + 1900, () => {
         setActiveIgDm('h.nakano'); // switch to the unread DM thread
         setClickKey(k => k + 1);
@@ -665,7 +734,7 @@ function HeroBrowserScene() {
       });
 
       /* ── Beat 4b: Instagram — watch story ──────────── */
-      t(afterDelete + 4500, () => setCursorPos(P.storyBubble));
+      t(afterDelete + 4500, () => moveCursor('storyBubble'));
       t(afterDelete + 5200, () => {
         setShowStory(true);
         setClickKey(k => k + 1);
@@ -674,20 +743,20 @@ function HeroBrowserScene() {
       t(afterDelete + 10200, () => setShowStory(false));
 
       /* ── Beat 5: Disable seen, switch to Facebook ─── */
-      t(afterDelete + 11500, () => setCursorPos(P.extIcon));
+      t(afterDelete + 11500, () => moveCursor('extIcon'));
       t(afterDelete + 12400, () => { setPopupOpen(true); setClickKey(k => k + 1); });
-      t(afterDelete + 13700, () => setCursorPos(P.mfSeenToggle)); // cursor moves inside popup
+      t(afterDelete + 13700, () => moveCursor('mfSeenToggle')); // cursor moves inside popup
       t(afterDelete + 14800, () => { setMsControls(prev => ({ ...prev, seen: false })); setClickKey(k => k + 1); }); // click toggle
       // Close popup: cursor moves back to ext icon, clicks to close
-      t(afterDelete + 16100, () => setCursorPos(P.extIcon));
+      t(afterDelete + 16100, () => moveCursor('extIcon'));
       t(afterDelete + 17000, () => { setClickKey(k => k + 1); setPopupOpen(false); });
       // Switch to Facebook tab
-      t(afterDelete + 17900, () => setCursorPos(P.fbTab));
+      t(afterDelete + 17900, () => moveCursor('fbTab'));
       t(afterDelete + 18800, () => { setActivePlat('facebook'); setClickKey(k => k + 1); });
 
       /* ── Beat 6: Click FB unread — badge disappears ─ */
       // seen is now OFF — receipt gets sent normally
-      t(afterDelete + 20200, () => setCursorPos(P.fbUnreadDM));
+      t(afterDelete + 20200, () => moveCursor('fbUnreadDM'));
       t(afterDelete + 21100, () => {
         setFbActiveChatId('ryan');
         setFbUnreadBadge(false); // badge gone — receipt sent
@@ -696,19 +765,20 @@ function HeroBrowserScene() {
       });
 
       /* ── Beat 7: Re-enable seen, close popup, loop ── */
-      t(afterDelete + 24600, () => setCursorPos(P.extIcon));
+      t(afterDelete + 24600, () => moveCursor('extIcon'));
       t(afterDelete + 25500, () => { setPopupOpen(true); setClickKey(k => k + 1); });
-      t(afterDelete + 26800, () => setCursorPos(P.mfSeenToggle)); // cursor moves to toggle
+      t(afterDelete + 26800, () => moveCursor('mfSeenToggle')); // cursor moves to toggle
       t(afterDelete + 27900, () => { setMsControls(prev => ({ ...prev, seen: true })); setClickKey(k => k + 1); }); // click toggle
       // Close popup: cursor back to ext icon, click to close
-      t(afterDelete + 29200, () => setCursorPos(P.extIcon));
+      t(afterDelete + 29200, () => moveCursor('extIcon'));
       t(afterDelete + 30100, () => { setClickKey(k => k + 1); setPopupOpen(false); });
-      t(afterDelete + 31000, () => setCursorPos(P.rest)); // cursor drifts to rest
+      t(afterDelete + 31000, () => moveCursor('rest')); // cursor drifts to rest
 
       t(afterDelete + 33000, () => {
         timers.forEach(clearTimeout);
         timers.length = 0;
         clearInterval(typingTimer.current);
+        dispatchMascot('typing-stop');
         loop();
       });
     }
@@ -718,8 +788,9 @@ function HeroBrowserScene() {
       clearTimeout(init);
       timers.forEach(clearTimeout);
       clearInterval(typingTimer.current);
+      dispatchMascot('typing-stop');
     };
-  }, [heroVisible]);
+  }, [heroVisible, moveCursor]);
 
   const tabs: { id: HeroPlatform; label: string; url: string }[] = [
     { id: 'messenger', label: 'Messenger', url: 'messenger.com' },
@@ -752,10 +823,12 @@ function HeroBrowserScene() {
       </div>
 
       {/* Tab bar */}
-      <div style={{ background: '#141210', display: 'flex', alignItems: 'flex-end', padding: '0 10px', gap: 2, height: 32, borderBottom: '1px solid rgba(240,230,210,0.05)', flexShrink: 0 }}>
+      <div className="hero-tabbar" style={{ background: '#141210', display: 'flex', alignItems: 'flex-end', padding: '0 10px', gap: 2, height: 32, borderBottom: '1px solid rgba(240,230,210,0.05)', flexShrink: 0 }}>
         {tabs.map((tab) => (
           <div
             key={tab.id}
+            className="hero-tab"
+            data-cursor-target={tab.id === 'messenger' ? 'msgTab' : tab.id === 'facebook' ? 'fbTab' : 'igTab'}
             style={{
               height: 27, padding: '0 12px', borderRadius: '6px 6px 0 0',
               background: activePlatform === tab.id ? '#1C1A17' : 'transparent',
@@ -770,15 +843,15 @@ function HeroBrowserScene() {
           </div>
         ))}
         {/* Extension icon */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingBottom: 3 }}>
-          <div style={{ width: 21, height: 21, borderRadius: 5, background: popupOpen ? 'rgba(196,72,48,0.22)' : 'rgba(196,72,48,0.12)', border: `1px solid ${popupOpen ? 'rgba(196,72,48,0.45)' : 'rgba(196,72,48,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s ease' }}>
+        <div className="hero-extension-tab-icon" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingBottom: 3 }}>
+          <div data-cursor-target="extIcon" style={{ width: 21, height: 21, borderRadius: 5, background: popupOpen ? 'rgba(196,72,48,0.22)' : 'rgba(196,72,48,0.12)', border: `1px solid ${popupOpen ? 'rgba(196,72,48,0.45)' : 'rgba(196,72,48,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s ease' }}>
             <GhostMark size={13} />
           </div>
         </div>
       </div>
 
       {/* Address bar */}
-      <div style={{ background: '#1C1A17', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(240,230,210,0.04)', flexShrink: 0 }}>
+      <div className="hero-address" style={{ background: '#1C1A17', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(240,230,210,0.04)', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 3 }}>
           <span style={{ color: 'rgba(240,230,210,0.18)', fontSize: 12, lineHeight: '18px', width: 18, textAlign: 'center' }}>‹</span>
           <span style={{ color: 'rgba(240,230,210,0.1)', fontSize: 12, lineHeight: '18px', width: 18, textAlign: 'center' }}>›</span>
@@ -817,7 +890,7 @@ function HeroBrowserScene() {
       />
 
       {/* Cursor */}
-      <DemoCursor x={cursorPos.x} y={cursorPos.y} clickKey={clickKey} />
+      <DemoCursor x={cursorPos.x} y={cursorPos.y} clickKey={clickKey} target={cursorTarget} />
     </div>
   );
 }
@@ -827,17 +900,17 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="snap-start"
+      className="snap-start hero-section"
       style={{ height: '100svh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden', paddingTop: 60 }}
     >
       <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 90% 70% at 65% 55%, rgba(24,18,10,0.9) 0%, var(--g-bg) 100%)', zIndex: 0, pointerEvents: 'none' }} />
-      <div aria-hidden style={{ position: 'absolute', left: '5%', top: '20%', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,72,48,0.035) 0%, transparent 68%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div className="hero-glow" aria-hidden style={{ position: 'absolute', left: '5%', top: '20%', width: 480, height: 480, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,72,48,0.035) 0%, transparent 68%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div
         className="hero-grid"
         style={{
-          width: '100%', maxWidth: 1360, margin: '0 auto',
-          padding: '0 clamp(24px, 4vw, 56px)',
+          width: '100%', maxWidth: 1480, margin: '0 auto',
+          padding: '0 clamp(22px, 3vw, 48px)',
           display: 'grid', gridTemplateColumns: '42fr 58fr',
           gap: 'clamp(32px, 4vw, 56px)',
           alignItems: 'center', position: 'relative', zIndex: 1,
@@ -845,7 +918,7 @@ export function HeroSection() {
       >
         {/* Left: copy */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
@@ -907,10 +980,10 @@ export function HeroSection() {
 
         {/* Right: browser autoplay */}
         <motion.div
-          initial={{ opacity: 0, x: 24 }}
+          initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.78, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-          style={{ height: 'min(calc(100svh - 120px), 540px)', position: 'relative' }}
+          style={{ height: 'min(calc(100svh - 104px), 600px)', position: 'relative' }}
         >
           <HeroBrowserScene />
         </motion.div>
@@ -918,14 +991,89 @@ export function HeroSection() {
 
       <style>{`
         @media (max-width: 768px) {
+          .hero-section {
+            height: auto !important;
+            min-height: 100svh !important;
+            align-items: flex-start !important;
+            overflow: visible !important;
+            padding-top: 76px !important;
+            padding-bottom: 44px !important;
+          }
           .hero-grid {
             grid-template-columns: 1fr !important;
-            padding: 24px 20px !important;
-            gap: 28px !important;
+            box-sizing: border-box !important;
+            padding: 0 18px !important;
+            gap: 24px !important;
             align-items: start !important;
           }
+          .hero-grid > * {
+            min-width: 0 !important;
+          }
+          .hero-glow {
+            display: none !important;
+          }
           .hero-grid > :last-child {
-            height: min(55vh, 380px) !important;
+            width: 100% !important;
+            max-width: 640px !important;
+            height: min(48svh, 340px) !important;
+            justify-self: center !important;
+          }
+          .hero-tabbar {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+            gap: 1px !important;
+            overflow: hidden !important;
+          }
+          .hero-tab {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+            min-width: 0 !important;
+            flex: 0 1 auto !important;
+            font-size: 10.5px !important;
+            gap: 4px !important;
+          }
+          .hero-extension-tab-icon {
+            padding-left: 4px !important;
+          }
+          .hero-address {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+          }
+          .hero-chat-list {
+            width: clamp(112px, 34%, 156px) !important;
+            flex-basis: clamp(112px, 34%, 156px) !important;
+          }
+          .hero-thread {
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+          }
+        }
+        @media (max-width: 420px) {
+          .hero-grid > :last-child {
+            height: clamp(320px, 54svh, 340px) !important;
+          }
+          .hero-chat-list {
+            width: clamp(108px, 35%, 126px) !important;
+            flex-basis: clamp(108px, 35%, 126px) !important;
+          }
+          .hero-tab {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            font-size: 9.5px !important;
+          }
+          .hero-extension-tab-icon {
+            padding-left: 3px !important;
+          }
+        }
+        @media (max-width: 340px) {
+          .hero-tab {
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+            font-size: 9px !important;
+            gap: 3px !important;
+          }
+          .hero-address > div:first-child {
+            display: none !important;
           }
         }
       `}</style>

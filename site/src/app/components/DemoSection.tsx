@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe } from 'lucide-react';
 import { GhostMark } from './GhostSVG';
@@ -11,6 +11,7 @@ interface Controls {
 }
 
 type ControlGroup = keyof Controls;
+type TypingSignal = 'start' | 'active' | 'stop';
 
 const PLATFORM_URLS: Record<Platform, string> = {
   messenger: 'messenger.com',
@@ -20,6 +21,43 @@ const PLATFORM_URLS: Record<Platform, string> = {
 
 function dispatchMascot(type: string) {
   window.dispatchEvent(new CustomEvent('ghostify:mascot', { detail: { type } }));
+}
+
+function useTypingActivity(onType: (signal: TypingSignal) => void) {
+  const isTyping = useRef(false);
+  const onTypeRef = useRef(onType);
+  const stopTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    onTypeRef.current = onType;
+  }, [onType]);
+
+  useEffect(() => () => {
+    clearTimeout(stopTimer.current);
+    if (isTyping.current) {
+      isTyping.current = false;
+      onTypeRef.current('stop');
+    }
+  }, []);
+
+  return useCallback((value: string) => {
+    clearTimeout(stopTimer.current);
+
+    if (!value) {
+      if (isTyping.current) {
+        isTyping.current = false;
+        onTypeRef.current('stop');
+      }
+      return;
+    }
+
+    onTypeRef.current(isTyping.current ? 'active' : 'start');
+    isTyping.current = true;
+    stopTimer.current = setTimeout(() => {
+      isTyping.current = false;
+      onTypeRef.current('stop');
+    }, 850);
+  }, []);
 }
 
 /* ── Toggle ──────────────────────────────────────────── */
@@ -32,6 +70,7 @@ function Toggle({
 }) {
   return (
     <button
+      className="demo-toggle"
       role="switch"
       aria-checked={on}
       onClick={() => onChange(!on)}
@@ -261,10 +300,11 @@ function MessengerView({
 }: {
   unreadMap: Record<string, boolean>;
   onOpenChat: (id: string) => void;
-  onType: () => void;
+  onType: (signal: TypingSignal) => void;
 }) {
   const [activeChat, setActiveChat] = useState('maria');
   const [composerText, setComposerText] = useState('');
+  const signalTyping = useTypingActivity(onType);
 
   const handleChatOpen = (id: string) => {
     setActiveChat(id);
@@ -273,7 +313,7 @@ function MessengerView({
 
   const handleType = (v: string) => {
     setComposerText(v);
-    if (v.length === 1) onType();
+    signalTyping(v);
   };
 
   const chat = MESSENGER_CHATS.find((c) => c.id === activeChat);
@@ -283,6 +323,7 @@ function MessengerView({
     <div style={{ height: '100%', display: 'flex', background: '#1A1E2B' }}>
       {/* Chat list */}
       <div
+        className="demo-chat-list demo-chat-list-messenger"
         style={{
           width: 210,
           borderRight: '1px solid rgba(255,255,255,0.06)',
@@ -396,7 +437,7 @@ function MessengerView({
       </div>
 
       {/* Thread */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="demo-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div
           style={{
             padding: '10px 14px',
@@ -612,13 +653,14 @@ function FacebookView({
   controls: { seen: boolean; typing: boolean; story: boolean };
   unreadMap: Record<string, boolean>;
   onOpenChat: (id: string) => void;
-  onType: () => void;
+  onType: (signal: TypingSignal) => void;
   onStoryView: (name: string) => void;
   storyViewedSet: Record<string, boolean>;
 }) {
   const [storyOpen, setStoryOpen] = useState(false);
   const [composerText, setComposerText] = useState('');
   const [activeChat, setActiveChat] = useState('natalie');
+  const signalTyping = useTypingActivity(onType);
 
   const chats = [
     { id: 'natalie', name: 'Natalie Park', msg: 'are you joining tonight?', time: '8:55', color: '#E91E63', unread: 2 },
@@ -635,6 +677,11 @@ function FacebookView({
   const handleStory = (name: string) => {
     setStoryOpen(true);
     onStoryView(name);
+  };
+
+  const handleType = (v: string) => {
+    setComposerText(v);
+    signalTyping(v);
   };
 
   return (
@@ -706,6 +753,7 @@ function FacebookView({
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left: chat list + stories */}
         <div
+          className="demo-chat-list demo-chat-list-facebook"
           style={{
             width: 240,
             borderRight: '1px solid rgba(255,255,255,0.06)',
@@ -843,7 +891,7 @@ function FacebookView({
         </div>
 
         {/* Right: chat thread */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <div className="demo-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {/* Thread header */}
           <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0 }}>
             <div style={{ width: 28, height: 28, borderRadius: 14, background: chats.find(c => c.id === activeChat)?.color ?? '#E91E63', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
@@ -882,10 +930,7 @@ function FacebookView({
           <div style={{ padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <input
               value={composerText}
-              onChange={(e) => {
-                setComposerText(e.target.value);
-                if (e.target.value.length === 1) onType();
-              }}
+              onChange={(e) => handleType(e.target.value)}
               placeholder="Aa"
               style={{
                 width: '100%',
@@ -1027,13 +1072,14 @@ function InstagramView({
   controls: { seen: boolean; typing: boolean; story: boolean };
   unreadMap: Record<string, boolean>;
   onOpenChat: (id: string) => void;
-  onType: () => void;
+  onType: (signal: TypingSignal) => void;
   onStoryView: (name: string) => void;
   storyViewedSet: Record<string, boolean>;
 }) {
   const [storyOpen, setStoryOpen] = useState(false);
   const [composerText, setComposerText] = useState('');
   const [activeChat, setActiveChat] = useState('cami');
+  const signalTyping = useTypingActivity(onType);
 
   const stories = [
     { name: 'cami.v', color: '#E1306C' },
@@ -1056,10 +1102,16 @@ function InstagramView({
     onStoryView(name);
   };
 
+  const handleType = (v: string) => {
+    setComposerText(v);
+    signalTyping(v);
+  };
+
   return (
     <div style={{ height: '100%', display: 'flex', background: '#000', position: 'relative' }}>
       {/* Left nav rail */}
       <div
+        className="demo-ig-rail"
         style={{
           width: 60,
           borderRight: '1px solid rgba(255,255,255,0.08)',
@@ -1098,6 +1150,7 @@ function InstagramView({
 
       {/* DM list */}
       <div
+        className="demo-chat-list demo-chat-list-instagram"
         style={{
           width: 200,
           borderRight: '1px solid rgba(255,255,255,0.07)',
@@ -1221,7 +1274,7 @@ function InstagramView({
       </div>
 
       {/* Thread */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="demo-thread" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 14, background: activeDm.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'white', fontFamily: 'var(--g-sans)' }}>
             {activeDm.handle[0].toUpperCase()}
@@ -1257,10 +1310,7 @@ function InstagramView({
         <div style={{ padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <input
             value={composerText}
-            onChange={(e) => {
-              setComposerText(e.target.value);
-              if (e.target.value.length === 1) onType();
-            }}
+            onChange={(e) => handleType(e.target.value)}
             placeholder="Message..."
             style={{
               width: '100%',
@@ -1310,10 +1360,13 @@ export function DemoSection() {
   const getActiveControls = () =>
     platform === 'instagram' ? controls.instagram : controls.messengerFacebook;
 
-  const handleType = () => {
+  const handleType = (signal: TypingSignal) => {
     const ctrl = getActiveControls();
-    if (ctrl.typing) dispatchMascot('typing');
-    else dispatchMascot('feature-off');
+    if (ctrl.typing) {
+      dispatchMascot(`typing-${signal}`);
+    } else if (signal === 'start') {
+      dispatchMascot('feature-off');
+    }
   };
 
   const handleOpenChat = (id: string) => {
@@ -1354,10 +1407,10 @@ export function DemoSection() {
   return (
     <section
       id="demo"
-      className="snap-start"
+      className="snap-start demo-section"
       style={{
         padding: 'clamp(60px, 10vw, 100px) 28px',
-        maxWidth: 1280,
+        maxWidth: 1440,
         margin: '0 auto',
         minHeight: '100svh',
         display: 'flex',
@@ -1366,7 +1419,7 @@ export function DemoSection() {
       }}
     >
       {/* Section heading */}
-      <div style={{ marginBottom: 36 }}>
+      <div className="demo-section-heading" style={{ marginBottom: 36 }}>
         <div
           style={{
             fontFamily: 'var(--g-mono)',
@@ -1396,6 +1449,7 @@ export function DemoSection() {
 
       {/* Browser chrome wrapper */}
       <div
+        className="demo-browser"
         style={{
           background: '#1C1A17',
           borderRadius: 12,
@@ -1414,10 +1468,11 @@ export function DemoSection() {
         </div>
 
         {/* Tab bar */}
-        <div style={{ background: '#141210', display: 'flex', alignItems: 'flex-end', padding: '0 12px', height: 32 }}>
+        <div className="demo-tabbar" style={{ background: '#141210', display: 'flex', alignItems: 'flex-end', padding: '0 12px', height: 32 }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              className="demo-tab-button"
               onClick={() => setPlatform(tab.id)}
               style={{
                 height: 26,
@@ -1426,6 +1481,7 @@ export function DemoSection() {
                 background: platform === tab.id ? '#1C1A17' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
+                position: 'relative',
                 fontFamily: 'var(--g-sans)',
                 fontSize: 11,
                 color: platform === tab.id ? 'rgba(240,230,210,0.85)' : 'rgba(240,230,210,0.32)',
@@ -1442,7 +1498,7 @@ export function DemoSection() {
           ))}
 
           {/* Address bar filler */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', paddingBottom: 4, paddingLeft: 12 }}>
+          <div className="demo-address" style={{ flex: 1, display: 'flex', alignItems: 'center', paddingBottom: 4, paddingLeft: 12 }}>
             <div style={{ flex: 1, height: 20, borderRadius: 10, background: 'rgba(240,230,210,0.04)', border: '1px solid rgba(240,230,210,0.05)', display: 'flex', alignItems: 'center', padding: '0 10px', gap: 5 }}>
               <Globe size={9} color="rgba(240,230,210,0.25)" />
               <span style={{ fontFamily: 'var(--g-mono)', fontSize: 9.5, color: 'rgba(240,230,210,0.3)' }}>
@@ -1452,7 +1508,7 @@ export function DemoSection() {
           </div>
 
           {/* Extension icon */}
-          <div style={{ paddingBottom: 6, paddingLeft: 8, display: 'flex', alignItems: 'center' }}>
+          <div className="demo-extension-tab-icon" style={{ paddingBottom: 6, paddingLeft: 8, display: 'flex', alignItems: 'center' }}>
             <div style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(196,72,48,0.18)', border: '1px solid rgba(196,72,48,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <GhostMark size={12} />
             </div>
@@ -1460,7 +1516,7 @@ export function DemoSection() {
         </div>
 
         {/* Content area: platform UI + ghostify panel */}
-        <div className="demo-content" style={{ display: 'flex', height: 420 }}>
+        <div className="demo-content" style={{ display: 'flex', height: 480 }}>
           {/* Platform view */}
           <div className="demo-platform" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             <AnimatePresence mode="wait">
@@ -1539,10 +1595,147 @@ export function DemoSection() {
       </p>
 
       <style>{`
+        @media (max-width: 900px) {
+          .demo-section {
+            padding-left: clamp(18px, 4vw, 28px) !important;
+            padding-right: clamp(18px, 4vw, 28px) !important;
+          }
+          .demo-content {
+            height: 440px !important;
+          }
+          .demo-chat-list-messenger {
+            width: 180px !important;
+            flex-basis: 180px !important;
+          }
+          .demo-chat-list-facebook {
+            width: 190px !important;
+            flex-basis: 190px !important;
+          }
+          .demo-chat-list-instagram {
+            width: 168px !important;
+            flex-basis: 168px !important;
+          }
+        }
         @media (max-width: 640px) {
+          .demo-section {
+            min-height: auto !important;
+            justify-content: flex-start !important;
+            padding: 76px 18px 52px !important;
+          }
+          .demo-section-heading {
+            margin-bottom: 22px !important;
+          }
+          .demo-browser {
+            border-radius: 10px !important;
+          }
+          .demo-toggle::before,
+          .demo-tab-button::before {
+            content: "";
+            position: absolute;
+            inset: -10px -7px;
+          }
+          .demo-tabbar {
+            padding: 0 8px !important;
+            overflow: hidden !important;
+          }
+          .demo-tab-button {
+            padding: 0 8px !important;
+            font-size: 10.5px !important;
+            min-width: 0 !important;
+          }
+          .demo-address {
+            display: none !important;
+          }
+          .demo-extension-tab-icon {
+            margin-left: auto !important;
+            padding-left: 6px !important;
+          }
           .demo-content { flex-direction: column !important; height: auto !important; }
-          .demo-panel { border-left: none !important; border-top: 1px solid rgba(240,230,210,0.05) !important; padding: 12px !important; }
-          .demo-platform { height: 320px !important; }
+          .demo-platform {
+            flex: 0 0 min(58svh, 440px) !important;
+            height: min(58svh, 440px) !important;
+            min-height: min(360px, 58svh) !important;
+          }
+          .demo-panel {
+            border-left: none !important;
+            border-top: 1px solid rgba(240,230,210,0.05) !important;
+            padding: 12px !important;
+            justify-content: center !important;
+          }
+          .demo-chat-list {
+            width: 124px !important;
+            flex-basis: 124px !important;
+          }
+          .demo-chat-list-messenger {
+            width: 128px !important;
+            flex-basis: 128px !important;
+          }
+          .demo-chat-list-facebook {
+            width: 130px !important;
+            flex-basis: 130px !important;
+          }
+          .demo-chat-list-instagram {
+            width: 118px !important;
+            flex-basis: 118px !important;
+          }
+          .demo-ig-rail {
+            width: 38px !important;
+            flex-basis: 38px !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
+          .demo-thread {
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+          }
+        }
+        @media (max-width: 430px) {
+          .demo-section {
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+          .demo-platform {
+            flex-basis: min(54svh, 420px) !important;
+            height: min(54svh, 420px) !important;
+            min-height: min(330px, 54svh) !important;
+          }
+          .demo-chat-list {
+            width: 116px !important;
+            flex-basis: 116px !important;
+          }
+          .demo-chat-list-messenger,
+          .demo-chat-list-facebook {
+            width: 120px !important;
+            flex-basis: 120px !important;
+          }
+          .demo-chat-list-instagram {
+            width: 112px !important;
+            flex-basis: 112px !important;
+          }
+          .demo-ig-rail {
+            width: 34px !important;
+            flex-basis: 34px !important;
+          }
+          .demo-tab-button {
+            padding: 0 7px !important;
+            font-size: 10px !important;
+          }
+        }
+        @media (max-width: 360px) {
+          .demo-tab-button {
+            padding: 0 5px !important;
+            font-size: 9.5px !important;
+          }
+          .demo-chat-list,
+          .demo-chat-list-messenger,
+          .demo-chat-list-facebook {
+            width: 108px !important;
+            flex-basis: 108px !important;
+          }
+          .demo-chat-list-instagram {
+            width: 104px !important;
+            flex-basis: 104px !important;
+          }
         }
       `}</style>
     </section>
