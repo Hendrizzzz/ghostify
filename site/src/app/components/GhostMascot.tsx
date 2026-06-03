@@ -9,12 +9,12 @@ const EVENT_PHRASES: Record<string, string> = {
   'feature-off': 'that one went through.',
 };
 
-const FRICTION  = 0.955;
-const GRAVITY   = 0.18;
-const BOUNCE    = 0.68;
-const MIN_SPEED = 0.16;
-const THROW_POWER = 24;
-const MAX_THROW_SPEED = 42;
+const FRICTION  = 0.974;
+const GRAVITY   = 0.16;
+const BOUNCE    = 0.82;
+const MIN_SPEED = 0.12;
+const THROW_POWER = 36;
+const MAX_THROW_SPEED = 64;
 const GHOST_W   = 64;
 const GHOST_H   = 64;
 const GLIDE_K   = 0.045;
@@ -39,18 +39,17 @@ const THROW_PHRASES = [
 ];
 
 export function GhostMascot() {
-  const [displayPos, setDisplayPos]   = useState({ x: -200, y: -200 });
   const [message, setMessage]         = useState<string | null>(null);
   const [isFlying, setIsFlying]       = useState(false);
   const [typingMotion, setTypingMotion] = useState<'idle' | 'burst' | 'active' | 'settling'>('idle');
   const [bubbleBelow, setBubbleBelow] = useState(false);
-  const [bubbleLeft, setBubbleLeft]   = useState<number>(0);
-  const [bubbleWidth, setBubbleWidth] = useState<number>(BUBBLE_W);
   const [mounted, setMounted]         = useState(false);
 
   const pos           = useRef({ x: 200, y: 200 });
+  const visualPos     = useRef({ x: -200, y: -200 });
   const vel           = useRef({ x: 0, y: 0 });
   const isDragging    = useRef(false);
+  const isFlyingRef   = useRef(false);
   const lastPointerAt = useRef(0);
   const dragOffset    = useRef({ x: 0, y: 0 });
   const lastPointers  = useRef<{ x: number; y: number; t: number }[]>([]);
@@ -64,6 +63,8 @@ export function GhostMascot() {
   const idlePhrase    = useRef(0);
   const lastTouched   = useRef(Date.now());
   const ghostRef      = useRef<HTMLDivElement>(null);
+  const bubbleRef     = useRef<HTMLDivElement>(null);
+  const bubbleLayout  = useRef({ below: false, left: 0, top: -200, width: BUBBLE_W });
   const typingActive  = useRef(false);
   const typingBurstUntil = useRef(0);
 
@@ -95,26 +96,51 @@ export function GhostMascot() {
     };
   }, []);
 
+  const setFlying = useCallback((next: boolean) => {
+    if (isFlyingRef.current === next) return;
+    isFlyingRef.current = next;
+    setIsFlying(next);
+  }, []);
+
   const updateBubblePos = useCallback((px: number, py: number) => {
     const vw = window.innerWidth;
     const margin = 14;
     const width = Math.min(BUBBLE_W, Math.max(BUBBLE_MIN_W, vw - margin * 2));
     let left = px + GHOST_W / 2 - width / 2;
     left = Math.max(margin, Math.min(vw - width - margin, left));
-    setBubbleLeft(left);
-    setBubbleWidth(width);
-    setBubbleBelow(py < 112);
+    const below = py < 112;
+    const top = py + (below ? GHOST_H + 10 : -50);
+    const bubble = bubbleRef.current;
+
+    bubbleLayout.current = { below, left, top, width };
+
+    if (bubble) {
+      bubble.style.transform = `translate3d(${left.toFixed(2)}px, ${top.toFixed(2)}px, 0)`;
+      bubble.style.width = `${width.toFixed(2)}px`;
+    }
+
+    setBubbleBelow((current) => (current === below ? current : below));
   }, []);
+
+  const applyVisualPos = useCallback((x: number, y: number) => {
+    visualPos.current = { x, y };
+    const ghost = ghostRef.current;
+
+    if (ghost) {
+      ghost.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
+    }
+
+    updateBubblePos(x, y);
+  }, [updateBubblePos]);
 
   const parkAtSafeEdge = useCallback(() => {
     const next = safeMascotPos();
     pos.current = next;
     vel.current = { x: 0, y: 0 };
     isHoldingCenter.current = false;
-    setIsFlying(false);
-    setDisplayPos(next);
-    updateBubblePos(next.x, next.y);
-  }, [safeMascotPos, updateBubblePos]);
+    setFlying(false);
+    applyVisualPos(next.x, next.y);
+  }, [safeMascotPos, setFlying, applyVisualPos]);
 
   const showMessage = useCallback((msg: string, duration = IDLE_MESSAGE_MS) => {
     clearTimeout(msgTimer.current);
@@ -224,9 +250,8 @@ export function GhostMascot() {
             pos.current.y = cy;
           }
           vel.current = { x: 0, y: 0 };
-          setDisplayPos({ x: pos.current.x, y: pos.current.y });
-          updateBubblePos(pos.current.x, pos.current.y);
-          setIsFlying(false);
+          applyVisualPos(pos.current.x, pos.current.y);
+          setFlying(false);
         } else {
           isHoldingCenter.current = false;
         }
@@ -251,12 +276,11 @@ export function GhostMascot() {
           if (pos.current.y >= vh) {
             pos.current.y   = vh;
             vel.current.y  *= -BOUNCE;
-            vel.current.x  *= 0.86;
+            vel.current.x  *= 0.94;
           }
 
-          setDisplayPos({ x: pos.current.x, y: pos.current.y });
-          updateBubblePos(pos.current.x, pos.current.y);
-          setIsFlying(true);
+          applyVisualPos(pos.current.x, pos.current.y);
+          setFlying(true);
         } else {
           // Idle drift — very slow
           idleT.current += 0.007;
@@ -265,20 +289,19 @@ export function GhostMascot() {
           pos.current.x = Math.max(0, Math.min(window.innerWidth  - GHOST_W, pos.current.x + dx));
           pos.current.y = Math.max(0, Math.min(window.innerHeight - GHOST_H, pos.current.y + dy));
           vel.current = { x: 0, y: 0 };
-          setDisplayPos({ x: pos.current.x, y: pos.current.y });
-          updateBubblePos(pos.current.x, pos.current.y);
-          setIsFlying(false);
+          applyVisualPos(pos.current.x, pos.current.y);
+          setFlying(false);
         }
       }
     }
     rafRef.current = requestAnimationFrame(tick);
-  }, [updateBubblePos]);
+  }, [applyVisualPos, setFlying]);
 
   useEffect(() => {
-    setMounted(true);
     pos.current = safeMascotPos();
-    setDisplayPos({ x: pos.current.x, y: pos.current.y });
+    visualPos.current = { x: pos.current.x, y: pos.current.y };
     updateBubblePos(pos.current.x, pos.current.y);
+    setMounted(true);
 
     rafRef.current = requestAnimationFrame(tick);
 
@@ -292,6 +315,11 @@ export function GhostMascot() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [safeMascotPos, tick, showMessage, updateBubblePos]);
+
+  useEffect(() => {
+    if (!message) return;
+    updateBubblePos(pos.current.x, pos.current.y);
+  }, [message, bubbleBelow, updateBubblePos]);
 
   useEffect(() => {
     const moveToSafeEdge = (clearBubble = false) => {
@@ -389,25 +417,24 @@ export function GhostMascot() {
     isHoldingCenter.current = false;
     dragOffset.current = { x: clientX - pos.current.x, y: clientY - pos.current.y };
     lastPointers.current = [{ x: clientX, y: clientY, t: timeStamp }];
-    setIsFlying(false);
+    setFlying(false);
     typingActive.current = false;
     clearTimeout(danceTimer.current);
     clearTimeout(settleTimer.current);
     setTypingMotion('idle');
     clearTimeout(msgTimer.current);
     setMessage(null);
-  }, []);
+  }, [setFlying]);
 
   const dragAt = useCallback((clientX: number, clientY: number, timeStamp: number) => {
     if (!isDragging.current) return;
     const nx = clientX - dragOffset.current.x;
     const ny = clientY - dragOffset.current.y;
     pos.current = { x: nx, y: ny };
-    setDisplayPos({ x: nx, y: ny });
-    updateBubblePos(nx, ny);
+    applyVisualPos(nx, ny);
     lastPointers.current.push({ x: clientX, y: clientY, t: timeStamp });
     if (lastPointers.current.length > 6) lastPointers.current.shift();
-  }, [updateBubblePos]);
+  }, [applyVisualPos]);
 
   const finishDrag = useCallback(() => {
     if (!isDragging.current) return;
@@ -417,7 +444,7 @@ export function GhostMascot() {
     let releasedSpeed = 0;
     if (pts.length >= 2) {
       const last = pts[pts.length - 1];
-      const prev = pts[Math.max(0, pts.length - 3)];
+      const prev = pts[Math.max(0, pts.length - 2)];
       const dt = Math.max(last.t - prev.t, 16);
       const rawVel = {
         x: ((last.x - prev.x) / dt) * THROW_POWER,
@@ -471,9 +498,8 @@ export function GhostMascot() {
 
   if (!mounted) return null;
 
-  const bubbleTopOffset = bubbleBelow ? GHOST_H + 10 : -50;
   const mascotAnimation = isFlying
-    ? 'none'
+    ? 'ghostFlightTumble 0.72s ease-in-out infinite'
     : typingMotion === 'burst'
       ? 'ghostOrbit 0.85s ease-in-out 2 both'
       : typingMotion === 'active'
@@ -489,19 +515,44 @@ export function GhostMascot() {
         {message && (
           <motion.div
             key={message}
-            initial={{ opacity: 0, y: bubbleBelow ? -8 : 8, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.94 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: 'fixed', left: bubbleLeft, top: displayPos.y + bubbleTopOffset, width: bubbleWidth, zIndex: 10000, pointerEvents: 'none' }}
+            style={{
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              zIndex: 10000,
+              pointerEvents: 'none',
+              willChange: 'opacity',
+            }}
           >
-            <div style={{ background: 'rgba(20,18,14,0.94)', border: '1px solid rgba(240,235,224,0.13)', borderRadius: 9, padding: '7px 13px', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-              <span style={{ fontFamily: 'var(--g-mono)', fontSize: 11.5, letterSpacing: '0.01em', color: 'rgba(240,235,224,0.9)', display: 'block', textAlign: 'center' }}>
-                {message}
-              </span>
+            <div
+              ref={bubbleRef}
+              style={{
+                position: 'relative',
+                width: bubbleLayout.current.width,
+                transform: `translate3d(${bubbleLayout.current.left.toFixed(2)}px, ${bubbleLayout.current.top.toFixed(2)}px, 0)`,
+                willChange: 'transform',
+                contain: 'layout paint style',
+                backfaceVisibility: 'hidden',
+              }}
+            >
+              <motion.div
+                initial={{ y: bubbleBelow ? -8 : 8, scale: 0.9 }}
+                animate={{ y: 0, scale: 1 }}
+                exit={{ scale: 0.94 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={{ background: 'rgba(20,18,14,0.97)', border: '1px solid rgba(240,235,224,0.13)', borderRadius: 9, padding: '7px 13px', boxShadow: '0 4px 18px rgba(0,0,0,0.42)', willChange: 'transform', backfaceVisibility: 'hidden' }}
+              >
+                <span style={{ fontFamily: 'var(--g-mono)', fontSize: 11.5, letterSpacing: '0.01em', color: 'rgba(240,235,224,0.9)', display: 'block', textAlign: 'center' }}>
+                  {message}
+                </span>
+              </motion.div>
+              {!bubbleBelow && <div style={{ position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(20,18,14,0.94)' }} />}
+              {bubbleBelow  && <div style={{ position: 'absolute', top: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '5px solid rgba(20,18,14,0.94)' }} />}
             </div>
-            {!bubbleBelow && <div style={{ position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(20,18,14,0.94)' }} />}
-            {bubbleBelow  && <div style={{ position: 'absolute', top: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '5px solid rgba(20,18,14,0.94)' }} />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -520,7 +571,7 @@ export function GhostMascot() {
           top: 0,
           width: GHOST_W,
           height: GHOST_H,
-          transform: `translate3d(${displayPos.x.toFixed(2)}px, ${displayPos.y.toFixed(2)}px, 0)`,
+          transform: `translate3d(${visualPos.current.x.toFixed(2)}px, ${visualPos.current.y.toFixed(2)}px, 0)`,
           zIndex: 10000,
           cursor: isDragging.current ? 'grabbing' : 'grab',
           touchAction: 'none',
@@ -529,14 +580,17 @@ export function GhostMascot() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          backfaceVisibility: 'hidden',
+          contain: 'layout paint style',
         }}
       >
-        <div style={{ animation: mascotAnimation }}>
+        <div style={{ animation: mascotAnimation, willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
           <GhostSVG
             size={GHOST_W}
             style={{
               width: 'var(--ghost-mascot-size, 64px)',
               height: 'var(--ghost-mascot-size, 64px)',
+              display: 'block',
               filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.45)) drop-shadow(0 0 2px rgba(240,235,224,0.06))',
             }}
           />
@@ -550,6 +604,11 @@ export function GhostMascot() {
         @keyframes ghostSettle {
           0% { transform: translateY(-2px) rotate(0.35deg) scale(1.006); }
           100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+        @keyframes ghostFlightTumble {
+          0%, 100% { transform: translateY(0) rotate(-4deg) scale(1); }
+          45% { transform: translateY(-3px) rotate(7deg) scale(1.025); }
+          75% { transform: translateY(1px) rotate(2deg) scale(0.995); }
         }
         @media (max-width: 480px) {
           .ghost-mascot-shell {
