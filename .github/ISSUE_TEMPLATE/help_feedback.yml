@@ -52,7 +52,7 @@ body:
     attributes:
       label: Details
       description: Tell us what happened, what you expected, your idea, or your question.
-      placeholder: Example: Facebook makes a chat appear read locally, but refreshing shows it is still unread.
+      placeholder: "Example: Facebook makes a chat appear read locally, but refreshing shows it is still unread."
     validations:
       required: true
   - type: textarea
@@ -64,6 +64,13 @@ body:
         1. Go to facebook.com
         2. Open Messenger
         3. Click ...
+    validations:
+      required: false
+  - type: upload
+    id: attachments
+    attributes:
+      label: Screenshots or screen recording
+      description: Optional. Add screenshots or a short video if it helps show the issue.
     validations:
       required: false
   - type: dropdown

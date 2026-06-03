@@ -25,7 +25,7 @@ body:
     id: problem
     attributes:
       label: What problem would this solve?
-      placeholder: Example: Users may think Hide Seen is broken because Facebook locally makes chats appear read.
+      placeholder: "Example: Users may think Hide Seen is broken because Facebook locally makes chats appear read."
     validations:
       required: true
   - type: textarea
@@ -33,7 +33,7 @@ body:
     attributes:
       label: What would you like Ghostify to do?
       description: Describe the smallest useful version.
-      placeholder: Example: Add a short note in the popup explaining that Seen is still blocked.
+      placeholder: "Example: Add a short note in the popup explaining that Seen is still blocked."
     validations:
       required: true
   - type: textarea
