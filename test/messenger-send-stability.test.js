@@ -3283,13 +3283,16 @@ function testPopupMessengerSeenNoteExplainsLocalFacebookReadUi() {
 
 function testPopupSupportLinksUseGuidedIssueForms() {
     const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
+    const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
     const issueChooserUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new/choose';
+    const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
     const issueTemplateFiles = [
         '.github/ISSUE_TEMPLATE/config.yml',
         '.github/ISSUE_TEMPLATE/bug_report.yml',
         '.github/ISSUE_TEMPLATE/platform_update.yml',
-        '.github/ISSUE_TEMPLATE/feature_request.yml'
+        '.github/ISSUE_TEMPLATE/feature_request.yml',
+        '.github/ISSUE_TEMPLATE/feedback.yml'
     ];
 
     assert(
@@ -3299,8 +3302,17 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     );
     assert(
         popupHtml.includes(`href="${issueChooserUrl}"`) &&
-        popupHtml.includes('Report issue'),
-        'Popup should send users to guided GitHub issue forms instead of a blank issue draft'
+        popupHtml.includes('Help &amp; feedback') &&
+        popupHtml.includes(`data-tooltip="${thanksTooltip}"`) &&
+        !popupHtml.includes('Report issue'),
+        'Popup should expose a lowkey help-and-ideas link, not an issue-only label'
+    );
+    assert(
+        popupCss.includes('.support-link::after') &&
+        popupCss.includes('content: attr(data-tooltip);') &&
+        popupCss.includes('font-weight: 500;') &&
+        popupCss.includes('text-decoration: none;'),
+        'Popup support link should stay visually quiet and explain the optional thank-you credit on hover'
     );
 
     for (const file of issueTemplateFiles) {

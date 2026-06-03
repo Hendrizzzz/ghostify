@@ -1,0 +1,59 @@
+name: Question or other feedback
+description: Ask a question or share feedback that does not fit the bug or feature forms.
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to help shape Ghostify. Short, specific feedback is easiest to act on.
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What is this about?
+      options:
+        - A question about how Ghostify works
+        - Something confusing in the popup
+        - Website or docs feedback
+        - Privacy or trust concern
+        - Other feedback
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Pick the closest match if this is platform-specific.
+      options:
+        - Not platform-specific
+        - Facebook
+        - Messenger
+        - Instagram
+        - Multiple platforms
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What would you like to share?
+      placeholder: Example: The Hide Seen note helped, but I was not sure whether refreshing was required.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Optional, but useful if this involves a specific page, browser, or setting.
+    validations:
+      required: false
+  - type: dropdown
+    id: public-thanks
+    attributes:
+      label: Can we thank you publicly if this helps a fix?
+      description: This is optional and only used for future community thanks.
+      options:
+        - No thanks
+        - GitHub username only
+        - Name and GitHub avatar
+    validations:
+      required: true
