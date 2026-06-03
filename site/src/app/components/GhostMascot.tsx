@@ -9,12 +9,12 @@ const EVENT_PHRASES: Record<string, string> = {
   'feature-off': 'that one went through.',
 };
 
-const FRICTION  = 0.955;
-const GRAVITY   = 0.18;
-const BOUNCE    = 0.68;
-const MIN_SPEED = 0.16;
-const THROW_POWER = 24;
-const MAX_THROW_SPEED = 42;
+const FRICTION  = 0.974;
+const GRAVITY   = 0.16;
+const BOUNCE    = 0.82;
+const MIN_SPEED = 0.12;
+const THROW_POWER = 36;
+const MAX_THROW_SPEED = 64;
 const GHOST_W   = 64;
 const GHOST_H   = 64;
 const GLIDE_K   = 0.045;
@@ -276,7 +276,7 @@ export function GhostMascot() {
           if (pos.current.y >= vh) {
             pos.current.y   = vh;
             vel.current.y  *= -BOUNCE;
-            vel.current.x  *= 0.86;
+            vel.current.x  *= 0.94;
           }
 
           applyVisualPos(pos.current.x, pos.current.y);
@@ -444,7 +444,7 @@ export function GhostMascot() {
     let releasedSpeed = 0;
     if (pts.length >= 2) {
       const last = pts[pts.length - 1];
-      const prev = pts[Math.max(0, pts.length - 3)];
+      const prev = pts[Math.max(0, pts.length - 2)];
       const dt = Math.max(last.t - prev.t, 16);
       const rawVel = {
         x: ((last.x - prev.x) / dt) * THROW_POWER,
@@ -499,7 +499,7 @@ export function GhostMascot() {
   if (!mounted) return null;
 
   const mascotAnimation = isFlying
-    ? 'none'
+    ? 'ghostFlightTumble 0.72s ease-in-out infinite'
     : typingMotion === 'burst'
       ? 'ghostOrbit 0.85s ease-in-out 2 both'
       : typingMotion === 'active'
@@ -604,6 +604,11 @@ export function GhostMascot() {
         @keyframes ghostSettle {
           0% { transform: translateY(-2px) rotate(0.35deg) scale(1.006); }
           100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+        @keyframes ghostFlightTumble {
+          0%, 100% { transform: translateY(0) rotate(-4deg) scale(1); }
+          45% { transform: translateY(-3px) rotate(7deg) scale(1.025); }
+          75% { transform: translateY(1px) rotate(2deg) scale(0.995); }
         }
         @media (max-width: 480px) {
           .ghost-mascot-shell {
