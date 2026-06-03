@@ -111,22 +111,24 @@ function isFacebookMessageRequestNavigationTarget(target) {
     const element = getClosestRequestElement(target);
     if (!element) return false;
 
-    const href = getElementAttribute(element, 'href');
-    const label = [
-        getElementAttribute(element, 'aria-label'),
-        getElementAttribute(element, 'title'),
-        element.innerText,
-        element.textContent,
-        href
-    ].filter(Boolean).join(' ').toLowerCase();
+    let current = element;
+    for (let depth = 0; current && depth < 5; depth += 1) {
+        const href = getElementAttribute(current, 'href').toLowerCase();
+        const label = [
+            getElementAttribute(current, 'aria-label'),
+            getElementAttribute(current, 'title'),
+            current.innerText,
+            current.textContent,
+            href
+        ].filter(Boolean).join(' ').toLowerCase();
 
-    return href.includes('/messages/requests') ||
-        href.includes('/messages/message-requests') ||
-        href.includes('/messages/message_requests') ||
-        href.includes('folder=message_requests') ||
-        label.includes('message requests') ||
-        label.includes('message_requests') ||
-        label.includes('message-requests');
+        if (isFacebookMessageRequestRouteText(`${href} ${label}`)) return true;
+        if (isFacebookConversationRouteText(href)) return false;
+
+        current = current.parentElement;
+    }
+
+    return false;
 }
 
 function isFacebookFeedConversationNavigationTarget(target) {
@@ -250,9 +252,29 @@ function isFacebookMessageRequestSurface() {
     const hash = String(window.location?.hash || '').toLowerCase();
     const route = `${path} ${search} ${hash}`;
 
+    return isFacebookMessageRequestRouteText(route);
+}
+
+function isFacebookMessageRequestRouteText(routeText) {
+    const route = String(routeText || '').toLowerCase();
+
     return route.includes('/messages/requests') ||
         route.includes('/messages/message-requests') ||
         route.includes('/messages/message_requests') ||
         route.includes('folder=message_requests') ||
-        route.includes('message_requests');
+        route.includes('folder=pending_threads') ||
+        route.includes('folder=filtered_threads') ||
+        route.includes('folder=spam_threads') ||
+        route.includes('message requests') ||
+        route.includes('message-requests') ||
+        route.includes('message_requests') ||
+        route.includes('pending_threads') ||
+        route.includes('filtered_threads') ||
+        route.includes('spam_threads');
+}
+
+function isFacebookConversationRouteText(routeText) {
+    const route = String(routeText || '').toLowerCase();
+    return route.includes('/messages/t/') ||
+        route.includes('/messages/e2ee/t/');
 }

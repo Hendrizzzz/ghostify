@@ -1094,6 +1094,11 @@
             changed = changed || truthy;
             continue;
           }
+          if (isReadWatermarkKey(normalizedKey) && isLikelyReadWatermarkValue(child)) {
+            clone[key] = safeReadWatermarkValue(child);
+            changed = changed || clone[key] !== child;
+            continue;
+          }
           if (child && typeof child === "object" && !isBinaryPayload(child)) {
             const childText = stringifyForMatch(child).toLowerCase();
             if (isDedicatedServerReadReceiptCommand(childText)) {
@@ -1132,6 +1137,19 @@
     }
     function isReadReceiptMutationKey(key) {
       return key === "lssendreadreceipt" || key === "readreceiptmutation" || key === "sendreadreceiptmutation";
+    }
+    function isReadWatermarkKey(key) {
+      return key === "lastreadwatermark" || key === "lastreadwatermarkts" || key === "lastseentimems" || key === "readwatermark" || key === "watermarktimestamp";
+    }
+    function isLikelyReadWatermarkValue(value) {
+      if (typeof value === "number") return Number.isFinite(value) && value >= 1e9;
+      if (typeof value === "string") return /^\d{10,}$/.test(value.trim());
+      return false;
+    }
+    function safeReadWatermarkValue(value) {
+      const text = String(value).trim();
+      const safe = safeReadWatermarkDigits(text.length);
+      return typeof value === "number" ? Number(safe) : safe;
     }
     function isTruthyPrivacyValue(value) {
       if (value === true || value === 1) return true;

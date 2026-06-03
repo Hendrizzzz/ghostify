@@ -49,6 +49,8 @@ FakeBlob.instances = [];
 const createdObjectUrls = [];
 
 const NativeURL = URL;
+const SAFE_READ_WATERMARK = 1000000000000;
+const SAFE_READ_WATERMARK_STRING = String(SAFE_READ_WATERMARK);
 
 function FakeURL(input, base) {
     return new NativeURL(input, base);
@@ -1671,6 +1673,11 @@ function testFacebookNormalThreadLocalReadModulesAreSanitized() {
         'Facebook normal message-thread local read modules must receive a sanitized clone'
     );
     assert.strictEqual(calls[0].should_send_read_receipt, false);
+    assert.strictEqual(
+        calls[0].last_read_watermark,
+        SAFE_READ_WATERMARK,
+        'Facebook normal message-thread local read modules must receive a stale read watermark so local UI stays unread'
+    );
     assert.strictEqual(calls[0].readReceiptMutation, null);
     assert.strictEqual(
         context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
@@ -1713,7 +1720,11 @@ function testFacebookFeedMiniChatLocalReadModulesSanitizeReadReceiptsWithoutBloc
         'Facebook feed mini-chat local read modules must receive a sanitized clone while still calling the hydrator'
     );
     assert.deepStrictEqual(calls[0].thread_key, normalReadPayload.thread_key);
-    assert.strictEqual(calls[0].last_read_watermark, normalReadPayload.last_read_watermark);
+    assert.strictEqual(
+        calls[0].last_read_watermark,
+        SAFE_READ_WATERMARK,
+        'Facebook feed mini-chat local read modules must receive a stale read watermark so the real unread UI remains'
+    );
     assert.strictEqual(calls[0].should_send_read_receipt, false);
     assert.strictEqual(calls[0].readReceiptMutation, null);
     assert.strictEqual(context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0, 1);
@@ -1756,9 +1767,67 @@ function testFacebookFeedMiniChatStaleLocalReadModulesSanitizeReadReceiptsWithou
         'Facebook feed mini-chat stale local read modules must receive a sanitized clone after the chat opens'
     );
     assert.deepStrictEqual(calls[0].thread_key, normalReadPayload.thread_key);
-    assert.strictEqual(calls[0].last_read_watermark, normalReadPayload.last_read_watermark);
+    assert.strictEqual(
+        calls[0].last_read_watermark,
+        SAFE_READ_WATERMARK,
+        'Facebook feed mini-chat stale local read modules must receive a stale read watermark so the real unread UI remains'
+    );
     assert.strictEqual(calls[0].should_send_read_receipt, false);
     assert.strictEqual(calls[0].readReceiptMutation, null);
+    assert.strictEqual(context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0, 1);
+    assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
+}
+
+function testFacebookLocalReadModulesRewriteNestedWatermarksToPreserveUnreadUi() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const calls = [];
+    const module = registerMessengerModule(
+        context,
+        'LSUpdateThreadReadWatermark',
+        function (_a, _b, _c, _d, moduleObject) {
+            moduleObject.exports.default = function (payload) {
+                calls.push(payload);
+                return 'feed-mini-chat-read-updated';
+            };
+        }
+    );
+    const normalReadPayload = {
+        thread_key: { thread_fbid: 'redacted-thread' },
+        last_read_watermark: 1779530000000,
+        last_read_watermark_ts: '1779530000001',
+        last_seen_time_ms: 1779530000002,
+        read_watermark: '1779530000003',
+        nested: {
+            watermark_timestamp: 1779530000004
+        },
+        should_send_read_receipt: true,
+        readReceiptMutation: { should_send_read_receipt: true }
+    };
+
+    assert.strictEqual(module.exports.default(normalReadPayload), 'feed-mini-chat-read-updated');
+    assert.strictEqual(calls.length, 1);
+    assert.notStrictEqual(
+        calls[0],
+        normalReadPayload,
+        'Facebook local read modules must receive a clone when read UI state is neutralized'
+    );
+    assert.strictEqual(calls[0].last_read_watermark, SAFE_READ_WATERMARK);
+    assert.strictEqual(calls[0].last_read_watermark_ts, SAFE_READ_WATERMARK_STRING);
+    assert.strictEqual(calls[0].last_seen_time_ms, SAFE_READ_WATERMARK);
+    assert.strictEqual(calls[0].read_watermark, SAFE_READ_WATERMARK_STRING);
+    assert.strictEqual(calls[0].nested.watermark_timestamp, SAFE_READ_WATERMARK);
+    assert.strictEqual(calls[0].should_send_read_receipt, false);
+    assert.strictEqual(calls[0].readReceiptMutation, null);
+    assert.strictEqual(
+        normalReadPayload.last_read_watermark,
+        1779530000000,
+        'the original Facebook payload must not be mutated while neutralizing local read UI state'
+    );
     assert.strictEqual(context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0, 1);
     assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
 }
@@ -2868,6 +2937,20 @@ function testMessageRequestRoutesDoNotSuppressFocusEvents() {
         'Facebook request routes must not suppress focus events needed by the request loader'
     );
 
+    for (const folder of ['pending_threads', 'filtered_threads', 'spam_threads']) {
+        const facebookRequestAliasWindow = makeGhostPage({
+            hostname: 'www.facebook.com',
+            pathname: '/messages/t/redacted-thread',
+            search: `?folder=${folder}`,
+            href: `https://www.facebook.com/messages/t/redacted-thread?folder=${folder}`
+        });
+        assert.strictEqual(
+            countDeliveredFocusEvents(facebookRequestAliasWindow),
+            4,
+            `Facebook ${folder} request alias routes must not suppress focus events needed by the request loader`
+        );
+    }
+
     const facebookProxyWindow = makeGhostPage({
         hostname: 'www.fbsbx.com',
         pathname: '/maw_proxy_page/',
@@ -2999,6 +3082,43 @@ function createRequestClickTarget({ href = '', label = '' }) {
     };
 }
 
+function createNestedRequestClickTarget({ parentHref = '', parentLabel = '', childLabel = '' }) {
+    const parent = createRequestClickTarget({
+        href: parentHref,
+        label: parentLabel
+    });
+    const child = createRequestClickTarget({
+        href: '',
+        label: childLabel
+    });
+    child.parentElement = parent;
+    child.closest = function () {
+        return this;
+    };
+    return child;
+}
+
+function createNestedConversationClickTargetWithRequestSibling({ rowLabel = '', containerLabel = '' }) {
+    const container = createRequestClickTarget({
+        href: '',
+        label: containerLabel
+    });
+    const row = createRequestClickTarget({
+        href: '/messages/t/redacted-thread',
+        label: rowLabel
+    });
+    const child = createRequestClickTarget({
+        href: '',
+        label: ''
+    });
+    row.parentElement = container;
+    child.parentElement = row;
+    child.closest = function () {
+        return this;
+    };
+    return child;
+}
+
 function testMessageRequestClicksTemporarilyRestoreNativeFocus() {
     const messengerWindow = makeGhostPage({
         hostname: 'www.messenger.com',
@@ -3060,6 +3180,178 @@ function testMessageRequestClicksTemporarilyRestoreNativeFocus() {
     assert(
         Number(facebookWindow.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0) > Date.now(),
         'Facebook message-request menu clicks must open a short native transport grace window'
+    );
+}
+
+function testFacebookNestedMessageRequestClicksTemporarilyRestoreNativeFocus() {
+    const facebookWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/messages/t/redacted-thread',
+        href: 'https://www.facebook.com/messages/t/redacted-thread'
+    });
+    assert.strictEqual(facebookWindow.document.hasFocus(), false);
+    let facebookFocusSignals = 0;
+    facebookWindow.addEventListener('focus', () => { facebookFocusSignals += 1; });
+    facebookWindow.document.addEventListener('visibilitychange', () => { facebookFocusSignals += 1; });
+    facebookWindow.document.addEventListener('focusin', () => { facebookFocusSignals += 1; });
+
+    facebookWindow.document.dispatchEvent({
+        type: 'click',
+        target: createNestedRequestClickTarget({
+            parentLabel: 'New message requests From Princess Hannah Bermudez and others',
+            childLabel: ''
+        })
+    });
+
+    assert.strictEqual(
+        facebookWindow.document.hasFocus(),
+        true,
+        'Facebook nested New message requests clicks must restore native focus before the SPA URL changes'
+    );
+    assert(
+        facebookFocusSignals > 0,
+        'Facebook nested New message requests clicks must deliver native focus/visibility signals for the request loader'
+    );
+    assert(
+        Number(facebookWindow.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0) > Date.now(),
+        'Facebook nested New message requests clicks must open a short native transport grace window'
+    );
+}
+
+function testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestText() {
+    const facebookWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/messages/t/redacted-thread',
+        href: 'https://www.facebook.com/messages/t/redacted-thread'
+    });
+    assert.strictEqual(facebookWindow.document.hasFocus(), false);
+    let facebookFocusSignals = 0;
+    facebookWindow.addEventListener('focus', () => { facebookFocusSignals += 1; });
+    facebookWindow.document.addEventListener('visibilitychange', () => { facebookFocusSignals += 1; });
+    facebookWindow.document.addEventListener('focusin', () => { facebookFocusSignals += 1; });
+
+    facebookWindow.document.dispatchEvent({
+        type: 'click',
+        target: createNestedConversationClickTargetWithRequestSibling({
+            rowLabel: 'Jayy Zz You: thumbs up 2d',
+            containerLabel: 'New message requests From Princess Hannah Bermudez Jayy Zz You: thumbs up 2d'
+        })
+    });
+
+    assert.strictEqual(
+        facebookWindow.document.hasFocus(),
+        false,
+        'Normal Facebook conversation clicks must not inherit sibling Message requests text from a broad container'
+    );
+    assert.strictEqual(
+        facebookFocusSignals,
+        0,
+        'Normal Facebook conversation clicks must not open request-loader focus grace from sibling request text'
+    );
+    assert.strictEqual(
+        Number(facebookWindow.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0) > Date.now(),
+        false,
+        'Normal Facebook conversation clicks must not activate message-request native grace'
+    );
+}
+
+function testPopupMessengerSeenNoteExplainsLocalFacebookReadUi() {
+    const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
+    const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
+    const note = 'Ghostify is working. Facebook may only make chats appear read here; Seen stays blocked.';
+
+    assert(
+        popupHtml.includes(note),
+        'Messenger/Facebook Hide Seen should explain Facebook local read UI without implying Seen was sent'
+    );
+    assert(
+        popupHtml.includes(`data-tooltip="${note}"`),
+        'Messenger/Facebook Hide Seen should use a custom tooltip so it appears immediately'
+    );
+    assert(
+        !popupHtml.includes(' title='),
+        'Messenger/Facebook Hide Seen should not use the delayed native title tooltip'
+    );
+    assert(
+        popupCss.includes('.info-icon::after') &&
+        popupCss.includes('content: attr(data-tooltip);') &&
+        popupCss.includes('white-space: normal;') &&
+        popupCss.includes('transition: none;'),
+        'Messenger/Facebook Hide Seen tooltip should wrap and appear without hover delay'
+    );
+}
+
+function testPopupSupportLinksUseGuidedIssueForms() {
+    const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
+    const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
+    const websiteUrl = 'https://ghostify-extension.vercel.app/';
+    const issueChooserUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new/choose';
+    const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
+    const issueTemplateFiles = [
+        '.github/ISSUE_TEMPLATE/config.yml',
+        '.github/ISSUE_TEMPLATE/bug_report.yml',
+        '.github/ISSUE_TEMPLATE/feature_request.yml',
+        '.github/ISSUE_TEMPLATE/feedback.yml',
+        '.github/ISSUE_TEMPLATE/question.yml'
+    ];
+    const issueTemplateNames = [
+        'name: Report a bug',
+        'name: Share an idea',
+        'name: Share feedback',
+        'name: Ask a question'
+    ];
+
+    assert(
+        popupHtml.includes(`href="${websiteUrl}"`) &&
+        popupHtml.includes('aria-label="Open the Ghostify website"'),
+        'Popup brand should open the Ghostify website when clicked'
+    );
+    assert(
+        popupHtml.includes(`href="${issueChooserUrl}"`) &&
+        popupHtml.includes('Help &amp; feedback') &&
+        popupHtml.includes(`data-tooltip="${thanksTooltip}"`) &&
+        !popupHtml.includes('Report issue'),
+        'Popup should expose a lowkey help-and-ideas link, not an issue-only label'
+    );
+    assert(
+        popupCss.includes('.support-link::after') &&
+        popupCss.includes('content: attr(data-tooltip);') &&
+        popupCss.includes('font-weight: 500;') &&
+        popupCss.includes('text-decoration: none;'),
+        'Popup support link should stay visually quiet and explain the optional thank-you credit on hover'
+    );
+
+    for (const file of issueTemplateFiles) {
+        assert(fs.existsSync(file), `${file} should exist so users are guided before filing reports`);
+    }
+
+    const issueTemplateConfig = fs.readFileSync('.github/ISSUE_TEMPLATE/config.yml', 'utf8');
+    assert(
+        issueTemplateConfig.includes('blank_issues_enabled: false'),
+        'GitHub blank issues should be disabled so users do not draft from scratch'
+    );
+
+    const forms = issueTemplateFiles
+        .filter(file => file.endsWith('.yml') && !file.endsWith('config.yml'))
+        .map(file => fs.readFileSync(file, 'utf8'));
+    for (const name of issueTemplateNames) {
+        assert(
+            forms.some(form => form.includes(name)),
+            `Guided issue chooser should include the action label "${name}"`
+        );
+    }
+    assert(
+        !fs.existsSync('.github/ISSUE_TEMPLATE/platform_update.yml'),
+        'Guided issue chooser should avoid extra overlapping issue types beyond bug, idea, feedback, and question'
+    );
+    assert(
+        forms.every(form =>
+            form.includes('type: dropdown') &&
+            form.includes('type: textarea') &&
+            form.includes('id: public-thanks') &&
+            form.includes('Can we thank you publicly if this helps a fix?')
+        ),
+        'Guided issue forms should collect structured details and public-thanks consent'
     );
 }
 
@@ -3168,6 +3460,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testFacebookNormalThreadLocalReadModulesAreSanitized();
     testFacebookFeedMiniChatLocalReadModulesSanitizeReadReceiptsWithoutBlockingHistoryLoading();
     testFacebookFeedMiniChatStaleLocalReadModulesSanitizeReadReceiptsWithoutBlockingHistoryLoading();
+    testFacebookLocalReadModulesRewriteNestedWatermarksToPreserveUnreadUi();
     testFacebookMessageRequestGraceLeavesLocalReadModulesUntouched();
     testFacebookMessageRequestGraceBypassesStaleLocalReadWrappersAtCallTime();
     testFacebookMawProxyLocalReadModulesAreSanitized();
@@ -3197,6 +3490,10 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMawProxyRejectsUntrustedMessageRequestGrace();
     testMessageRequestSpaRouteChangesRestoreNativeFocus();
     testMessageRequestClicksTemporarilyRestoreNativeFocus();
+    testFacebookNestedMessageRequestClicksTemporarilyRestoreNativeFocus();
+    testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestText();
+    testPopupMessengerSeenNoteExplainsLocalFacebookReadUi();
+    testPopupSupportLinksUseGuidedIssueForms();
     await testMessageRequestClickGraceKeepsTransportAndBridgeNative();
     console.log('messenger send-stability regression tests passed');
 })().catch(error => {

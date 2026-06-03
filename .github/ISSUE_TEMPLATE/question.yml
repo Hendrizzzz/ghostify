@@ -1,0 +1,60 @@
+name: Ask a question
+description: Ask how Ghostify works or what a control means.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking. Clear questions help make Ghostify easier to understand.
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What is your question about?
+      options:
+        - How Ghostify works
+        - A popup setting
+        - Facebook or Messenger behavior
+        - Instagram behavior
+        - Privacy or data handling
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Pick the closest match if this is platform-specific.
+      options:
+        - Not platform-specific
+        - Facebook
+        - Messenger
+        - Instagram
+        - Multiple platforms
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      placeholder: Example: If Facebook makes a chat appear read locally, does Ghostify still block Seen?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Optional, but useful if this involves a specific page, browser, or setting.
+    validations:
+      required: false
+  - type: dropdown
+    id: public-thanks
+    attributes:
+      label: Can we thank you publicly if this helps a fix?
+      description: This is optional and only used for future community thanks.
+      options:
+        - No thanks
+        - GitHub username only
+        - Name and GitHub avatar
+    validations:
+      required: true

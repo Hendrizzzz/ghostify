@@ -1,0 +1,93 @@
+name: Report a bug
+description: Tell us when a Ghostify control, platform flow, or popup state is not working as expected.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping keep Ghostify reliable. Clear reports make fixes much faster.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where did this happen?
+      options:
+        - Facebook
+        - Messenger
+        - Instagram
+        - Multiple platforms
+    validations:
+      required: true
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Feature affected
+      options:
+        - Hide Seen
+        - Hide Typing
+        - Hide Story Views
+        - Message Requests
+        - Platform changed UI or behavior
+        - Popup UI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Tell us what you saw.
+      placeholder: Example: I clicked New message requests on facebook.com and the request list did not open.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: Example: Message requests should open without sending Seen.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps are best.
+      placeholder: |
+        1. Go to facebook.com
+        2. Open Messenger
+        3. Click ...
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Chrome 125, Edge 125, Opera GX, etc.
+    validations:
+      required: true
+  - type: input
+    id: extension-version
+    attributes:
+      label: Ghostify version
+      placeholder: Example: v2.0.1
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or screen recording
+      description: Optional, but very helpful if this is a UI issue.
+    validations:
+      required: false
+  - type: dropdown
+    id: public-thanks
+    attributes:
+      label: Can we thank you publicly if this helps a fix?
+      description: This is optional and only used for future community thanks.
+      options:
+        - No thanks
+        - GitHub username only
+        - Name and GitHub avatar
+    validations:
+      required: true

@@ -1,0 +1,56 @@
+name: Share an idea
+description: Suggest a focused improvement for Ghostify.
+title: "[Idea]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Specific requests are easier to discuss, design, and ship.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where would this help?
+      options:
+        - Facebook
+        - Messenger
+        - Instagram
+        - Popup UI
+        - Website
+        - Multiple platforms
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: Example: Users may think Hide Seen is broken because Facebook locally makes chats appear read.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like Ghostify to do?
+      description: Describe the smallest useful version.
+      placeholder: Example: Add a short note in the popup explaining that Seen is still blocked.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Optional, but helpful.
+    validations:
+      required: false
+  - type: dropdown
+    id: public-thanks
+    attributes:
+      label: Can we thank you publicly if this helps a fix?
+      description: This is optional and only used for future community thanks.
+      options:
+        - No thanks
+        - GitHub username only
+        - Name and GitHub avatar
+    validations:
+      required: true

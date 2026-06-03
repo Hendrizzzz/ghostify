@@ -11,8 +11,10 @@
 <body>
     <main class="popup-shell" aria-label="Ghostify privacy controls">
         <header class="header">
-            <img src="icons/icon32.png" alt="" class="header-icon">
-            <h1>Ghostify</h1>
+            <a class="brand-link" href="https://ghostify-extension.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open the Ghostify website">
+                <img src="icons/icon32.png" alt="" class="header-icon">
+                <h1>Ghostify</h1>
+            </a>
         </header>
 
         <section class="platform" aria-labelledby="instagram-heading">
@@ -61,6 +63,7 @@
                     <span class="row-label">
                         <span class="feature-icon seen-icon" aria-hidden="true"></span>
                         <span>Hide Seen</span>
+                        <button class="info-icon" type="button" aria-label="Ghostify is working. Facebook may only make chats appear read here; Seen stays blocked." data-tooltip="Ghostify is working. Facebook may only make chats appear read here; Seen stays blocked.">i</button>
                     </span>
                     <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
                 </div>
@@ -83,6 +86,7 @@
 
         <footer class="footer">
             <span id="version-number"></span>
+            <a class="support-link" href="https://github.com/Hendrizzzz/Ghostify/issues/new/choose" target="_blank" rel="noopener noreferrer" aria-label="Get help or share feedback using guided GitHub forms" data-tooltip="Helpful bug reports or ideas will be credited in release notes and on the website, with permission.">Help &amp; feedback</a>
         </footer>
     </main>
 
