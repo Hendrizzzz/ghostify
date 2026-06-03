@@ -2735,12 +2735,13 @@ function testFacebookRestoredMiniChatLoadingKeepsNativeFocusUntilHydrated() {
 }
 
 function testFacebookUnreadFeedMessageClicksKeepDocumentVisibleForThreadLoading() {
-    const window = makeGhostPage({
+    const page = {
         hostname: 'www.facebook.com',
         pathname: '/',
         href: 'https://www.facebook.com/',
         facebookMessengerPopoverOpen: true
-    });
+    };
+    const window = makeGhostPage(page);
     window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ = Date.now() - 1;
     assert.strictEqual(
         window.document.visibilityState,
@@ -2768,15 +2769,23 @@ function testFacebookUnreadFeedMessageClicksKeepDocumentVisibleForThreadLoading(
     assert.strictEqual(window.document.hidden, false);
     assert.strictEqual(
         window.document.hasFocus(),
-        true,
-        'Opening a Facebook feed Messenger row needs a short native-focus grace so an already-restored mini-chat can hydrate'
+        false,
+        'Opening an unread Facebook feed Messenger row must keep hasFocus false so Facebook does not optimistically clear the unread UI'
     );
     assert.strictEqual(
         countDeliveredFocusEvents(window),
         4,
         'Opening a Facebook feed Messenger row must keep loader focus events flowing even while hasFocus is spoofed'
     );
+    page.facebookMessengerPopoverOpen = false;
+    window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ = Date.now() + 30000;
+    assert.strictEqual(
+        window.document.hasFocus(),
+        false,
+        'Conversation-click privacy must keep hasFocus false even if the popover closes before mini-chat DOM appears'
+    );
     window.__GHOSTIFY_FACEBOOK_CHAT_OPEN_FOCUS_UNTIL__ = Date.now() - 1;
+    window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ = Date.now() - 1;
     assert.strictEqual(
         window.document.hasFocus(),
         false,
@@ -2820,8 +2829,8 @@ function testFacebookUnreadFeedMessageChildClicksKeepDocumentVisibleForThreadLoa
     assert.strictEqual(window.document.hidden, false);
     assert.strictEqual(
         window.document.hasFocus(),
-        true,
-        'Unread child clicks must open the same short native-focus grace for restored mini-chat hydration'
+        false,
+        'Unread child clicks must keep hasFocus false so Facebook does not optimistically clear the unread UI'
     );
     assert.strictEqual(
         countDeliveredFocusEvents(window),

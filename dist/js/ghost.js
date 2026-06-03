@@ -2499,7 +2499,7 @@
     if (isFacebookMessageRequestSurface()) return null;
     if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
       if (isFacebookRestoredMiniChatLoadingSurface()) return null;
-      if (hasRecentChatOpenIntent()) return null;
+      if (hasRecentChatOpenIntent()) return "unfocused-passive";
       if (isFacebookFeedMessengerSurface()) return "unfocused-passive";
       if (isFacebookFeedRootSurface()) return hasRootNativeGrace() ? null : "unfocused-passive";
       if (!isFacebookMessagingSurface()) return null;
