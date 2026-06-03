@@ -37,7 +37,7 @@ body:
     id: question
     attributes:
       label: Question
-      placeholder: Example: If Facebook makes a chat appear read locally, does Ghostify still block Seen?
+      placeholder: "Example: If Facebook makes a chat appear read locally, does Ghostify still block Seen?"
     validations:
       required: true
   - type: textarea

@@ -38,14 +38,14 @@ body:
     attributes:
       label: What happened?
       description: Tell us what you saw.
-      placeholder: Example: I clicked New message requests on facebook.com and the request list did not open.
+      placeholder: "Example: I clicked New message requests on facebook.com and the request list did not open."
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
       label: What did you expect?
-      placeholder: Example: Message requests should open without sending Seen.
+      placeholder: "Example: Message requests should open without sending Seen."
     validations:
       required: true
   - type: textarea
@@ -70,14 +70,14 @@ body:
     id: extension-version
     attributes:
       label: Ghostify version
-      placeholder: Example: v2.0.1
+      placeholder: "Example: v2.0.1"
     validations:
       required: true
-  - type: textarea
-    id: screenshots
+  - type: upload
+    id: attachments
     attributes:
       label: Screenshots or screen recording
-      description: Optional, but very helpful if this is a UI issue.
+      description: Optional. Add screenshots or a short video if it helps show the issue.
     validations:
       required: false
   - type: dropdown

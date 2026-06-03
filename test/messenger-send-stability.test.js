@@ -3347,6 +3347,7 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Guided issue chooser should avoid extra overlapping issue types beyond bug, idea, feedback, and question'
     );
     const directHelpForm = fs.readFileSync('.github/ISSUE_TEMPLATE/help_feedback.yml', 'utf8');
+    const bugReportForm = fs.readFileSync('.github/ISSUE_TEMPLATE/bug_report.yml', 'utf8');
     assert(
         directHelpForm.includes('name: Help & feedback') &&
         directHelpForm.includes('Report a bug') &&
@@ -3363,6 +3364,19 @@ function testPopupSupportLinksUseGuidedIssueForms() {
             form.includes('Can we thank you publicly if this helps a fix?')
         ),
         'Guided issue forms should collect structured details and public-thanks consent'
+    );
+    assert(
+        forms.every(form => !/^\s*placeholder:\s+[^"|\n][^\n]*:\s/m.test(form)),
+        'Guided issue forms should quote colon-containing placeholder text so GitHub does not reject the YAML'
+    );
+    assert(
+        directHelpForm.includes('type: upload') &&
+        directHelpForm.includes('id: attachments') &&
+        directHelpForm.includes('Screenshots or screen recording') &&
+        directHelpForm.includes('short video') &&
+        bugReportForm.includes('type: upload') &&
+        bugReportForm.includes('id: attachments'),
+        'Guided bug and feedback forms should support screenshot or video uploads'
     );
 }
 

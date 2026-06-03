@@ -35,7 +35,7 @@ body:
     id: details
     attributes:
       label: What would you like to share?
-      placeholder: Example: The Hide Seen note helped, but I was not sure whether refreshing was required.
+      placeholder: "Example: The Hide Seen note helped, but I was not sure whether refreshing was required."
     validations:
       required: true
   - type: textarea
