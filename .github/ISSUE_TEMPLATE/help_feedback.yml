@@ -1,0 +1,79 @@
+name: Help & feedback
+description: Report a bug, share an idea, ask a question, or send feedback.
+title: "[Help & feedback]: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Ghostify. This guided form keeps the details clear without making you start from scratch.
+  - type: dropdown
+    id: request-type
+    attributes:
+      label: What would you like to do?
+      options:
+        - Report a bug
+        - Share an idea
+        - Share feedback
+        - Ask a question
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Pick the closest match.
+      options:
+        - Not platform-specific
+        - Facebook
+        - Messenger
+        - Instagram
+        - Multiple platforms
+    validations:
+      required: true
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Area
+      description: Pick the closest match.
+      options:
+        - Hide Seen
+        - Hide Typing
+        - Hide Story Views
+        - Message Requests
+        - Popup UI
+        - Website or docs
+        - Privacy or trust
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Tell us what happened, what you expected, your idea, or your question.
+      placeholder: Example: Facebook makes a chat appear read locally, but refreshing shows it is still unread.
+    validations:
+      required: true
+  - type: textarea
+    id: steps-or-context
+    attributes:
+      label: Steps or context
+      description: Optional, but useful for bugs. Numbered steps, screenshots, browser, and Ghostify version help a lot.
+      placeholder: |
+        1. Go to facebook.com
+        2. Open Messenger
+        3. Click ...
+    validations:
+      required: false
+  - type: dropdown
+    id: public-thanks
+    attributes:
+      label: Can we thank you publicly if this helps a fix?
+      description: This is optional and only used for future community thanks.
+      options:
+        - No thanks
+        - GitHub username only
+        - Name and GitHub avatar
+    validations:
+      required: true

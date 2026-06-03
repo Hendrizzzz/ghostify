@@ -3285,14 +3285,15 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
     const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
-    const issueChooserUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new/choose';
+    const directHelpFormUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml';
     const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
     const issueTemplateFiles = [
         '.github/ISSUE_TEMPLATE/config.yml',
         '.github/ISSUE_TEMPLATE/bug_report.yml',
         '.github/ISSUE_TEMPLATE/feature_request.yml',
         '.github/ISSUE_TEMPLATE/feedback.yml',
-        '.github/ISSUE_TEMPLATE/question.yml'
+        '.github/ISSUE_TEMPLATE/question.yml',
+        '.github/ISSUE_TEMPLATE/help_feedback.yml'
     ];
     const issueTemplateNames = [
         'name: Report a bug',
@@ -3307,11 +3308,12 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Popup brand should open the Ghostify website when clicked'
     );
     assert(
-        popupHtml.includes(`href="${issueChooserUrl}"`) &&
+        popupHtml.includes(`href="${directHelpFormUrl}"`) &&
         popupHtml.includes('Help &amp; feedback') &&
         popupHtml.includes(`data-tooltip="${thanksTooltip}"`) &&
+        !popupHtml.includes('issues/new/choose') &&
         !popupHtml.includes('Report issue'),
-        'Popup should expose a lowkey help-and-ideas link, not an issue-only label'
+        'Popup should open one guided Help & feedback draft directly instead of the issue chooser'
     );
     assert(
         popupCss.includes('.support-link::after') &&
@@ -3343,6 +3345,15 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     assert(
         !fs.existsSync('.github/ISSUE_TEMPLATE/platform_update.yml'),
         'Guided issue chooser should avoid extra overlapping issue types beyond bug, idea, feedback, and question'
+    );
+    const directHelpForm = fs.readFileSync('.github/ISSUE_TEMPLATE/help_feedback.yml', 'utf8');
+    assert(
+        directHelpForm.includes('name: Help & feedback') &&
+        directHelpForm.includes('Report a bug') &&
+        directHelpForm.includes('Share an idea') &&
+        directHelpForm.includes('Share feedback') &&
+        directHelpForm.includes('Ask a question'),
+        'Popup direct Help & feedback form should guide users into bug, idea, feedback, or question paths'
     );
     assert(
         forms.every(form =>
