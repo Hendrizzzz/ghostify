@@ -3287,6 +3287,7 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
     const directHelpFormUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml';
     const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
+    const directHelpPlaceholder = 'Example: On facebook.com, I clicked New message requests and it opened a blank chat page instead of the request list. I expected Ghostify to keep the real UI working while Seen stays blocked.';
     const issueTemplateFiles = [
         '.github/ISSUE_TEMPLATE/config.yml',
         '.github/ISSUE_TEMPLATE/bug_report.yml',
@@ -3353,7 +3354,8 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         directHelpForm.includes('Report a bug') &&
         directHelpForm.includes('Share an idea') &&
         directHelpForm.includes('Share feedback') &&
-        directHelpForm.includes('Ask a question'),
+        directHelpForm.includes('Ask a question') &&
+        directHelpForm.includes(`placeholder: "${directHelpPlaceholder}"`),
         'Popup direct Help & feedback form should guide users into bug, idea, feedback, or question paths'
     );
     assert(
@@ -3361,9 +3363,14 @@ function testPopupSupportLinksUseGuidedIssueForms() {
             form.includes('type: dropdown') &&
             form.includes('type: textarea') &&
             form.includes('id: public-thanks') &&
-            form.includes('Can we thank you publicly if this helps a fix?')
+            form.includes('Thank-you credit preview:') &&
+            form.includes('Can we thank you publicly if this helps Ghostify?') &&
+            form.includes('Yes means we can credit your GitHub name and avatar in release notes and on the Ghostify website.') &&
+            form.includes('- Yes, name and avatar') &&
+            form.includes('- No thanks') &&
+            !form.includes('- GitHub username only')
         ),
-        'Guided issue forms should collect structured details and public-thanks consent'
+        'Guided issue forms should collect structured details and public-thanks consent with a clear two-option thank-you credit'
     );
     assert(
         forms.every(form => !/^\s*placeholder:\s+[^"|\n][^\n]*:\s/m.test(form)),

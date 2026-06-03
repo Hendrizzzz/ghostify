@@ -52,7 +52,7 @@ body:
     attributes:
       label: Details
       description: Tell us what happened, what you expected, your idea, or your question.
-      placeholder: "Example: Facebook makes a chat appear read locally, but refreshing shows it is still unread."
+      placeholder: "Example: On facebook.com, I clicked New message requests and it opened a blank chat page instead of the request list. I expected Ghostify to keep the real UI working while Seen stays blocked."
     validations:
       required: true
   - type: textarea
@@ -73,14 +73,17 @@ body:
       description: Optional. Add screenshots or a short video if it helps show the issue.
     validations:
       required: false
+  - type: markdown
+    attributes:
+      value: |
+        **Thank-you credit preview:** Helpful bugs, ideas, feedback, and questions can be credited in Ghostify release notes and on the website.
   - type: dropdown
     id: public-thanks
     attributes:
-      label: Can we thank you publicly if this helps a fix?
-      description: This is optional and only used for future community thanks.
+      label: Can we thank you publicly if this helps Ghostify?
+      description: Yes means we can credit your GitHub name and avatar in release notes and on the Ghostify website.
       options:
+        - Yes, name and avatar
         - No thanks
-        - GitHub username only
-        - Name and GitHub avatar
     validations:
       required: true
