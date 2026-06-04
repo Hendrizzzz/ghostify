@@ -263,6 +263,7 @@
     }
 
     function shouldBlockFacebookTypingText(text) {
+        if (isFacebookFeedMessengerSurface() && hasMessengerMessageSendIntentText(text)) return false;
         if (isFacebookTypingBridgeCommand(text)) return true;
         if (!hasExplicitTypingWriteIntent(text)) return false;
 
@@ -279,6 +280,7 @@
         if (isMessageRequestHydrationText(text)) return false;
         if (isFacebookMessengerReadOnlyQueryText(text)) return false;
         if (text.includes('delivery_receipt') && !hasReadReceiptWriteIntent(text)) return false;
+        if (hasMessengerMessageSendIntentText(text)) return false;
         if (isFacebookRealtimeReadReceiptTask(text)) return true;
         if (isFacebookLocalBridgeReadReceiptCommand(text)) return true;
 
@@ -570,7 +572,19 @@
             text.includes('threadid') ||
             text.includes('recipient_id') ||
             text.includes('message_thread') ||
-            text.includes('act_thread_id');
+            text.includes('act_thread_id') ||
+            text.includes('parent_thread_key') ||
+            text.includes('parentthreadkey') ||
+            text.includes('open_message_thread_key') ||
+            text.includes('openmessagethreadkey') ||
+            text.includes('armadillo_thread_key') ||
+            text.includes('armadillothreadkey') ||
+            text.includes('other_user_fbid') ||
+            text.includes('otheruserfbid') ||
+            text.includes('other_user_id') ||
+            text.includes('otheruserid') ||
+            text.includes('target_id') ||
+            text.includes('targetid');
     }
 
     function hasReadWatermarkTarget(text) {
@@ -884,14 +898,16 @@
                 window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ = [];
                 window.__GHOSTIFY_DEBUG_EVENTS__ = [];
                 window.__GHOSTIFY_OBSERVATION_COUNTS__ = {};
-            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = 0;
-            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = 0;
-            window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = 0;
-            window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ = 0;
-            window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
-            window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
-            window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
-            window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
+                window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = 0;
+                window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = 0;
+                window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = 0;
+                window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ = 0;
+                window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = 0;
+                window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ = 0;
+                window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
+                window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
+                window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
+                window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
                 pushPatchObservation(createPatchMarkerEvent(`reset:${window.__GHOSTIFY_CAPTURE_PHASE__}`));
                 return `Ghostify capture reset: ${window.__GHOSTIFY_CAPTURE_PHASE__}`;
             };
@@ -911,7 +927,11 @@
                     debugEvents: window.__GHOSTIFY_DEBUG_EVENTS__ || [],
                     blockedWorkerMessages: window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0,
                     sanitizedWorkerMessages: window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0,
+                    sanitizedSeenBridgeMessages: window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0,
+                    sanitizedNetworkMessages: window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0,
                     facebookUnsafeBlocksSkipped: window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0,
+                    messengerUnsafeBlocksSkipped: window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ || 0,
+                    unsafeTransferBlocksSkipped: window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ || 0,
                     blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
                     blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
                     sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
@@ -1276,6 +1296,16 @@
                 }
 
                 if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
+                    if (blockType === 'MSG_TYPING') {
+                        const sanitizedTyping = sanitizeBridgeMessage(message);
+                        if (sanitizedTyping.changed && !sanitizedTyping.blockedAll) {
+                            const transferSafe = filterPostMessageTransfer(transfer, sanitizedTyping.value);
+                            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
+                            tracePostMessageOutcome(kind, blockType, 'sanitize_typing', message, text);
+                            return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedTyping.value, transferSafe);
+                        }
+                    }
+
                     if (isSafeFacebookBridgeBlock(blockType, text)) {
                         window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
                         tracePostMessageOutcome(kind, blockType, 'drop', message, text);
@@ -1355,6 +1385,8 @@
 
     function isSafeFacebookBridgeBlock(blockType, text) {
         if (blockType === 'MSG_TYPING') {
+            if (hasMessengerMessageSendIntentText(text)) return false;
+
             return isFacebookTypingBridgeCommand(text) ||
                 (hasExplicitTypingWriteIntent(text) &&
                     hasFacebookMessengerWriteContext(text) &&
@@ -1366,6 +1398,7 @@
         }
 
         if (blockType === 'MSG_SEEN') {
+            if (hasMessengerMessageSendIntentText(text)) return false;
             if (isFacebookRealtimeReadReceiptTask(text)) return true;
 
             return hasStrictReadReceiptWriteCommand(text) &&
@@ -1628,9 +1661,11 @@
     }
 
     function hasMessengerMessageSendIntentText(text) {
-        if (!hasMessengerThreadTarget(text)) return false;
+        const value = String(text || '');
+        const matchText = value.includes('\\') ? `${value} ${value.replace(/\\/g, '')}` : value;
+        if (!hasMessengerThreadTarget(matchText)) return false;
 
-        const hasSendOperationName = includesAnyText(text, [
+        const hasSendOperationName = includesAnyText(matchText, [
             'send_message',
             'sendmessage',
             'message_send',
@@ -1640,7 +1675,7 @@
             'sendmessagemutation',
             'messengersendmessagemutation'
         ]);
-        const hasClientMessageId = includesAnyText(text, [
+        const hasClientMessageId = includesAnyText(matchText, [
             'offline_threading_id',
             'offlinethreadingid',
             'client_message_id',
@@ -1649,7 +1684,7 @@
             'clientmutationid',
             'otid'
         ]);
-        const hasMessagePayload = includesAnyText(text, [
+        const hasMessagePayload = includesAnyText(matchText, [
             '"message"',
             '%22message%22',
             'message:',
@@ -1661,11 +1696,27 @@
             'body',
             'attachment',
             'sticker',
-            'media'
+            'media',
+            'encrypted_message',
+            'encryptedmessage',
+            'encrypted_payload',
+            'encryptedpayload',
+            'encrypted_blob',
+            'encryptedblob',
+            'encrypted_content',
+            'encryptedcontent',
+            'ciphertext',
+            'reaction',
+            'message_reaction',
+            'messagereaction',
+            'emoji',
+            'quick_like',
+            'quicklike',
+            'like'
         ]);
 
-        if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || text.includes('send_type'))) return true;
-        return text.includes('send_type') && hasClientMessageId && hasMessagePayload;
+        if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || matchText.includes('send_type'))) return true;
+        return matchText.includes('send_type') && hasClientMessageId && hasMessagePayload;
     }
 
     function tracePostMessageOutcome(kind, blockType, outcome, message, text) {
@@ -1926,6 +1977,11 @@
 
         const wrapped = function (...args) {
             if (window.__ghostify_shouldBlockTyping()) {
+                const argsText = stringifyForMatch(args).toLowerCase();
+                if ((isFacebookDotCom || isFacebookMessengerProxy) && hasMessengerMessageSendIntentText(argsText)) {
+                    return fn.apply(this, args);
+                }
+
                 window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0) + 1;
                 return noopTypingResult();
             }
@@ -1988,6 +2044,9 @@
                         if (hasNativeMessageRequestBypass() ||
                             isCurrentMessageRequestSurface() ||
                             isLocalReadMessageRequestHydrationText(argsText)) {
+                            return Reflect.apply(target, thisArg, args);
+                        }
+                        if (isLocalSendAckStateText(argsText)) {
                             return Reflect.apply(target, thisArg, args);
                         }
                         const sanitizedArgs = sanitizeSeenBridgeMessage(args);
@@ -2065,6 +2124,80 @@
         });
     }
 
+    function isLocalSendAckStateText(text) {
+        if (!isFacebookDotCom && !isFacebookMessengerProxy) return false;
+        if (!hasMessengerThreadTarget(text)) return false;
+
+        const hasClientMessageId = includesAnyText(text, [
+            'offline_threading_id',
+            'offlinethreadingid',
+            'client_message_id',
+            'clientmessageid',
+            'client_mutation_id',
+            'clientmutationid',
+            'message_id',
+            'messageid',
+            'otid'
+        ]);
+        const hasLocalSendState = includesAnyText(text, [
+            'send_state',
+            'sendstate',
+            'sending',
+            'pending',
+            'send_type',
+            'sendtype'
+        ]);
+        const hasLocalSendPayload = includesAnyText(text, [
+            'message',
+            'text',
+            'body',
+            'attachment',
+            'sticker',
+            'media',
+            'encrypted_message',
+            'encryptedmessage',
+            'encrypted_payload',
+            'encryptedpayload',
+            'reaction',
+            'emoji',
+            'quick_like',
+            'quicklike'
+        ]);
+
+        if (hasClientMessageId && hasLocalSendState && hasLocalSendPayload) {
+            return true;
+        }
+
+        const stripped = stripFalseyPrivacyFields(text);
+        if (hasExplicitSeenWriteIntent(stripped) ||
+            hasStrictReadReceiptWriteCommand(stripped) ||
+            hasDedicatedServerReadReceiptIntent(stripped)) {
+            return false;
+        }
+
+        return includesAnyText(text, [
+            'offline_threading_id',
+            'offlinethreadingid',
+            'client_message_id',
+            'clientmessageid',
+            'client_mutation_id',
+            'clientmutationid',
+            'message_id',
+            'messageid',
+            'otid'
+        ]) && includesAnyText(text, [
+            'send_state',
+            'sendstate',
+            'delivery_receipt',
+            'deliveryreceipt',
+            'delivery_receipts',
+            'message_delivered',
+            'messagedelivered',
+            'sent',
+            'delivered'
+        ]);
+    }
+
     function isTypingExportName(exportName, allowDefault = false) {
         const name = String(exportName || '').toLowerCase();
         return (
@@ -2084,11 +2217,15 @@
             name.includes('sendtypingindicator') ||
             name.includes('send_typing_indicator') ||
             name.includes('typingindicatorstoredprocedure') ||
-            name.includes('securetypingstate') ||
             name.includes('sendchatstate') ||
             name.includes('send_chat_state') ||
             (name.includes('typing') && name.includes('send'))
         );
+    }
+
+    function isSecureTypingStateDependency(moduleName) {
+        const name = String(moduleName || '').toLowerCase();
+        return name.includes('securetypingstate');
     }
 
     function isReadReceiptExportName(exportName, allowDefault = false) {
@@ -2174,10 +2311,6 @@
         factoryCallbacks[moduleName] = factoryCallbacks[moduleName] || [];
         factoryCallbacks[moduleName].push(callback);
     }
-
-    registerFactoryCallback('MAWSecureTypingState', (factoryArgs) => {
-        wrapTypingRequire(factoryArgs, { inspectExports: true });
-    });
 
     function wrapTypingRequire(factoryArgs, options = {}) {
         [1, 2, 3].forEach(index => {
@@ -2451,7 +2584,7 @@
                             );
                             const patchedFactory = originalFactory;
                             const factory = function (...factoryArgs) {
-                                if (!avoidFactoryMutation) {
+                                if (!avoidFactoryMutation && !isSecureTypingStateDependency(moduleName)) {
                                     wrapTypingRequire(factoryArgs);
                                     applyFactoryCallbacks(factoryArgs, moduleName);
                                 }

@@ -313,7 +313,19 @@
       "threadid",
       "recipient_id",
       "message_thread",
-      "act_thread_id"
+      "act_thread_id",
+      "parent_thread_key",
+      "parentthreadkey",
+      "open_message_thread_key",
+      "openmessagethreadkey",
+      "armadillo_thread_key",
+      "armadillothreadkey",
+      "other_user_fbid",
+      "otheruserfbid",
+      "other_user_id",
+      "otheruserid",
+      "target_id",
+      "targetid"
     ]);
   }
   function hasMessengerReadReceiptSignal(str) {
@@ -402,7 +414,19 @@
       "threadid",
       "recipient_id",
       "message_thread",
-      "act_thread_id"
+      "act_thread_id",
+      "parent_thread_key",
+      "parentthreadkey",
+      "open_message_thread_key",
+      "openmessagethreadkey",
+      "armadillo_thread_key",
+      "armadillothreadkey",
+      "other_user_fbid",
+      "otheruserfbid",
+      "other_user_id",
+      "otheruserid",
+      "target_id",
+      "targetid"
     ]);
   }
   function hasReadReceiptWatermarkContext(str) {
@@ -706,8 +730,10 @@
     return hasReadReceiptOperationContext(str) && hasMessengerThreadContext(str);
   }
   function hasMessengerMessageSendIntent(str) {
-    if (!hasMessengerThreadContext(str)) return false;
-    const hasSendOperationName = includesAny(str, [
+    const text = String(str || "");
+    const matchText = text.includes("\\") ? `${text} ${text.replace(/\\/g, "")}` : text;
+    if (!hasMessengerThreadContext(matchText)) return false;
+    const hasSendOperationName = includesAny(matchText, [
       "send_message",
       "sendmessage",
       "message_send",
@@ -717,7 +743,7 @@
       "sendmessagemutation",
       "messengersendmessagemutation"
     ]);
-    const hasClientMessageId = includesAny(str, [
+    const hasClientMessageId = includesAny(matchText, [
       "offline_threading_id",
       "offlinethreadingid",
       "client_message_id",
@@ -726,7 +752,7 @@
       "clientmutationid",
       "otid"
     ]);
-    const hasMessagePayload = includesAny(str, [
+    const hasMessagePayload = includesAny(matchText, [
       '"message"',
       "%22message%22",
       "message:",
@@ -738,10 +764,26 @@
       "body",
       "attachment",
       "sticker",
-      "media"
+      "media",
+      "encrypted_message",
+      "encryptedmessage",
+      "encrypted_payload",
+      "encryptedpayload",
+      "encrypted_blob",
+      "encryptedblob",
+      "encrypted_content",
+      "encryptedcontent",
+      "ciphertext",
+      "reaction",
+      "message_reaction",
+      "messagereaction",
+      "emoji",
+      "quick_like",
+      "quicklike",
+      "like"
     ]);
-    if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || str.includes("send_type"))) return true;
-    return str.includes("send_type") && hasClientMessageId && hasMessagePayload;
+    if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || matchText.includes("send_type"))) return true;
+    return matchText.includes("send_type") && hasClientMessageId && hasMessagePayload;
   }
   function hasMessengerDeliveryAckIntent(str) {
     if (!hasMessengerThreadContext(str)) return false;
@@ -1557,6 +1599,8 @@
     const isFacebookPage = isFacebookDotCom && !isMessengerDotCom;
     if (isFacebookPage) {
       if (isMessageRequestHydrationRequest(str, urlString, method)) return null;
+      if (hasMessengerMessageSendIntent(str)) return null;
+      if (hasMessengerDeliveryAckIntent(str)) return null;
       if (SETTINGS.msgSeen && !isKilled("msgSeen") && isGraphQLRequest(str, urlString) && isFacebookGraphQLMessengerSeenWrite(str)) {
         return "MSG_SEEN";
       }
@@ -1855,7 +1899,11 @@
         window.__GHOSTIFY_OBSERVATION_COUNTS__ = {};
         window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = 0;
         window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = 0;
+        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = 0;
+        window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ = 0;
         window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = 0;
+        window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ = 0;
+        window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
         window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
         window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
         window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
@@ -1876,7 +1924,11 @@
           debugEvents: window.__GHOSTIFY_DEBUG_EVENTS__ || [],
           blockedWorkerMessages: window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0,
           sanitizedWorkerMessages: window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0,
+          sanitizedSeenBridgeMessages: window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0,
+          sanitizedNetworkMessages: window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0,
           facebookUnsafeBlocksSkipped: window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0,
+          messengerUnsafeBlocksSkipped: window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ || 0,
+          unsafeTransferBlocksSkipped: window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ || 0,
           blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
           blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
           sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,

@@ -313,7 +313,19 @@ function hasFacebookMessengerContext(str) {
         'threadid',
         'recipient_id',
         'message_thread',
-        'act_thread_id'
+        'act_thread_id',
+        'parent_thread_key',
+        'parentthreadkey',
+        'open_message_thread_key',
+        'openmessagethreadkey',
+        'armadillo_thread_key',
+        'armadillothreadkey',
+        'other_user_fbid',
+        'otheruserfbid',
+        'other_user_id',
+        'otheruserid',
+        'target_id',
+        'targetid'
     ]);
 }
 
@@ -427,7 +439,19 @@ function hasMessengerThreadContext(str) {
         'threadid',
         'recipient_id',
         'message_thread',
-        'act_thread_id'
+        'act_thread_id',
+        'parent_thread_key',
+        'parentthreadkey',
+        'open_message_thread_key',
+        'openmessagethreadkey',
+        'armadillo_thread_key',
+        'armadillothreadkey',
+        'other_user_fbid',
+        'otheruserfbid',
+        'other_user_id',
+        'otheruserid',
+        'target_id',
+        'targetid'
     ]);
 }
 
@@ -770,9 +794,11 @@ function isMessengerSendWithBundledReadWatermark(str) {
 }
 
 function hasMessengerMessageSendIntent(str) {
-    if (!hasMessengerThreadContext(str)) return false;
+    const text = String(str || '');
+    const matchText = text.includes('\\') ? `${text} ${text.replace(/\\/g, '')}` : text;
+    if (!hasMessengerThreadContext(matchText)) return false;
 
-    const hasSendOperationName = includesAny(str, [
+    const hasSendOperationName = includesAny(matchText, [
         'send_message',
         'sendmessage',
         'message_send',
@@ -782,7 +808,7 @@ function hasMessengerMessageSendIntent(str) {
         'sendmessagemutation',
         'messengersendmessagemutation'
     ]);
-    const hasClientMessageId = includesAny(str, [
+    const hasClientMessageId = includesAny(matchText, [
         'offline_threading_id',
         'offlinethreadingid',
         'client_message_id',
@@ -791,7 +817,7 @@ function hasMessengerMessageSendIntent(str) {
         'clientmutationid',
         'otid'
     ]);
-    const hasMessagePayload = includesAny(str, [
+    const hasMessagePayload = includesAny(matchText, [
         '"message"',
         '%22message%22',
         'message:',
@@ -803,11 +829,27 @@ function hasMessengerMessageSendIntent(str) {
         'body',
         'attachment',
         'sticker',
-        'media'
+        'media',
+        'encrypted_message',
+        'encryptedmessage',
+        'encrypted_payload',
+        'encryptedpayload',
+        'encrypted_blob',
+        'encryptedblob',
+        'encrypted_content',
+        'encryptedcontent',
+        'ciphertext',
+        'reaction',
+        'message_reaction',
+        'messagereaction',
+        'emoji',
+        'quick_like',
+        'quicklike',
+        'like'
     ]);
 
-    if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || str.includes('send_type'))) return true;
-    return str.includes('send_type') && hasClientMessageId && hasMessagePayload;
+    if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || matchText.includes('send_type'))) return true;
+    return matchText.includes('send_type') && hasClientMessageId && hasMessagePayload;
 }
 
 function hasMessengerDeliveryAckIntent(str) {
@@ -1789,6 +1831,8 @@ export function shouldBlock(data, url = '', options = {}) {
 
     if (isFacebookPage) {
         if (isMessageRequestHydrationRequest(str, urlString, method)) return null;
+        if (hasMessengerMessageSendIntent(str)) return null;
+        if (hasMessengerDeliveryAckIntent(str)) return null;
 
         if (
             SETTINGS.msgSeen &&

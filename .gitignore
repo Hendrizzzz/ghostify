@@ -1,6 +1,7 @@
 node_modules/
 
 *.zip
+AGENTS.local.md
 
 .vscode/
 .idea/

@@ -317,6 +317,74 @@ const facebookWorkerEdgeChatLastSeenFrame = new Uint8Array(Buffer.from(`{}\r\u00
 
 const facebookWorkerEdgeChatDeliveryFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"label\\":\\"delivery\\",\\"payload\\":\\"{\\\\\\"thread_id\\\\\\":9554524854659116,\\\\\\"delivery_receipt\\\\\\":true}\\",\\"version\\":\\"27029912679952307\\"}","request_id":180,"type":4}`, 'utf8'));
 
+const facebookEdgeChatMixedOpaqueSendTypingFrame = new Uint8Array(Buffer.from(`{}\r\u0000${JSON.stringify({
+    app_id: '2220391788200892',
+    payload: JSON.stringify({
+        epoch_id: 7466158453245588000,
+        tasks: [{
+            failure_count: null,
+            label: '46',
+            payload: JSON.stringify({
+                thread_id: 9554524854659116,
+                offline_threading_id: 'redacted-offline-id',
+                send_type: 1,
+                message: { text: '1' },
+                sync_group: 104
+            }),
+            queue_name: '9554524854659116',
+            task_id: 410
+        }, {
+            failure_count: null,
+            label: 'sendChatStateFromComposer',
+            payload: JSON.stringify({
+                thread_id: 9554524854659116,
+                chatstate: 'typing_indicator',
+                send_type: 'typing'
+            }),
+            queue_name: '9554524854659116',
+            task_id: 411
+        }],
+        version_id: '27029912679952307'
+    }),
+    request_id: 181,
+    type: 3
+})}`, 'utf8'));
+
+const facebookEdgeChatQuickReactionSendTypingFrame = new Uint8Array(Buffer.from(`{}\r\u0000${JSON.stringify({
+    app_id: '2220391788200892',
+    payload: JSON.stringify({
+        epoch_id: 7466158453245588001,
+        tasks: [{
+            failure_count: null,
+            label: '46',
+            payload: JSON.stringify({
+                other_user_id: 'redacted-user',
+                offline_threading_id: 'redacted-offline-id',
+                send_type: 1,
+                reaction: '👍',
+                emoji: '👍',
+                quick_like: true,
+                sync_group: 104
+            }),
+            queue_name: 'redacted-user',
+            task_id: 412
+        }, {
+            failure_count: null,
+            label: 'sendChatStateFromComposer',
+            payload: JSON.stringify({
+                other_user_id: 'redacted-user',
+                chatstate: 'typing_indicator',
+                send_type: 'typing'
+            }),
+            queue_name: 'redacted-user',
+            task_id: 413
+        }],
+        version_id: '27029912679952307'
+    }),
+    request_id: 182,
+    type: 3
+})}`, 'utf8'));
+
 const facebookFeedThreadOpenFullFetchFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466175527281646890,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"209\\",\\"payload\\":\\"{\\\\\\"thread_fbid\\\\\\":1594581527264656,\\\\\\"force_upsert\\\\\\":0,\\\\\\"use_open_messenger_transport\\\\\\":0,\\\\\\"sync_group\\\\\\":95,\\\\\\"metadata_only\\\\\\":0,\\\\\\"preview_only\\\\\\":0}\\",\\"queue_name\\":\\"1594581527264656\\",\\"task_id\\":238}],\\"version_id\\":\\"27029912679952307\\"}","request_id":107,"type":3}`, 'utf8'));
 
 const facebookFeedArmadilloOpenThreadFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466178972558867308,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"436\\",\\"payload\\":\\"{\\\\\\"open_message_thread_key\\\\\\":61557782315684,\\\\\\"armadillo_thread_key\\\\\\":61557782315684,\\\\\\"trace_id\\\\\\":\\\\\\"41AA1952E6DBA5E1\\\\\\",\\\\\\"should_copy_messages\\\\\\":0}\\",\\"queue_name\\":\\"61557782315684_61557782315684\\",\\"task_id\\":391}],\\"version_id\\":\\"27029912679952307\\"}","request_id":145,"type":3}`, 'utf8'));
@@ -549,6 +617,30 @@ const messageRequestMarkReadDocIdWrite = JSON.stringify({
         mark_read: true
     }
 });
+
+const facebookGraphQLShortSendWithReadMetadata = `fb_api_req_friendly_name=CometMessengerSendMessageMutation&doc_id=redacted-doc&variables=${encodeURIComponent(JSON.stringify({
+    input: {
+        thread_key: { thread_fbid: 'redacted-thread' },
+        offline_threading_id: 'redacted-offline-id',
+        client_mutation_id: 'redacted-client-mutation',
+        send_type: 1,
+        message: { text: '1' },
+        last_read_watermark_ts: 1779530000000,
+        should_send_read_receipt: true
+    }
+}))}`;
+
+const facebookGraphQLShortSendWithTypingMetadata = `fb_api_req_friendly_name=CometMessengerSendMessageMutation&doc_id=redacted-doc&variables=${encodeURIComponent(JSON.stringify({
+    input: {
+        thread_key: { thread_fbid: 'redacted-thread' },
+        offline_threading_id: 'redacted-offline-id',
+        client_mutation_id: 'redacted-client-mutation',
+        send_type: 1,
+        message: { text: '.' },
+        composer: { is_typing: true },
+        chatstate: 'typing_indicator'
+    }
+}))}`;
 
 const facebookVideoReadWatermarkMutation = `fb_api_req_friendly_name=MWUpdateLastReadWatermarkMutation&doc_id=redacted-doc&variables=${encodeURIComponent(JSON.stringify({
     thread_id: 'redacted-thread',
@@ -828,6 +920,20 @@ function registerMessengerModule(context, moduleName, factory) {
     return registeredModule || result;
 }
 
+function registerMessengerModuleWithDependencies(context, moduleName, dependencies, dependencyExports, factory) {
+    let registeredModule;
+    context.window.__d = function (_moduleName, _dependencies, moduleFactory) {
+        const module = { exports: {} };
+        const localRequire = (name) => dependencyExports[name] || {};
+        moduleFactory(null, localRequire, localRequire, localRequire, module, module.exports);
+        registeredModule = module;
+        return module;
+    };
+
+    const result = context.window.__d(moduleName, dependencies, factory);
+    return registeredModule || result;
+}
+
 async function fetchOutcome(window, body) {
     const response = await window.fetch('/ls_req', {
         method: 'POST',
@@ -1013,6 +1119,9 @@ async function testMessengerBatchedSendTrafficIsAllowed() {
 
 async function testMessengerBatchedNetworkTrafficSanitizesPrivacyTasks() {
     const fetchWindow = makeMessengerPage();
+    fetchWindow.localStorage.ghostifyDebug = '1';
+    fetchWindow.localStorage.ghostifyMessengerObserve = '1';
+    fetchWindow.__GHOSTIFY_RESET_CAPTURE__('network-sanitize-report-test');
 
     assert.strictEqual(await fetchOutcome(fetchWindow, messengerBatchedSendWithReadReceipt), 'allowed');
     assert.strictEqual(fetchWindow.fetchCalls.length, 1);
@@ -1021,6 +1130,12 @@ async function testMessengerBatchedNetworkTrafficSanitizesPrivacyTasks() {
         forwardedFetch.tasks.map(task => task.label),
         ['send_message'],
         'Fetch send batches should preserve the send task and remove bundled read receipts'
+    );
+    const report = JSON.parse(fetchWindow.__GHOSTIFY_REPORT__());
+    assert.strictEqual(
+        report.sanitizedNetworkMessages,
+        1,
+        'network reports must include sanitized network counters for live Facebook send diagnostics'
     );
 
     const wsWindow = makeMessengerPage();
@@ -1181,6 +1296,31 @@ async function testMessengerDeliveryWatermarkTrafficIsAllowed() {
     );
 }
 
+async function testFacebookGraphQLShortSendsWithPrivacyMetadataAreAllowed() {
+    const facebookWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+
+    assert.strictEqual(
+        await fetchOutcomeAt(facebookWindow, '/api/graphql/', facebookGraphQLShortSendWithReadMetadata),
+        'allowed',
+        'Facebook short message sends with bundled read metadata must not be blocked as seen'
+    );
+    assert.strictEqual(
+        await fetchOutcomeAt(facebookWindow, '/api/graphql/', facebookGraphQLShortSendWithTypingMetadata),
+        'allowed',
+        'Facebook short message sends with bundled typing metadata must not be blocked as typing'
+    );
+    assert.strictEqual(
+        xhrSendAt(facebookWindow, '/api/graphql/', facebookGraphQLShortSendWithReadMetadata, 'POST').result,
+        'sent',
+        'Facebook XHR short message sends with bundled read metadata must still send'
+    );
+}
+
 function testMessengerPatchMixedSendTypingBatchPreservesSend() {
     const context = makeMessengerPatchPage();
     const outcome = workerOutcome(context, JSON.parse(messengerBatchedSendWithTyping));
@@ -1203,6 +1343,178 @@ function testMessengerPatchMixedSendTypingBatchPreservesSend() {
     assert.strictEqual(forwardedPortMessage.tasks.length, 1);
     assert.strictEqual(forwardedPortMessage.tasks[0].label, 'send_message');
     assert.strictEqual(forwardedPortMessage.tasks[0].payload.message.text, 'typing_indicator mark_read read_receipt');
+}
+
+function testFacebookPatchMixedSendTypingBatchPreservesSend() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/messages/t/redacted-thread',
+        href: 'https://www.facebook.com/messages/t/redacted-thread'
+    });
+    const outcome = workerOutcome(context, JSON.parse(messengerBatchedSendWithTyping));
+
+    assert.strictEqual(outcome.result, 'worker-sent');
+    assert.strictEqual(outcome.postCount, 1);
+    assert.strictEqual(outcome.blocked, 0);
+
+    const forwarded = parseForwardedMessage(outcome.post);
+    assert.strictEqual(forwarded.tasks.length, 1);
+    assert.strictEqual(forwarded.tasks[0].label, 'send_message');
+}
+
+function testFacebookMiniChatSecureSendWithAlternateTargetsIsForwarded() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const message = {
+        issue_new_task: true,
+        tasks: [{
+            label: 'send_message',
+            queue_name: 'messenger_send_message',
+            payload: {
+                target_id: 'redacted-user',
+                other_user_fbid: 'redacted-user',
+                open_message_thread_key: 'redacted-open-thread',
+                armadillo_thread_key: 'redacted-open-thread',
+                send_type: 1,
+                offline_threading_id: 'redacted-offline-id',
+                message: { text: '1' },
+                should_send_read_receipt: true,
+                chatstate: 'typing_indicator'
+            }
+        }]
+    };
+    const outcome = workerOutcome(context, message);
+
+    assert.strictEqual(
+        outcome.result,
+        'worker-sent',
+        'Facebook mini-chat secure sends with alternate thread targets must not be dropped as typing'
+    );
+    assert.strictEqual(outcome.postCount, 1);
+    assert.strictEqual(outcome.blocked, 0);
+
+    const forwarded = parseForwardedMessage(outcome.post);
+    assert.strictEqual(forwarded.tasks.length, 1);
+    assert.strictEqual(forwarded.tasks[0].label, 'send_message');
+    assert.strictEqual(forwarded.tasks[0].payload.message.text, '1');
+}
+
+function testFacebookMiniChatMixedSendTypingBridgeFrameDoesNotEnterTypingSanitizer() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const message = {
+        issue_new_task: true,
+        tasks: [{
+            label: '46',
+            queue_name: 'redacted-user',
+            payload: JSON.stringify({
+                other_user_id: 'redacted-user',
+                offline_threading_id: 'redacted-offline-id',
+                send_type: 1,
+                message: { text: 'a' }
+            })
+        }, {
+            label: 'sendChatStateFromComposer',
+            queue_name: 'redacted-user',
+            payload: JSON.stringify({
+                other_user_id: 'redacted-user',
+                chatstate: 'typing_indicator',
+                send_type: 'typing'
+            })
+        }]
+    };
+    const outcome = workerOutcome(context, message);
+
+    assert.strictEqual(
+        outcome.result,
+        'worker-sent',
+        'Facebook mixed send/typing bridge frames must forward instead of entering the typing sanitizer'
+    );
+    assert.strictEqual(outcome.postCount, 1);
+    assert.strictEqual(outcome.blocked, 0);
+    assert.strictEqual(
+        outcome.sanitized,
+        0,
+        'mixed send/typing frames should not be rewritten when preserving the send requires native frame shape'
+    );
+    const forwarded = parseForwardedMessage(outcome.post);
+    assert.strictEqual(forwarded.tasks.length, 2);
+    assert.strictEqual(forwarded.tasks[0].label, '46');
+    assert.strictEqual(forwarded.tasks[1].label, 'sendChatStateFromComposer');
+}
+
+async function testFacebookSecureEncryptedDirectRecipientSendsAreAllowed() {
+    const facebookWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const variables = encodeURIComponent(JSON.stringify({
+        input: {
+            other_user_id: 'redacted-user',
+            otid: 'redacted-otid',
+            send_type: 1,
+            encrypted_message: 'redacted-ciphertext',
+            should_send_read_receipt: true,
+            last_read_watermark_ts: 1780070888819
+        }
+    }));
+    const graphQlSend = `fb_api_req_friendly_name=MessengerSendMessageMutation&variables=${variables}`;
+
+    assert.strictEqual(
+        await fetchOutcomeAt(facebookWindow, '/api/graphql/', graphQlSend),
+        'allowed',
+        'Facebook encrypted direct-recipient GraphQL sends must not be replaced as read receipts'
+    );
+
+    const miniChatContext = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const bridgeSend = {
+        issue_new_task: true,
+        tasks: [{
+            label: '46',
+            queue_name: 'redacted-user',
+            payload: JSON.stringify({
+                other_user_id: 'redacted-user',
+                offline_threading_id: 'redacted-otid',
+                send_type: 1,
+                encrypted_message: 'redacted-ciphertext'
+            })
+        }, {
+            label: 'sendChatStateFromComposer',
+            payload: JSON.stringify({
+                other_user_id: 'redacted-user',
+                chatstate: 'typing_indicator',
+                send_type: 'typing'
+            })
+        }]
+    };
+    const outcome = workerOutcome(miniChatContext, bridgeSend);
+
+    assert.strictEqual(
+        outcome.result,
+        'worker-sent',
+        'Facebook encrypted direct-recipient bridge sends bundled with typing must preserve the send task'
+    );
+    assert.strictEqual(outcome.postCount, 1);
+    assert.strictEqual(outcome.blocked, 0);
+    assert.strictEqual(outcome.sanitized, 0);
+    const forwarded = parseForwardedMessage(outcome.post);
+    assert.strictEqual(forwarded.tasks.length, 2);
+    assert.strictEqual(forwarded.tasks[0].label, '46');
+    assert.strictEqual(forwarded.tasks[1].label, 'sendChatStateFromComposer');
 }
 
 function testMessengerPatchMixedSendReadStringBatchPreservesSend() {
@@ -1306,6 +1618,191 @@ async function testMessengerTypingAndSeenProtectionsStillBlock() {
     assert.strictEqual(websocketOutcome(window, messengerReadReceipt), 'blocked');
     assert.strictEqual(await fetchOutcome(window, messengerReadReceiptWithDeliveryMarker), 'MSG_SEEN');
     assert.strictEqual(websocketOutcome(window, messengerReadReceiptWithDeliveryMarker), 'blocked');
+}
+
+async function testFacebookSecureTypingStateModulesPreserveReturnContract() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const calls = [];
+    const ack = { ok: true, armadillo_thread_key: 'redacted-armadillo-thread' };
+    const module = registerMessengerModule(
+        context,
+        'MAWSecureTypingState',
+        function (_a, _b, _c, _d, moduleObject) {
+            moduleObject.exports.default = function secureTypingState(payload) {
+                calls.push(payload);
+                return Promise.resolve(ack);
+            };
+        }
+    );
+
+    const result = module.exports.default({
+        armadillo_thread_key: 'redacted-armadillo-thread',
+        offline_threading_id: 'redacted-offline-id'
+    });
+
+    assert.strictEqual(
+        typeof result?.then,
+        'function',
+        'Facebook MAW secure typing-state modules must keep promise-like return values for protected chat send state'
+    );
+    assert.strictEqual(await result, ack);
+    assert.strictEqual(calls.length, 1);
+    assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0, 0);
+
+    const typingCalls = [];
+    const typingModule = registerMessengerModule(
+        makeMessengerPatchPage(),
+        'LSSendTypingIndicator',
+        function (_a, _b, _c, _d, moduleObject) {
+            moduleObject.exports.default = function sendTypingIndicator(payload) {
+                typingCalls.push(payload);
+                return 'typing-sent';
+            };
+        }
+    );
+    assert.strictEqual(
+        typingModule.exports.default({
+            thread_key: { thread_fbid: 'redacted-thread' },
+            chatstate: 'typing_indicator',
+            send_type: 'typing'
+        }),
+        undefined,
+        'explicit typing indicator modules must still be blocked'
+    );
+    assert.strictEqual(typingCalls.length, 0);
+}
+
+async function testFacebookMawSecureTypingStateDependenciesPreserveSecureSend() {
+    const context = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const dependencyCalls = [];
+    const dependencyExports = {
+        LSSendTypingIndicator: {
+            default(payload) {
+                dependencyCalls.push({ module: 'typing', payload });
+                return Promise.resolve('secure-send-state-ok');
+            }
+        },
+        LSUpdateThreadReadWatermark: {
+            default(payload) {
+                dependencyCalls.push({ module: 'read', payload });
+                return 'local-state-ok';
+            }
+        }
+    };
+    const module = registerMessengerModuleWithDependencies(
+        context,
+        'MAWSecureTypingState',
+        ['LSSendTypingIndicator', 'LSUpdateThreadReadWatermark'],
+        dependencyExports,
+        function (_a, require, _c, _d, moduleObject) {
+            moduleObject.exports.default = async function secureTypingState(payload) {
+                await require('LSSendTypingIndicator').default(payload);
+                require('LSUpdateThreadReadWatermark').default(payload);
+                return 'secure-send-ok';
+            };
+        }
+    );
+    const secureSendPayload = {
+        armadillo_thread_key: 'redacted-armadillo-thread',
+        offline_threading_id: 'redacted-offline-id',
+        send_type: 1,
+        encrypted_message: 'redacted-ciphertext',
+        last_read_watermark: 1779530000000,
+        should_send_read_receipt: false
+    };
+
+    assert.strictEqual(await module.exports.default(secureSendPayload), 'secure-send-ok');
+    assert.deepStrictEqual(
+        dependencyCalls,
+        [
+            { module: 'typing', payload: secureSendPayload },
+            { module: 'read', payload: secureSendPayload }
+        ],
+        'MAW secure-send dependencies must receive the original payload and preserve their return contracts'
+    );
+    assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0, 0);
+    assert.strictEqual(context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0, 0);
+}
+
+async function testFacebookMiniChatComposerSendDependenciesPreserveSecureSend() {
+    for (const page of [{
+        label: 'Facebook mini-chat',
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    }, {
+        label: 'Facebook MAW proxy',
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    }]) {
+        const context = makeMessengerPatchPage({}, page);
+        const dependencyCalls = [];
+        const dependencyExports = {
+            LSSendTypingIndicator: {
+                default(payload) {
+                    dependencyCalls.push({ module: 'typing', payload });
+                    return Promise.resolve('secure-send-state-ok');
+                }
+            },
+            LSUpdateThreadReadWatermark: {
+                default(payload) {
+                    dependencyCalls.push({ module: 'read', payload });
+                    return 'local-send-state-ok';
+                }
+            }
+        };
+        const module = registerMessengerModuleWithDependencies(
+            context,
+            'MWChatComposerSendMessageAction',
+            ['LSSendTypingIndicator', 'LSUpdateThreadReadWatermark'],
+            dependencyExports,
+            function (_a, require, _c, _d, moduleObject) {
+                moduleObject.exports.default = async function sendMessage(payload) {
+                    const typingResult = await require('LSSendTypingIndicator').default(payload);
+                    const readResult = require('LSUpdateThreadReadWatermark').default(payload);
+                    return { typingResult, readResult };
+                };
+            }
+        );
+        const secureSendPayload = {
+            open_message_thread_key: 'redacted-open-thread',
+            armadillo_thread_key: 'redacted-armadillo-thread',
+            offline_threading_id: 'redacted-offline-id',
+            client_message_id: 'redacted-client-message-id',
+            send_type: 1,
+            encrypted_payload: 'redacted-ciphertext',
+            should_send_read_receipt: false,
+            last_read_watermark: 1779530000000
+        };
+
+        assert.deepStrictEqual(await module.exports.default(secureSendPayload), {
+            typingResult: 'secure-send-state-ok',
+            readResult: 'local-send-state-ok'
+        }, `${page.label} composer send dependencies must preserve secure-send return values`);
+        assert.deepStrictEqual(
+            dependencyCalls,
+            [
+                { module: 'typing', payload: secureSendPayload },
+                { module: 'read', payload: secureSendPayload }
+            ],
+            `${page.label} send modules must receive original secure-send dependency payloads`
+        );
+        assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0, 0);
+        assert.strictEqual(context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0, 0);
+    }
 }
 
 function testMessengerPatchPurePrivacyTrafficStillBlocks() {
@@ -1832,6 +2329,127 @@ function testFacebookLocalReadModulesRewriteNestedWatermarksToPreserveUnreadUi()
     assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
 }
 
+function testFacebookFeedMiniChatLocalReadModulesPreserveSendAckStatePayloads() {
+    for (const moduleName of ['LSUpdateThreadReadWatermark', 'LSMarkThreadRead', 'MWMarkThreadRead']) {
+        const context = makeMessengerPatchPage({}, {
+            hostname: 'www.facebook.com',
+            pathname: '/',
+            href: 'https://www.facebook.com/',
+            facebookMiniChatOpen: true
+        });
+        const calls = [];
+        const module = registerMessengerModule(
+            context,
+            moduleName,
+            function (_a, _b, _c, _d, moduleObject) {
+                moduleObject.exports.default = function (payload) {
+                    calls.push(payload);
+                    return 'send-state-applied';
+                };
+            }
+        );
+        const sendAckPayload = {
+            thread_key: { thread_fbid: 'redacted-thread' },
+            offline_threading_id: 'redacted-offline-id',
+            client_message_id: 'redacted-client-message-id',
+            message_id: 'redacted-message-id',
+            send_state: 'sent',
+            delivery_receipt: true,
+            last_read_watermark: 1779530000000,
+            should_send_read_receipt: false
+        };
+
+        assert.strictEqual(
+            module.exports.default(sendAckPayload),
+            'send-state-applied',
+            `${moduleName} send ack/state payloads must still call the original implementation`
+        );
+        assert.strictEqual(calls.length, 1);
+        assert.strictEqual(
+            calls[0],
+            sendAckPayload,
+            `${moduleName} send ack/state payloads must not be cloned or stale-watermarked`
+        );
+        assert.strictEqual(
+            context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
+            0,
+            `${moduleName} send ack/state payloads must not increment read sanitization`
+        );
+        assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
+
+        const pureReadPayload = {
+            thread_key: { thread_fbid: 'redacted-thread' },
+            last_read_watermark: 1779530000001,
+            should_send_read_receipt: true,
+            readReceiptMutation: { should_send_read_receipt: true }
+        };
+
+        assert.strictEqual(module.exports.default(pureReadPayload), 'send-state-applied');
+        assert.strictEqual(calls.length, 2);
+        assert.notStrictEqual(
+            calls[1],
+            pureReadPayload,
+            `${moduleName} pure read payloads should still be sanitized for Hide Seen`
+        );
+        assert.strictEqual(calls[1].last_read_watermark, SAFE_READ_WATERMARK);
+        assert.strictEqual(calls[1].should_send_read_receipt, false);
+        assert.strictEqual(context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0, 1);
+    }
+}
+
+function testFacebookFeedMiniChatLocalReadModulesPreservePendingSendStatePayloads() {
+    for (const moduleName of ['LSUpdateThreadReadWatermark', 'LSMarkThreadRead', 'MWMarkThreadRead']) {
+        const context = makeMessengerPatchPage({}, {
+            hostname: 'www.facebook.com',
+            pathname: '/',
+            href: 'https://www.facebook.com/',
+            facebookMiniChatOpen: true
+        });
+        const calls = [];
+        const module = registerMessengerModule(
+            context,
+            moduleName,
+            function (_a, _b, _c, _d, moduleObject) {
+                moduleObject.exports.default = function (payload) {
+                    calls.push(payload);
+                    return 'pending-send-state-applied';
+                };
+            }
+        );
+        const pendingSendPayload = {
+            thread_key: { thread_fbid: 'redacted-thread' },
+            offline_threading_id: 'redacted-offline-id',
+            client_message_id: 'redacted-client-message-id',
+            message: { text: '1' },
+            send_type: 1,
+            send_state: 'sending',
+            status: 'Sending',
+            last_read_watermark: 1779530000000,
+            should_send_read_receipt: true
+        };
+
+        assert.strictEqual(
+            module.exports.default(pendingSendPayload),
+            'pending-send-state-applied',
+            `${moduleName} pending send-state payloads must still call the original implementation`
+        );
+        assert.strictEqual(calls.length, 1);
+        assert.strictEqual(
+            calls[0],
+            pendingSendPayload,
+            `${moduleName} pending send-state payloads must not be cloned or stale-watermarked`
+        );
+        assert.strictEqual(calls[0].last_read_watermark, 1779530000000);
+        assert.strictEqual(calls[0].should_send_read_receipt, true);
+        assert.strictEqual(
+            context.window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
+            0,
+            `${moduleName} pending send-state payloads must not increment read sanitization`
+        );
+        assert.strictEqual(context.window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0, 0);
+    }
+}
+
 function testFacebookMessageRequestGraceLeavesLocalReadModulesUntouched() {
     const context = makeMessengerPatchPage({}, {
         hostname: 'www.facebook.com',
@@ -2025,6 +2643,76 @@ function testFacebookEdgeChatRealtimeReadWatermarkFramesAreBlocked() {
     );
 }
 
+function testFacebookEdgeChatMixedShortSendTypingFrameIsAllowed() {
+    const edgeChatUrl = 'wss://edge-chat.facebook.com/chat?region=redacted';
+    const lightspeedUrl = 'wss://gateway.facebook.com/ws/lightspeed';
+    const pages = [{
+        label: 'Facebook top page',
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    }, {
+        label: 'Facebook MAW proxy',
+        hostname: 'www.fbsbx.com',
+        pathname: '/maw_proxy_page/',
+        search: '?__cci=redacted',
+        href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+    }];
+
+    for (const page of pages) {
+        for (const url of [edgeChatUrl, lightspeedUrl]) {
+            const window = makeGhostPage(page);
+            const outcome = websocketSend(window, facebookEdgeChatMixedOpaqueSendTypingFrame, url);
+
+            assert.strictEqual(
+                outcome.result,
+                'sent',
+                `${page.label} mixed mini-chat send/typing frames must not be dropped as typing`
+            );
+            assert.strictEqual(outcome.socket.sent.length, 1);
+            assert.deepStrictEqual(
+                Array.from(outcome.socket.sent[0]),
+                Array.from(facebookEdgeChatMixedOpaqueSendTypingFrame),
+                `${page.label} mixed mini-chat send/typing frames must forward byte-for-byte`
+            );
+        }
+    }
+}
+
+function testFacebookEdgeChatQuickReactionSendTypingFrameIsAllowed() {
+    for (const page of [
+        {
+            label: 'Facebook top page',
+            hostname: 'www.facebook.com',
+            pathname: '/',
+            href: 'https://www.facebook.com/'
+        },
+        {
+            label: 'Facebook MAW proxy',
+            hostname: 'www.fbsbx.com',
+            pathname: '/maw_proxy_page/',
+            search: '?__cci=redacted',
+            href: 'https://www.fbsbx.com/maw_proxy_page/?__cci=redacted'
+        }
+    ]) {
+        const window = makeGhostPage(page);
+        const edgeChatUrl = 'wss://edge-chat.facebook.com/chat?region=redacted';
+        const lightspeedUrl = 'wss://gateway.facebook.com/ws/lightspeed';
+
+        assert.strictEqual(
+            websocketOutcome(window, facebookEdgeChatQuickReactionSendTypingFrame, edgeChatUrl),
+            'allowed',
+            `${page.label} quick-like/reaction send frames must not be dropped as typing`
+        );
+        assert.strictEqual(
+            websocketOutcome(window, facebookEdgeChatQuickReactionSendTypingFrame, lightspeedUrl),
+            'allowed',
+            `${page.label} quick-like/reaction lightspeed frames must not be dropped as typing`
+        );
+    }
+}
+
 function testFacebookThreadOpenRealtimeLoadsStayAllowed() {
     const lightspeedUrl = 'wss://gateway.facebook.com/ws/lightspeed';
     const normalWindow = makeGhostPage({
@@ -2111,6 +2799,26 @@ function testFacebookBareBridgeReadReceiptsAreBlocked() {
     assert.ok(dropOutcome.terms.includes('markthreadasread'));
     assert.strictEqual(dropOutcome.flags?.hasReadReceipt, true);
     assert.ok(Array.isArray(dropOutcome.callSite), 'drop outcomes must include a sanitized call site');
+    assert.strictEqual(
+        report.blockedWorkerMessages,
+        1,
+        'patch reports must include blocked worker counters for live Facebook send diagnostics'
+    );
+    assert.strictEqual(
+        report.sanitizedSeenBridgeMessages,
+        0,
+        'patch reports must include sanitized seen bridge counters for live Facebook send diagnostics'
+    );
+    assert.strictEqual(
+        report.messengerUnsafeBlocksSkipped,
+        0,
+        'patch reports must include Messenger unsafe-forward counters for live Facebook send diagnostics'
+    );
+    assert.strictEqual(
+        report.unsafeTransferBlocksSkipped,
+        0,
+        'patch reports must include unsafe transfer counters for live Facebook send diagnostics'
+    );
 }
 
 function testFacebookMixedBridgeReadReceiptBatchesAreSanitizedNotDropped() {
@@ -3477,13 +4185,21 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     await testRapidMessengerSendsWithPrivacyMarkersAreAllowed();
     await testMessengerSendUserTextPrivacyTermsAreAllowed();
     await testMessengerDeliveryWatermarkTrafficIsAllowed();
+    await testFacebookGraphQLShortSendsWithPrivacyMetadataAreAllowed();
     testMessengerPatchMixedSendTypingBatchPreservesSend();
+    testFacebookPatchMixedSendTypingBatchPreservesSend();
+    testFacebookMiniChatSecureSendWithAlternateTargetsIsForwarded();
+    testFacebookMiniChatMixedSendTypingBridgeFrameDoesNotEnterTypingSanitizer();
+    await testFacebookSecureEncryptedDirectRecipientSendsAreAllowed();
     testMessengerPatchMixedSendReadStringBatchPreservesSend();
     testMessengerPatchObjectMapBatchSanitizesPrivacyTasks();
     testMessengerPatchSendWithTransferIsForwarded();
     testMessengerPatchMixedTransferBatchesSanitizePrivacyTasks();
     testMessengerPatchReferencedSendTransferIsPreserved();
     await testMessengerTypingAndSeenProtectionsStillBlock();
+    await testFacebookSecureTypingStateModulesPreserveReturnContract();
+    await testFacebookMawSecureTypingStateDependenciesPreserveSecureSend();
+    await testFacebookMiniChatComposerSendDependenciesPreserveSecureSend();
     testMessengerPatchPurePrivacyTrafficStillBlocks();
     await testMessengerTogglesDisableProtections();
     await testMessageRequestsAndInboxQueriesAreAllowed();
@@ -3493,11 +4209,15 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testFacebookFeedMiniChatLocalReadModulesSanitizeReadReceiptsWithoutBlockingHistoryLoading();
     testFacebookFeedMiniChatStaleLocalReadModulesSanitizeReadReceiptsWithoutBlockingHistoryLoading();
     testFacebookLocalReadModulesRewriteNestedWatermarksToPreserveUnreadUi();
+    testFacebookFeedMiniChatLocalReadModulesPreserveSendAckStatePayloads();
+    testFacebookFeedMiniChatLocalReadModulesPreservePendingSendStatePayloads();
     testFacebookMessageRequestGraceLeavesLocalReadModulesUntouched();
     testFacebookMessageRequestGraceBypassesStaleLocalReadWrappersAtCallTime();
     testFacebookMawProxyLocalReadModulesAreSanitized();
     await testFacebookMawProxyNetworkReadReceiptsAreBlocked();
     testFacebookEdgeChatRealtimeReadWatermarkFramesAreBlocked();
+    testFacebookEdgeChatMixedShortSendTypingFrameIsAllowed();
+    testFacebookEdgeChatQuickReactionSendTypingFrameIsAllowed();
     testFacebookThreadOpenRealtimeLoadsStayAllowed();
     testFacebookBridgeLightspeedReadFramesAreSanitizedBeforeSharedWorkerStateUpdates();
     testFacebookGenericLightspeedHistoryWithReadMetadataStaysAllowed();

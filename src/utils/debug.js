@@ -220,7 +220,11 @@ function installDebugHelpers() {
             window.__GHOSTIFY_OBSERVATION_COUNTS__ = {};
             window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = 0;
             window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = 0;
+            window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = 0;
+            window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ = 0;
             window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = 0;
+            window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ = 0;
+            window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
             window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
             window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
             window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
@@ -243,7 +247,11 @@ function installDebugHelpers() {
                 debugEvents: window.__GHOSTIFY_DEBUG_EVENTS__ || [],
                 blockedWorkerMessages: window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0,
                 sanitizedWorkerMessages: window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0,
+                sanitizedSeenBridgeMessages: window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0,
+                sanitizedNetworkMessages: window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0,
                 facebookUnsafeBlocksSkipped: window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0,
+                messengerUnsafeBlocksSkipped: window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ || 0,
+                unsafeTransferBlocksSkipped: window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ || 0,
                 blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
                 blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
                 sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,

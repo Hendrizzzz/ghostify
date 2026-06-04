@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Ghostify | Hide Seen, Typing & Story Views",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "Control your visibility on Instagram & Facebook/Messenger. Hide typing indicators, read receipts, and story views.",
     "author": "Hendrizzzz",
     "permissions": [
