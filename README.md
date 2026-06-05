@@ -1,115 +1,134 @@
+# Ghostify
+
 <div align="center">
 
-# 👻 Ghostify
+Privacy controls for Instagram, Facebook, and Messenger web.
 
-**Invisible on Instagram & Messenger**
+[Website](https://ghostify-extension.vercel.app) |
+[Chrome Web Store](https://chromewebstore.google.com/detail/flpnibonbhdmnpgflnbemgghghhblmpm) |
+[Help & feedback](https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml)
 
-[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore/detail/ghostify-hide-seen-typin/YOUR_EXTENSION_ID)
-[![Manifest V3](https://img.shields.io/badge/Manifest-V3-00C853?style=for-the-badge)](https://developer.chrome.com/docs/extensions/mv3/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
-
-*Take back control of your online presence. Browse privately without leaving a trace.*
-
-[Features](#features) • [Installation](#installation) • [How It Works](#how-it-works) • [Contributing](#contributing)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/flpnibonbhdmnpgflnbemgghghhblmpm?label=Chrome%20Web%20Store&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/flpnibonbhdmnpgflnbemgghghhblmpm)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-16a34a)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
+[![License: MIT](https://img.shields.io/github/license/Hendrizzzz/Ghostify)](LICENSE)
 
 </div>
 
----
+Ghostify is a Manifest V3 browser extension that helps reduce social pressure on Meta web apps. It blocks supported read receipts, typing indicators, and story-view signals locally in the browser, without requiring a Ghostify account or asking for social media passwords.
 
 ## Features
 
-| Privacy Feature | Instagram | Messenger | Notes |
-|:----------------|:---------:|:---------:|:------|
-| **Hide Typing Indicator** | ✅ | ✅ | Toggleable protection for Messenger and Instagram |
-| **Hide Read Receipts** | ✅ | ✅ | Read messages without triggering "Seen" status |
-| **Hide Story Views** | ✅ | ✅ | Watch stories anonymously |
+| Privacy control | Instagram | Facebook | Messenger |
+| --- | :---: | :---: | :---: |
+| Hide Seen / read receipts | Yes | Yes | Yes |
+| Hide typing indicators | Yes | Yes | Yes |
+| Hide story-view signals | Yes | Yes | Yes |
 
-> **Important for Messenger:** Typing protection is toggleable. Changes apply to open Messenger/Facebook tabs through extension storage sync; refresh already-open tabs after updating the extension so the static page patch is loaded at document start.
+Facebook and Messenger share the same Messenger / Facebook controls in the popup.
 
-## Installation
+## Install
 
-### Option 1: Chrome Web Store (Recommended)
-[**Install Ghostify from the Chrome Web Store**](https://chromewebstore.google.com/detail/flpnibonbhdmnpgflnbemgghghhblmpm?utm_source=item-share-cb)
+### Chrome Web Store
 
-### Option 2: Manual Install (Developer Mode)
+Install Ghostify from the [Chrome Web Store](https://chromewebstore.google.com/detail/flpnibonbhdmnpgflnbemgghghhblmpm).
+
+### Manual install
+
 1. Clone or download this repository.
-2. Navigate to `chrome://extensions/` in your browser.
-3. Enable **Developer mode** (top-right toggle).
-4. Click **Load unpacked** and select the `dist/` folder from this project.
+2. Run `npm install`.
+3. Run `npm run build`.
+4. Open `chrome://extensions` in Chrome or a Chromium-based browser.
+5. Enable Developer mode.
+6. Click Load unpacked and select the `dist/` folder.
+
+## Latest Release
+
+Current version: `v2.0.2`
+
+- Fixed Facebook/Messenger messages getting stuck on "Sending" in some conversations while Hide Seen is enabled.
+- Restored Instagram story-view protection after recent Instagram changes.
+- Added guided Help & feedback links for bug reports, ideas, feedback, and questions.
+
+See all versions in [Releases](https://github.com/Hendrizzzz/Ghostify/releases).
 
 ## How It Works
 
-Ghostify is built on a custom **dual-layer privacy engine**, designed to robustly protect your activity across Meta's evolving platforms:
+Ghostify runs locally through browser extension APIs:
 
-1. **Strategic Payload Filtering** 
-   Ghostify employs zero-latency pattern matching to identify and neutralize telemetry, read-receipts, and typing indicators at the network level before they ever leave your browser.
-2. **Execution Context Isolation**
-   For modern, heavy-client applications, Ghostify securely isolates and overrides specific application modules natively within the browser, ensuring "typing" signals are bypassed without breaking core functionality.
+- `declarativeNetRequest` rules block known privacy-related endpoints where static rules are reliable.
+- Content scripts and page-context patches handle modern Meta web app behavior that cannot be covered by static rules alone.
+- User settings are saved in extension storage and synced to open Instagram, Facebook, and Messenger tabs.
 
-**Security First:** The extension operates entirely offline within your browser. It does not collect data, require logins, or communicate with external servers.
+Ghostify does not run a tracking server and does not collect, sell, or share user activity.
 
-### Technical Architecture
+## Privacy
 
-Ghostify is engineered for resilience and performance. The V2 release introduces a fully modular ES6 architecture built on top of the ultra-fast **ESBuild** ecosystem:
+Ghostify is designed to work entirely inside your browser.
 
-- **Decoupled Engines:** Core features (network interceptors, platform heuristics, and DOM wrappers) are strictly separated into single-responsibility modules.
-- **Bundled Policy Resolution:** Blocking patterns ship with the extension package and user toggles are synchronized through extension storage.
-- **Zero-Dependency Pipeline:** The project compiles down into robust, optimized vanilla JavaScript, ensuring the absolute minimum memory footprint.
+It does not:
+
+- collect your messages
+- require a Ghostify account
+- ask for Instagram, Facebook, or Messenger passwords
+- send your browsing activity to a Ghostify server
+
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
+
+## Known Behavior
+
+On `facebook.com`, Facebook may sometimes make an unread chat look read locally after you open it. Ghostify still blocks the Seen/read receipt signal. Refreshing Facebook or checking Messenger can confirm that the chat remains unread.
+
+Meta changes Instagram, Facebook, and Messenger often. If something stops working, update Ghostify to the latest version, reload the affected tab, and report it if the issue continues.
+
+## Development
+
+Requirements:
+
+- Node.js
+- npm
+
+Commands:
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+`npm run build` compiles the extension into `dist/`, which is the folder loaded by Chrome.
 
 ## Project Structure
 
 ```text
 Ghostify/
-├── src/                        # 🛠️ Main Engineering Directory (ES6 Modules)
-│   ├── config.js               # Global state and toggles
-│   ├── utils/network.js        # Generic payload inspection logic
-│   ├── core/interceptors/      # Network & DOM hooks
-│   ├── platforms/              # Site-specific heuristics
-│   ├── background.js           # Extension Service Worker
-│   ├── content.js              # Settings sync
-│   ├── ghost.js                # Core Interceptor Entry Point
-│   └── messenger_patch.js      # Messenger Module Patcher
-│
-├── dist/                       # 📦 Build Output (Loaded by Chrome)
-│   ├── config/patterns.json    # Bundled blocking rules
-│   ├── css/ & icons/           # Static UI Assets
-│   ├── js/                     # Auto-generated by ESBuild
-│   ├── background.js           # Built Service Worker
-│   ├── manifest.json           # Extension Manifest V3
-│   └── popup.html              # Extension Popup
-│
-├── build.js                    # ESBuild Bundler Script
-└── package.json                # Project Dependencies
+|-- src/                  Source modules and platform logic
+|-- dist/                 Built extension loaded by the browser
+|-- test/                 Regression tests
+|-- site/                 Public website
+|-- build.js              ESBuild build script
+|-- CONTRIBUTING.md       Contribution guide
+|-- PRIVACY.md            Privacy policy
+`-- README.md             Project overview
 ```
 
-## Tech Stack
+## Feedback and Issues
 
-- **Platform:** Chrome Extension (Manifest V3)
-- **Core APIs:** `storage`, content scripts, page-context network monkeypatching
-- **Techniques:** Module export wrapping, Fetch/XHR/WebSocket frame inspection, focus/visibility spoofing
+Found a bug, have an idea, want to share feedback, or need to ask a question?
+
+Use the guided form: [Help & feedback](https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml)
+
+Screenshots or short screen recordings are welcome when they help explain the issue. Helpful confirmed reports can be credited in Ghostify release notes and on the website, with permission.
 
 ## Contributing
 
-Found a bug? Have a feature idea? Want to submit code?
-
-See **[CONTRIBUTING.md](CONTRIBUTING.md)** for guidelines.
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) for reporting bugs, suggesting features, and submitting code.
 
 ## Disclaimer
 
-**Ghostify** is an independent open-source project. It is not affiliated with, endorsed by, or sponsored by **Meta Platforms, Inc.**, **Instagram**, or **Facebook**.
+Ghostify is an independent open-source project. It is not affiliated with, endorsed by, or sponsored by Meta Platforms, Inc., Instagram, Facebook, or Messenger.
 
-- All product names, logos, and brands are property of their respective owners.
-- The use of this extension is at your own discretion.
-- This tool is for educational and personal privacy purposes.
+Use this extension at your own discretion and follow the terms of the platforms you use.
 
 ## License
 
-Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
-
----
-
-<div align="center">
-
-**Built with 👻 by [Hendrizzzz](https://github.com/Hendrizzzz)**
-
-</div>
+Ghostify is distributed under the [MIT License](LICENSE).
