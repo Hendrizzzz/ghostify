@@ -1,5 +1,8 @@
 node_modules/
 
+AGENTS.local.md
+tmp/
+
 *.zip
 AGENTS.local.md
 
