@@ -1,0 +1,4 @@
+title = "Ghostify secret scan configuration"
+
+[extend]
+useDefault = true

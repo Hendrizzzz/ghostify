@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "test": "npm run build && node test/messenger-send-stability.test.js",
+    "test": "npm run build && node test/messenger-send-stability.test.js && npm run test:validator && npm run test:package",
+    "test:validator": "node test/validate-extension-package.test.js",
+    "test:package": "node test/package-extension.test.js",
+    "package:extension": "node scripts/package-extension.js",
     "validate:extension": "node scripts/validate-extension-package.js",
     "verify:dist": "git diff --exit-code -- dist/background.js dist/js/content.js dist/js/ghost.js dist/js/messenger_patch.js",
     "audit:high": "npm audit --audit-level=high",
@@ -23,6 +26,6 @@
   },
   "homepage": "https://github.com/Hendrizzzz/Ghostify#readme",
   "devDependencies": {
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.1"
   }
 }

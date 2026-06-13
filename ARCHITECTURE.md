@@ -99,6 +99,8 @@ Version values must stay synchronized across:
 - `dist/manifest.json`
 - `dist/config/patterns.json`
 - `src/content.js` fallback config
+- `CHANGELOG.md` release heading and release notes
+- `README.md` when it contains fixed version or release wording
 
 ## Blocking And Sanitization Strategy
 
@@ -174,14 +176,16 @@ npm test
 ```
 
 That command builds the bundled extension scripts and runs
-`test/messenger-send-stability.test.js`. The test uses a Node VM harness and fake
-browser primitives to exercise the built `dist/js/ghost.js` and
+`test/messenger-send-stability.test.js`, the extension package validator tests,
+and the release ZIP dry-run tests. The Messenger/Facebook test uses a Node VM
+harness and fake browser primitives to exercise the built `dist/js/ghost.js` and
 `dist/js/messenger_patch.js` bundles. It also checks selected static assets and
 GitHub issue-template behavior.
 
 These tests protect important regression paths, but they are not a substitute
 for manual browser smoke tests on Instagram, Messenger, and Facebook before a
-Chrome Web Store release.
+Chrome Web Store release. Use the smoke IDs in `docs/QA_FIXTURES.md` for
+high-risk fixes and releases.
 
 ## Platform-Change Risks
 
@@ -210,6 +214,7 @@ and navigation.
 - Update `dist/config/patterns.json` and `src/utils/network.js` together when a
   new pattern requires new matching logic.
 - Run `npm test` before opening a PR.
+- Run `npm run ci` before PR-ready or release-ready changes.
 - Manually test affected Instagram, Messenger, and Facebook flows before a
   release.
 - Do not include local-only files, ZIP packages, logs, or temporary captures in

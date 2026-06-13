@@ -56,6 +56,23 @@ jobs:
       - name: Run extension CI
         run: npm run ci
 
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
   site:
     name: Site build
     runs-on: ubuntu-24.04
@@ -84,3 +101,44 @@ jobs:
       - name: Audit site dependencies
         run: npm audit --audit-level=high
         working-directory: site
+
+  release-package:
+    name: Release package dry run
+    runs-on: ubuntu-24.04
+    needs:
+      - extension
+      - secret-scan
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create release package
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            npm run package:extension -- --expected-tag "${GITHUB_REF_NAME}"
+          else
+            npm run package:extension
+          fi
+
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-web-store-package
+          path: |
+            ghostify-v*-chrome-web-store.zip
+            ghostify-v*-chrome-web-store.zip.sha256
+          if-no-files-found: error

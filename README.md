@@ -43,13 +43,7 @@ Install Ghostify from the [Chrome Web Store](https://chromewebstore.google.com/d
 
 ## Latest Release
 
-Current version: `v2.0.2`
-
-- Fixed Facebook/Messenger messages getting stuck on "Sending" in some conversations while Hide Seen is enabled.
-- Restored Instagram story-view protection after recent Instagram changes.
-- Added guided Help & feedback links for bug reports, ideas, feedback, and questions.
-
-See all versions in [Releases](https://github.com/Hendrizzzz/Ghostify/releases).
+Use the Chrome Web Store badge above or [Releases](https://github.com/Hendrizzzz/Ghostify/releases) for the current published version and release notes.
 
 ## How It Works
 
@@ -93,9 +87,13 @@ Commands:
 npm install
 npm run build
 npm test
+npm run ci
 ```
 
 `npm run build` compiles the extension into `dist/`, which is the folder loaded by Chrome.
+`npm test` rebuilds generated extension bundles and runs the regression harness.
+`npm run ci` is the PR-ready check: tests, extension package validation,
+generated bundle drift check, and high-severity dependency audit.
 
 ## Project Structure
 
@@ -104,6 +102,7 @@ Ghostify/
 |-- src/                  Source modules and platform logic
 |-- dist/                 Built extension loaded by the browser
 |-- test/                 Regression tests
+|-- docs/                 QA fixtures and maintainer references
 |-- site/                 Public website
 |-- build.js              ESBuild build script
 |-- CONTRIBUTING.md       Contribution guide

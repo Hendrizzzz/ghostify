@@ -27,7 +27,7 @@ git log --oneline --decorate --max-count=5
 
 - Do not release from a branch that is behind `origin/main`.
 - Keep local-only artifacts out of commits and release PRs, including
-  `AGENTS.local.md`, `tmp/`, `*.zip`, `*.log`, and local design/export files.
+  `*.local.md`, `.local-notes/`, `tmp/`, `*.zip`, `*.log`, and local design/export files.
 - Use explicit path staging for releases. Do not use `git add .` from a dirty
   workspace.
 - Confirm the intended code changes are already reviewed or intentionally included.
@@ -65,40 +65,15 @@ match the GitHub Release/tag you are preparing. If the repository version is
 behind the live Store version, stop and reconcile the repo before building a
 release package.
 
-Run this internal version check before packaging:
+Run the internal package validator before packaging:
 
-```powershell
-@'
-const fs = require('fs');
-
-function readJson(file) {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
-}
-
-const pkg = readJson('package.json');
-const lock = readJson('package-lock.json');
-const manifest = readJson('dist/manifest.json');
-const patterns = readJson('dist/config/patterns.json');
-const content = fs.readFileSync('src/content.js', 'utf8');
-const fallback = content.match(/version:\s*["']([^"']+)/)?.[1];
-
-const versions = {
-    'package-lock.json': lock.version,
-    'package-lock root package': lock.packages?.['']?.version,
-    'dist/manifest.json': manifest.version,
-    'dist/config/patterns.json': patterns.version,
-    'src/content.js fallback': fallback
-};
-
-for (const [name, value] of Object.entries(versions)) {
-    if (value !== pkg.version) {
-        throw new Error(`${name} version ${value || '<missing>'} does not match package.json ${pkg.version}`);
-    }
-}
-
-console.log(`version ${pkg.version} is synchronized`);
-'@ | node
+```bash
+npm run validate:extension
 ```
+
+The validator checks version synchronization, fallback config synchronization,
+manifest asset references, approved manifest permissions, approved host
+permissions, content-script matches, and web-accessible resource matches.
 
 ## 4. Changelog And Release Notes
 
@@ -118,6 +93,7 @@ Install from the lockfile and run the full extension test command:
 ```bash
 npm ci
 npm run ci
+npm run package:extension
 ```
 
 `npm run ci` runs the extension build/test harness, package validation,
@@ -130,6 +106,14 @@ git diff --exit-code -- dist/background.js dist/js/content.js dist/js/ghost.js d
 
 Do not package or upload if CI or local tests fail.
 
+`npm run validate:extension` also checks that manifest permissions and host
+permissions match the approved allowlist. Permission changes require a privacy
+review before release.
+
+The release package command creates `ghostify-vX.Y.Z-chrome-web-store.zip` and
+`ghostify-vX.Y.Z-chrome-web-store.zip.sha256` in the repository root. Do not
+commit those artifacts.
+
 ## 6. Manual Extension Smoke Test
 
 Load `dist/` as an unpacked extension in Chrome or a Chromium-based browser:
@@ -139,11 +123,10 @@ Load `dist/` as an unpacked extension in Chrome or a Chromium-based browser:
 3. Click Load unpacked.
 4. Select the repository `dist/` folder.
 
-Verify:
-
-- Popup opens without errors.
-- Popup displays the expected manifest version.
-- Toggles persist after popup close and page refresh.
+- `GH-POPUP-001`:
+  - Popup opens without errors.
+  - Popup displays the expected manifest version.
+  - Toggles persist after popup close and page refresh.
 - Existing open Meta tabs receive setting changes or are refreshed after install.
 - Extension service worker has no relevant runtime errors.
 - Browser console has no repeated Ghostify errors on tested sites.
@@ -154,26 +137,28 @@ Test only with accounts and conversations you are allowed to use.
 
 ### Instagram
 
-- Hide typing is enabled and typing indicators are not sent.
-- Hide Seen is enabled and read receipt writes are blocked.
-- Hide story-view signals is enabled and story/reel view writes are blocked.
-- Messages, stories, reels, and normal navigation still load.
+- `GH-IG-TYPING-001`: Hide typing is enabled and typing indicators are not sent.
+- `GH-IG-SEEN-001`: Hide Seen is enabled and read receipt writes are blocked.
+- `GH-IG-STORY-001`: Hide story-view signals is enabled and story/reel view writes are blocked.
+- Messages, stories, reels, and normal navigation still load during the relevant Instagram smoke checks.
 
 ### Messenger
 
-- Hide typing is enabled and typing indicators are not sent.
-- Hide Seen is enabled and read receipt writes are blocked.
-- Sending a normal message still succeeds.
-- Message requests open and hydrate correctly.
+- `GH-MSG-TYPING-001`: Hide typing is enabled and typing indicators are not sent.
+- `GH-MSG-SEEN-001`:
+  - Hide Seen is enabled and read receipt writes are blocked.
+  - Sending a normal message still succeeds.
+- `GH-MSG-REQUESTS-001`: Message requests open and hydrate correctly.
 - Conversation navigation, media, and reload behavior remain usable.
 
 ### Facebook
 
-- Feed mini-chat and `/messages` or Messenger surfaces still load.
-- Hide Seen blocks read receipt writes.
-- Message requests open correctly.
-- Facebook local read-state behavior is documented and not mistaken for a sent Seen signal.
-- Video and media playback still work on non-message surfaces.
+- `GH-FB-SEEN-001`:
+  - Feed mini-chat and `/messages` or Messenger surfaces still load.
+  - Hide Seen blocks read receipt writes.
+  - Message requests open correctly.
+- `GH-FB-LOCAL-READ-001`: Facebook local read-state behavior is documented and not mistaken for a sent Seen signal.
+- `GH-FB-MEDIA-001`: video and media playback still work on non-message surfaces.
 
 Record any platform limitation in the GitHub Release notes and, when user-facing,
 in the website or README known-issues section.
@@ -193,32 +178,25 @@ Confirm the release still matches `PRIVACY.md` and Chrome Web Store disclosures:
 - No messages, credentials, browsing history, or social media content are collected.
 - Chrome Web Store privacy fields still match actual behavior.
 - Reviewer test instructions are updated if behavior or permissions changed.
+- `GH-PRIVACY-001` is recorded as verified, manual-pending, gap, or not applicable.
 
 ## 9. Package For Chrome Web Store
 
 Create the package with `manifest.json` at the ZIP root:
 
-```powershell
-$version = (Get-Content package.json | ConvertFrom-Json).version
-$zip = "ghostify-v$version-chrome-web-store.zip"
-if (Test-Path $zip) { Remove-Item $zip }
-Compress-Archive -Path dist\* -DestinationPath $zip
-Get-FileHash $zip -Algorithm SHA256
+```bash
+npm run package:extension
 ```
 
-Verify the package contents before upload using a temporary directory outside
-the repository:
+Verify the package contents before upload:
 
-```powershell
-$version = (Get-Content package.json | ConvertFrom-Json).version
-$zip = "ghostify-v$version-chrome-web-store.zip"
-$releaseCheck = Join-Path $env:TEMP "ghostify-release-check-$version"
-if (Test-Path $releaseCheck) { Remove-Item $releaseCheck -Recurse -Force }
-Expand-Archive $zip -DestinationPath $releaseCheck -Force
-(Get-Content (Join-Path $releaseCheck "manifest.json") | ConvertFrom-Json).version
+```bash
+npm run test:package
 ```
 
-The extracted manifest version must equal the target release version.
+The ZIP must contain `manifest.json` at the root, the extracted manifest version
+must equal the target release version, and the SHA-256 checksum file must match
+the generated ZIP. Record `GH-PKG-001` as verified.
 
 ## 10. Chrome Web Store Submission
 

@@ -25,14 +25,26 @@ grouped by version, with the most recent changes first.
 - Added `ARCHITECTURE.md` documenting the Manifest V3 runtime model, build flow,
   settings/config flow, blocking strategy, platform modules, tests, and
   platform-change risks.
+- Added `docs/QA_FIXTURES.md` with stable smoke-test IDs and evidence statuses
+  for high-risk fixes and releases.
+- Added manifest permission and host-permission drift validation to the
+  extension package checks.
+- Added release ZIP dry-run tooling that verifies the Chrome Web Store package
+  shape and writes a SHA-256 checksum.
+- Added secret scanning configuration for CI and optional local pre-commit use.
 - Added this changelog so future release notes are kept in the repository before
   they are copied to Chrome Web Store and GitHub Releases.
-- Added ignore rules for local agent notes and temporary release/test artifacts
+- Added ignore rules for local-only notes and temporary release/test artifacts
   so they are not accidentally included in release changes.
+
+### Changed
+
+- Clarified the privacy-policy justification for the local
+  `declarativeNetRequest` permission.
 
 ### Verification
 
-- Automated: run `npm test` before release.
+- Automated: run `npm run ci` and `npm run package:extension` before release.
 - Manual: complete the Instagram, Messenger, and Facebook smoke matrix in
   `RELEASE_CHECKLIST.md` before Chrome Web Store upload.
 

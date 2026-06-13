@@ -1,6 +1,6 @@
 # Privacy Policy for Ghostify
 
-**Last Updated:** January 30, 2026
+**Last Updated:** June 13, 2026
 
 ## 1. Introduction
 Ghostify ("we," "our," or "the Extension") is a browser extension designed to enhance user privacy on social media platforms by preventing the transmission of "read receipts," "typing indicators," and "story view" telemetry. We are committed to protecting your personal information and your right to privacy.
@@ -16,6 +16,7 @@ The Extension operates entirely locally on your device ("client-side"). All data
 To function correctly, the Extension requires specific permissions:
 *   **Host Permissions (`https://*.instagram.com/*`, etc.):** This is required to inject the content script that intercepts specific network requests (e.g., `mark_seen`) before they leave your browser. This interception happens locally.
 *   **Storage Permission:** Used to save your preferences (e.g., "Hide Seen: ON") locally in your browser's `chrome.storage.local`.
+*   **Declarative Net Request Permission:** Used to register local browser rules that block supported privacy signals without sending your data to a Ghostify server.
 
 ## 3. Configuration
 The Extension uses configuration files bundled with the installed extension package.

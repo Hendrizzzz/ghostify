@@ -1,10 +1,11 @@
 node_modules/
 
-AGENTS.local.md
+*.local.md
+.local-notes/
 tmp/
 
 *.zip
-AGENTS.local.md
+*.zip.sha256
 
 .vscode/
 .idea/

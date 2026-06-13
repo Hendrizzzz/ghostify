@@ -34,6 +34,164 @@ const patterns = readJson('dist/config/patterns.json');
 const contentSource = fs.readFileSync('src/content.js', 'utf8');
 const fallbackConfig = readFallbackConfig(contentSource);
 
+const ALLOWED_PERMISSIONS = [
+    'storage',
+    'declarativeNetRequest'
+];
+
+const ALLOWED_HOST_PERMISSIONS = [
+    'https://*.instagram.com/*',
+    'https://*.messenger.com/*',
+    'https://*.facebook.com/*',
+    'https://www.fbsbx.com/*'
+];
+
+const ALL_PLATFORM_MATCHES = [
+    'https://*.instagram.com/*',
+    'https://*.messenger.com/*',
+    'https://*.facebook.com/*',
+    'https://www.fbsbx.com/*'
+];
+
+const MESSENGER_FACEBOOK_MATCHES = [
+    'https://*.messenger.com/*',
+    'https://*.facebook.com/*',
+    'https://www.fbsbx.com/*'
+];
+
+const EXPECTED_CONTENT_SCRIPTS = [
+    {
+        js: ['js/content.js'],
+        matches: ALL_PLATFORM_MATCHES,
+        run_at: 'document_start',
+        world: 'ISOLATED',
+        all_frames: true,
+        match_origin_as_fallback: true
+    },
+    {
+        js: ['js/messenger_patch.js'],
+        matches: MESSENGER_FACEBOOK_MATCHES,
+        run_at: 'document_start',
+        world: 'MAIN',
+        all_frames: true,
+        match_origin_as_fallback: true
+    },
+    {
+        js: ['js/ghost.js'],
+        matches: ALL_PLATFORM_MATCHES,
+        run_at: 'document_start',
+        world: 'MAIN',
+        all_frames: true,
+        match_origin_as_fallback: true
+    }
+];
+
+const EXPECTED_WEB_ACCESSIBLE_RESOURCES = [
+    {
+        resources: ['config/patterns.json'],
+        matches: ALL_PLATFORM_MATCHES
+    }
+];
+
+function assertStringArray(value, label) {
+    if (!Array.isArray(value)) fail(`${label} must be an array`);
+    for (const [index, item] of value.entries()) {
+        if (!item || typeof item !== 'string') fail(`${label}[${index}] must be a non-empty string`);
+    }
+}
+
+function duplicateStrings(values) {
+    const seen = new Set();
+    const duplicates = new Set();
+    for (const value of values) {
+        if (seen.has(value)) duplicates.add(value);
+        seen.add(value);
+    }
+    return [...duplicates];
+}
+
+function assertExactStringSet(actual, expected, label) {
+    assertStringArray(actual, label);
+    const duplicates = duplicateStrings(actual);
+    if (duplicates.length) fail(`Duplicate ${label}: ${duplicates.join(', ')}`);
+
+    const actualSet = new Set(actual);
+    const expectedSet = new Set(expected);
+    const unexpected = actual.filter(value => !expectedSet.has(value));
+    const missing = expected.filter(value => !actualSet.has(value));
+
+    if (unexpected.length) fail(`Unexpected ${label}: ${unexpected.join(', ')}`);
+    if (missing.length) fail(`Missing ${label}: ${missing.join(', ')}`);
+}
+
+function assertEqual(actual, expected, label) {
+    if (actual !== expected) fail(`${label} must be ${JSON.stringify(expected)}`);
+}
+
+function assertOnlyKeys(value, allowedKeys, label) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) fail(`${label} must be an object`);
+    for (const key of Object.keys(value)) {
+        if (!allowedKeys.includes(key)) fail(`Unexpected ${label} field: ${key}`);
+    }
+}
+
+function assertNoOptionalPermissionFields(manifestValue) {
+    for (const field of ['optional_permissions', 'optional_host_permissions']) {
+        if (Object.prototype.hasOwnProperty.call(manifestValue, field)) {
+            fail(`dist/manifest.json ${field} must not be declared`);
+        }
+    }
+}
+
+function assertContentScripts(actual, expected) {
+    if (!Array.isArray(actual)) fail('dist/manifest.json content_scripts must be an array');
+    if (actual.length !== expected.length) {
+        fail(`dist/manifest.json content_scripts must contain ${expected.length} entries`);
+    }
+
+    const actualByJs = new Map();
+    for (const script of actual) {
+        assertOnlyKeys(script, ['matches', 'js', 'run_at', 'world', 'all_frames', 'match_origin_as_fallback'], `content_scripts entry for ${(script.js || []).join(', ') || '<unknown>'}`);
+        assertStringArray(script.js, 'content_scripts[].js');
+        const key = stableJson(script.js);
+        if (actualByJs.has(key)) fail(`Duplicate content_scripts entry for ${script.js.join(', ')}`);
+        actualByJs.set(key, script);
+    }
+
+    for (const expectedScript of expected) {
+        const key = stableJson(expectedScript.js);
+        const script = actualByJs.get(key);
+        if (!script) fail(`Missing content_scripts entry for ${expectedScript.js.join(', ')}`);
+
+        const label = `content_scripts entry for ${expectedScript.js.join(', ')}`;
+        assertExactStringSet(script.matches, expectedScript.matches, `${label} matches`);
+        assertEqual(script.run_at, expectedScript.run_at, `${label} run_at`);
+        assertEqual(script.world, expectedScript.world, `${label} world`);
+        assertEqual(script.all_frames, expectedScript.all_frames, `${label} all_frames`);
+        assertEqual(script.match_origin_as_fallback, expectedScript.match_origin_as_fallback, `${label} match_origin_as_fallback`);
+    }
+
+    for (const [key, script] of actualByJs.entries()) {
+        if (!expected.some(expectedScript => stableJson(expectedScript.js) === key)) {
+            fail(`Unexpected content_scripts entry for ${script.js.join(', ')}`);
+        }
+    }
+}
+
+function assertWebAccessibleResources(actual, expected) {
+    if (!Array.isArray(actual)) fail('dist/manifest.json web_accessible_resources must be an array');
+    if (actual.length !== expected.length) {
+        fail(`dist/manifest.json web_accessible_resources must contain ${expected.length} entries`);
+    }
+
+    for (const [index, expectedGroup] of expected.entries()) {
+        const group = actual[index];
+        assertOnlyKeys(group, ['resources', 'matches'], `web_accessible_resources[${index}]`);
+        assertExactStringSet(group.resources, expectedGroup.resources, `web_accessible_resources[${index}].resources`);
+        assertExactStringSet(group.matches, expectedGroup.matches, `web_accessible_resources[${index}].matches`);
+    }
+}
+
 if (!pkg.version) fail('package.json must declare a version');
 if (lock.version && lock.version !== pkg.version) {
     fail(`package-lock.json version ${lock.version} does not match package.json ${pkg.version}`);
@@ -45,6 +203,11 @@ if (manifest.manifest_version !== 3) fail('dist/manifest.json manifest_version m
 if (manifest.version !== pkg.version) {
     fail(`dist/manifest.json version ${manifest.version} does not match package.json ${pkg.version}`);
 }
+assertExactStringSet(manifest.permissions, ALLOWED_PERMISSIONS, 'dist/manifest.json permissions');
+assertExactStringSet(manifest.host_permissions, ALLOWED_HOST_PERMISSIONS, 'dist/manifest.json host_permissions');
+assertNoOptionalPermissionFields(manifest);
+assertContentScripts(manifest.content_scripts, EXPECTED_CONTENT_SCRIPTS);
+assertWebAccessibleResources(manifest.web_accessible_resources, EXPECTED_WEB_ACCESSIBLE_RESOURCES);
 if (patterns.version !== pkg.version) {
     fail(`dist/config/patterns.json version ${patterns.version} does not match package.json ${pkg.version}`);
 }
