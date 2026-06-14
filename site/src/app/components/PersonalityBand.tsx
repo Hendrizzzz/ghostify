@@ -1,9 +1,9 @@
 import { motion } from 'motion/react';
 
 const LINES = [
-  { label: 'Signal control', text: 'Reads everything. Reports nothing.' },
-  { label: 'Architecture',   text: 'Local-only. No cloud. No relay.'    },
-  { label: 'Footprint',      text: '50.28 KiB total. Zero servers.'     },
+  { label: 'Signal control', text: 'Seen signals stay quiet.'           },
+  { label: 'Architecture',   text: 'Local-only. No Ghostify relay.'     },
+  { label: 'Footprint',      text: 'Local controls. Zero Ghostify servers.' },
   { label: 'Trust model',    text: 'Open source. Read it yourself.'     },
 ];
 

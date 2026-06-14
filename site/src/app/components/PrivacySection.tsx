@@ -18,7 +18,7 @@ const PILLARS = [
     index: '03',
     icon: HardDrive,
     title: 'Local settings',
-    body: 'Every toggle you flip is stored locally. Clear your browser data and they reset. No sync, no cloud.',
+    body: 'Every toggle you flip is stored in your browser. Changes are broadcast to open supported tabs, not synced to a Ghostify cloud.',
   },
   {
     index: '04',
@@ -36,7 +36,7 @@ const PILLARS = [
     index: '06',
     icon: Eye,
     title: 'Built for visibility control',
-    body: 'The only thing Ghostify changes is which presence signals get sent. It cannot read, access, or store your messages.',
+    body: 'Ghostify locally checks supported signal traffic so read receipts, typing indicators, and story-view writes can be blocked before they leave the tab.',
   },
 ];
 
@@ -64,7 +64,7 @@ export function PrivacySection() {
               <em style={{ fontStyle: 'italic', fontWeight: 400 }}>the right places.</em>
             </h2>
             <p style={{ fontFamily: 'var(--g-mono)', fontSize: 12, lineHeight: 1.6, color: 'var(--g-dim)', maxWidth: 300, margin: 0, letterSpacing: '0.02em' }}>
-              No login. No profile. No cloud relay.
+              No login. No profile. No Ghostify cloud relay.
               <br />
               Your switches live in your browser.
             </p>
@@ -115,9 +115,9 @@ export function PrivacySection() {
           {/* Trust statement */}
           <div style={{ padding: 'clamp(24px, 3vw, 36px) 0', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
             <div style={{ fontFamily: 'var(--g-mono)', fontSize: 11.5, letterSpacing: '0.04em', color: 'var(--g-dim)', lineHeight: 1.8, maxWidth: 560 }}>
-              Ghostify modifies how the browser tab renders social signals.
-              It does not intercept, store, transmit, or touch your messages or credentials.
-              The extension only activates on messenger.com, facebook.com, and instagram.com.
+              Ghostify modifies which supported social signals leave the browser tab.
+              It does not store messages, transmit conversations to Ghostify, or ask for credentials.
+              The extension activates on supported Messenger, Facebook, Instagram, and Facebook/Messenger proxy-frame surfaces.
             </div>
             <a
               href="https://github.com/Hendrizzzz/Ghostify"

@@ -251,7 +251,7 @@ function ExtensionScene() {
       <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, borderBottom: '1px solid rgba(240,230,210,0.07)', background: '#141210' }}>
         <GhostMark size={14} />
         <span style={{ fontFamily: 'var(--g-sans)', fontSize: 12.5, fontWeight: 500, color: 'var(--g-white)', lineHeight: 1, letterSpacing: 0 }}>Ghostify</span>
-        <span style={{ marginLeft: 'auto', fontFamily: 'var(--g-mono)', fontSize: 8.5, color: 'rgba(240,230,210,0.22)' }}>v2.0.2</span>
+        <span style={{ marginLeft: 'auto', fontFamily: 'var(--g-mono)', fontSize: 8.5, color: 'rgba(240,230,210,0.22)' }}>local</span>
       </div>
       {rows.map(row => (
         <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5.5px 12px' }}>
@@ -333,7 +333,7 @@ export function FeaturesSection() {
           <FeatureCopy
             tag="read receipts"
             title="Hide read receipts"
-            body="Open messages without instantly sending a signal. No blue ticks, no timestamp pressure."
+            body="Open messages without instantly sending a signal. No Seen labels, no timestamp pressure."
           />
         </motion.div>
 

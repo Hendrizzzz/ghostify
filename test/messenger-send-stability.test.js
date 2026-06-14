@@ -2980,7 +2980,7 @@ function testFacebookWorkersKeepNativeScriptUrls() {
     );
 }
 
-function testNonMawFbsbxPagesAreNotTreatedAsMessenger() {
+async function testNonMawFbsbxPagesAreNotTreatedAsMessenger() {
     const context = makeMessengerPatchPage({}, {
         hostname: 'www.fbsbx.com',
         pathname: '/cdn/redacted',
@@ -3011,10 +3011,25 @@ function testNonMawFbsbxPagesAreNotTreatedAsMessenger() {
         pathname: '/cdn/redacted',
         href: 'https://www.fbsbx.com/cdn/redacted'
     });
+    assert.notStrictEqual(
+        window.__GHOSTIFY_GHOST_HOOKED__,
+        true,
+        'non-MAW fbsbx pages must not install the main Ghostify hook set'
+    );
     assert.strictEqual(
         window.document.hasFocus(),
         true,
         'non-MAW fbsbx pages must not get Messenger focus spoofing'
+    );
+    assert.strictEqual(
+        await fetchOutcome(window, messengerReadReceipt),
+        'allowed',
+        'non-MAW fbsbx pages must not install Ghostify fetch privacy hooks'
+    );
+    assert.strictEqual(
+        websocketOutcome(window, facebookWorkerEdgeChatLastSeenFrame),
+        'allowed',
+        'non-MAW fbsbx pages must not install Ghostify WebSocket privacy hooks'
     );
 }
 
@@ -4241,7 +4256,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testFacebookTargetlessBridgeReadReceiptBatchesAreSanitizedBeforeSharedWorkerStateUpdates();
     testFacebookBridgeThreadOpenFramesStayAllowed();
     testFacebookWorkersKeepNativeScriptUrls();
-    testNonMawFbsbxPagesAreNotTreatedAsMessenger();
+    await testNonMawFbsbxPagesAreNotTreatedAsMessenger();
     testManifestInjectsIntoFacebookMawProxyFrames();
     testMessengerPatchRequestRouteExplicitModulesStayProtected();
     await testVideoAdAndMediaTrafficIsAllowed();

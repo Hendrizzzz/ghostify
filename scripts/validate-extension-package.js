@@ -2,6 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
+const repoRoot = path.resolve(__dirname, '..');
+
+function repoPath(...segments) {
+    return path.join(repoRoot, ...segments);
+}
+
 function readJson(file) {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
@@ -27,11 +33,12 @@ function readFallbackConfig(source) {
     return vm.runInNewContext(`(${match[1]})`, Object.create(null));
 }
 
-const pkg = readJson('package.json');
-const lock = readJson('package-lock.json');
-const manifest = readJson('dist/manifest.json');
-const patterns = readJson('dist/config/patterns.json');
-const contentSource = fs.readFileSync('src/content.js', 'utf8');
+const pkg = readJson(repoPath('package.json'));
+const lock = readJson(repoPath('package-lock.json'));
+const manifest = readJson(repoPath('dist', 'manifest.json'));
+const patterns = readJson(repoPath('dist', 'config', 'patterns.json'));
+const privacyPolicy = fs.readFileSync(repoPath('PRIVACY.md'), 'utf8');
+const contentSource = fs.readFileSync(repoPath('src', 'content.js'), 'utf8');
 const fallbackConfig = readFallbackConfig(contentSource);
 
 const ALLOWED_PERMISSIONS = [
@@ -51,6 +58,37 @@ const ALL_PLATFORM_MATCHES = [
     'https://*.messenger.com/*',
     'https://*.facebook.com/*',
     'https://www.fbsbx.com/*'
+];
+
+const REQUIRED_PRIVACY_DISCLOSURES = [
+    {
+        label: 'local transient inspection disclosure',
+        phrases: [
+            'Ghostify transiently inspects request URLs, request payloads, and supported page or worker messages inside your browser',
+            'does not send this inspected data to a Ghostify server'
+        ]
+    },
+    {
+        label: 'fbsbx proxy narrowing disclosure',
+        phrases: [
+            'https://www.fbsbx.com/*',
+            'Ghostify limits Messenger-specific runtime behavior to supported Messenger proxy pages'
+        ]
+    },
+    {
+        label: 'Chrome Web Store Limited Use disclosure',
+        phrases: [
+            'Chrome Web Store User Data Policy',
+            'Limited Use requirements'
+        ]
+    },
+    {
+        label: 'voluntary feedback disclosure',
+        phrases: [
+            'GitHub issue forms or Google Forms',
+            'Do not submit private messages, credentials, or account-sensitive details'
+        ]
+    }
 ];
 
 const MESSENGER_FACEBOOK_MATCHES = [
@@ -143,6 +181,40 @@ function assertNoOptionalPermissionFields(manifestValue) {
     }
 }
 
+function assertPrivacyPolicyCoversPermissions() {
+    const match = privacyPolicy.match(/### 2\.1\. Permissions Justification([\s\S]*?)(?:\n##\s|\n#\s|$)/);
+    if (!match) fail('PRIVACY.md must include a Permissions Justification section');
+
+    const section = match[1];
+    const justified = [];
+    for (const line of section.split(/\r?\n/)) {
+        const bulletMatch = line.match(/^\*\s+\*\*[^`]*\(`([^`]+)`\):/);
+        if (bulletMatch) justified.push(bulletMatch[1]);
+    }
+
+    const expected = [...ALLOWED_HOST_PERMISSIONS, ...ALLOWED_PERMISSIONS];
+    for (const permission of expected) {
+        if (!justified.includes(permission)) {
+            const label = ALLOWED_HOST_PERMISSIONS.includes(permission) ? 'host permission' : 'permission';
+            fail(`PRIVACY.md must justify ${permission} ${label}`);
+        }
+    }
+
+    const expectedSet = new Set(expected);
+    const unexpected = justified.filter(permission => !expectedSet.has(permission));
+    if (unexpected.length) fail(`Unexpected PRIVACY.md permission justification: ${unexpected.join(', ')}`);
+}
+
+function assertPrivacyPolicyRequiredDisclosures() {
+    for (const disclosure of REQUIRED_PRIVACY_DISCLOSURES) {
+        for (const phrase of disclosure.phrases) {
+            if (!privacyPolicy.includes(phrase)) {
+                fail(`PRIVACY.md must include ${disclosure.label}`);
+            }
+        }
+    }
+}
+
 function assertContentScripts(actual, expected) {
     if (!Array.isArray(actual)) fail('dist/manifest.json content_scripts must be an array');
     if (actual.length !== expected.length) {
@@ -206,6 +278,8 @@ if (manifest.version !== pkg.version) {
 assertExactStringSet(manifest.permissions, ALLOWED_PERMISSIONS, 'dist/manifest.json permissions');
 assertExactStringSet(manifest.host_permissions, ALLOWED_HOST_PERMISSIONS, 'dist/manifest.json host_permissions');
 assertNoOptionalPermissionFields(manifest);
+assertPrivacyPolicyCoversPermissions();
+assertPrivacyPolicyRequiredDisclosures();
 assertContentScripts(manifest.content_scripts, EXPECTED_CONTENT_SCRIPTS);
 assertWebAccessibleResources(manifest.web_accessible_resources, EXPECTED_WEB_ACCESSIBLE_RESOURCES);
 if (patterns.version !== pkg.version) {
@@ -247,7 +321,7 @@ for (const [index, group] of (manifest.web_accessible_resources || []).entries()
 }
 
 for (const file of requiredFiles) {
-    const fullPath = path.join('dist', file);
+    const fullPath = repoPath('dist', file);
     if (!fs.existsSync(fullPath)) fail(`Missing manifest asset: ${fullPath}`);
 }
 

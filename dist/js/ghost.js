@@ -2955,6 +2955,7 @@
   // src/ghost.js
   (function() {
     "use strict";
+    if (!(isInstagram || isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy)) return;
     if (window.__GHOSTIFY_GHOST_HOOKED__) return;
     window.__GHOSTIFY_GHOST_HOOKED__ = true;
     traceMessengerHealth("ghost.init", {

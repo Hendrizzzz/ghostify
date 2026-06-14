@@ -5,7 +5,7 @@ import { Plus, Minus } from 'lucide-react';
 const FAQS = [
   {
     q: 'Does Ghostify read my messages?',
-    a: "No. Ghostify doesn't intercept, read, or store messages or login credentials. It modifies how the browser tab renders social signals — which outbound events get sent to the platform. Your conversations never leave your browser through Ghostify.",
+    a: "Ghostify inspects supported request and message metadata locally in your browser to identify read receipts, typing indicators, and story-view signals. It does not send your conversations to Ghostify, store raw messages, or ask for login credentials.",
   },
   {
     q: 'Does it work on mobile apps?',
@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: 'Which sites does it work on?',
-    a: 'Ghostify activates on messenger.com, facebook.com, and instagram.com. It does nothing on any other site.',
+    a: 'Ghostify activates on the supported web versions of Messenger, Facebook, Instagram, and the Facebook/Messenger proxy frames those apps use. It does nothing on unrelated sites.',
   },
   {
     q: 'Can I turn it off per site?',
@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: 'Does it store my activity?',
-    a: 'No. Ghostify has no server, no analytics, and no sync. Your toggle settings are stored locally in your browser. Clear your browser data and they reset.',
+    a: 'No. Ghostify has no tracking server, no analytics, and no Ghostify cloud sync. Toggle settings and bundled config stay in your browser, and setting changes are broadcast only to open supported tabs.',
   },
   {
     q: 'Is this ethical?',
@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: 'What should I do after updating?',
-    a: 'Reload any open messenger.com, facebook.com, or instagram.com tabs after installing or updating. The extension activates on page load.',
+    a: 'Reload any open messenger.com, facebook.com, or instagram.com tabs after installing or updating. Facebook/Messenger proxy frames are handled inside those web apps.',
   },
 ];
 

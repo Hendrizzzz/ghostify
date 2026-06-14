@@ -10,7 +10,7 @@ function copyFixture() {
     const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-validate-'));
     fs.mkdirSync(path.join(fixtureRoot, 'scripts'), { recursive: true });
 
-    for (const file of ['package.json', 'package-lock.json']) {
+    for (const file of ['package.json', 'package-lock.json', 'PRIVACY.md']) {
         fs.copyFileSync(path.join(repoRoot, file), path.join(fixtureRoot, file));
     }
 
@@ -26,6 +26,13 @@ function copyFixture() {
 
 function runValidator(cwd) {
     return childProcess.spawnSync(process.execPath, ['scripts/validate-extension-package.js'], {
+        cwd,
+        encoding: 'utf8'
+    });
+}
+
+function runValidatorFrom(cwd, scriptPath) {
+    return childProcess.spawnSync(process.execPath, [scriptPath], {
         cwd,
         encoding: 'utf8'
     });
@@ -54,6 +61,14 @@ function withFixture(testFn) {
 
 withFixture(fixtureRoot => {
     const result = runValidator(fixtureRoot);
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+});
+
+withFixture(fixtureRoot => {
+    const result = runValidatorFrom(
+        path.dirname(fixtureRoot),
+        path.join(fixtureRoot, 'scripts', 'validate-extension-package.js')
+    );
     assert.strictEqual(result.status, 0, result.stderr || result.stdout);
 });
 
@@ -100,6 +115,133 @@ withFixture(fixtureRoot => {
 });
 
 withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace('`https://www.fbsbx.com/*`', '`https://www.example.com/*`')
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing privacy-policy host permission coverage');
+    assert.match(
+        result.stderr,
+        /PRIVACY\.md must justify https:\/\/www\.fbsbx\.com\/\* host permission/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace('`storage`', '`localStorage`')
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing privacy-policy permission coverage');
+    assert.match(
+        result.stderr,
+        /PRIVACY\.md must justify storage permission/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace(
+            '*   **Declarative Net Request permission (`declarativeNetRequest`):',
+            '*   **Tabs permission (`tabs`):** Not used.\n*   **Declarative Net Request permission (`declarativeNetRequest`):'
+        )
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject stale extra privacy-policy permission entries');
+    assert.match(
+        result.stderr,
+        /Unexpected PRIVACY\.md permission justification: tabs/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace(
+            'Ghostify transiently inspects request URLs, request payloads, and supported page or worker messages inside your browser',
+            'Ghostify works inside your browser'
+        )
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing local inspection disclosure');
+    assert.match(
+        result.stderr,
+        /PRIVACY\.md must include local transient inspection disclosure/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace(
+            'Ghostify limits Messenger-specific runtime behavior to supported Messenger proxy pages',
+            'Ghostify uses this host permission for Messenger support'
+        )
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing fbsbx runtime-narrowing disclosure');
+    assert.match(
+        result.stderr,
+        /PRIVACY\.md must include fbsbx proxy narrowing disclosure/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace(
+            'Chrome Web Store User Data Policy',
+            'Chrome extension policy'
+        )
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing Chrome Web Store Limited Use disclosure');
+    assert.match(
+        result.stderr,
+        /PRIVACY\.md must include Chrome Web Store Limited Use disclosure/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace(
+            'GitHub issue forms or Google Forms',
+            'feedback links'
+        )
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing voluntary feedback disclosure');
+    assert.match(
+        result.stderr,
+        /PRIVACY\.md must include voluntary feedback disclosure/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
     const { manifestPath, manifest } = readManifest(fixtureRoot);
     manifest.optional_permissions = ['tabs'];
     writeManifest(manifestPath, manifest);
@@ -109,6 +251,20 @@ withFixture(fixtureRoot => {
     assert.match(
         result.stderr,
         /dist\/manifest\.json optional_permissions must not be declared/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const { manifestPath, manifest } = readManifest(fixtureRoot);
+    manifest.optional_host_permissions = ['https://example.com/*'];
+    writeManifest(manifestPath, manifest);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject optional host permissions');
+    assert.match(
+        result.stderr,
+        /dist\/manifest\.json optional_host_permissions must not be declared/,
         result.stderr || result.stdout
     );
 });

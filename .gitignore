@@ -3,6 +3,7 @@ node_modules/
 *.local.md
 .local-notes/
 tmp/
+output/
 
 *.zip
 *.zip.sha256

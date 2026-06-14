@@ -70,7 +70,7 @@ See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
 ## Known Behavior
 
-On `facebook.com`, Facebook may sometimes make an unread chat look read locally after you open it. Ghostify still blocks the Seen/read receipt signal. Refreshing Facebook or checking Messenger can confirm that the chat remains unread.
+On `facebook.com`, Facebook may sometimes make an unread chat look read locally after you open it. That local display state is not proof that the sender received a Seen/read marker. Sender-side Seen state is the authoritative verification; refreshed Facebook/Messenger UI is only supporting context.
 
 Meta changes Instagram, Facebook, and Messenger often. If something stops working, update Ghostify to the latest version, reload the affected tab, and report it if the issue continues.
 

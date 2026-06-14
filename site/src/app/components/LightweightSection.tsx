@@ -70,7 +70,7 @@ export function LightweightSection() {
           whiteSpace: 'nowrap',
         }}
       >
-        50 KiB
+        local
       </div>
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(60px, 9vw, 100px) clamp(28px, 4vw, 56px)', position: 'relative', zIndex: 1 }}>
@@ -136,11 +136,10 @@ export function LightweightSection() {
                 marginBottom: 10,
               }}
             >
-              <CountUp target={50.28} />
-              <span style={{ fontSize: '0.38em', fontWeight: 400, marginLeft: 6, color: 'var(--g-body)' }}>KiB</span>
+              Local
             </div>
             <div style={{ fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'var(--g-dim)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              installed size
+              privacy controls
             </div>
           </div>
 
@@ -176,7 +175,7 @@ export function LightweightSection() {
                 maxWidth: 340,
               }}
             >
-              Tiny enough to feel like a browser control, not another app to manage. No background sync. No update nag.
+              Built to feel like a browser control, not another app to manage. No Ghostify cloud sync. No update nag.
             </p>
             <div
               style={{
@@ -187,9 +186,9 @@ export function LightweightSection() {
                 lineHeight: 1.8,
               }}
             >
-              An average Instagram feed load: ~4 MB.
+              Ghostify runs inside supported tabs you already opened.
               <br />
-              Ghostify: 50.28 KiB — once, total.
+              No Ghostify server in the path.
             </div>
           </div>
         </div>

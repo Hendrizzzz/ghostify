@@ -46,7 +46,7 @@ export function Footer() {
             textAlign: 'center',
           }}
         >
-          open source · no account · local controls · 50.28 KiB
+          open source · no account · local controls · no tracking server
         </span>
 
         {/* GitHub */}

@@ -55,7 +55,7 @@ export function FinalCTA() {
               </div>
               <div>
                 <div style={{ fontFamily: 'var(--g-sans)', fontSize: 12, fontWeight: 500, color: 'var(--g-white)', letterSpacing: 0 }}>Ghostify</div>
-                <div style={{ fontFamily: 'var(--g-mono)', fontSize: 9.5, color: 'var(--g-dim)' }}>50.28 KiB · v2.0.2 · open source</div>
+                <div style={{ fontFamily: 'var(--g-mono)', fontSize: 9.5, color: 'var(--g-dim)' }}>open source · local-only</div>
               </div>
               <div style={{ marginLeft: 'auto', fontFamily: 'var(--g-mono)', fontSize: 10, color: 'rgba(196,72,48,0.7)', letterSpacing: '0.04em' }}>
                 Free
