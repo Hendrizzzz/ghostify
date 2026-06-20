@@ -33,9 +33,6 @@ export function PersonalityBand() {
         overflow: 'hidden',
       }}
     >
-      {/* Subtle horizontal grid lines */}
-      <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 24%, rgba(240,230,210,0.012) 25%)', pointerEvents: 'none' }} />
-
       <div className="band-marquee">
         <div className="band-track">
           <div className="band-group">{LINES.map(renderLine)}</div>
