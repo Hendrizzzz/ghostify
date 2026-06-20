@@ -901,41 +901,17 @@ export function HeroSection() {
     <section
       id="hero"
       className="snap-start hero-section"
-      style={{
-        height: '100svh',
-        display: 'flex',
-        alignItems: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        paddingTop: 76,
-        background: '#F6F2E4',
-        color: '#17130F',
-      }}
+      style={{ height: '100svh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden', paddingTop: 60, background: 'var(--g-bg)' }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: [
-            'linear-gradient(rgba(23,19,15,0.035) 1px, transparent 1px)',
-            'linear-gradient(90deg, rgba(23,19,15,0.035) 1px, transparent 1px)',
-          ].join(', '),
-          backgroundSize: '80px 80px',
-          maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.26), rgba(0,0,0,0.08) 44%, transparent 88%)',
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      />
-      <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1, background: 'rgba(23,19,15,0.16)', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'var(--g-bg)', zIndex: 0, pointerEvents: 'none' }} />
 
       <div
         className="hero-grid"
         style={{
-          width: '100%', maxWidth: 1420, margin: '0 auto',
+          width: '100%', maxWidth: 1480, margin: '0 auto',
           padding: '0 clamp(22px, 3vw, 48px)',
-          display: 'grid', gridTemplateColumns: '44fr 56fr',
-          gap: 'clamp(36px, 5vw, 72px)',
+          display: 'grid', gridTemplateColumns: '42fr 58fr',
+          gap: 'clamp(32px, 4vw, 56px)',
           alignItems: 'center', position: 'relative', zIndex: 1,
         }}
       >
@@ -946,83 +922,56 @@ export function HeroSection() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
-            <div style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--g-accent)', opacity: 0.9 }} />
-            <span style={{ fontFamily: 'var(--g-mono)', fontSize: 10, letterSpacing: '0.11em', textTransform: 'uppercase', color: 'rgba(23,19,15,0.48)' }}>
+            <div style={{ width: 5, height: 5, borderRadius: 3, background: 'var(--g-accent)', opacity: 0.75 }} />
+            <span style={{ fontFamily: 'var(--g-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--g-dim)' }}>
               Open source browser extension
             </span>
           </div>
 
-          <h1 style={{ fontFamily: 'var(--g-display)', fontSize: 'clamp(3.15rem, 5.7vw, 6.45rem)', fontWeight: 400, lineHeight: 0.94, letterSpacing: 0, color: '#17130F', margin: '0 0 26px', maxWidth: 660 }}>
-            Read messages. Stay unseen.
+          <h1 style={{ fontFamily: 'var(--g-display)', fontSize: 'clamp(2.8rem, 4.4vw, 4.4rem)', fontWeight: 400, fontStyle: 'italic', lineHeight: 1.06, letterSpacing: 0, color: 'var(--g-white)', margin: '0 0 8px' }}>
+            Read it.
+          </h1>
+          <h1 style={{ fontFamily: 'var(--g-display)', fontSize: 'clamp(2.8rem, 4.4vw, 4.4rem)', fontWeight: 400, fontStyle: 'italic', lineHeight: 1.06, letterSpacing: 0, color: 'rgba(240,235,224,0.45)', margin: '0 0 28px' }}>
+            Don't announce it.
           </h1>
 
-          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(0.98rem, 1.2vw, 1.08rem)', lineHeight: 1.62, color: 'rgba(23,19,15,0.72)', margin: '0 0 10px', maxWidth: 520 }}>
-            Ghostify helps hide read receipts, typing indicators, and supported story-view signals on Instagram, Messenger, and Facebook.
+          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(0.88rem, 1.05vw, 0.98rem)', lineHeight: 1.65, color: 'var(--g-body)', margin: '0 0 10px', maxWidth: 400 }}>
+            Ghostify locally hides read receipts, typing indicators, and supported story-view signals on Messenger, Facebook, and Instagram.
           </p>
-          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(0.86rem, 1vw, 0.94rem)', lineHeight: 1.6, color: 'rgba(23,19,15,0.48)', margin: '0 0 28px', maxWidth: 500 }}>
-            No Ghostify account. No Ghostify cloud relay. Preferences stay in your browser.
+          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(0.82rem, 0.95vw, 0.9rem)', lineHeight: 1.65, color: 'rgba(240,235,224,0.3)', margin: '0 0 32px', maxWidth: 400 }}>
+            No account login. No cloud relay. Just your browser quietly refusing to snitch.
           </p>
-
-          <div className="hero-platform-row" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 26 }}>
-            {[
-              { label: 'Instagram', color: '#E1306C' },
-              { label: 'Messenger', color: '#0082FB' },
-              { label: 'Facebook', color: '#1877F2' },
-            ].map((item) => (
-              <span
-                key={item.label}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  height: 36,
-                  padding: '0 13px',
-                  borderRadius: 18,
-                  background: 'rgba(255,255,255,0.48)',
-                  border: '1px solid rgba(23,19,15,0.12)',
-                  boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset',
-                  fontFamily: 'var(--g-sans)',
-                  fontSize: 13.5,
-                  fontWeight: 500,
-                  color: 'rgba(23,19,15,0.78)',
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: 4, background: item.color, boxShadow: `0 0 0 3px ${item.color}22` }} />
-                {item.label}
-              </span>
-            ))}
-          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
             <a
               href="https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm?utm_source=item-share-cb"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 24px', borderRadius: 8, background: '#17130F', color: '#F6F2E4', fontFamily: 'var(--g-sans)', fontSize: 14.5, fontWeight: 600, textDecoration: 'none', letterSpacing: 0, boxShadow: '0 12px 26px rgba(23,19,15,0.18)', transition: 'opacity 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.92'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 16px 32px rgba(23,19,15,0.2)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 26px rgba(23,19,15,0.18)'; }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', borderRadius: 7, background: 'var(--g-white)', color: '#0B0A08', fontFamily: 'var(--g-sans)', fontSize: 14, fontWeight: 500, textDecoration: 'none', letterSpacing: 0, boxShadow: '0 2px 12px rgba(0,0,0,0.28)', transition: 'opacity 0.18s ease, transform 0.15s ease' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
             >
               <Chrome size={14} />
-              Add to Chrome
+              Get Ghostify
             </a>
             <a
               href="https://github.com/Hendrizzzz/Ghostify"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderRadius: 8, background: 'rgba(255,255,255,0.42)', color: 'rgba(23,19,15,0.72)', fontFamily: 'var(--g-sans)', fontSize: 14.5, fontWeight: 500, textDecoration: 'none', letterSpacing: 0, border: '1px solid rgba(23,19,15,0.14)', transition: 'border-color 0.18s ease, color 0.18s ease, background 0.18s ease' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(23,19,15,0.28)'; (e.currentTarget as HTMLElement).style.color = '#17130F'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.68)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(23,19,15,0.14)'; (e.currentTarget as HTMLElement).style.color = 'rgba(23,19,15,0.72)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.42)'; }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 7, background: 'transparent', color: 'var(--g-white-dim)', fontFamily: 'var(--g-sans)', fontSize: 14, fontWeight: 400, textDecoration: 'none', letterSpacing: 0, border: '1px solid rgba(240,230,210,0.13)', transition: 'border-color 0.18s ease, color 0.18s ease' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(240,230,210,0.28)'; (e.currentTarget as HTMLElement).style.color = 'var(--g-white)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(240,230,210,0.13)'; (e.currentTarget as HTMLElement).style.color = 'var(--g-white-dim)'; }}
             >
               <Github size={14} strokeWidth={1.5} />
               View source
             </a>
           </div>
 
-          <div className="hero-proof-strip" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {['Open source', 'Runs locally', 'No account credentials', 'Browser extension'].map((item, i) => (
               <span key={item} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontFamily: 'var(--g-mono)', fontSize: 10, color: 'rgba(23,19,15,0.44)', letterSpacing: '0.02em' }}>{item}</span>
-                {i < 3 && <span style={{ color: 'rgba(23,19,15,0.24)', fontSize: 10 }}>-</span>}
+                <span style={{ fontFamily: 'var(--g-mono)', fontSize: 10, color: 'var(--g-dim)', letterSpacing: '0.02em' }}>{item}</span>
+                {i < 3 && <span style={{ color: 'rgba(240,230,210,0.15)', fontSize: 10 }}>·</span>}
               </span>
             ))}
           </div>
@@ -1033,16 +982,7 @@ export function HeroSection() {
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.78, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-          className="hero-demo-stage"
-          style={{
-            height: 'min(calc(100svh - 132px), 620px)',
-            position: 'relative',
-            padding: 14,
-            borderRadius: 24,
-            background: 'rgba(255,255,255,0.34)',
-            border: '1px solid rgba(23,19,15,0.12)',
-            boxShadow: '0 34px 90px rgba(35,27,14,0.18), 0 1px 0 rgba(255,255,255,0.65) inset',
-          }}
+          style={{ height: 'min(calc(100svh - 104px), 600px)', position: 'relative' }}
         >
           <HeroBrowserScene />
         </motion.div>
@@ -1055,32 +995,27 @@ export function HeroSection() {
             min-height: 100svh !important;
             align-items: flex-start !important;
             overflow: visible !important;
-            padding-top: 92px !important;
-            padding-bottom: 38px !important;
+            padding-top: 76px !important;
+            padding-bottom: 44px !important;
           }
           .hero-grid {
             grid-template-columns: 1fr !important;
             box-sizing: border-box !important;
             padding: 0 18px !important;
-            gap: 22px !important;
+            gap: 24px !important;
             align-items: start !important;
           }
           .hero-grid > * {
             min-width: 0 !important;
           }
-          .hero-proof-strip {
-            display: none !important;
-          }
           .hero-glow {
             display: none !important;
           }
-          .hero-demo-stage {
+          .hero-grid > :last-child {
             width: 100% !important;
             max-width: 640px !important;
-            height: min(48svh, 350px) !important;
+            height: min(48svh, 340px) !important;
             justify-self: center !important;
-            padding: 8px !important;
-            border-radius: 18px !important;
           }
           .hero-tabbar {
             padding-left: 8px !important;
@@ -1113,7 +1048,7 @@ export function HeroSection() {
           }
         }
         @media (max-width: 420px) {
-          .hero-demo-stage {
+          .hero-grid > :last-child {
             height: clamp(320px, 54svh, 340px) !important;
           }
           .hero-chat-list {
