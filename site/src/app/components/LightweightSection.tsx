@@ -149,7 +149,7 @@ export function LightweightSection() {
               <CountUp target={0} />
             </div>
             <div style={{ fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'var(--g-dim)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              Ghostify servers
+              tracking relays
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export function LightweightSection() {
             >
               Ghostify runs inside supported tabs you already opened.
               <br />
-              No Ghostify server in the path.
+              No tracking relay in the path.
             </div>
           </div>
         </div>

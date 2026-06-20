@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const pkg = require('../package.json');
 
 const ghostSource = fs.readFileSync('dist/js/ghost.js', 'utf8');
 const messengerPatchSource = fs.readFileSync('dist/js/messenger_patch.js', 'utf8');
@@ -3981,11 +3982,11 @@ function testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestTe
 function testPopupMessengerSeenNoteExplainsLocalFacebookReadUi() {
     const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
     const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
-    const note = 'Ghostify is working. Facebook may only make chats appear read here; Seen stays blocked.';
+    const note = 'Ghostify is active. Facebook may make chats look read here. Refresh Facebook or Messenger before judging.';
 
     assert(
         popupHtml.includes(note),
-        'Messenger/Facebook Hide Seen should explain Facebook local read UI without implying Seen was sent'
+        'Messenger/Facebook Hide Seen should explain Facebook local read UI in concise user-facing wording'
     );
     assert(
         popupHtml.includes(`data-tooltip="${note}"`),
@@ -3994,6 +3995,11 @@ function testPopupMessengerSeenNoteExplainsLocalFacebookReadUi() {
     assert(
         !popupHtml.includes(' title='),
         'Messenger/Facebook Hide Seen should not use the delayed native title tooltip'
+    );
+    assert(
+        !popupHtml.includes('sender-side') &&
+        !popupHtml.includes('manual verification'),
+        'Messenger/Facebook Hide Seen tooltip should avoid technical verification language'
     );
     assert(
         popupCss.includes('.info-icon::after') &&
@@ -4007,10 +4013,18 @@ function testPopupMessengerSeenNoteExplainsLocalFacebookReadUi() {
 function testPopupSupportLinksUseGuidedIssueForms() {
     const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
     const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
+    const popupJs = fs.readFileSync('dist/js/popup.js', 'utf8');
+    const privacyPolicy = fs.readFileSync('PRIVACY.md', 'utf8');
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
-    const surveyUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSddFGgzML2BCOJKTgVBaopmmzl0p1gBMkLEFMS5ofQY7hg89w/viewform';
+    const surveyBaseUrl = 'https://tally.so/r/D4W0Jq';
+    const footerSurveyUrl = `${surveyBaseUrl}?source=popup_footer&amp;version=${pkg.version}`;
+    const labsSurveyUrls = [
+        `${surveyBaseUrl}?source=popup_labs&amp;feature=instagram_video_controls&amp;version=${pkg.version}`,
+        `${surveyBaseUrl}?source=popup_labs&amp;feature=per_site_control_presets&amp;version=${pkg.version}`,
+        `${surveyBaseUrl}?source=popup_labs&amp;feature=compatibility_alerts&amp;version=${pkg.version}`
+    ];
     const directHelpFormUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml';
-    const surveyTooltip = 'Share whether View Once media support fits Ghostify.';
+    const surveyTooltip = 'Share which Labs ideas you want next. Do not include private messages.';
     const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
     const directHelpPlaceholder = 'Example: On facebook.com, I clicked New message requests and it opened a blank chat page instead of the request list. I expected Ghostify to keep the real UI working while Seen stays blocked.';
     const issueTemplateFiles = [
@@ -4042,24 +4056,113 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Popup should open one guided Help & feedback draft directly instead of the issue chooser'
     );
     assert(
-        popupHtml.includes(`href="${surveyUrl}"`) &&
-        popupHtml.includes('Feature survey') &&
+        popupHtml.includes(`href="${footerSurveyUrl}"`) &&
+        popupHtml.includes('Per-site Control Presets') &&
         popupHtml.includes(`data-tooltip="${surveyTooltip}"`),
-        'Popup should include the View Once feature survey as a quiet footer link'
+        'Popup should include the Tally feature survey as a quiet Labs vote path'
     );
     assert(
         popupHtml.includes('class="footer-link survey-link"') &&
+        popupHtml.includes('class="footer-link support-link"') &&
+        popupHtml.includes('id="version-number"') &&
         popupCss.includes('.survey-link::after') &&
         popupCss.includes('left: -88px;') &&
         popupCss.includes('width: 220px;'),
-        'Popup survey tooltip should be shifted inside the narrow extension popup instead of clipping offscreen'
+        'Popup footer should keep the quiet version, Feature survey, and Help & feedback layout'
     );
     assert(
-        popupCss.includes('.support-link::after') &&
-        popupCss.includes('content: attr(data-tooltip);') &&
-        popupCss.includes('font-weight: 500;') &&
-        popupCss.includes('text-decoration: none;'),
-        'Popup support link should stay visually quiet and explain the optional thank-you credit on hover'
+        popupCss.includes('.footer-link:hover::after') &&
+        popupCss.includes('.support-link:hover::after'),
+        'Popup footer should reveal helpful text on hover and keyboard focus'
+    );
+    assert(
+        popupHtml.includes('id="open-labs"') &&
+        popupHtml.includes('id="labs-view"') &&
+        !popupHtml.includes('Pick the next Labs idea to test') &&
+        popupHtml.includes('Instagram Video Controls') &&
+        !popupHtml.includes('Cleaner Instagram Videos &amp; Reels') &&
+        !popupHtml.includes('Fewer distractions around the player') &&
+        popupHtml.includes('Per-site Control Presets') &&
+        popupHtml.includes('Compatibility Alerts') &&
+        !popupHtml.includes('Save Instagram View-Once Media') &&
+        !popupHtml.includes('Re-watch or download one-time photos/videos') &&
+        !popupHtml.includes('View Deleted Messages') &&
+        !popupHtml.includes('Only messages deleted after Ghostify saw them') &&
+        !popupHtml.includes('Clean Facebook Videos') &&
+        !popupHtml.includes('Save Facebook Media') &&
+        !popupHtml.includes('View-Once Media Preview') &&
+        !popupHtml.includes('Clean Video Player</span>') &&
+        !popupHtml.includes('Save Best Available Media</span>') &&
+        !popupHtml.includes('View Once Privacy Lab') &&
+        !popupHtml.includes('Message Memory') &&
+        labsSurveyUrls.every(url => popupHtml.includes(`href="${url}"`)) &&
+        (popupHtml.match(/https:\/\/tally\.so\/r\/D4W0Jq/g) || []).length >= 4 &&
+        !popupHtml.includes('docs.google.com/forms') &&
+        !popupHtml.includes('feature_request.yml&title=Vote%3A') &&
+        !popupHtml.includes('<input type="checkbox" disabled'),
+        'Popup Labs should route quiet Vote rows to the shared Tally survey instead of Google Forms or GitHub issue drafts'
+    );
+    assert(
+        privacyPolicy.includes('GitHub issue forms or Tally forms') &&
+        privacyPolicy.includes('privacy practices of GitHub or Tally') &&
+        !privacyPolicy.includes('Google Forms'),
+        'Privacy policy should disclose Tally as the external feature survey provider'
+    );
+    assert(
+        popupCss.includes('.labs-row') &&
+        popupCss.includes('.labs-row-title') &&
+        popupCss.includes('.vote-pill') &&
+        !popupCss.includes('.labs-row-copy') &&
+        !popupCss.includes('.labs-row-detail') &&
+        !popupCss.includes('.labs-note') &&
+        popupCss.includes('padding: 8px 12px 14px;') &&
+        popupCss.includes('line-height: 1.25;') &&
+        popupCss.includes('min-height: 42px;') &&
+        /\.row-label\s*\{[^}]*font-weight:\s*400;/.test(popupCss) &&
+        /\.labs-row-title\s*\{[^}]*font-weight:\s*400;/.test(popupCss) &&
+        /\.trust-row\s*\{[^}]*font-weight:\s*400;/.test(popupCss) &&
+        !popupCss.includes('0 0 10px var(--ghost-red-glow)') &&
+        popupCss.includes('.trust-row') &&
+        popupJs.includes('attachViewListeners') &&
+        popupJs.includes('open-labs') &&
+        popupJs.includes('close-labs'),
+        'Popup Labs view should stay compact and use local view switching'
+    );
+    assert(
+        popupHtml.includes('class="verification-panel"') &&
+        popupHtml.includes('id="public-status-link"') &&
+        popupHtml.includes('id="public-status-summary"') &&
+        popupHtml.includes('id="public-status-action"') &&
+        popupHtml.includes('>Verification</span>') &&
+        popupHtml.includes('id="local-refresh" hidden') &&
+        popupHtml.includes('id="local-refresh-message"') &&
+        popupHtml.includes('id="status-refresh"') &&
+        !popupHtml.includes('Status Check') &&
+        !popupHtml.includes('id="status-pill"') &&
+        !popupHtml.includes('id="status-message"') &&
+        popupJs.includes('GHOSTIFY_STATUS_CHECK') &&
+        popupJs.includes("document.getElementById('status-refresh')?.addEventListener('click', refreshActiveStatusTab)") &&
+        popupJs.includes('refreshActiveStatusTab') &&
+        popupJs.includes('chrome.tabs.reload') &&
+        popupJs.includes('{ frameId: 0 }') &&
+        popupJs.includes('SUPPORTED_TAB_URL_PATTERNS') &&
+        popupJs.includes('getStatusTargetTab') &&
+        popupJs.includes('url: SUPPORTED_TAB_URL_PATTERNS') &&
+        popupJs.includes('hasRequiredHooks') &&
+        popupJs.includes("target?.platform === 'instagram'") &&
+        popupJs.includes("target?.platform === 'messenger'") &&
+        popupJs.includes("target?.platform === 'facebook'") &&
+        popupJs.includes("state === 'needsRefresh' || state === 'someChecksFailed'") &&
+        !popupJs.includes('dataset.action') &&
+        popupCss.includes('.verification-panel') &&
+        popupCss.includes('.local-refresh[hidden]') &&
+        !popupJs.includes('smoke test') &&
+        !popupJs.includes('Local hooks active.') &&
+        !popupJs.includes('platformMayHaveChanged') &&
+        !popupHtml.includes('Seen is definitely blocked') &&
+        !popupHtml.includes('sender-side') &&
+        !popupHtml.includes('sender-side Seen is verified'),
+        'Popup should keep public Verification as the persistent trust row and show local refresh guidance only when needed'
     );
 
     for (const file of issueTemplateFiles) {
@@ -4102,6 +4205,7 @@ function testPopupSupportLinksUseGuidedIssueForms() {
             form.includes('type: textarea') &&
             form.includes('id: public-thanks') &&
             form.includes('Thank-you credit preview:') &&
+            form.includes('Do not include private messages, credentials, or account-sensitive details') &&
             form.includes('Can we thank you publicly if this helps Ghostify?') &&
             form.includes('Yes means we can credit your GitHub name and avatar in release notes and on the Ghostify website.') &&
             form.includes('- Yes, name and avatar') &&
@@ -4115,14 +4219,145 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Guided issue forms should quote colon-containing placeholder text so GitHub does not reject the YAML'
     );
     assert(
-        directHelpForm.includes('type: upload') &&
+        !directHelpForm.includes('type: upload') &&
         directHelpForm.includes('id: attachments') &&
-        directHelpForm.includes('Screenshots or screen recording') &&
-        directHelpForm.includes('short video') &&
-        bugReportForm.includes('type: upload') &&
-        bugReportForm.includes('id: attachments'),
-        'Guided bug and feedback forms should support screenshot or video uploads'
+        directHelpForm.includes('Screenshots or screen recording links') &&
+        directHelpForm.includes('Do not include private messages, credentials, or account-sensitive details') &&
+        directHelpForm.includes('Remove private messages, credentials, and account-sensitive details first') &&
+        bugReportForm.includes('id: attachments') &&
+        bugReportForm.includes('Screenshots or screen recording links') &&
+        bugReportForm.includes('Do not include private messages, credentials, or account-sensitive details') &&
+        !bugReportForm.includes('type: upload'),
+        'Guided bug and feedback forms should explain how to attach safe screenshots or videos without using unsupported issue-form upload fields'
     );
+    assert(
+        directHelpForm.includes('type: textarea') &&
+        directHelpForm.includes('id: attachments') &&
+        directHelpForm.includes('short video') &&
+        bugReportForm.includes('id: attachments'),
+        'Guided bug and feedback forms should keep a screenshot/video attachment field'
+    );
+}
+
+function testPopupStatusDecisionRequiresPlatformHooks() {
+    const popupSource = fs.readFileSync('dist/js/popup.js', 'utf8');
+    const context = {
+        console,
+        URL,
+        setTimeout,
+        clearTimeout,
+        window: null,
+        chrome: {
+            runtime: {
+                getManifest: () => ({ version: pkg.version }),
+                lastError: null
+            },
+            storage: {
+                local: {
+                    get() { },
+                    set() { }
+                }
+            },
+            tabs: {}
+        },
+        document: {
+            addEventListener() { },
+            querySelectorAll() { return []; },
+            getElementById() { return null; }
+        }
+    };
+    context.window = context;
+    vm.runInNewContext(popupSource, context, { filename: 'popup.js' });
+
+    const coreHooks = {
+        ghost: true,
+        fetch: true,
+        xhr: true,
+        websocket: true,
+        visibility: true
+    };
+
+    assert.strictEqual(
+        context.hasRequiredHooks({ hooks: { ...coreHooks, instagram: true } }, { platform: 'instagram' }),
+        true,
+        'Instagram popup status should pass only when the Instagram platform hook is loaded'
+    );
+    assert.strictEqual(
+        context.hasRequiredHooks({ hooks: { ...coreHooks } }, { platform: 'instagram' }),
+        false,
+        'Instagram popup status must not pass on core hooks alone'
+    );
+    assert.strictEqual(
+        context.hasRequiredHooks({ hooks: { ...coreHooks, messenger: true } }, { platform: 'messenger' }),
+        true,
+        'Messenger popup status should require the Messenger platform hook'
+    );
+    assert.strictEqual(
+        context.hasRequiredHooks({ hooks: { ...coreHooks, facebook: true } }, { platform: 'facebook' }),
+        true,
+        'Facebook popup status should require the Facebook platform hook'
+    );
+    assert.strictEqual(
+        context.hasRequiredHooks({ hooks: { ...coreHooks, facebook: true } }, { platform: 'messenger' }),
+        false,
+        'Messenger popup status must not pass because only Facebook hook loaded'
+    );
+    assert.strictEqual(
+        context.hasRequiredHooks({ hooks: { ...coreHooks, instagram: true } }, { platform: 'unknown' }),
+        false,
+        'Unknown platform status must not pass'
+    );
+    assert.strictEqual(
+        context.getPlatformKey('https://www.fbsbx.com/maw_proxy_page?x=1'),
+        'messenger',
+        'MAW proxy frame status should be treated as Messenger readiness'
+    );
+}
+
+function testReleaseDocsIncludeMessengerFacebookStorySmokeIds() {
+    const qaFixtures = fs.readFileSync('docs/QA_FIXTURES.md', 'utf8');
+    const releaseChecklist = fs.readFileSync('RELEASE_CHECKLIST.md', 'utf8');
+
+    for (const smokeId of ['GH-MSG-STORY-001', 'GH-FB-STORY-001']) {
+        assert(
+            qaFixtures.includes(smokeId) && releaseChecklist.includes(smokeId),
+            `${smokeId} should be part of release smoke coverage when public copy claims Messenger/Facebook story-view support`
+        );
+    }
+}
+
+function testGhostStatusCheckReportsLocalHookReadiness() {
+    const instagramWindow = makeGhostPage({
+        hostname: 'www.instagram.com',
+        pathname: '/direct/inbox/',
+        href: 'https://www.instagram.com/direct/inbox/'
+    });
+    let response;
+
+    instagramWindow.addEventListener('message', (event) => {
+        if (event.data?.type === 'GHOSTIFY_STATUS_RESPONSE') {
+            response = event.data;
+        }
+    });
+
+    instagramWindow.postMessage({
+        type: 'GHOSTIFY_STATUS_REQUEST',
+        source: 'GHOSTIFY_EXTENSION',
+        requestId: 'test-status'
+    });
+
+    assert.strictEqual(response?.requestId, 'test-status', 'Ghostify should echo the popup status request id');
+    assert.strictEqual(response.status.loaded, true, 'Ghostify status should report that main-world hooks loaded');
+    assert.strictEqual(response.status.settingsReady, true, 'Ghostify status should report that settings reached the page');
+    assert.strictEqual(response.status.hooks.ghost, true, 'Ghostify status should include the main ghost hook');
+    assert.strictEqual(response.status.hooks.fetch, true, 'Ghostify status should include the fetch hook');
+    assert.strictEqual(response.status.hooks.xhr, true, 'Ghostify status should include the XHR hook');
+    assert.strictEqual(response.status.hooks.websocket, true, 'Ghostify status should include the WebSocket hook');
+    assert.strictEqual(response.status.hooks.visibility, true, 'Ghostify status should include the visibility hook');
+    assert.strictEqual(response.status.hooks.instagram, true, 'Ghostify status should include the active platform hook');
+    assert.strictEqual(response.status.hooks.facebook, false, 'Ghostify status should not claim inactive platform hooks are ready');
+    assert.strictEqual(response.status.hooks.messenger, false, 'Ghostify status should not claim inactive platform hooks are ready');
+    assert.strictEqual(response.status.href, undefined, 'Ghostify status should not expose page URLs to the popup');
 }
 
 async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
@@ -4276,6 +4511,9 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestText();
     testPopupMessengerSeenNoteExplainsLocalFacebookReadUi();
     testPopupSupportLinksUseGuidedIssueForms();
+    testPopupStatusDecisionRequiresPlatformHooks();
+    testReleaseDocsIncludeMessengerFacebookStorySmokeIds();
+    testGhostStatusCheckReportsLocalHookReadiness();
     await testMessageRequestClickGraceKeepsTransportAndBridgeNative();
     console.log('messenger send-stability regression tests passed');
 })().catch(error => {

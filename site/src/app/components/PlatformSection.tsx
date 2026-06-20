@@ -124,8 +124,8 @@ const ROWS = [
   {
     name: 'Messenger',
     color: '#0082FB',
-    read: true, typing: true, story: false,
-    notes: 'Works on messenger.com',
+    read: true, typing: true, story: true,
+    notes: 'Messenger web + shared Facebook story control',
     Fragment: MessengerFragment,
   },
   {
@@ -226,6 +226,36 @@ export function PlatformSection() {
               </motion.div>
             ))}
 
+            <a
+              className="public-status-link"
+              href="/status"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr) auto',
+                alignItems: 'center',
+                gap: 14,
+                marginTop: 18,
+                padding: '12px 14px',
+                border: '1px solid rgba(240,230,210,0.08)',
+                borderRadius: 8,
+                background: 'rgba(240,230,210,0.025)',
+                color: 'inherit',
+                textDecoration: 'none',
+              }}
+            >
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'rgba(240,230,210,0.34)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+                  Latest public verification
+                </span>
+                <span style={{ display: 'block', fontFamily: 'var(--g-sans)', fontSize: 13.5, color: 'rgba(240,230,210,0.72)', lineHeight: 1.45 }}>
+                  v2.0.4 checks are under review and downgrade visibly when evidence expires.
+                </span>
+              </span>
+              <span style={{ fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'var(--g-body)', letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                Status
+              </span>
+            </a>
+
             {/* Footer note */}
             <p style={{ fontFamily: 'var(--g-mono)', fontSize: 10.5, color: 'rgba(240,230,210,0.24)', margin: '18px 0 0', letterSpacing: '0.02em', lineHeight: 1.7 }}>
               Controls are applied locally per browser tab.<br />
@@ -278,6 +308,10 @@ export function PlatformSection() {
           }
           .platform-notes-cell {
             overflow-wrap: anywhere !important;
+          }
+          .public-status-link {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
           }
         }
         @media (max-width: 560px) {

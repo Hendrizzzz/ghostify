@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "product": "Ghostify",
+  "productVersion": "2.0.4",
+  "generatedAt": "2026-06-20T00:00:00Z",
+  "statusUrl": "https://ghostify-extension.vercel.app/status",
+  "historyUrl": "https://ghostify-extension.vercel.app/status/history",
+  "summary": {
+    "publicStatus": "under_review",
+    "label": "Under review",
+    "message": "v2.0.4 public verification is open and will be updated after reviewed release smoke evidence."
+  },
+  "policy": {
+    "verificationCadence": "Reviewed after each release and after credible platform-change reports.",
+    "verifiedStatusExpiresAfterDays": 14,
+    "staleBehavior": "Verified live-platform statuses downgrade after expiresAt instead of staying green."
+  },
+  "automationPolicy": {
+    "canFlagReports": true,
+    "canSummarizeReports": true,
+    "canDowngradeStatus": true,
+    "canMarkVerified": false
+  },
+  "communityVerification": {
+    "requiresMaintainerReview": true,
+    "publicCreditRequiresOptIn": true,
+    "screenshotsMustBeRedacted": true,
+    "privateMessagesAllowed": false,
+    "rawSubmissionsShownInPopup": false
+  },
+  "entries": [
+    {
+      "id": "instagram-hide-seen",
+      "platform": "Instagram",
+      "feature": "Hide Seen",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "sender_side_no_signal",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-IG-SEEN-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires sender-side proof before a green public claim."
+    },
+    {
+      "id": "instagram-hide-typing",
+      "platform": "Instagram",
+      "feature": "Hide Typing",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "sender_side_no_signal",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-IG-TYPING-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires live account verification before a green public claim."
+    },
+    {
+      "id": "instagram-hide-story-views",
+      "platform": "Instagram",
+      "feature": "Hide Story Views",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "story_owner_no_view",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-IG-STORY-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires story-owner proof before a green public claim."
+    },
+    {
+      "id": "messenger-hide-seen",
+      "platform": "Messenger",
+      "feature": "Hide Seen",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "sender_side_no_signal",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-MSG-SEEN-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires sender-side proof and normal message-send smoke."
+    },
+    {
+      "id": "messenger-hide-typing",
+      "platform": "Messenger",
+      "feature": "Hide Typing",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "sender_side_no_signal",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-MSG-TYPING-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires live account verification before a green public claim."
+    },
+    {
+      "id": "messenger-hide-story-views",
+      "platform": "Messenger",
+      "feature": "Hide Story Views",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "story_owner_no_view",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-MSG-STORY-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Shared Facebook/Messenger story surfaces need live smoke coverage."
+    },
+    {
+      "id": "facebook-hide-seen",
+      "platform": "Facebook",
+      "feature": "Hide Seen",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "sender_side_no_signal",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-FB-SEEN-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Facebook local read-looking UI is not treated as sender-side proof."
+    },
+    {
+      "id": "facebook-hide-typing",
+      "platform": "Facebook",
+      "feature": "Hide Typing",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "sender_side_no_signal",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-FB-TYPING-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires live Facebook/Messenger surface verification."
+    },
+    {
+      "id": "facebook-hide-story-views",
+      "platform": "Facebook",
+      "feature": "Hide Story Views",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
+      "publicEvidenceType": "story_owner_no_view",
+      "sourceType": "maintainer",
+      "reviewer": "Maintainer review pending",
+      "reviewRecord": "GH-FB-STORY-001 manual smoke pending for v2.0.4",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "relatedIssueUrl": null,
+      "notes": "Requires story-owner proof and media playback smoke."
+    }
+  ],
+  "history": [
+    {
+      "date": "2026-06-20",
+      "publicStatus": "under_review",
+      "title": "v2.0.4 public verification opened",
+      "summary": "v2.0.4 adds public status pages, a popup status link, stale-status behavior, and reviewed community verification guardrails."
+    },
+    {
+      "date": "2026-06-15",
+      "publicStatus": "not_recently_verified",
+      "title": "v2.0.4 release candidate held for status work",
+      "summary": "The first v2.0.4 package candidate covered the popup foundation, then was held back so Public Verification Status could ship in the same release."
+    }
+  ]
+}

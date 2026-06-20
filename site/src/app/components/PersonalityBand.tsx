@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 const LINES = [
   { label: 'Signal control', text: 'Seen signals stay quiet.'           },
   { label: 'Architecture',   text: 'Local-only. No Ghostify relay.'     },
-  { label: 'Footprint',      text: 'Local controls. Zero Ghostify servers.' },
+  { label: 'Footprint',      text: 'No tracking or message relay.' },
   { label: 'Trust model',    text: 'Open source. Read it yourself.'     },
 ];
 

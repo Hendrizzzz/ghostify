@@ -7,6 +7,7 @@ body:
     attributes:
       value: |
         Thanks for the idea. Specific requests are easier to discuss, design, and ship.
+        Do not include private messages, credentials, or account-sensitive details.
   - type: dropdown
     id: platform
     attributes:

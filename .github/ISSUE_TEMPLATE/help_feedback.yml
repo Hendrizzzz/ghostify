@@ -7,6 +7,7 @@ body:
     attributes:
       value: |
         Thanks for helping improve Ghostify. This guided form keeps the details clear without making you start from scratch.
+        Do not include private messages, credentials, or account-sensitive details in reports, screenshots, or recordings.
   - type: dropdown
     id: request-type
     attributes:
@@ -66,11 +67,11 @@ body:
         3. Click ...
     validations:
       required: false
-  - type: upload
+  - type: textarea
     id: attachments
     attributes:
-      label: Screenshots or screen recording
-      description: Optional. Add screenshots or a short video if it helps show the issue.
+      label: Screenshots or screen recording links
+      description: Optional. Drag screenshots or a short video into the GitHub comment box after creating the issue, or paste a safe link here. Remove private messages, credentials, and account-sensitive details first.
     validations:
       required: false
   - type: markdown

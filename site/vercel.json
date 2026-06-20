@@ -1,0 +1,31 @@
+{
+  "headers": [
+    {
+      "source": "/status.json",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, HEAD"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, stale-while-revalidate=3600"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/status/history",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/status",
+      "destination": "/index.html"
+    }
+  ]
+}

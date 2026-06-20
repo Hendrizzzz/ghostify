@@ -12,10 +12,14 @@ import { LimitsSection } from './components/LimitsSection';
 import { FAQSection } from './components/FAQSection';
 import { FinalCTA } from './components/FinalCTA';
 import { Footer } from './components/Footer';
+import { StatusPage } from './components/StatusPage';
 
 const NAV_ANCHOR_OFFSET = 0;
 
 export default function App() {
+  const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+  const statusView = pathname === '/status/history' ? 'history' : pathname === '/status' ? 'current' : null;
+
   useEffect(() => {
     const scrollToHash = (nextHash = window.location.hash) => {
       const hash = nextHash;
@@ -92,18 +96,24 @@ export default function App() {
       <Header />
 
       {/* Page sections */}
-      <main>
-        <HeroSection />
-        <DemoSection />
-        <FeaturesSection />
-        <PlatformSection />
-        <PersonalityBand />
-        <PrivacySection />
-        <LightweightSection />
-        <LimitsSection />
-        <FAQSection />
-        <FinalCTA />
-      </main>
+      {statusView ? (
+        <main>
+          <StatusPage view={statusView} />
+        </main>
+      ) : (
+        <main>
+          <HeroSection />
+          <DemoSection />
+          <FeaturesSection />
+          <PlatformSection />
+          <PersonalityBand />
+          <PrivacySection />
+          <LightweightSection />
+          <LimitsSection />
+          <FAQSection />
+          <FinalCTA />
+        </main>
+      )}
 
       <Footer />
 

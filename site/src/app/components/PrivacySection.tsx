@@ -11,8 +11,8 @@ const PILLARS = [
   {
     index: '02',
     icon: Server,
-    title: 'No Ghostify server',
-    body: 'Your settings live in your browser. Nothing passes through our infrastructure — because there isn\'t any.',
+    title: 'No tracking relay',
+    body: 'No Ghostify server receives your messages, tab URLs, settings, or social activity. The public status feed is display-only.',
   },
   {
     index: '03',
@@ -64,7 +64,7 @@ export function PrivacySection() {
               <em style={{ fontStyle: 'italic', fontWeight: 400 }}>the right places.</em>
             </h2>
             <p style={{ fontFamily: 'var(--g-mono)', fontSize: 12, lineHeight: 1.6, color: 'var(--g-dim)', maxWidth: 300, margin: 0, letterSpacing: '0.02em' }}>
-              No login. No profile. No Ghostify cloud relay.
+              No login. No profile. No Ghostify tracking relay.
               <br />
               Your switches live in your browser.
             </p>

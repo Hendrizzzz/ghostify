@@ -5,7 +5,7 @@ import { Plus, Minus } from 'lucide-react';
 const FAQS = [
   {
     q: 'Does Ghostify read my messages?',
-    a: "Ghostify inspects supported request and message metadata locally in your browser to identify read receipts, typing indicators, and story-view signals. It does not send your conversations to Ghostify, store raw messages, or ask for login credentials.",
+    a: "Ghostify transiently inspects supported request URLs, request payloads, and page or worker messages locally in your browser to identify read receipts, typing indicators, and story-view signals. It does not send your conversations to Ghostify, store raw messages, or ask for login credentials.",
   },
   {
     q: 'Does it work on mobile apps?',
@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: 'Can platforms break Ghostify\'s controls?',
-    a: "Yes. Meta updates their interfaces regularly and sometimes changes how presence signals are sent. When a platform update breaks a control, we investigate and push a fix — but there's no guarantee of instant coverage. Check the GitHub repo for known issues.",
+    a: "Yes. Meta updates their interfaces regularly and sometimes changes how presence signals are sent. When a platform update breaks a control, we investigate and push a fix, but there is no guarantee of instant coverage. Check the Status page for current public verification and the GitHub repo for known issues.",
   },
   {
     q: 'Does it store my activity?',

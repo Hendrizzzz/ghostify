@@ -65,6 +65,11 @@ function smoothScrollTo(targetTop: number, nextUrl: string) {
 }
 
 function scrollToSection(href: string) {
+  if (window.location.pathname !== '/') {
+    window.location.href = `/${href}`;
+    return;
+  }
+
   const target = document.querySelector<HTMLElement>(href);
   if (!target) {
     return;
@@ -108,7 +113,13 @@ export function Header() {
         {/* Logo + wordmark */}
         <button
           type="button"
-          onClick={() => smoothScrollTo(0, '/')}
+          onClick={() => {
+            if (window.location.pathname !== '/') {
+              window.location.href = '/';
+              return;
+            }
+            smoothScrollTo(0, '/');
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
