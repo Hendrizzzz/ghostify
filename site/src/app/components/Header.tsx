@@ -99,15 +99,20 @@ export function Header() {
       <div
         className="site-nav-frame"
         style={{
-          maxWidth: 1280,
-          margin: '0 auto',
-          padding: '0 28px',
-          height: 60,
+          maxWidth: 1120,
+          margin: '14px auto 0',
+          padding: '0 18px',
+          height: 58,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           position: 'relative',
           isolation: 'isolate',
+          background: 'rgba(247, 244, 232, 0.92)',
+          border: '1px solid rgba(20, 18, 14, 0.14)',
+          borderRadius: 10,
+          boxShadow: '0 14px 42px rgba(21, 17, 11, 0.12), 0 1px 0 rgba(255,255,255,0.56) inset',
+          backdropFilter: 'blur(14px)',
         }}
       >
         {/* Logo + wordmark */}
@@ -131,16 +136,29 @@ export function Header() {
             textDecoration: 'none',
             position: 'relative',
             zIndex: 1,
-            textShadow: '0 1px 14px rgba(0,0,0,0.55)',
+            textShadow: 'none',
           }}
         >
-          <GhostMark size={22} />
+          <span
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 7,
+              background: '#17130F',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 1px 0 rgba(255,255,255,0.1) inset',
+            }}
+          >
+            <GhostMark size={17} />
+          </span>
           <span
             style={{
               fontFamily: 'var(--g-display)',
               fontSize: 18,
               fontWeight: 500,
-              color: 'var(--g-white)',
+              color: '#17130F',
               letterSpacing: '0.01em',
               lineHeight: 1,
             }}
@@ -172,7 +190,7 @@ export function Header() {
                 fontFamily: 'var(--g-sans)',
                 fontSize: 13.5,
                 fontWeight: 400,
-                color: 'rgba(240, 235, 224, 0.52)',
+                color: 'rgba(23, 19, 15, 0.62)',
                 padding: 0,
                 border: 0,
                 background: 'transparent',
@@ -182,10 +200,10 @@ export function Header() {
                 transition: 'color 0.18s ease',
               }}
               onMouseEnter={(e) => {
-                (e.target as HTMLElement).style.color = 'rgba(240, 235, 224, 0.9)';
+                (e.currentTarget as HTMLElement).style.color = 'rgba(23, 19, 15, 0.94)';
               }}
               onMouseLeave={(e) => {
-                (e.target as HTMLElement).style.color = 'rgba(240, 235, 224, 0.52)';
+                (e.currentTarget as HTMLElement).style.color = 'rgba(23, 19, 15, 0.62)';
               }}
             >
               {item.label}
@@ -203,16 +221,16 @@ export function Header() {
               fontFamily: 'var(--g-sans)',
               fontSize: 13.5,
               fontWeight: 400,
-              color: 'rgba(240, 235, 224, 0.52)',
+              color: 'rgba(23, 19, 15, 0.62)',
               textDecoration: 'none',
               letterSpacing: '0.01em',
               transition: 'color 0.18s ease',
             }}
             onMouseEnter={(e) => {
-              (e.target as HTMLElement).style.color = 'rgba(240, 235, 224, 0.9)';
+              (e.currentTarget as HTMLElement).style.color = 'rgba(23, 19, 15, 0.94)';
             }}
             onMouseLeave={(e) => {
-              (e.target as HTMLElement).style.color = 'rgba(240, 235, 224, 0.52)';
+              (e.currentTarget as HTMLElement).style.color = 'rgba(23, 19, 15, 0.62)';
             }}
           >
             <Github size={14} strokeWidth={1.5} />
@@ -222,17 +240,7 @@ export function Header() {
       </div>
       <style>{`
         .site-header-shade {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 56px;
-          background:
-            linear-gradient(180deg, rgba(8, 8, 7, 0.56) 0%, rgba(8, 8, 7, 0.42) 64%, rgba(8, 8, 7, 0.1) 100%);
-          box-shadow:
-            0 4px 12px rgba(0, 0, 0, 0.1);
-          pointer-events: none;
-          z-index: 0;
+          display: none;
         }
         .site-nav-frame > button,
         .site-nav button,
@@ -242,14 +250,10 @@ export function Header() {
           align-items: center;
         }
         @media (max-width: 640px) {
-          .site-header-shade {
-            top: 0;
-            height: 56px;
-            background:
-              linear-gradient(180deg, rgba(8, 8, 7, 0.6) 0%, rgba(8, 8, 7, 0.44) 66%, rgba(8, 8, 7, 0.08) 100%);
-          }
           .site-nav-frame {
-            padding: 0 18px !important;
+            margin: 10px 10px 0 !important;
+            padding: 0 14px !important;
+            height: 54px !important;
           }
           .site-nav {
             gap: 10px !important;

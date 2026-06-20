@@ -44,6 +44,7 @@ export function GhostMascot() {
   const [typingMotion, setTypingMotion] = useState<'idle' | 'burst' | 'active' | 'settling'>('idle');
   const [bubbleBelow, setBubbleBelow] = useState(false);
   const [mounted, setMounted]         = useState(false);
+  const [heroQuiet, setHeroQuiet]     = useState(false);
 
   const pos           = useRef({ x: 200, y: 200 });
   const visualPos     = useRef({ x: -200, y: -200 });
@@ -369,6 +370,20 @@ export function GhostMascot() {
     return () => clearInterval(idleTimer.current);
   }, [heroIsVisible, showMessage]);
 
+  useEffect(() => {
+    const updateHeroQuiet = () => {
+      setHeroQuiet(heroIsVisible() && !message && !isDragging.current && !isHoldingCenter.current);
+    };
+
+    updateHeroQuiet();
+    window.addEventListener('scroll', updateHeroQuiet, { passive: true });
+    window.addEventListener('resize', updateHeroQuiet);
+    return () => {
+      window.removeEventListener('scroll', updateHeroQuiet);
+      window.removeEventListener('resize', updateHeroQuiet);
+    };
+  }, [heroIsVisible, message]);
+
   // React to hero browser events
   useEffect(() => {
     const handler = (e: Event) => {
@@ -582,6 +597,9 @@ export function GhostMascot() {
           justifyContent: 'center',
           backfaceVisibility: 'hidden',
           contain: 'layout paint style',
+          opacity: heroQuiet ? 0 : 1,
+          pointerEvents: heroQuiet ? 'none' : 'auto',
+          transition: 'opacity 220ms ease',
         }}
       >
         <div style={{ animation: mascotAnimation, willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
