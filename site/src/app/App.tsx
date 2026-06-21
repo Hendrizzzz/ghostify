@@ -138,7 +138,11 @@ export default function App() {
       <Footer />
 
       <style>{`
+        html {
+          scroll-padding-top: 76px;
+        }
         @media (max-width: 640px) {
+          html { scroll-padding-top: 68px; }
           body { overflow-x: hidden; }
         }
         .mascot-stage {
@@ -148,12 +152,6 @@ export default function App() {
         .mascot-stage[data-hero-hidden="true"] {
           opacity: 0;
           pointer-events: none;
-        }
-        @media (min-width: 821px) {
-          .mascot-stage[data-hero-hidden="true"] {
-            opacity: 1;
-            pointer-events: auto;
-          }
         }
         *:focus-visible {
           outline: 2px solid rgba(196,72,48,0.6);

@@ -301,16 +301,19 @@ export function FeaturesSection() {
   const FT = { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
 
   return (
-    <section id="features" className="snap-start" style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <section id="features" className="snap-start features-section" style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', background: '#0B0A08', marginTop: -1, scrollMarginTop: 76 }}>
       {/* Section heading */}
-      <div style={{ padding: 'clamp(48px, 6vw, 72px) clamp(28px, 4vw, 56px) clamp(20px, 3vw, 32px)' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.7, margin: '0px 0px -18% 0px' }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        style={{ padding: 'clamp(16px, 2.4vw, 28px) clamp(28px, 4vw, 56px) clamp(20px, 3vw, 32px)' }}
+      >
         <h2 style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(1.4rem, 2.2vw, 1.9rem)', fontWeight: 500, color: 'var(--g-white)', margin: 0, lineHeight: 1.2, letterSpacing: 0 }}>
           Quiet controls for noisy apps.
         </h2>
-      </div>
-
-      {/* Full-width hairline before the grid */}
-      <div style={{ height: 1, background: 'rgba(240,230,210,0.06)' }} />
+      </motion.div>
 
       {/* Asymmetric 4-up grid — full viewport width, no maxWidth cage */}
       <div className="feat-outer" style={{ display: 'grid', gridTemplateColumns: '42% 58%', flex: 1 }}>
@@ -398,6 +401,21 @@ export function FeaturesSection() {
       </div>
 
       <style>{`
+        .features-section::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: -72px;
+          height: 96px;
+          z-index: 0;
+          pointer-events: none;
+          background: linear-gradient(180deg, rgba(11,10,8,0) 0%, rgba(11,10,8,0.86) 58%, #0B0A08 100%);
+        }
+        .features-section > * {
+          position: relative;
+          z-index: 1;
+        }
         @media (max-width: 900px) {
           .feat-outer { grid-template-columns: 1fr !important; }
           .feat-f1 { border-right: none !important; border-bottom: ${H} !important; }
@@ -406,7 +424,7 @@ export function FeaturesSection() {
         }
         @media (max-height: 820px) and (min-width: 901px) {
           #features > div:first-child {
-            padding-top: 84px !important;
+            padding-top: 30px !important;
             padding-bottom: 14px !important;
           }
           .feat-cell { padding: 18px 32px !important; gap: 18px !important; }
@@ -431,7 +449,7 @@ export function FeaturesSection() {
         }
         @media (max-width: 480px) {
           #features > div:first-child {
-            padding-top: 76px !important;
+            padding-top: 44px !important;
           }
           .feat-cell { padding: 28px 22px !important; }
         }

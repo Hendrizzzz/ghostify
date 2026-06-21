@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Chrome, Github, Globe } from 'lucide-react';
-import { GhostMark } from './GhostSVG';
+import { Activity, Chrome, Github, Globe } from 'lucide-react';
+import { GhostMark, GhostSVG } from './GhostSVG';
 
 type HeroPlatform = 'messenger' | 'facebook' | 'instagram';
 type HeroProofKind = 'messenger' | 'instagram' | 'facebook' | 'local' | 'source';
@@ -951,172 +951,201 @@ function HeroBrowserScene() {
 }
 
 /* ── Hero section ─────────────────────────────────────── */
-const privacyPixelClassNames = Array.from({ length: 14 }, (_, index) => `hpv-pixel hpv-pixel-${index + 1}`);
-const heroSignalWords = ['seen', 'typing', 'story-view'] as const;
-type HeroSignalWord = (typeof heroSignalWords)[number];
+const heroSignalRows = [
+  { word: 'seen', output: 'seen-receipt blocked' },
+  { word: 'typing', output: 'typing' },
+  { word: 'story-view', output: 'story-view blocked' },
+] as const;
+type HeroSignalWord = (typeof heroSignalRows)[number]['word'];
+type HeroSignalOutput = (typeof heroSignalRows)[number]['output'];
+type SignalDirection = 'input' | 'output';
 
-function HeroSignalText({ routeId, word, begin }: { routeId: string; word: HeroSignalWord; begin: number }) {
-  const duration = 6.2;
-  const beginAt = `${begin.toFixed(2)}s`;
-  const className = `hpv-signal-stage hpv-word-${word.replace(/[^a-z0-9]/g, '-')}`;
+const routeKeys: Record<HeroSignalWord, string> = {
+  seen: 'seen',
+  typing: 'typing',
+  'story-view': 'story',
+};
+
+const signalMotionConfig = {
+  seen: { inputCount: 9, outputCount: 4, inputDuration: 18, outputDuration: 20, phase: 0 },
+  typing: { inputCount: 10, outputCount: 10, inputDuration: 16, outputDuration: 16, phase: 0.35 },
+  'story-view': { inputCount: 7, outputCount: 4, inputDuration: 19, outputDuration: 20, phase: 0.7 },
+} satisfies Record<HeroSignalWord, {
+  inputCount: number;
+  outputCount: number;
+  inputDuration: number;
+  outputDuration: number;
+  phase: number;
+}>;
+
+function TypingLetters({ crossed = false }: { crossed?: boolean }) {
+  return (
+    <>
+      {'typing'.split('').map((letter, letterIndex) => (
+        <tspan
+          className={crossed ? 'hpv-type-crossed' : undefined}
+          key={`${letter}-${letterIndex}`}
+        >
+          {!crossed && (
+            <animate
+              attributeName="baseline-shift"
+              values="0;0.08em;0;0"
+              dur="1.24s"
+              begin={`${(letterIndex * 0.08).toFixed(2)}s`}
+              repeatCount="indefinite"
+            />
+          )}
+          {letter}
+        </tspan>
+      ))}
+    </>
+  );
+}
+
+function MotionSignalToken({
+  row,
+  direction,
+  index,
+}: {
+  row: (typeof heroSignalRows)[number];
+  direction: SignalDirection;
+  index: number;
+}) {
+  const routeKey = routeKeys[row.word];
+  const routeId = direction === 'input' ? `hpv-route-${routeKey}` : `hpv-out-${routeKey}`;
+  const label = direction === 'input' ? row.word : row.output;
+  const config = signalMotionConfig[row.word];
+  const count = direction === 'input' ? config.inputCount : config.outputCount;
+  const duration = direction === 'input' ? config.inputDuration : config.outputDuration;
+  const begin = -((duration / count) * index + config.phase);
+  const className = [
+    'hpv-path-text',
+    `hpv-${direction}-text`,
+    `hpv-${direction}-${row.word.replace(/[^a-z0-9]/g, '-')}`,
+  ].join(' ');
 
   return (
-    <text className={className} opacity="0.92">
-      <animate
-        attributeName="opacity"
-        values="0.92;0.92;0.18"
-        keyTimes="0;0.96;1"
+    <text className={className} textAnchor="middle">
+      <animateMotion
         dur={`${duration}s`}
-        begin={beginAt}
+        begin={`${begin.toFixed(2)}s`}
         repeatCount="indefinite"
-      />
-      <textPath href={`#${routeId}`} startOffset="0%" method="align" spacing="auto">
-        <animate
-          attributeName="startOffset"
-          values="0%;99%"
-          dur={`${duration}s`}
-          begin={beginAt}
-          repeatCount="indefinite"
-        />
-        {word}
-      </textPath>
+        rotate="auto"
+      >
+        <mpath href={`#${routeId}`} />
+      </animateMotion>
+      {row.word === 'typing' ? (
+        <TypingLetters crossed={direction === 'output'} />
+      ) : (
+        label
+      )}
     </text>
   );
 }
 
-function PrivacySignalConsole() {
-  const signalRoutes = [
-    { id: 'hpv-route-messenger', begin: -0.45 },
-    { id: 'hpv-route-instagram', begin: -1.15 },
-    { id: 'hpv-route-facebook', begin: -1.85 },
-  ];
+function MotionSignalStream({ row, direction }: { row: (typeof heroSignalRows)[number]; direction: SignalDirection }) {
+  const config = signalMotionConfig[row.word];
+  const count = direction === 'input' ? config.inputCount : config.outputCount;
 
   return (
+    <>
+      {Array.from({ length: count }).map((_, index) => (
+        <MotionSignalToken
+          key={`${direction}-${row.word}-${index}`}
+          row={row}
+          direction={direction}
+          index={index}
+        />
+      ))}
+    </>
+  );
+}
+
+function PrivacySignalConsole() {
+  return (
     <div className="hpv-scene">
-      <div className="hpv-grid" />
-      <div className="hpv-pane hpv-pane-left" />
-      <div className="hpv-pane hpv-pane-center" />
-      <div className="hpv-pane hpv-pane-right" />
-
-      <svg className="hpv-routes" viewBox="0 0 760 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg className="hpv-routes" viewBox="0 0 1600 360" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="hpvMessengerFade" x1="96" y1="176" x2="536" y2="318" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#4AA3FF" stopOpacity="0.1" />
-            <stop offset="0.6" stopColor="#4AA3FF" stopOpacity="0.36" />
-            <stop offset="1" stopColor="#D8A16F" stopOpacity="0.72" />
+          <linearGradient id="hpvLineSeen" x1="-220" y1="92" x2="820" y2="180" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#F0EBE0" stopOpacity="0" />
+            <stop offset="0.12" stopColor="#F0EBE0" stopOpacity="0.2" />
+            <stop offset="0.76" stopColor="#F0EBE0" stopOpacity="0.46" />
+            <stop offset="1" stopColor="#F0EBE0" stopOpacity="0" />
           </linearGradient>
-          <linearGradient id="hpvInstagramFade" x1="96" y1="318" x2="536" y2="318" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#B84CE5" stopOpacity="0.1" />
-            <stop offset="0.42" stopColor="#F06A78" stopOpacity="0.34" />
-            <stop offset="0.75" stopColor="#F6B45E" stopOpacity="0.42" />
-            <stop offset="1" stopColor="#D8A16F" stopOpacity="0.72" />
+          <linearGradient id="hpvLineTyping" x1="-220" y1="180" x2="820" y2="180" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#D8A16F" stopOpacity="0" />
+            <stop offset="0.12" stopColor="#D8A16F" stopOpacity="0.25" />
+            <stop offset="0.76" stopColor="#D8A16F" stopOpacity="0.52" />
+            <stop offset="1" stopColor="#F0EBE0" stopOpacity="0" />
           </linearGradient>
-          <linearGradient id="hpvFacebookFade" x1="96" y1="462" x2="536" y2="318" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#1877F2" stopOpacity="0.1" />
-            <stop offset="0.62" stopColor="#1877F2" stopOpacity="0.34" />
-            <stop offset="1" stopColor="#D8A16F" stopOpacity="0.72" />
+          <linearGradient id="hpvLineStory" x1="-220" y1="270" x2="820" y2="190" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#C46A4A" stopOpacity="0" />
+            <stop offset="0.12" stopColor="#C46A4A" stopOpacity="0.22" />
+            <stop offset="0.74" stopColor="#C46A4A" stopOpacity="0.48" />
+            <stop offset="1" stopColor="#F0EBE0" stopOpacity="0" />
           </linearGradient>
-          <linearGradient id="hpvLaneFade" x1="72" y1="120" x2="384" y2="120" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F0EBE0" stopOpacity="0.04" />
-            <stop offset="0.45" stopColor="#D8A16F" stopOpacity="0.34" />
-            <stop offset="1" stopColor="#D8A16F" stopOpacity="0.7" />
+          <linearGradient id="hpvFlowFade" x1="-220" y1="0" x2="900" y2="0" gradientUnits="userSpaceOnUse">
+            <stop stopColor="black" stopOpacity="0" />
+            <stop offset="0.08" stopColor="white" stopOpacity="1" />
+            <stop offset="0.9" stopColor="white" stopOpacity="1" />
+            <stop offset="1" stopColor="black" stopOpacity="0" />
           </linearGradient>
-          <linearGradient id="hpvInstagramNode" x1="59" y1="337" x2="99" y2="297" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#FEDA75" />
-            <stop offset="0.34" stopColor="#FA7E1E" />
-            <stop offset="0.64" stopColor="#D62976" />
-            <stop offset="1" stopColor="#4F5BD5" />
-          </linearGradient>
-          <clipPath id="hpvSignalBlockClip">
-            <rect x="-24" y="-24" width="528" height="668" rx="0" />
-          </clipPath>
+          <radialGradient id="hpvCoreHalo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(790 160) rotate(90) scale(124)">
+            <stop stopColor="#F0EBE0" stopOpacity="0.06" />
+            <stop offset="0.4" stopColor="#D8A16F" stopOpacity="0.045" />
+            <stop offset="1" stopColor="#0B0A08" stopOpacity="0" />
+          </radialGradient>
+          <mask id="hpvFlowMask" maskUnits="userSpaceOnUse" x="-240" y="0" width="1160" height="360">
+            <rect x="-240" y="0" width="1160" height="360" fill="url(#hpvFlowFade)" />
+          </mask>
         </defs>
-        <g className="hpv-server-target">
-          <path className="hpv-server-link" d="M562 318C580 318 588 318 602 318" />
-          <rect className="hpv-server-body" x="600" y="230" width="118" height="188" rx="18" />
-          <rect className="hpv-server-bay" x="620" y="256" width="78" height="34" rx="7" />
-          <rect className="hpv-server-bay" x="620" y="306" width="78" height="34" rx="7" />
-          <rect className="hpv-server-bay" x="620" y="356" width="78" height="34" rx="7" />
-          <circle className="hpv-server-port" cx="638" cy="273" r="3" />
-          <circle className="hpv-server-port" cx="638" cy="323" r="3" />
-          <circle className="hpv-server-port" cx="638" cy="373" r="3" />
-          <path className="hpv-server-core" d="M659 273H688M659 323H688M659 373H688" />
+
+        <path id="hpv-route-seen" d="M-260 86C114 86 398 102 600 128C682 139 742 142 810 132" />
+        <path id="hpv-route-typing" d="M-260 160C114 160 398 160 602 160C690 160 748 160 812 160" />
+        <path id="hpv-route-story" d="M-260 244C116 244 400 226 604 198C684 187 742 184 810 196" />
+        <path id="hpv-out-seen" d="M806 132C996 102 1302 78 1740 70" />
+        <path id="hpv-out-typing" d="M812 160C1010 160 1304 160 1740 160" />
+        <path id="hpv-out-story" d="M806 196C998 228 1302 260 1740 286" />
+
+        <g className="hpv-flow-field" mask="url(#hpvFlowMask)">
+          <path className="hpv-lane hpv-lane-a" d="M-260 86C114 86 398 102 600 128C682 139 742 142 810 132" />
+          <path className="hpv-lane hpv-lane-b" d="M-260 160C114 160 398 160 602 160C690 160 748 160 812 160" />
+          <path className="hpv-lane hpv-lane-c" d="M-260 244C116 244 400 226 604 198C684 187 742 184 810 196" />
+
+          <g className="hpv-input-signals" aria-hidden="true">
+            {heroSignalRows.map((row) => (
+              <MotionSignalStream key={`input-${row.word}`} row={row} direction="input" />
+            ))}
+          </g>
         </g>
 
-        <path id="hpv-route-messenger" className="hpv-lane hpv-lane-a" d="M80 176C170 134 268 154 340 226C392 278 466 318 536 318" />
-        <path id="hpv-route-instagram" className="hpv-lane hpv-lane-b" d="M80 318H536" />
-        <path id="hpv-route-facebook" className="hpv-lane hpv-lane-c" d="M80 462C170 504 268 482 342 410C392 360 466 318 536 318" />
-
-        <g className="hpv-signal-streams" clipPath="url(#hpvSignalBlockClip)">
-          {signalRoutes.flatMap((route, routeIndex) =>
-            heroSignalWords.map((word, wordIndex) => (
-              <HeroSignalText
-                key={`${route.id}-${word}`}
-                routeId={route.id}
-                word={word}
-                begin={route.begin - wordIndex * 1.92 - routeIndex * 0.18}
-              />
-            ))
-          )}
+        <g className="hpv-output-signals" aria-hidden="true">
+          {heroSignalRows.map((row) => (
+            <MotionSignalStream key={`output-${row.word}`} row={row} direction="output" />
+          ))}
         </g>
 
-        <g className="hpv-static-signals" clipPath="url(#hpvSignalBlockClip)" aria-hidden="true">
-          <text><textPath href="#hpv-route-messenger" startOffset="16%">seen / typing / story-view</textPath></text>
-          <text><textPath href="#hpv-route-instagram" startOffset="16%">seen / typing / story-view</textPath></text>
-          <text><textPath href="#hpv-route-facebook" startOffset="16%">seen / typing / story-view</textPath></text>
+        <g className="hpv-core-burst" aria-hidden="true">
+          <circle cx="790" cy="160" r="124" fill="url(#hpvCoreHalo)" />
+          <path d="M612 126C680 136 734 138 806 132C730 152 678 154 612 160" />
+          <path d="M617 160C686 160 738 160 812 160" />
+          <path d="M612 198C680 188 734 190 806 196C730 172 678 170 612 160" />
+          {Array.from({ length: 18 }, (_, index) => {
+            const x = 618 + (index % 6) * 30;
+            const y = 116 + Math.floor(index / 6) * 42 + (index % 2) * 8;
+            return <circle key={index} cx={x} cy={y} r={index % 3 === 0 ? 2 : 1.35} />;
+          })}
         </g>
 
-        <g className="hpv-source-nodes">
-          <g className="hpv-platform-node hpv-platform-node-messenger">
-            <circle className="hpv-source-ring" cx="78" cy="176" r="19" />
-            <circle className="hpv-source-face hpv-source-face-messenger" cx="78" cy="176" r="13" />
-            <path className="hpv-platform-mark" d="M70.7 179.1 76.6 172.8l4.1 4.2 6.6-6.8-5.8 9.8-4.3-4.3-6.5 3.4Z" />
-          </g>
-          <g className="hpv-platform-node hpv-platform-node-instagram">
-            <circle className="hpv-source-ring" cx="78" cy="318" r="19" />
-            <rect className="hpv-source-face hpv-source-face-instagram" x="65" y="305" width="26" height="26" rx="8" />
-            <rect className="hpv-platform-camera" x="71.4" y="311.4" width="13.2" height="13.2" rx="4" />
-            <circle className="hpv-platform-camera-lens" cx="78" cy="318" r="3.7" />
-            <circle className="hpv-platform-camera-dot" cx="83.2" cy="312.8" r="1.35" />
-          </g>
-          <g className="hpv-platform-node hpv-platform-node-facebook">
-            <circle className="hpv-source-ring" cx="78" cy="462" r="19" />
-            <circle className="hpv-source-face hpv-source-face-facebook" cx="78" cy="462" r="13" />
-            <path className="hpv-platform-mark hpv-platform-mark-facebook" d="M81.1 471v-8.1h2.8l.4-3.2h-3.2v-2c0-.9.3-1.5 1.6-1.5h1.7v-2.9c-.3 0-1.3-.1-2.5-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H75v3.2h2.8v8.1h3.3Z" />
-          </g>
+        <g className="hpv-output-lines" aria-hidden="true">
+          <path d="M806 132C996 102 1302 78 1740 70" />
+          <path d="M812 160C1010 160 1304 160 1740 160" />
+          <path d="M806 196C998 228 1302 260 1740 286" />
         </g>
       </svg>
 
-      <div className="hpv-mascot-dock" data-hero-mascot-dock aria-hidden />
-
-      <svg className="hpv-ghost" viewBox="0 0 520 620" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <clipPath id="hpvGhostClip">
-            <path d="M116 444V220C116 117.3 181.7 52 260 52s144 65.3 144 168v224c0 17.8-20.6 27.7-34.5 16.6l-28.2-22.5-28.3 22.5a25.2 25.2 0 0 1-31.5 0L260 443.5l-21.5 17.1a25.2 25.2 0 0 1-31.5 0l-28.3-22.5-28.2 22.5C136.6 471.7 116 461.8 116 444Z" />
-          </clipPath>
-          <linearGradient id="hpvGhostFill" x1="141" y1="59" x2="397" y2="475" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F5F1E7" stopOpacity="0.64" />
-            <stop offset="0.52" stopColor="#D9D6CF" stopOpacity="0.48" />
-            <stop offset="1" stopColor="#8F9AA2" stopOpacity="0.14" />
-          </linearGradient>
-          <pattern id="hpvGhostLines" width="9" height="9" patternUnits="userSpaceOnUse">
-            <rect width="3.3" height="9" fill="url(#hpvGhostFill)" />
-          </pattern>
-        </defs>
-        <g clipPath="url(#hpvGhostClip)">
-          <rect x="92" y="34" width="336" height="462" fill="url(#hpvGhostLines)" />
-          <rect className="hpv-ghost-shade" x="92" y="34" width="336" height="462" fill="url(#hpvGhostFill)" opacity="0.22" />
-          <rect className="hpv-ghost-mask" x="92" y="390" width="336" height="120" />
-        </g>
-        <path className="hpv-ghost-edge" d="M116 444V220C116 117.3 181.7 52 260 52s144 65.3 144 168v224c0 17.8-20.6 27.7-34.5 16.6l-28.2-22.5-28.3 22.5a25.2 25.2 0 0 1-31.5 0L260 443.5l-21.5 17.1a25.2 25.2 0 0 1-31.5 0l-28.3-22.5-28.2 22.5C136.6 471.7 116 461.8 116 444Z" />
-        <ellipse className="hpv-eye hpv-eye-left" cx="215" cy="226" rx="28" ry="46" />
-        <ellipse className="hpv-eye hpv-eye-right" cx="305" cy="226" rx="28" ry="46" />
-      </svg>
-
-      <div className="hpv-pixel-field">
-        {privacyPixelClassNames.map((className) => (
-          <span key={className} className={className} />
-        ))}
+      <div className="hpv-core" aria-hidden="true">
+        <GhostSVG size={232} className="hpv-core-ghost" eyeColor="#11131D" bodyColor="#F4F0EA" />
       </div>
     </div>
   );
@@ -1124,11 +1153,11 @@ function PrivacySignalConsole() {
 
 export function HeroSection() {
   const proofItems = [
-    { title: 'Messenger', detail: 'No seen receipts', kind: 'messenger' as const },
-    { title: 'Instagram', detail: 'Hide story views', kind: 'instagram' as const },
-    { title: 'Facebook', detail: 'Stay invisible', kind: 'facebook' as const },
-    { title: 'Local-only', detail: 'Nothing leaves your browser', kind: 'local' as const },
-    { title: 'Open source', detail: 'Read it yourself', kind: 'source' as const },
+    { title: 'Messenger', kind: 'messenger' as const },
+    { title: 'Instagram', kind: 'instagram' as const },
+    { title: 'Facebook', kind: 'facebook' as const },
+    { title: 'Local-only', kind: 'local' as const },
+    { title: 'Open source', kind: 'source' as const },
   ];
 
   return (
@@ -1136,7 +1165,7 @@ export function HeroSection() {
       id="hero"
       className="snap-start hero-section"
       style={{
-        minHeight: 'clamp(700px, 86svh, 860px)',
+        minHeight: 'max(100vh, 900px)',
         display: 'flex',
         alignItems: 'center',
         position: 'relative',
@@ -1153,13 +1182,13 @@ export function HeroSection() {
         className="hero-grid"
         style={{
           width: '100%',
-          maxWidth: 1480,
+          maxWidth: 1560,
           margin: '0 auto',
-          padding: 'clamp(42px, 5.8vw, 76px) clamp(24px, 4vw, 72px) clamp(34px, 5vw, 72px)',
+          padding: 'clamp(28px, 5vw, 56px) clamp(24px, 5vw, 96px) clamp(8px, 1.4vw, 20px)',
           display: 'grid',
-          gridTemplateColumns: 'minmax(520px, 0.95fr) minmax(520px, 1.05fr)',
-          gap: 'clamp(28px, 4vw, 64px)',
-          alignItems: 'center',
+          gridTemplateRows: 'auto auto',
+          gap: 'clamp(12px, 1.8vw, 20px)',
+          alignItems: 'start',
           position: 'relative',
           zIndex: 1,
         }}
@@ -1168,42 +1197,32 @@ export function HeroSection() {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          style={{ position: 'relative', zIndex: 2, maxWidth: 760 }}
+          style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 920, justifySelf: 'center', textAlign: 'center' }}
         >
-          <div style={{ fontFamily: 'var(--g-mono)', fontSize: 12, letterSpacing: '0.16em', color: 'rgba(196,106,74,0.86)', textTransform: 'uppercase', marginBottom: 24 }}>
-            Private by default
-          </div>
-
           <h1 className="hero-title">
-            Read messages
-            <br />
-            <span>without</span>
-            <br />
-            being seen.
+            No <span>seen.</span> No pressure.
           </h1>
 
-          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(1rem, 1.35vw, 1.26rem)', lineHeight: 1.55, color: 'rgba(240,235,224,0.72)', margin: '0 0 30px', maxWidth: 560 }}>
-            Ghostify hides seen receipts, typing indicators, and story-view signals on Messenger, Instagram, and Facebook, <span className="hero-local-phrase">all <span className="hero-local-word">locally</span> in your browser.</span>
+          <p className="hero-subcopy">
+            Ghostify hides seen receipts, typing indicators, and story-view signals on Messenger, Instagram, and Facebook, locally in your browser.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
+          <div className="hero-action-row">
             <a
               href="https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm?utm_source=item-share-cb"
               target="_blank"
               rel="noopener noreferrer"
               className="hero-primary-cta"
             >
-              <Chrome size={16} />
-              Add to Chrome
+              <Chrome size={14} />
+              Get Ghostify
             </a>
             <a
-              href="https://github.com/Hendrizzzz/Ghostify"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/status"
               className="hero-secondary-cta"
             >
-              <Github size={14} strokeWidth={1.5} />
-              View source
+              <Activity size={15} strokeWidth={1.7} />
+              View status
             </a>
           </div>
 
@@ -1213,10 +1232,7 @@ export function HeroSection() {
                 <div className="hero-proof-icon">
                   <HeroProofIcon kind={item.kind} label={item.title} />
                 </div>
-                <div>
-                  <div className="hero-proof-title">{item.title}</div>
-                  <div className="hero-proof-detail">{item.detail}</div>
-                </div>
+                <div className="hero-proof-title">{item.title}</div>
               </div>
             ))}
           </div>
@@ -1227,21 +1243,6 @@ export function HeroSection() {
           initial={{ opacity: 0, x: 18 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-          onPointerMove={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            const px = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-            const py = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-            const x = (px - 0.5) * 2;
-            const y = (py - 0.5) * 2;
-            event.currentTarget.style.setProperty('--hero-pointer-x', x.toFixed(3));
-            event.currentTarget.style.setProperty('--hero-pointer-y', y.toFixed(3));
-            event.currentTarget.style.setProperty('--hero-hover', '1');
-          }}
-          onPointerLeave={(event) => {
-            event.currentTarget.style.setProperty('--hero-pointer-x', '0');
-            event.currentTarget.style.setProperty('--hero-pointer-y', '0');
-            event.currentTarget.style.setProperty('--hero-hover', '0');
-          }}
           aria-hidden
         >
           <PrivacySignalConsole />
@@ -1255,21 +1256,22 @@ export function HeroSection() {
           z-index: 0;
           pointer-events: none;
           background:
-            radial-gradient(ellipse at 23% 49%, rgba(196,106,74,0.075), transparent 24%),
-            radial-gradient(ellipse at 74% 45%, rgba(240,235,224,0.045), transparent 34%),
-            radial-gradient(ellipse at 76% 70%, rgba(216,161,111,0.035), transparent 32%),
-            linear-gradient(90deg, rgba(11,10,8,0.99) 0%, rgba(11,10,8,0.94) 41%, rgba(11,10,8,0.88) 63%, rgba(11,10,8,0.99) 100%);
+            radial-gradient(ellipse at 50% 28%, rgba(216,161,111,0.09), transparent 32%),
+            radial-gradient(ellipse at 22% 82%, rgba(74,163,255,0.055), transparent 31%),
+            radial-gradient(ellipse at 72% 82%, rgba(196,106,74,0.07), transparent 34%),
+            linear-gradient(180deg, rgba(7,8,8,0.98) 0%, #0B0A08 62%, #0B0A08 100%);
         }
         .hero-section::after {
           content: "";
           position: absolute;
           left: 0;
           right: 0;
-          bottom: -1px;
-          height: clamp(96px, 13vh, 150px);
+          bottom: 0;
+          height: clamp(72px, 10vh, 128px);
           z-index: 0;
           pointer-events: none;
-          background: linear-gradient(180deg, rgba(11,10,8,0), #0B0A08 78%);
+          opacity: 0.82;
+          background: linear-gradient(180deg, rgba(11,10,8,0) 0%, rgba(11,10,8,0.72) 68%, #0B0A08 100%);
         }
         .hero-texture {
           position: absolute;
@@ -1278,12 +1280,9 @@ export function HeroSection() {
           pointer-events: none;
           opacity: 0.24;
           background-image:
-            repeating-linear-gradient(0deg, rgba(240,235,224,0.03) 0 1px, transparent 1px 5px),
-            repeating-linear-gradient(90deg, rgba(240,235,224,0.018) 0 1px, transparent 1px 4px),
-            radial-gradient(circle at 30% 12%, rgba(240,235,224,0.05), transparent 20%);
+            repeating-linear-gradient(0deg, rgba(240,235,224,0.024) 0 1px, transparent 1px 5px),
+            repeating-linear-gradient(90deg, rgba(240,235,224,0.014) 0 1px, transparent 1px 4px);
           mix-blend-mode: soft-light;
-          -webkit-mask-image: linear-gradient(180deg, black 0%, black 100%);
-          mask-image: linear-gradient(180deg, black 0%, black 100%);
         }
         .hero-vignette {
           position: absolute;
@@ -1291,529 +1290,596 @@ export function HeroSection() {
           z-index: 0;
           pointer-events: none;
           background:
-            linear-gradient(180deg, rgba(0,0,0,0.28), transparent 24%, transparent 82%, rgba(0,0,0,0.14) 100%),
-            radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.5) 100%);
+            linear-gradient(180deg, rgba(0,0,0,0.44), transparent 24%, transparent 78%, rgba(0,0,0,0.2) 100%),
+            radial-gradient(ellipse at center, transparent 44%, rgba(0,0,0,0.56) 100%);
         }
         .hero-title {
           font-family: var(--g-display);
-          font-size: clamp(3.6rem, 5.45vw, 6.25rem);
+          font-size: clamp(3.2rem, 5.6vw, 5.9rem);
           font-weight: 400;
-          line-height: 0.94;
+          line-height: 1;
           letter-spacing: 0;
           color: var(--g-white);
           margin: 0 0 22px;
+          text-wrap: nowrap;
           white-space: nowrap;
         }
-        .hero-title span { color: #C46A4A; font-style: italic; }
-        .hero-local-word {
-          font-family: var(--g-display);
+        .hero-title span {
+          color: #C46A4A;
           font-style: italic;
-          color: #D8A16F;
-          font-size: 1.32em;
-          line-height: 0.72;
-          letter-spacing: 0;
+          text-shadow: 0 0 32px rgba(196,106,74,0.18);
         }
-        .hero-local-phrase { white-space: nowrap; }
+        .hero-subcopy {
+          width: min(100%, 760px);
+          max-width: 760px;
+          margin: 0 auto 24px;
+          color: rgba(240,235,224,0.76);
+          font-family: var(--g-sans);
+          font-size: 1rem;
+          line-height: 1.52;
+        }
+        .hero-action-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.65rem;
+          flex-wrap: wrap;
+          margin-bottom: 1rem;
+        }
         .hero-primary-cta,
         .hero-secondary-cta {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 9px;
-          min-height: 48px;
-          padding: 0 28px;
+          gap: 0.44rem;
+          min-height: 2.3rem;
+          min-width: 9.35rem;
+          padding: 0 0.92rem;
           border-radius: 6px;
           font-family: var(--g-sans);
-          font-size: 15px;
-          font-weight: 500;
+          font-size: 0.78rem;
+          font-weight: 600;
           text-decoration: none;
           letter-spacing: 0;
           box-sizing: border-box;
-          transition: transform 0.16s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+          transition: transform 0.16s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
         }
         .hero-primary-cta {
-          background: linear-gradient(135deg, #F3EDE2, #D8CBB8);
+          background: linear-gradient(135deg, #F4EDE1, #D8A16F 112%);
           color: #0B0A08;
-          box-shadow: 0 12px 34px rgba(216,161,111,0.16);
+          box-shadow: 0 18px 46px rgba(216,161,111,0.18);
         }
         .hero-secondary-cta {
-          color: rgba(240,235,224,0.88);
-          border: 1px solid rgba(240,235,224,0.28);
-          background: rgba(240,235,224,0.02);
+          color: rgba(240,235,224,0.9);
+          border: 1px solid rgba(240,235,224,0.22);
+          background: rgba(240,235,224,0.025);
         }
         .hero-primary-cta:hover,
-        .hero-secondary-cta:hover { transform: translateY(-1px); }
-        .hero-secondary-cta:hover { border-color: rgba(240,235,224,0.42); color: var(--g-white); }
-        .hero-proof-row {
-          display: grid;
-          grid-template-columns: repeat(5, minmax(0, 1fr));
-          gap: clamp(12px, 1vw, 16px);
-          width: min(100%, 680px);
-          max-width: 100%;
-          padding-top: 14px;
-          border-top: 1px solid rgba(240,235,224,0.12);
+        .hero-secondary-cta:hover {
+          transform: translateY(-1px);
         }
-        .hero-proof-item { display: flex; gap: 10px; align-items: start; min-width: 0; }
+        .hero-primary-cta:hover {
+          box-shadow: 0 20px 54px rgba(216,161,111,0.23);
+        }
+        .hero-secondary-cta:hover {
+          border-color: rgba(240,235,224,0.38);
+          color: var(--g-white);
+          background: rgba(240,235,224,0.045);
+        }
+        .hero-proof-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 0.44rem;
+          max-width: min(100%, 660px);
+          margin: 0 auto;
+        }
+        .hero-proof-item {
+          min-height: 1.82rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.42rem;
+          padding: 0 0.58rem;
+          border: 1px solid rgba(240,235,224,0.12);
+          border-radius: 6px;
+          background: rgba(8,9,9,0.42);
+          box-shadow: inset 0 1px 0 rgba(240,235,224,0.035);
+        }
         .hero-proof-icon {
-          width: 28px; height: 28px;
-          display: inline-flex; align-items: center; justify-content: center;
+          width: 1.02rem;
+          height: 1.02rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           border-radius: 50%;
-          background: rgba(196,106,74,0.14);
+          background: rgba(216,161,111,0.1);
           color: #D8A16F;
-          font-family: var(--g-sans); font-size: 15px; font-weight: 700;
-          border: 1px solid rgba(216,161,111,0.2);
+          border: 1px solid rgba(216,161,111,0.18);
+          flex: 0 0 auto;
         }
         .hero-proof-title {
-          font-family: var(--g-sans); font-size: 13.5px; color: rgba(240,235,224,0.92);
-          line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .hero-proof-detail {
-          margin-top: 5px;
-          font-family: var(--g-sans); font-size: 11.5px; color: rgba(240,235,224,0.42);
-          line-height: 1.3; white-space: normal;
+          font-family: var(--g-sans);
+          font-size: 0.72rem;
+          line-height: 1;
+          color: rgba(240,235,224,0.9);
+          white-space: nowrap;
         }
         .hero-privacy-visual {
-          min-height: min(78svh, 760px);
           position: relative;
-          pointer-events: auto;
-          perspective: 1500px;
-          transform-style: preserve-3d;
+          width: 100vw;
+          height: clamp(236px, 21vw, 300px);
+          min-height: 0;
+          margin-top: clamp(88px, 8.2vw, 132px);
+          margin-left: calc(50% - 50vw);
+          align-self: start;
+          pointer-events: none;
           z-index: 1;
-          --hero-pointer-x: 0;
-          --hero-pointer-y: 0;
-          --hero-hover: 0;
         }
-
         .hpv-scene {
           position: absolute;
-          inset: -7% -9% -10% -3%;
+          inset: 0;
           overflow: visible;
           pointer-events: none;
-          transform-style: preserve-3d;
           isolation: isolate;
         }
-        .hpv-grid {
-          position: absolute;
-          inset: 8% 2% 9% 4%;
-          opacity: 0.105;
-          background-image:
-            linear-gradient(90deg, rgba(240,235,224,0.14) 1px, transparent 1px),
-            linear-gradient(0deg, rgba(240,235,224,0.09) 1px, transparent 1px);
-          background-size: 46px 46px;
-          mask-image: radial-gradient(ellipse at 58% 52%, black 0 50%, transparent 78%);
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * -6px), calc(var(--hero-pointer-y, 0) * -4px), -170px)
-            rotateY(-20deg)
-            skewY(-4deg);
-          transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .hpv-pane {
-          position: absolute;
-          border: 1px solid rgba(221,229,232,0.16);
-          background:
-            linear-gradient(116deg, rgba(170,184,193,0.13), rgba(170,184,193,0.038) 42%, rgba(240,235,224,0.045)),
-            repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 44px),
-            repeating-linear-gradient(0deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 42px);
-          box-shadow:
-            inset 0 0 1px rgba(255,255,255,0.28),
-            0 28px 70px rgba(0,0,0,0.36);
-          opacity: 0.5;
-          transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease;
-        }
-        .hpv-pane::after {
+        .hpv-scene::before {
           content: "";
           position: absolute;
-          inset: 0;
-          border-left: 1px solid rgba(255,255,255,0.10);
-          opacity: 0.38;
-        }
-        .hpv-pane-left {
-          width: 36%;
-          height: 52%;
-          left: 6%;
-          top: 28%;
-          clip-path: polygon(0 28%, 100% 0, 100% 100%, 0 84%);
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * -15px), calc(var(--hero-pointer-y, 0) * -7px), -48px)
-            rotateY(-25deg)
-            skewY(-6deg);
-        }
-        .hpv-pane-center {
-          width: 31%;
-          height: 74%;
-          left: 35%;
-          top: 5%;
-          opacity: 0.42;
-          clip-path: polygon(0 0, 100% 9%, 100% 100%, 0 90%);
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * -6px), calc(var(--hero-pointer-y, 0) * -11px), -92px)
-            rotateY(-14deg)
-            skewY(-4deg);
-        }
-        .hpv-pane-right {
-          width: 43%;
-          height: 58%;
-          right: 5%;
-          top: 22%;
-          opacity: 0.38;
-          clip-path: polygon(0 10%, 100% 30%, 100% 92%, 0 100%);
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * 13px), calc(var(--hero-pointer-y, 0) * -6px), -30px)
-            rotateY(-16deg)
-            skewY(4deg);
+          left: 0;
+          right: 0;
+          bottom: -20%;
+          height: 78%;
+          background: linear-gradient(180deg, transparent, rgba(216,161,111,0.018));
+          opacity: 0.55;
         }
         .hpv-routes {
           position: absolute;
-          inset: 1% 3% 5% 1%;
+          inset: 0;
           width: 100%;
           height: 100%;
           overflow: visible;
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * -9px), calc(var(--hero-pointer-y, 0) * -4px), 38px)
-            rotateY(-6deg);
-          transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
-          z-index: 5;
+          transform: none;
+          transform-origin: 50% 52%;
+          z-index: 2;
+        }
+        .hpv-flow-field {
+          opacity: 0.96;
         }
         .hpv-lane {
           fill: none;
-          stroke: var(--hpv-lane-stroke, url(#hpvLaneFade));
-          stroke-width: 1.45;
+          stroke-width: 1.2;
           stroke-linecap: round;
-          opacity: 0.5;
+          opacity: 0.72;
         }
-        .hpv-lane-a { --hpv-lane-stroke: url(#hpvMessengerFade); --hpv-pulse-stroke: #74B7FF; }
-        .hpv-lane-b { --hpv-lane-stroke: url(#hpvInstagramFade); --hpv-pulse-stroke: #F3A463; opacity: 0.42; }
-        .hpv-lane-c { --hpv-lane-stroke: url(#hpvFacebookFade); --hpv-pulse-stroke: #5A9BFF; }
-        .hpv-signal-streams,
-        .hpv-static-signals {
+        .hpv-lane-a { stroke: url(#hpvLineSeen); }
+        .hpv-lane-b { stroke: url(#hpvLineTyping); stroke-width: 1.35; }
+        .hpv-lane-c { stroke: url(#hpvLineStory); }
+        .hpv-input-signals,
+        .hpv-output-signals {
           pointer-events: none;
         }
-        .hpv-signal-stage,
-        .hpv-static-signals text {
-          font-family: var(--g-mono);
-          font-size: 10.5px;
-          font-weight: 600;
-          letter-spacing: 0.035em;
-          fill: color-mix(in srgb, var(--hpv-signal-color, #D8A16F) 76%, #F0EBE0);
-          text-anchor: middle;
-          paint-order: stroke;
-          stroke: rgba(11,10,8,0.9);
-          stroke-width: 3.5px;
-          stroke-linejoin: round;
+        .hpv-path-text {
+          font-family: var(--g-sans);
+          font-size: clamp(0.76rem, 1.1vw, 1.04rem);
+          font-weight: 650;
+          letter-spacing: 0;
           dominant-baseline: middle;
+          paint-order: stroke;
+          stroke: rgba(8,9,9,0.72);
+          stroke-width: 3px;
+          stroke-linejoin: round;
         }
-        .hpv-signal-stage {
-          filter: drop-shadow(0 0 5px color-mix(in srgb, var(--hpv-signal-color, #D8A16F) 36%, transparent));
+        .hpv-input-seen {
+          fill: rgba(240,235,224,0.76);
         }
-        .hpv-word-seen { --hpv-signal-color: #74B7FF; }
-        .hpv-word-typing { --hpv-signal-color: #E8A15D; }
-        .hpv-word-story-view { --hpv-signal-color: #EF6F87; }
-        .hpv-static-signals {
-          display: none;
-          opacity: 0.62;
+        .hpv-input-typing {
+          fill: rgba(216,161,111,0.88);
         }
-        .hpv-server-target {
-          opacity: 0.54;
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * 7px), calc(var(--hero-pointer-y, 0) * -3px), -14px);
-          transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease;
+        .hpv-input-story-view {
+          fill: rgba(196,106,74,0.82);
         }
-        .hpv-server-link {
+        .hpv-output-text {
+          fill: rgba(216,161,111,0.9);
+          stroke-width: 3.25px;
+        }
+        .hpv-output-seen {
+          fill: rgba(216,161,111,0.88);
+        }
+        .hpv-output-typing {
+          fill: rgba(240,235,224,0.86);
+        }
+        .hpv-output-story-view {
+          fill: rgba(216,161,111,0.88);
+        }
+        .hpv-type-crossed {
+          text-decoration-line: line-through;
+          text-decoration-thickness: 0.12em;
+        }
+        .hpv-core-burst path {
+          fill: none;
+          stroke: rgba(216,161,111,0.14);
+          stroke-width: 1;
+          stroke-linecap: round;
+          stroke-dasharray: 2 7;
+        }
+        .hpv-core-burst > circle:first-child {
+          fill: transparent;
+          filter: none;
+        }
+        .hpv-core-burst > circle:not(:first-child) {
+          fill: rgba(216,161,111,0.28);
+          filter: none;
+        }
+        .hpv-output-lines {
+          opacity: 0.82;
+        }
+        .hpv-output-lines path {
           fill: none;
           stroke: rgba(216,161,111,0.4);
           stroke-width: 1.25;
           stroke-linecap: round;
-          stroke-dasharray: 7 11;
-          opacity: 0.68;
+          stroke-dasharray: 2 9;
         }
-        .hpv-server-body {
-          fill: rgba(14,15,14,0.72);
-          stroke: rgba(240,235,224,0.22);
-          stroke-width: 1.2;
-        }
-        .hpv-server-bay {
-          fill: rgba(240,235,224,0.055);
-          stroke: rgba(240,235,224,0.16);
-          stroke-width: 1;
-        }
-        .hpv-server-port {
-          fill: rgba(216,161,111,0.72);
-        }
-        .hpv-server-core {
-          stroke: rgba(240,235,224,0.24);
-          stroke-width: 1.2;
-          stroke-linecap: round;
-        }
-        .hpv-mascot-dock {
+        .hpv-core {
           position: absolute;
-          left: 66.4%;
-          top: 51.35%;
-          width: 74px;
-          height: 74px;
-          border-radius: 50%;
-          z-index: 6;
-          pointer-events: none;
-          transform:
-            translate3d(calc(-50% + var(--hero-pointer-x, 0) * 9px), calc(-50% + var(--hero-pointer-y, 0) * -3px), 96px);
-          background:
-            radial-gradient(circle at 50% 50%, rgba(216,161,111,0.18), rgba(216,161,111,0.045) 48%, transparent 70%);
-          border: 1px solid rgba(216,161,111,0.26);
-          box-shadow:
-            inset 0 0 0 1px rgba(240,235,224,0.05),
-            0 0 0 1px rgba(11,10,8,0.5),
-            0 16px 34px rgba(0,0,0,0.28);
-          opacity: 0.66;
-          transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease;
+          left: 49.4%;
+          top: 44%;
+          width: clamp(250px, 22vw, 340px);
+          height: clamp(250px, 22vw, 340px);
+          transform: translate(-50%, -50%);
+          z-index: 4;
+          isolation: isolate;
         }
-        .hpv-mascot-dock::after {
+        .hpv-core::before,
+        .hpv-core::after {
           content: "";
           position: absolute;
-          inset: 16px;
+          inset: -30%;
           border-radius: 50%;
-          border: 1px solid rgba(240,235,224,0.18);
-          background: rgba(11,10,8,0.28);
+          pointer-events: none;
         }
-        .hpv-platform-node {
-          animation: hpvNodeBreathe 4.9s ease-in-out infinite;
-          transform-box: fill-box;
-          transform-origin: center;
+        .hpv-core::before {
+          inset: -6%;
+          border: 1px solid rgba(240,235,224,0.14);
+          background: transparent;
+          box-shadow: none;
+          opacity: 0.82;
+          z-index: 1;
         }
-        .hpv-platform-node-instagram { animation-delay: -1.6s; }
-        .hpv-platform-node-facebook { animation-delay: -3.2s; }
-        .hpv-source-ring {
-          fill: rgba(11,10,8,0.7);
-          stroke: rgba(240,235,224,0.18);
-          stroke-width: 1;
+        .hpv-core::after {
+          inset: -18%;
+          border: 0;
+          background: radial-gradient(circle at 50% 49%, rgba(11,10,8,0.9) 0 45%, rgba(11,10,8,0.54) 58%, transparent 72%);
+          box-shadow: none;
+          z-index: 0;
         }
-        .hpv-source-face {
-          stroke: rgba(255,255,255,0.2);
-          stroke-width: 1;
-        }
-        .hpv-source-face-messenger { fill: #0A7CFF; }
-        .hpv-source-face-instagram {
-          fill: url(#hpvInstagramNode);
-          stroke: rgba(255,255,255,0.22);
-        }
-        .hpv-source-face-facebook { fill: #1877F2; }
-        .hpv-platform-mark {
-          fill: #fff;
-        }
-        .hpv-platform-mark-facebook {
-          fill: #fff;
-        }
-        .hpv-platform-camera,
-        .hpv-platform-camera-lens {
-          fill: none;
-          stroke: #fff;
-          stroke-width: 1.9;
-        }
-        .hpv-platform-camera-dot {
-          fill: #fff;
-        }
-        .hpv-ghost {
+        .hpv-core-ghost {
           position: absolute;
-          width: min(39vw, 560px);
-          max-width: 82%;
-          right: 11%;
-          top: 49%;
-          overflow: visible;
-          z-index: 4;
-          opacity: 0.78;
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * 14px), calc(-50% + var(--hero-pointer-y, 0) * 9px), 84px)
-            rotateX(calc(var(--hero-pointer-y, 0) * -1.6deg))
-            rotateY(calc(var(--hero-pointer-x, 0) * 3.6deg))
-            rotateZ(-1.2deg);
-          transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease;
+          left: 50%;
+          top: 50%;
+          width: 76%;
+          height: 76%;
+          transform: translate(-50%, -48%);
+          filter: drop-shadow(0 22px 34px rgba(0,0,0,0.42));
+          z-index: 2;
         }
-        .hpv-ghost-edge {
-          stroke: rgba(255,255,255,0.2);
-          stroke-width: 1.1;
-          fill: transparent;
-        }
-        .hpv-ghost-mask {
-          fill: rgba(11,10,8,0.56);
-        }
-        .hpv-eye {
-          fill: rgba(13,18,22,0.86);
-        }
-        .hpv-pixel-field {
-          position: absolute;
-          left: 24%;
-          right: 12%;
-          bottom: 7%;
-          height: 28%;
-          z-index: 3;
-          opacity: 0.22;
-          transform:
-            translate3d(calc(var(--hero-pointer-x, 0) * 8px), calc(var(--hero-pointer-y, 0) * 6px), 52px)
-            rotateY(-11deg)
-            skewY(-4deg);
-          transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .hpv-pixel {
-          position: absolute;
-          width: var(--px-w, 14px);
-          height: var(--px-h, 28px);
-          left: var(--px-x);
-          bottom: var(--px-y);
-          background: rgba(155,166,170,0.14);
-          border: 1px solid rgba(240,235,224,0.055);
-          animation: hpvPixelDrift var(--px-dur, 8s) ease-in-out infinite;
-          animation-delay: var(--px-delay, 0s);
-        }
-        .hpv-pixel-1 { --px-x: 4%; --px-y: 8%; --px-w: 10px; --px-h: 18px; --px-dur: 7.2s; }
-        .hpv-pixel-2 { --px-x: 13%; --px-y: 33%; --px-w: 14px; --px-h: 38px; --px-delay: -1s; }
-        .hpv-pixel-3 { --px-x: 21%; --px-y: 5%; --px-w: 7px; --px-h: 58px; --px-delay: -2.3s; }
-        .hpv-pixel-4 { --px-x: 31%; --px-y: 25%; --px-w: 19px; --px-h: 27px; --px-delay: -4.2s; }
-        .hpv-pixel-5 { --px-x: 39%; --px-y: 11%; --px-w: 6px; --px-h: 68px; --px-delay: -1.8s; }
-        .hpv-pixel-6 { --px-x: 48%; --px-y: 40%; --px-w: 18px; --px-h: 18px; --px-delay: -5.1s; }
-        .hpv-pixel-7 { --px-x: 57%; --px-y: 18%; --px-w: 11px; --px-h: 42px; --px-delay: -0.8s; }
-        .hpv-pixel-8 { --px-x: 66%; --px-y: 3%; --px-w: 22px; --px-h: 23px; --px-delay: -3.4s; }
-        .hpv-pixel-9 { --px-x: 74%; --px-y: 38%; --px-w: 8px; --px-h: 52px; --px-delay: -6s; }
-        .hpv-pixel-10 { --px-x: 82%; --px-y: 17%; --px-w: 17px; --px-h: 28px; --px-delay: -2s; }
-        .hpv-pixel-11 { --px-x: 89%; --px-y: 6%; --px-w: 10px; --px-h: 64px; --px-delay: -4.8s; }
-        .hpv-pixel-12 { --px-x: 18%; --px-y: 58%; --px-w: 22px; --px-h: 16px; --px-delay: -1.2s; }
-        .hpv-pixel-13 { --px-x: 52%; --px-y: 61%; --px-w: 18px; --px-h: 15px; --px-delay: -3.8s; }
-        .hpv-pixel-14 { --px-x: 84%; --px-y: 57%; --px-w: 20px; --px-h: 16px; --px-delay: -5.6s; }
-
-        @keyframes hpvNodeBreathe {
-          0%, 100% { opacity: 0.44; }
-          18%, 56% { opacity: 0.88; }
-        }
-        @keyframes hpvPixelDrift {
-          0%, 100% { transform: translateY(0); opacity: 0.22; }
-          52% { transform: translateY(-11px); opacity: 0.42; }
-        }
-
-        @keyframes ghostBlink {
-          0%, 90%, 100% { transform: scaleY(1); }
-          95%            { transform: scaleY(0.1); }
-        }
-
-        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-          .hpv-platform-node,
-          .hpv-pixel {
-            animation: none !important;
-          }
-          .hpv-signal-streams {
+          .hpv-input-signals,
+          .hpv-output-signals {
             display: none;
           }
-          .hpv-static-signals {
-            display: block;
-          }
-          .hpv-grid,
-          .hpv-pane,
           .hpv-routes,
-          .hpv-mascot-dock,
-          .hpv-server-target,
-          .hpv-ghost,
-          .hpv-pixel-field {
+          .hpv-core,
+          .hpv-core::after {
             transition: none !important;
           }
         }
 
-        /* Breakpoints */
         @media (max-width: 1180px) {
           .hero-grid {
-            grid-template-columns: minmax(390px, 0.82fr) minmax(470px, 1.18fr) !important;
-            gap: 18px !important;
             padding-left: 32px !important;
             padding-right: 32px !important;
+            gap: 14px !important;
           }
-          .hero-title { font-size: clamp(3.45rem, 5.65vw, 5.45rem); }
-          .hero-proof-row { grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 440px); max-width: calc(100vw - 64px); gap: 12px 14px; }
-          .hero-proof-item { min-width: 0; }
-          .hero-proof-detail { white-space: normal; }
-          .hero-proof-icon { width: 26px; height: 26px; }
-          .hero-proof-title { font-size: 13px; }
-          .hero-proof-detail { font-size: 11px; }
-          .hpv-scene { inset: -6% -12% -10% -4%; }
-          .hpv-ghost { width: min(43vw, 520px); right: 8%; }
+          .hero-title { font-size: clamp(3.2rem, 6.1vw, 5.15rem); }
+          .hero-subcopy { max-width: 680px; }
+          .hero-privacy-visual { height: 238px; }
         }
         @media (max-width: 900px) {
           .hero-section {
-            min-height: 100svh !important;
-            align-items: flex-start !important;
-            padding-top: 82px !important;
-            padding-bottom: 48px !important;
+            min-height: max(100vh, 860px) !important;
+            padding-top: 78px !important;
           }
           .hero-grid {
-            grid-template-columns: minmax(365px, 0.78fr) minmax(420px, 1.22fr) !important;
-            max-width: none !important;
-            box-sizing: border-box !important;
-            padding: 0 32px !important;
-            gap: 8px !important;
-            align-items: center !important;
+            grid-template-rows: auto auto !important;
+            padding: 30px 28px 18px !important;
+            gap: 14px !important;
           }
-          .hero-grid > * { min-width: 0 !important; }
-          .hero-title { font-size: clamp(3.25rem, 7.4vw, 4.7rem); }
-          .hero-proof-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 12px; max-width: min(100%, 430px); overflow: hidden; }
-          .hero-privacy-visual { min-height: clamp(420px, 58vw, 560px); width: 100%; max-width: none; justify-self: center; }
-          .hpv-scene { inset: -5% -16% -8% -8%; }
-          .hpv-ghost { width: min(52vw, 500px); right: 5%; }
+          .hero-title { font-size: clamp(2.9rem, 7.8vw, 4.15rem); }
+          .hero-subcopy { max-width: 600px; }
+          .hero-action-row { margin-bottom: 0.9rem; }
+          .hero-proof-row { max-width: 590px; }
+          .hero-privacy-visual {
+            height: 250px;
+            margin-top: 48px;
+          }
         }
-        @media (max-width: 820px) {
+        @media (max-width: 640px) {
+          .hero-section {
+            min-height: max(100vh, 820px) !important;
+          }
           .hero-grid {
-            grid-template-columns: 1fr !important;
-            max-width: min(620px, calc(100vw - 48px)) !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            padding: 0 24px !important;
-            gap: 20px !important;
-            overflow: visible;
+            padding: 24px 18px 18px !important;
+            grid-template-rows: auto auto !important;
+            gap: 14px !important;
           }
-          .hero-grid p { max-width: 460px !important; font-size: 1rem !important; line-height: 1.5 !important; }
-          .hero-title { font-size: clamp(3.35rem, 9.2vw, 4.35rem); }
-          .hero-proof-row { grid-template-columns: repeat(2, minmax(0, max-content)) !important; width: 100% !important; max-width: 470px !important; }
-          .hero-proof-item { min-width: 0; }
-          .hero-primary-cta, .hero-secondary-cta { width: 100%; }
+          .hero-title {
+            font-size: clamp(1.82rem, 7.2vw, 2.2rem);
+            line-height: 1.05;
+            margin-bottom: 18px;
+          }
+          .hero-subcopy {
+            max-width: 350px;
+            margin-bottom: 20px;
+            line-height: 1.45;
+          }
+          .hero-action-row {
+            gap: 0.55rem;
+            margin-bottom: 0.85rem;
+          }
+          .hero-primary-cta,
+          .hero-secondary-cta {
+            min-height: 2.38rem;
+            width: min(100%, 240px);
+            min-width: 0;
+          }
+          .hero-proof-row {
+            display: flex;
+            width: min(100%, 320px);
+            gap: 0.44rem;
+          }
+          .hero-proof-item {
+            min-height: 1.9rem;
+            padding: 0 0.52rem;
+            justify-content: center;
+          }
+          .hero-proof-title { font-size: 0.72rem; }
+          .hero-proof-icon { width: 1.02rem; height: 1.02rem; }
           .hero-privacy-visual {
-            position: absolute;
-            inset: 86px -220px auto auto;
-            width: 560px;
-            height: 520px;
-            min-height: 0;
-            max-width: none;
-            justify-self: auto;
-            opacity: 0.18;
-            pointer-events: none;
-            perspective: none;
-            -webkit-mask-image: linear-gradient(90deg, transparent 0 24%, rgba(0,0,0,0.35) 42%, black 68%);
-            mask-image: linear-gradient(90deg, transparent 0 24%, rgba(0,0,0,0.35) 42%, black 68%);
+            height: 238px;
+            margin-top: 14px;
+            overflow: hidden;
+            align-self: start;
           }
-          .hpv-scene { inset: 0; transform-style: flat; }
-          .hpv-mascot-dock,
-          .hpv-grid,
-          .hpv-routes { display: none; }
-          .hpv-pane-left,
-          .hpv-pane-right { display: none; }
-          .hpv-pane-center { width: 66%; height: 64%; left: 28%; top: 14%; transform: rotateY(-12deg) skewY(-4deg); opacity: 0.2; }
-          .hpv-ghost { width: 410px; right: 0; top: 15%; transform: translate3d(0, 0, 0) rotateZ(-1.2deg); opacity: 0.64; }
-          .hpv-pixel-field { left: 24%; right: 8%; bottom: 5%; height: 25%; opacity: 0.16; }
-        }
-        @media (max-width: 480px) {
-          .hero-grid { max-width: min(354px, calc(100vw - 36px)) !important; padding: 0 18px !important; margin-left: 0 !important; margin-right: auto !important; }
-          .hero-title { font-size: clamp(2.42rem, 11.8vw, 3.25rem); }
-          .hero-proof-row { grid-template-columns: 1fr !important; max-width: 100% !important; }
-          .hero-primary-cta, .hero-secondary-cta { width: 100%; }
-          .hero-privacy-visual {
-            inset: 156px -300px auto auto;
-            width: 560px;
-            height: 470px;
-            opacity: 0.16;
-            -webkit-mask-image: linear-gradient(90deg, transparent 0 30%, rgba(0,0,0,0.2) 47%, black 74%);
-            mask-image: linear-gradient(90deg, transparent 0 30%, rgba(0,0,0,0.2) 47%, black 74%);
+          .hpv-routes {
+            width: 164%;
+            left: -36%;
+            transform: none;
           }
-          .hpv-ghost { width: 390px; right: 0; top: 16%; }
-          .hpv-pane-center { left: 34%; top: 14%; width: 60%; opacity: 0.16; }
+          .hpv-core {
+            left: 50%;
+            top: 44%;
+            width: 170px;
+            height: 170px;
+          }
+          .hpv-path-text {
+            font-size: clamp(0.64rem, 2.8vw, 0.82rem);
+            stroke-width: 2.4px;
+          }
+          .hpv-output-text {
+            stroke-width: 2.6px;
+          }
         }
         @media (max-width: 400px) {
-          .hero-title { font-size: clamp(2.34rem, 11.6vw, 3rem); }
-          .hero-grid p { max-width: 306px !important; }
-          .hero-privacy-visual { inset: 168px -318px auto auto; opacity: 0.145; }
-          .hpv-ghost { width: 382px; }
+          .hero-section { min-height: max(100vh, 800px) !important; }
+          .hero-grid { padding-left: 16px !important; padding-right: 16px !important; }
+          .hero-title { font-size: clamp(1.7rem, 7.2vw, 2rem); }
+          .hero-subcopy { max-width: 320px; }
+          .hero-primary-cta,
+          .hero-secondary-cta { width: min(100%, 232px); }
+          .hero-proof-row { width: min(100%, 292px); }
+          .hero-proof-item { padding: 0 0.46rem; gap: 0.36rem; }
+          .hero-privacy-visual { height: 226px; margin-top: 12px; }
+          .hpv-core { width: 156px; height: 156px; }
+        }
+        @media (max-width: 640px) and (max-height: 700px) {
+          .hero-section {
+            align-items: flex-start !important;
+            min-height: 720px !important;
+            padding-top: 62px !important;
+          }
+          .hero-grid {
+            padding-top: 18px !important;
+            padding-bottom: 10px !important;
+            gap: 10px !important;
+          }
+          .hero-title {
+            font-size: clamp(1.62rem, 7vw, 1.92rem);
+            margin-bottom: 14px;
+          }
+          .hero-subcopy {
+            max-width: 286px;
+            margin-bottom: 16px;
+            font-size: 0.92rem;
+            line-height: 1.38;
+          }
+          .hero-action-row {
+            margin-bottom: 0.7rem;
+          }
+          .hero-primary-cta,
+          .hero-secondary-cta {
+            min-height: 2.22rem;
+            width: min(100%, 230px);
+          }
+          .hero-proof-row {
+            width: min(100%, 286px);
+            gap: 0.34rem;
+          }
+          .hero-proof-item {
+            min-height: 1.72rem;
+          }
+          .hero-privacy-visual {
+            height: 196px !important;
+            margin-top: 10px !important;
+          }
+          .hpv-core {
+            width: 140px;
+            height: 140px;
+          }
+          .hpv-path-text {
+            font-size: clamp(0.56rem, 2.5vw, 0.7rem);
+          }
+        }
+        @media (min-width: 901px) and (max-height: 820px) {
+          .hero-section {
+            align-items: flex-start !important;
+            min-height: 100vh !important;
+            padding-top: 54px !important;
+          }
+          .hero-grid {
+            padding-top: 22px !important;
+            padding-bottom: 10px !important;
+            gap: 8px !important;
+          }
+          .hero-title {
+            font-size: clamp(2.65rem, 5vw, 4.25rem);
+            margin-bottom: 14px;
+          }
+          .hero-subcopy {
+            max-width: 720px;
+            margin-bottom: 16px;
+            font-size: 0.92rem;
+            line-height: 1.42;
+          }
+          .hero-action-row {
+            gap: 0.55rem;
+            margin-bottom: 0.72rem;
+          }
+          .hero-primary-cta,
+          .hero-secondary-cta {
+            min-height: 2.12rem;
+            min-width: 8.7rem;
+            padding: 0 0.78rem;
+            font-size: 0.72rem;
+          }
+          .hero-proof-row {
+            gap: 0.34rem;
+            max-width: min(100%, 600px);
+          }
+          .hero-proof-item {
+            min-height: 1.56rem;
+            gap: 0.32rem;
+            padding: 0 0.46rem;
+          }
+          .hero-proof-icon {
+            width: 0.92rem;
+            height: 0.92rem;
+          }
+          .hero-proof-title {
+            font-size: 0.64rem;
+          }
+          .hero-privacy-visual {
+            height: 212px !important;
+            margin-top: 50px !important;
+          }
+          .hpv-core {
+            top: 52%;
+            width: 220px;
+            height: 220px;
+          }
+          .hpv-path-text {
+            font-size: clamp(0.58rem, 0.9vw, 0.78rem);
+            stroke-width: 2.45px;
+          }
+          .hpv-output-text {
+            stroke-width: 2.65px;
+          }
+        }
+        @media (min-width: 500px) and (max-width: 640px) and (min-height: 701px) and (max-height: 760px) {
+          .hero-section {
+            min-height: 100vh !important;
+            padding-top: 62px !important;
+          }
+          .hero-grid {
+            padding-top: 22px !important;
+            padding-bottom: 18px !important;
+            gap: 12px !important;
+          }
+          .hero-privacy-visual {
+            height: 214px !important;
+            margin-top: 12px !important;
+          }
+          .hpv-core {
+            top: 46%;
+            width: 152px;
+            height: 152px;
+          }
+        }
+        @media (min-width: 760px) and (max-height: 720px) {
+          .hero-section {
+            align-items: flex-start !important;
+            min-height: 680px !important;
+            padding-top: 54px !important;
+          }
+          .hero-grid {
+            padding-top: 22px !important;
+            padding-bottom: 10px !important;
+            gap: 8px !important;
+          }
+          .hero-title {
+            font-size: clamp(2.65rem, 5vw, 4.2rem);
+            margin-bottom: 14px;
+          }
+          .hero-subcopy {
+            max-width: 720px;
+            margin-bottom: 16px;
+            font-size: 0.92rem;
+            line-height: 1.42;
+          }
+          .hero-action-row {
+            gap: 0.55rem;
+            margin-bottom: 0.72rem;
+          }
+          .hero-primary-cta,
+          .hero-secondary-cta {
+            min-height: 2.12rem;
+            min-width: 8.7rem;
+            padding: 0 0.78rem;
+            font-size: 0.72rem;
+          }
+          .hero-proof-row {
+            gap: 0.34rem;
+            max-width: min(100%, 600px);
+          }
+          .hero-proof-item {
+            min-height: 1.56rem;
+            gap: 0.32rem;
+            padding: 0 0.46rem;
+          }
+          .hero-proof-icon {
+            width: 0.92rem;
+            height: 0.92rem;
+          }
+          .hero-proof-title {
+            font-size: 0.64rem;
+          }
+          .hero-privacy-visual {
+            height: 180px !important;
+            margin-top: 42px !important;
+          }
+          .hpv-core {
+            top: 50%;
+            width: 204px;
+            height: 204px;
+          }
+          .hpv-path-text {
+            font-size: clamp(0.58rem, 0.9vw, 0.78rem);
+            stroke-width: 2.45px;
+          }
+          .hpv-output-text {
+            stroke-width: 2.65px;
+          }
         }
 
       `}</style>
