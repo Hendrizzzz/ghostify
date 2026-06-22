@@ -17,77 +17,133 @@
             </a>
         </header>
 
-        <section class="platform" aria-labelledby="instagram-heading">
-            <div class="platform-label" id="instagram-heading">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" />
-                    <circle cx="12" cy="12" r="4" />
-                    <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
-                </svg>
-                <span>Instagram</span>
-            </div>
-            <div class="card">
-                <div class="row">
-                    <span class="row-label">
-                        <span class="feature-icon seen-icon" aria-hidden="true"></span>
-                        <span>Hide Seen</span>
+        <section class="verification-panel" aria-labelledby="verification-heading">
+            <a class="verification-link" id="public-status-link" href="https://ghostify-extension.vercel.app/status" target="_blank" rel="noopener noreferrer">
+                <span class="verification-main">
+                    <span class="feature-icon status-icon" aria-hidden="true"></span>
+                    <span class="verification-copy">
+                        <span class="verification-title" id="verification-heading">Verification</span>
+                        <span class="verification-summary" id="public-status-summary">Checking public status.</span>
                     </span>
-                    <label class="switch" aria-label="Hide Instagram seen receipts"><input type="checkbox" id="ig-seen"><span class="track"></span></label>
-                </div>
-                <div class="row">
-                    <span class="row-label">
-                        <span class="feature-icon typing-icon" aria-hidden="true"></span>
-                        <span>Hide Typing</span>
-                    </span>
-                    <label class="switch" aria-label="Hide Instagram typing indicator"><input type="checkbox" id="ig-typing"><span class="track"></span></label>
-                </div>
-                <div class="row">
-                    <span class="row-label">
-                        <span class="feature-icon story-icon" aria-hidden="true"></span>
-                        <span>Hide Story Views</span>
-                    </span>
-                    <label class="switch" aria-label="Hide Instagram story views"><input type="checkbox" id="ig-story"><span class="track"></span></label>
-                </div>
+                </span>
+                <span class="verification-action" id="public-status-action">View</span>
+            </a>
+            <div class="local-refresh" id="local-refresh" hidden>
+                <span class="local-refresh-message" id="local-refresh-message">Refresh this tab to load Ghostify.</span>
+                <button class="status-refresh" id="status-refresh" type="button" aria-label="Refresh this tab">Refresh</button>
             </div>
         </section>
 
-        <section class="platform" aria-labelledby="messenger-heading">
-            <div class="platform-label" id="messenger-heading">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.915 1.455 5.515 3.73 7.214V22l3.408-1.87c.91.252 1.872.389 2.862.389 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2Zm.995 12.468-2.547-2.716-4.97 2.716 5.468-5.804 2.608 2.716 4.91-2.716-5.469 5.804Z" />
-                </svg>
-                <span>Messenger / Facebook</span>
+        <section class="view is-active" id="main-view" aria-label="Core controls">
+            <section class="platform" aria-labelledby="instagram-heading">
+                <div class="platform-label" id="instagram-heading">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+                    </svg>
+                    <span>Instagram</span>
+                </div>
+                <div class="card">
+                    <div class="row">
+                        <span class="row-label">
+                            <span class="feature-icon seen-icon" aria-hidden="true"></span>
+                            <span>Hide Seen</span>
+                        </span>
+                        <label class="switch" aria-label="Hide Instagram seen receipts"><input type="checkbox" id="ig-seen"><span class="track"></span></label>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">
+                            <span class="feature-icon typing-icon" aria-hidden="true"></span>
+                            <span>Hide Typing</span>
+                        </span>
+                        <label class="switch" aria-label="Hide Instagram typing indicator"><input type="checkbox" id="ig-typing"><span class="track"></span></label>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">
+                            <span class="feature-icon story-icon" aria-hidden="true"></span>
+                            <span>Hide Story Views</span>
+                        </span>
+                        <label class="switch" aria-label="Hide Instagram story views"><input type="checkbox" id="ig-story"><span class="track"></span></label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="platform" aria-labelledby="messenger-heading">
+                <div class="platform-label" id="messenger-heading">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.915 1.455 5.515 3.73 7.214V22l3.408-1.87c.91.252 1.872.389 2.862.389 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2Zm.995 12.468-2.547-2.716-4.97 2.716 5.468-5.804 2.608 2.716 4.91-2.716-5.469 5.804Z" />
+                    </svg>
+                    <span>Messenger / Facebook</span>
+                </div>
+                <div class="card">
+                    <div class="row">
+                        <span class="row-label">
+                            <span class="feature-icon seen-icon" aria-hidden="true"></span>
+                            <span>Hide Seen</span>
+                            <button class="info-icon" type="button" aria-label="Ghostify is active. Facebook may make chats look read here. Refresh Facebook or Messenger before judging." data-tooltip="Ghostify is active. Facebook may make chats look read here. Refresh Facebook or Messenger before judging.">i</button>
+                        </span>
+                        <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">
+                            <span class="feature-icon typing-icon" aria-hidden="true"></span>
+                            <span>Hide Typing</span>
+                        </span>
+                        <label class="switch" aria-label="Hide Messenger and Facebook typing indicator"><input type="checkbox" id="msg-typing"><span class="track"></span></label>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">
+                            <span class="feature-icon story-icon" aria-hidden="true"></span>
+                            <span>Hide Story Views</span>
+                        </span>
+                        <label class="switch" aria-label="Hide Messenger and Facebook story views"><input type="checkbox" id="msg-story"><span class="track"></span></label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="compact-links" aria-label="More Ghostify options">
+                <button class="nav-row" id="open-labs" type="button">
+                    <span class="row-label">
+                        <span class="feature-icon labs-icon" aria-hidden="true"></span>
+                        <span>Labs</span>
+                    </span>
+                    <span class="row-action">Vote</span>
+                </button>
+            </section>
+        </section>
+
+        <section class="view" id="labs-view" aria-label="Labs feedback" hidden>
+            <button class="back-row" id="close-labs" type="button">
+                <span aria-hidden="true">&lt;</span>
+                <span>Labs</span>
+            </button>
+
+            <div class="card labs-card">
+                <a class="labs-row" href="https://tally.so/r/D4W0Jq?source=popup_labs&amp;feature=instagram_video_controls&amp;version=2.0.4" target="_blank" rel="noopener noreferrer">
+                    <span class="labs-row-title">Instagram Video Controls</span>
+                    <span class="vote-pill">Vote</span>
+                </a>
+                <a class="labs-row" href="https://tally.so/r/D4W0Jq?source=popup_labs&amp;feature=per_site_control_presets&amp;version=2.0.4" target="_blank" rel="noopener noreferrer">
+                    <span class="labs-row-title">Per-site Control Presets</span>
+                    <span class="vote-pill">Vote</span>
+                </a>
+                <a class="labs-row" href="https://tally.so/r/D4W0Jq?source=popup_labs&amp;feature=compatibility_alerts&amp;version=2.0.4" target="_blank" rel="noopener noreferrer">
+                    <span class="labs-row-title">Compatibility Alerts</span>
+                    <span class="vote-pill">Vote</span>
+                </a>
             </div>
-            <div class="card">
-                <div class="row">
-                    <span class="row-label">
-                        <span class="feature-icon seen-icon" aria-hidden="true"></span>
-                        <span>Hide Seen</span>
-                        <button class="info-icon" type="button" aria-label="Ghostify is working. Facebook may only make chats appear read here; Seen stays blocked." data-tooltip="Ghostify is working. Facebook may only make chats appear read here; Seen stays blocked.">i</button>
-                    </span>
-                    <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
-                </div>
-                <div class="row">
-                    <span class="row-label">
-                        <span class="feature-icon typing-icon" aria-hidden="true"></span>
-                        <span>Hide Typing</span>
-                    </span>
-                    <label class="switch" aria-label="Hide Messenger and Facebook typing indicator"><input type="checkbox" id="msg-typing"><span class="track"></span></label>
-                </div>
-                <div class="row">
-                    <span class="row-label">
-                        <span class="feature-icon story-icon" aria-hidden="true"></span>
-                        <span>Hide Story Views</span>
-                    </span>
-                    <label class="switch" aria-label="Hide Messenger and Facebook story views"><input type="checkbox" id="msg-story"><span class="track"></span></label>
-                </div>
-            </div>
+
+            <a class="trust-row" href="https://github.com/Hendrizzzz/Ghostify/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">
+                <span>Trust &amp; Permissions</span>
+                <span>Open</span>
+            </a>
         </section>
 
         <footer class="footer">
             <span id="version-number"></span>
             <nav class="footer-links" aria-label="Ghostify links">
-                <a class="footer-link survey-link" href="https://docs.google.com/forms/d/e/1FAIpQLSddFGgzML2BCOJKTgVBaopmmzl0p1gBMkLEFMS5ofQY7hg89w/viewform" target="_blank" rel="noopener noreferrer" aria-label="Open the Ghostify View Once feature survey" data-tooltip="Share whether View Once media support fits Ghostify.">Feature survey</a>
+                <a class="footer-link survey-link" href="https://tally.so/r/D4W0Jq?source=popup_footer&amp;version=2.0.4" target="_blank" rel="noopener noreferrer" aria-label="Open the Ghostify feature survey" data-tooltip="Share which Labs ideas you want next. Do not include private messages.">Feature survey</a>
                 <span class="footer-separator" aria-hidden="true">/</span>
                 <a class="footer-link support-link" href="https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml" target="_blank" rel="noopener noreferrer" aria-label="Get help or share feedback using a guided GitHub form" data-tooltip="Helpful bug reports or ideas will be credited in release notes and on the website, with permission.">Help &amp; feedback</a>
             </nav>

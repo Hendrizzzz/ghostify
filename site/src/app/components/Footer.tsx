@@ -1,14 +1,31 @@
+import { Github, ShieldCheck } from 'lucide-react';
 import { GhostMark } from './GhostSVG';
-import { Github } from 'lucide-react';
+
+const footerLinkStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  fontFamily: 'var(--g-mono)',
+  fontSize: 11,
+  color: 'var(--g-dim)',
+  textDecoration: 'none',
+  letterSpacing: '0.04em',
+  transition: 'color 0.18s ease',
+};
+
+function setHoverColor(element: HTMLElement, active: boolean) {
+  element.style.color = active ? 'var(--g-body)' : 'var(--g-dim)';
+}
 
 export function Footer() {
   return (
     <footer
       style={{
         padding: '32px 28px',
-        borderTop: '1px solid rgba(240,230,210,0.05)',
+        borderTop: '1px solid var(--g-border-dim)',
         maxWidth: 1280,
         margin: '0 auto',
+        background: 'var(--g-bg)',
       }}
     >
       <div
@@ -20,7 +37,6 @@ export function Footer() {
           gap: 16,
         }}
       >
-        {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <GhostMark size={18} />
           <span
@@ -28,7 +44,7 @@ export function Footer() {
               fontFamily: 'var(--g-display)',
               fontSize: 16,
               fontWeight: 500,
-              color: 'rgba(240,230,210,0.4)',
+              color: 'var(--g-body)',
               letterSpacing: '0.01em',
             }}
           >
@@ -36,7 +52,6 @@ export function Footer() {
           </span>
         </div>
 
-        {/* Center: tagline */}
         <span
           style={{
             fontFamily: 'var(--g-mono)',
@@ -46,35 +61,40 @@ export function Footer() {
             textAlign: 'center',
           }}
         >
-          open source · no account · local controls · no tracking server
+          open source - no account - local controls - no tracking server
         </span>
 
-        {/* GitHub */}
-        <a
-          href="https://github.com/Hendrizzzz/Ghostify"
-          target="_blank"
-          rel="noopener noreferrer"
+        <nav
+          aria-label="Footer links"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            fontFamily: 'var(--g-mono)',
-            fontSize: 11,
-            color: 'var(--g-dim)',
-            textDecoration: 'none',
-            letterSpacing: '0.04em',
-            transition: 'color 0.18s ease',
+            justifyContent: 'flex-end',
+            gap: 14,
+            flexWrap: 'wrap',
           }}
-          onMouseEnter={(e) =>
-            ((e.currentTarget as HTMLElement).style.color = 'var(--g-body)')
-          }
-          onMouseLeave={(e) =>
-            ((e.currentTarget as HTMLElement).style.color = 'var(--g-dim)')
-          }
         >
-          <Github size={13} strokeWidth={1.5} />
-          GitHub
-        </a>
+          <a
+            href="/status"
+            style={footerLinkStyle}
+            onMouseEnter={(e) => setHoverColor(e.currentTarget as HTMLElement, true)}
+            onMouseLeave={(e) => setHoverColor(e.currentTarget as HTMLElement, false)}
+          >
+            <ShieldCheck size={13} strokeWidth={1.5} />
+            Status
+          </a>
+          <a
+            href="https://github.com/Hendrizzzz/Ghostify"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={footerLinkStyle}
+            onMouseEnter={(e) => setHoverColor(e.currentTarget as HTMLElement, true)}
+            onMouseLeave={(e) => setHoverColor(e.currentTarget as HTMLElement, false)}
+          >
+            <Github size={13} strokeWidth={1.5} />
+            GitHub
+          </a>
+        </nav>
       </div>
 
       <div
@@ -82,12 +102,12 @@ export function Footer() {
           marginTop: 20,
           fontFamily: 'var(--g-mono)',
           fontSize: 10,
-          color: 'rgba(240,230,210,0.15)',
+          color: 'var(--g-dim)',
           letterSpacing: '0.04em',
           textAlign: 'center',
         }}
       >
-        Not affiliated with Meta · Independent open-source project
+        Not affiliated with Meta - Independent open-source project
       </div>
     </footer>
   );

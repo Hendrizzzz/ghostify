@@ -22,6 +22,8 @@ npm-debug.log*
 
 .env
 .env.local
+.env.*
+!.env.example
 
 _raw_assets/
 *.psd

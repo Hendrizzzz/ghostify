@@ -544,14 +544,14 @@ export function GhostMascot() {
                 animate={{ y: 0, scale: 1 }}
                 exit={{ scale: 0.94 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ background: 'rgba(20,18,14,0.97)', border: '1px solid rgba(240,235,224,0.13)', borderRadius: 9, padding: '7px 13px', boxShadow: '0 4px 18px rgba(0,0,0,0.42)', willChange: 'transform', backfaceVisibility: 'hidden' }}
+                style={{ background: 'rgba(18,18,19,0.97)', border: '1px solid var(--g-border)', borderRadius: 9, padding: '7px 13px', boxShadow: '0 4px 18px rgba(0,0,0,0.42)', willChange: 'transform', backfaceVisibility: 'hidden' }}
               >
                 <span style={{ fontFamily: 'var(--g-mono)', fontSize: 11.5, letterSpacing: '0.01em', color: 'rgba(240,235,224,0.9)', display: 'block', textAlign: 'center' }}>
                   {message}
                 </span>
               </motion.div>
-              {!bubbleBelow && <div style={{ position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(20,18,14,0.94)' }} />}
-              {bubbleBelow  && <div style={{ position: 'absolute', top: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '5px solid rgba(20,18,14,0.94)' }} />}
+              {!bubbleBelow && <div style={{ position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(18,18,19,0.94)' }} />}
+              {bubbleBelow  && <div style={{ position: 'absolute', top: -5, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '5px solid rgba(18,18,19,0.94)' }} />}
             </div>
           </motion.div>
         )}
@@ -591,7 +591,6 @@ export function GhostMascot() {
               width: 'var(--ghost-mascot-size, 64px)',
               height: 'var(--ghost-mascot-size, 64px)',
               display: 'block',
-              filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.45)) drop-shadow(0 0 2px rgba(240,235,224,0.06))',
             }}
           />
         </div>

@@ -1,8 +1,9 @@
-import { SETTINGS, isFacebookMessengerProxy, isKilled } from '../config.js';
+import { SETTINGS, isFacebookMessengerProxy, isMessengerDotCom, isKilled } from '../config.js';
 
 const REQUEST_NATIVE_GRACE_MS = 15000;
 
 export function startMessengerProtection() {
+    if (!isMessengerDotCom && !isFacebookMessengerProxy) return;
     if (window.__GHOSTIFY_MESSENGER_PROTECTION__) return;
     window.__GHOSTIFY_MESSENGER_PROTECTION__ = true;
 

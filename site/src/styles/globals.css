@@ -2,28 +2,31 @@
 :root {
   /* Surfaces */
   --g-bg:          #0B0A08;
+  --g-bg-rgb:      11, 10, 8;
   --g-surface:     #141210;
-  --g-surface-2:   #1C1A16;
-  --g-surface-3:   #242019;
-  --g-border:      rgba(240, 230, 210, 0.07);
-  --g-border-dim:  rgba(240, 230, 210, 0.04);
+  --g-surface-2:   #1B1714;
+  --g-surface-3:   #2A211C;
+  --g-border:      rgba(239, 226, 208, 0.11);
+  --g-border-dim:  rgba(239, 226, 208, 0.06);
 
   /* Accent */
-  --g-accent:      #C44830;
-  --g-accent-dim:  #7A2E1A;
-  --g-accent-glow: rgba(196, 72, 48, 0.14);
-  --g-amber:       #C08040;
+  --g-accent:      #D46A52;
+  --g-accent-soft: #E48B6D;
+  --g-accent-dim:  #7C3428;
+  --g-accent-glow: rgba(212, 106, 82, 0.16);
+  --g-amber:       #D9A66D;
 
   /* Text */
-  --g-white:       #F0EBE0;
-  --g-white-dim:   rgba(240, 235, 224, 0.7);
-  --g-body:        rgba(240, 235, 224, 0.5);
-  --g-dim:         rgba(240, 235, 224, 0.26);
-  --g-ghost-body:  #E8E2D6;
+  --g-white:       #EFE2D0;
+  --g-white-dim:   rgba(239, 226, 208, 0.74);
+  --g-body:        rgba(239, 226, 208, 0.58);
+  --g-dim:         rgba(239, 226, 208, 0.32);
+  --g-ghost-body:  #F0E7DC;
 
   /* Fonts */
-  --g-display:     'Cormorant Garamond', Georgia, serif;
-  --g-sans:        'DM Sans', system-ui, sans-serif;
+  --g-display:     'EB Garamond', Georgia, serif;
+  --g-sans:        'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --g-watermark:   'EB Garamond', Georgia, serif;
   --g-mono:        'DM Mono', monospace;
 
   /* Motion */
@@ -42,8 +45,7 @@
   --z-modal:    1000;
   --z-mascot:   9999;
 
-  /* Desktop scale: nudges the exported design toward the 125% browser-zoom feel. */
-  --font-size: clamp(16.75px, calc(15px + 0.18vw), 18px);
+  --font-size: 16px;
 }
 
 @media (max-width: 768px) {
@@ -61,6 +63,8 @@ html, body {
   background-color: var(--g-bg);
   color: var(--g-white);
   font-family: var(--g-sans);
+  font-feature-settings: "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

@@ -146,8 +146,8 @@ function GhostifyPanel({
     <div
       style={{
         width: 220,
-        background: '#141210',
-        border: '1px solid rgba(240,230,210,0.09)',
+        background: 'var(--g-surface)',
+        border: '1px solid var(--g-border)',
         borderRadius: 10,
         overflow: 'hidden',
         flexShrink: 0,
@@ -163,7 +163,7 @@ function GhostifyPanel({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          borderBottom: '1px solid rgba(240,230,210,0.06)',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
         }}
       >
         <GhostMark size={16} />
@@ -221,7 +221,7 @@ function GhostifyPanel({
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   color: isActive
-                    ? 'rgba(196,72,48,0.7)'
+                    ? 'rgba(228,139,109,0.82)'
                     : 'rgba(240,230,210,0.26)',
                 }}
               >
@@ -1419,19 +1419,14 @@ export function DemoSection() {
       }}
     >
       {/* Section heading */}
-      <div className="demo-section-heading" style={{ marginBottom: 36 }}>
-        <div
-          style={{
-            fontFamily: 'var(--g-mono)',
-            fontSize: 11,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--g-dim)',
-            marginBottom: 10,
-          }}
-        >
-          Interactive demo
-        </div>
+      <motion.div
+        className="demo-section-heading"
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.7, margin: '0px 0px -18% 0px' }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        style={{ marginBottom: 36 }}
+      >
         <h2
           style={{
             fontFamily: 'var(--g-sans)',
@@ -1445,21 +1440,21 @@ export function DemoSection() {
         >
           Try it. Switch surfaces. Toggle controls.
         </h2>
-      </div>
+      </motion.div>
 
       {/* Browser chrome wrapper */}
       <div
         className="demo-browser"
         style={{
-          background: '#1C1A17',
+          background: 'var(--g-surface-2)',
           borderRadius: 12,
-          border: '1px solid rgba(240,230,210,0.08)',
+          border: '1px solid var(--g-border)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           overflow: 'hidden',
         }}
       >
         {/* Window chrome */}
-        <div style={{ height: 36, background: '#141210', borderBottom: '1px solid rgba(240,230,210,0.06)', display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8 }}>
+        <div style={{ height: 36, background: 'var(--g-surface)', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{ width: 10, height: 10, borderRadius: 5, background: '#FF5F57' }} />
             <div style={{ width: 10, height: 10, borderRadius: 5, background: '#FFBD2E' }} />
@@ -1468,7 +1463,7 @@ export function DemoSection() {
         </div>
 
         {/* Tab bar */}
-        <div className="demo-tabbar" style={{ background: '#141210', display: 'flex', alignItems: 'flex-end', padding: '0 12px', height: 32 }}>
+        <div className="demo-tabbar" style={{ background: 'var(--g-surface)', display: 'flex', alignItems: 'flex-end', padding: '0 12px', height: 32 }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -1478,7 +1473,7 @@ export function DemoSection() {
                 height: 26,
                 padding: '0 14px',
                 borderRadius: '5px 5px 0 0',
-                background: platform === tab.id ? '#1C1A17' : 'transparent',
+                background: platform === tab.id ? 'var(--g-surface-2)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 position: 'relative',
@@ -1509,7 +1504,7 @@ export function DemoSection() {
 
           {/* Extension icon */}
           <div className="demo-extension-tab-icon" style={{ paddingBottom: 6, paddingLeft: 8, display: 'flex', alignItems: 'center' }}>
-            <div style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(196,72,48,0.18)', border: '1px solid rgba(196,72,48,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 20, height: 20, borderRadius: 4, background: 'rgba(212,106,82,0.12)', border: '1px solid rgba(212,106,82,0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <GhostMark size={12} />
             </div>
           </div>
@@ -1565,7 +1560,7 @@ export function DemoSection() {
             style={{
               padding: '12px 12px 12px 0',
               borderLeft: '1px solid rgba(240,230,210,0.05)',
-              background: '#141210',
+              background: 'var(--g-surface)',
               flexShrink: 0,
               display: 'flex',
               alignItems: 'flex-start',
@@ -1584,7 +1579,7 @@ export function DemoSection() {
       <p
         style={{
           fontFamily: 'var(--g-mono)',
-          fontSize: 11,
+          fontSize: 15,
           color: 'var(--g-dim)',
           textAlign: 'center',
           marginTop: 16,

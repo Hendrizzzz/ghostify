@@ -1,10 +1,11 @@
-import { SETTINGS, isKilled } from '../config.js';
+import { SETTINGS, isFacebookDotCom, isKilled } from '../config.js';
 
 const REQUEST_NATIVE_GRACE_MS = 15000;
 const ROOT_NATIVE_GRACE_MS = 30000;
 const CHAT_OPEN_NATIVE_GRACE_MS = 4000;
 
 export function startFacebookProtection() {
+    if (!isFacebookDotCom) return;
     if (window.__GHOSTIFY_FACEBOOK_PROTECTION__) return;
     window.__GHOSTIFY_FACEBOOK_PROTECTION__ = true;
 

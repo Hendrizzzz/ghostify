@@ -4,7 +4,7 @@ import { Github } from 'lucide-react';
 const navItems = [
   { label: 'Features', href: '#features', mobileLabel: 'Features' },
   { label: 'Platforms', href: '#platforms', mobileLabel: 'Apps' },
-  { label: 'Privacy', href: '#privacy', mobileLabel: 'Privacy' },
+  { label: 'Privacy', href: '#limits', mobileLabel: 'Privacy' },
 ];
 
 let activeScrollFrame = 0;
@@ -65,6 +65,11 @@ function smoothScrollTo(targetTop: number, nextUrl: string) {
 }
 
 function scrollToSection(href: string) {
+  if (window.location.pathname !== '/') {
+    window.location.href = `/${href}`;
+    return;
+  }
+
   const target = document.querySelector<HTMLElement>(href);
   if (!target) {
     return;
@@ -108,7 +113,13 @@ export function Header() {
         {/* Logo + wordmark */}
         <button
           type="button"
-          onClick={() => smoothScrollTo(0, '/')}
+          onClick={() => {
+            if (window.location.pathname !== '/') {
+              window.location.href = '/';
+              return;
+            }
+            smoothScrollTo(0, '/');
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -159,7 +170,7 @@ export function Header() {
               onClick={() => scrollToSection(item.href)}
               style={{
                 fontFamily: 'var(--g-sans)',
-                fontSize: 13.5,
+                fontSize: 15,
                 fontWeight: 400,
                 color: 'rgba(240, 235, 224, 0.52)',
                 padding: 0,
@@ -190,7 +201,7 @@ export function Header() {
               alignItems: 'center',
               gap: 6,
               fontFamily: 'var(--g-sans)',
-              fontSize: 13.5,
+              fontSize: 15,
               fontWeight: 400,
               color: 'rgba(240, 235, 224, 0.52)',
               textDecoration: 'none',
@@ -217,7 +228,7 @@ export function Header() {
           right: 0;
           height: 56px;
           background:
-            linear-gradient(180deg, rgba(8, 8, 7, 0.56) 0%, rgba(8, 8, 7, 0.42) 64%, rgba(8, 8, 7, 0.1) 100%);
+            linear-gradient(180deg, rgba(var(--g-bg-rgb), 0.66) 0%, rgba(var(--g-bg-rgb), 0.48) 64%, rgba(var(--g-bg-rgb), 0.12) 100%);
           box-shadow:
             0 4px 12px rgba(0, 0, 0, 0.1);
           pointer-events: none;
@@ -235,7 +246,7 @@ export function Header() {
             top: 0;
             height: 56px;
             background:
-              linear-gradient(180deg, rgba(8, 8, 7, 0.6) 0%, rgba(8, 8, 7, 0.44) 66%, rgba(8, 8, 7, 0.08) 100%);
+              linear-gradient(180deg, rgba(var(--g-bg-rgb), 0.7) 0%, rgba(var(--g-bg-rgb), 0.5) 66%, rgba(var(--g-bg-rgb), 0.1) 100%);
           }
           .site-nav-frame {
             padding: 0 18px !important;
@@ -248,35 +259,21 @@ export function Header() {
           .site-nav a {
             font-size: 12px !important;
           }
+          .site-nav a:last-child {
+            display: none !important;
+          }
+        }
+        @media (max-width: 560px) {
+          .site-nav button:nth-of-type(3) {
+            display: none !important;
+          }
         }
         @media (max-width: 520px) {
           .site-nav-frame {
             padding: 0 14px !important;
           }
           .site-nav {
-            gap: 5px !important;
-            padding-left: 8px !important;
-          }
-          .site-nav button,
-          .site-nav a {
-            justify-content: center !important;
-          }
-          .site-nav button[data-mobile-label] {
-            min-width: 44px !important;
-            padding: 0 3px !important;
-            font-size: 0 !important;
-          }
-          .site-nav button[data-mobile-label]::before {
-            content: attr(data-mobile-label);
-            font-size: 11px;
-            line-height: 1;
-          }
-          .site-nav a:last-child {
-            width: 44px !important;
-            min-height: 44px !important;
-            justify-content: center !important;
-            gap: 0 !important;
-            font-size: 0 !important;
+            display: none !important;
           }
         }
         @media (max-width: 360px) {
@@ -292,6 +289,15 @@ export function Header() {
           }
           .site-nav button[data-mobile-label]::before {
             font-size: 10.5px;
+          }
+        }
+        @media (max-width: 430px) {
+          .site-nav {
+            display: none !important;
+          }
+          .site-nav button:nth-of-type(3),
+          .site-nav a:last-child {
+            display: none !important;
           }
         }
         @media (max-width: 340px) {

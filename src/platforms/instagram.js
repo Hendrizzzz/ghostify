@@ -1,7 +1,8 @@
 import { isInstagram, SETTINGS, isKilled } from '../config.js';
 
 export function startInstagramProtection() {
-    return isInstagram;
+    if (!isInstagram || window.__GHOSTIFY_INSTAGRAM_PROTECTION__) return;
+    window.__GHOSTIFY_INSTAGRAM_PROTECTION__ = true;
 }
 
 export function getInstagramSpoofState() {

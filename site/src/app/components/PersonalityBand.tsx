@@ -1,15 +1,30 @@
-import { motion } from 'motion/react';
-
 const LINES = [
-  { label: 'Signal control', text: 'Seen signals stay quiet.'           },
-  { label: 'Architecture',   text: 'Local-only. No Ghostify relay.'     },
-  { label: 'Footprint',      text: 'Local controls. Zero Ghostify servers.' },
-  { label: 'Trust model',    text: 'Open source. Read it yourself.'     },
+  { label: 'Signal control', text: 'Seen signals stay quiet.' },
+  { label: 'Architecture', text: 'Local-only. No Ghostify relay.' },
+  { label: 'Footprint', text: 'No tracking or message relay.' },
+  { label: 'Trust model', text: 'Open source. Read it yourself.' },
+  { label: 'Platform scope', text: 'Instagram, Messenger, Facebook.' },
+  { label: 'Account model', text: 'No Ghostify account required.' },
+  { label: 'Tab behavior', text: 'Supported tabs only.' },
+  { label: 'Signal types', text: 'Seen, typing, story views.' },
+  { label: 'Storage', text: 'Preferences stay in your browser.' },
+  { label: 'Verification', text: 'Public status stays visible.' },
 ];
 
 export function PersonalityBand() {
+  const renderLine = (line: typeof LINES[number]) => (
+    <div className="band-card" key={line.label}>
+      <div className="band-chip">
+        <div className="band-dot" />
+        <span>{line.label}</span>
+      </div>
+      <div className="band-copy">{line.text}</div>
+    </div>
+  );
+
   return (
     <section
+      aria-label="Ghostify privacy and trust highlights"
       style={{
         position: 'relative',
         borderTop: '1px solid rgba(240,230,210,0.06)',
@@ -18,67 +33,111 @@ export function PersonalityBand() {
         overflow: 'hidden',
       }}
     >
-      {/* Subtle horizontal grid lines */}
-      <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 24%, rgba(240,230,210,0.012) 25%)', pointerEvents: 'none' }} />
-
-      <div
-        className="band-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-        }}
-      >
-        {LINES.map((line, i) => (
-          <motion.div
-            key={line.label}
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.45, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              padding: 'clamp(28px, 3.5vw, 40px) clamp(24px, 3vw, 36px)',
-              borderRight: i < 3 ? '1px solid rgba(240,230,210,0.05)' : 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
-          >
-            {/* Receipt chip */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}>
-              <div style={{ width: 4, height: 4, borderRadius: 2, background: 'rgba(196,72,48,0.5)', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--g-mono)', fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(240,230,210,0.22)' }}>
-                {line.label}
-              </span>
-            </div>
-
-            {/* Punchy line */}
-            <div
-              style={{
-                fontFamily: 'var(--g-sans)',
-                fontSize: 'clamp(0.95rem, 1.2vw, 1.08rem)',
-                fontWeight: 500,
-                color: 'var(--g-white)',
-                lineHeight: 1.3,
-                letterSpacing: 0,
-              }}
-            >
-              {line.text}
-            </div>
-          </motion.div>
-        ))}
+      <div className="band-marquee">
+        <div className="band-track">
+          <div className="band-group">{LINES.map(renderLine)}</div>
+          <div className="band-group" aria-hidden="true">{LINES.map(renderLine)}</div>
+        </div>
       </div>
 
       <style>{`
-        @media (max-width: 900px) {
-          .band-grid { grid-template-columns: 1fr 1fr !important; }
-          .band-grid > *:nth-child(2) { border-right: none !important; }
-          .band-grid > *:nth-child(3) { border-right: 1px solid rgba(240,230,210,0.05) !important; border-top: 1px solid rgba(240,230,210,0.05); }
-          .band-grid > *:nth-child(4) { border-top: 1px solid rgba(240,230,210,0.05); }
+        .band-marquee {
+          position: relative;
+          z-index: 1;
+          overflow: hidden;
+          width: 100%;
         }
+
+        .band-marquee::before,
+        .band-marquee::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          z-index: 2;
+          width: min(120px, 12vw);
+          pointer-events: none;
+        }
+
+        .band-marquee::before {
+          left: 0;
+          background: linear-gradient(90deg, #0D0C0A, rgba(13,12,10,0));
+        }
+
+        .band-marquee::after {
+          right: 0;
+          background: linear-gradient(270deg, #0D0C0A, rgba(13,12,10,0));
+        }
+
+        .band-track {
+          display: flex;
+          width: max-content;
+          animation: ghostify-band-scroll 44s linear infinite;
+          will-change: transform;
+        }
+
+        .band-group {
+          display: flex;
+          flex-shrink: 0;
+        }
+
+        .band-card {
+          width: clamp(220px, 23vw, 340px);
+          min-height: 116px;
+          box-sizing: border-box;
+          padding: clamp(28px, 3.5vw, 40px) clamp(24px, 3vw, 36px);
+          border-right: 1px solid rgba(240,230,210,0.05);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .band-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          align-self: flex-start;
+          white-space: nowrap;
+        }
+
+        .band-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 2px;
+          background: rgba(212,106,82,0.55);
+          flex-shrink: 0;
+        }
+
+        .band-chip span {
+          font-family: var(--g-mono);
+          font-size: 8.5px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: rgba(240,230,210,0.22);
+        }
+
+        .band-copy {
+          font-family: var(--g-sans);
+          font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+          font-weight: 500;
+          color: var(--g-white);
+          line-height: 1.3;
+          letter-spacing: 0;
+        }
+
+        @keyframes ghostify-band-scroll {
+          from { transform: translate3d(0, 0, 0); }
+          to { transform: translate3d(-50%, 0, 0); }
+        }
+
         @media (max-width: 540px) {
-          .band-grid { grid-template-columns: 1fr !important; }
-          .band-grid > * { border-right: none !important; border-top: 1px solid rgba(240,230,210,0.05) !important; }
-          .band-grid > *:first-child { border-top: none !important; }
+          .band-track { animation-duration: 36s; }
+          .band-card {
+            width: 230px;
+            min-height: 108px;
+            padding: 24px 22px;
+          }
         }
       `}</style>
     </section>

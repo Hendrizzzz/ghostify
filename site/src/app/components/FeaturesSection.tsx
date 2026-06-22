@@ -122,16 +122,16 @@ function TypingScene() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, alignSelf: 'flex-end' }}>
         <div style={{ position: 'relative', padding: '8px 14px', borderRadius: '14px 4px 14px 14px', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.1)' }}>
           {/* Red strikethrough over the dots */}
-          <div style={{ position: 'absolute', left: 8, right: 8, top: '50%', height: 1.5, background: 'rgba(196,72,48,0.7)', transform: 'translateY(-50%)', borderRadius: 1, zIndex: 1 }} />
+          <div style={{ position: 'absolute', left: 8, right: 8, top: '50%', height: 1.5, background: 'rgba(212,106,82,0.72)', transform: 'translateY(-50%)', borderRadius: 1, zIndex: 1 }} />
           <div style={{ display: 'flex', gap: 5 }}>
             {[0, 1, 2].map(i => (
               <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', animation: `typingBounce 1.1s ease-in-out ${i * 0.18}s infinite` }} />
             ))}
           </div>
         </div>
-        <div style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(196,72,48,0.13)', border: '1px solid rgba(196,72,48,0.28)', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        <div style={{ padding: '3px 8px', borderRadius: 6, background: 'rgba(212,106,82,0.11)', border: '1px solid rgba(212,106,82,0.3)', display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <GhostMark size={9} />
-          <span style={{ fontFamily: 'var(--g-mono)', fontSize: 9, color: 'rgba(196,72,48,0.82)', letterSpacing: '0.04em' }}>typing held</span>
+          <span style={{ fontFamily: 'var(--g-mono)', fontSize: 9, color: 'rgba(228,139,109,0.88)', letterSpacing: '0.04em' }}>typing held</span>
         </div>
       </div>
       {/* Composer — you are actively typing */}
@@ -247,8 +247,8 @@ function ExtensionScene() {
   ];
 
   return (
-    <div style={{ width: 176, background: '#191713', border: '1px solid rgba(240,230,210,0.11)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 10px 32px rgba(0,0,0,0.55)' }}>
-      <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, borderBottom: '1px solid rgba(240,230,210,0.07)', background: '#141210' }}>
+    <div style={{ width: 176, background: 'var(--g-surface)', border: '1px solid var(--g-border)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 10px 32px rgba(0,0,0,0.55)' }}>
+      <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'var(--g-surface-2)' }}>
         <GhostMark size={14} />
         <span style={{ fontFamily: 'var(--g-sans)', fontSize: 12.5, fontWeight: 500, color: 'var(--g-white)', lineHeight: 1, letterSpacing: 0 }}>Ghostify</span>
         <span style={{ marginLeft: 'auto', fontFamily: 'var(--g-mono)', fontSize: 8.5, color: 'rgba(240,230,210,0.22)' }}>local</span>
@@ -256,7 +256,7 @@ function ExtensionScene() {
       {rows.map(row => (
         <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5.5px 12px' }}>
           <span style={{ fontFamily: 'var(--g-sans)', fontSize: 11, color: 'rgba(240,230,210,0.62)' }}>{row.label}</span>
-          <div style={{ width: 26, height: 16, borderRadius: 8, backgroundColor: row.on ? '#C44830' : 'rgba(240,230,210,0.13)', position: 'relative', flexShrink: 0, overflow: 'hidden', contain: 'paint', transition: 'background-color 0.48s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div style={{ width: 26, height: 16, borderRadius: 8, backgroundColor: row.on ? '#D46A52' : 'rgba(240,230,210,0.13)', position: 'relative', flexShrink: 0, overflow: 'hidden', contain: 'paint', transition: 'background-color 0.48s cubic-bezier(0.16, 1, 0.3, 1)' }}>
             <div
               style={{
                 position: 'absolute', top: 3,
@@ -301,19 +301,19 @@ export function FeaturesSection() {
   const FT = { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
 
   return (
-    <section id="features" className="snap-start" style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <section id="features" className="snap-start features-section" style={{ position: 'relative', minHeight: '90svh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', background: 'transparent', marginTop: 0, scrollMarginTop: 76 }}>
       {/* Section heading */}
-      <div style={{ padding: 'clamp(48px, 6vw, 72px) clamp(28px, 4vw, 56px) clamp(20px, 3vw, 32px)' }}>
-        <div style={{ fontFamily: 'var(--g-mono)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--g-dim)', marginBottom: 10 }}>
-          What it controls
-        </div>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.7, margin: '0px 0px -18% 0px' }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        style={{ padding: 'clamp(16px, 2.4vw, 28px) clamp(28px, 4vw, 56px) clamp(20px, 3vw, 32px)' }}
+      >
         <h2 style={{ fontFamily: 'var(--g-sans)', fontSize: 'clamp(1.4rem, 2.2vw, 1.9rem)', fontWeight: 500, color: 'var(--g-white)', margin: 0, lineHeight: 1.2, letterSpacing: 0 }}>
           Quiet controls for noisy apps.
         </h2>
-      </div>
-
-      {/* Full-width hairline before the grid */}
-      <div style={{ height: 1, background: 'rgba(240,230,210,0.06)' }} />
+      </motion.div>
 
       {/* Asymmetric 4-up grid — full viewport width, no maxWidth cage */}
       <div className="feat-outer" style={{ display: 'grid', gridTemplateColumns: '42% 58%', flex: 1 }}>
@@ -401,15 +401,33 @@ export function FeaturesSection() {
       </div>
 
       <style>{`
+        .features-section > * {
+          position: relative;
+          z-index: 1;
+        }
         @media (max-width: 900px) {
-          .feat-outer { grid-template-columns: 1fr !important; }
+          #features > div:first-child,
+          .feat-outer {
+            width: min(100%, 700px) !important;
+            max-width: 700px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            box-sizing: border-box !important;
+          }
+          .feat-outer {
+            grid-template-columns: 1fr !important;
+          }
+          .feat-col,
+          .feat-bottom {
+            width: 100% !important;
+          }
           .feat-f1 { border-right: none !important; border-bottom: ${H} !important; }
           .feat-bottom { grid-template-columns: 1fr !important; }
           .feat-f3 { border-right: none !important; border-bottom: ${H} !important; }
         }
         @media (max-height: 820px) and (min-width: 901px) {
           #features > div:first-child {
-            padding-top: 84px !important;
+            padding-top: 30px !important;
             padding-bottom: 14px !important;
           }
           .feat-cell { padding: 18px 32px !important; gap: 18px !important; }
@@ -428,13 +446,13 @@ export function FeaturesSection() {
             margin-bottom: 8px !important;
           }
           .feat-cell p {
-            font-size: 14px !important;
+            font-size: 15px !important;
             line-height: 1.48 !important;
           }
         }
         @media (max-width: 480px) {
           #features > div:first-child {
-            padding-top: 76px !important;
+            padding-top: 44px !important;
           }
           .feat-cell { padding: 28px 22px !important; }
         }

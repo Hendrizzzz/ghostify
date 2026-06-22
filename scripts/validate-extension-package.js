@@ -39,6 +39,11 @@ const manifest = readJson(repoPath('dist', 'manifest.json'));
 const patterns = readJson(repoPath('dist', 'config', 'patterns.json'));
 const privacyPolicy = fs.readFileSync(repoPath('PRIVACY.md'), 'utf8');
 const contentSource = fs.readFileSync(repoPath('src', 'content.js'), 'utf8');
+const popupHtml = fs.readFileSync(repoPath('dist', 'popup.html'), 'utf8');
+const popupJs = fs.readFileSync(repoPath('dist', 'js', 'popup.js'), 'utf8');
+const changelog = fs.readFileSync(repoPath('CHANGELOG.md'), 'utf8');
+const statusJson = readJson(repoPath('site', 'public', 'status.json'));
+const statusSourceJson = readJson(repoPath('site', 'src', 'app', 'statusData.json'));
 const fallbackConfig = readFallbackConfig(contentSource);
 
 const ALLOWED_PERMISSIONS = [
@@ -61,6 +66,12 @@ const ALL_PLATFORM_MATCHES = [
 ];
 
 const REQUIRED_PRIVACY_DISCLOSURES = [
+    {
+        label: 'runtime-scoped collection statement',
+        phrases: [
+            "Ghostify's extension runtime does not collect, store, share, or sell your personal data."
+        ]
+    },
     {
         label: 'local transient inspection disclosure',
         phrases: [
@@ -85,7 +96,7 @@ const REQUIRED_PRIVACY_DISCLOSURES = [
     {
         label: 'voluntary feedback disclosure',
         phrases: [
-            'GitHub issue forms or Google Forms',
+            'GitHub issue forms or Tally forms',
             'Do not submit private messages, credentials, or account-sensitive details'
         ]
     }
@@ -131,6 +142,53 @@ const EXPECTED_WEB_ACCESSIBLE_RESOURCES = [
     }
 ];
 
+const PUBLIC_STATUS_VALUES = [
+    'maintainer_verified',
+    'community_verified_reviewed',
+    'under_review',
+    'not_recently_verified',
+    'known_issue',
+    'stale',
+    'public_status_unavailable'
+];
+
+const VERIFIED_PUBLIC_STATUS_VALUES = new Set([
+    'maintainer_verified',
+    'community_verified_reviewed'
+]);
+
+const PUBLIC_STATUS_LOCAL_EVIDENCE_VALUES = [
+    'manual_pending',
+    'verified',
+    'gap',
+    'not_applicable'
+];
+
+const PUBLIC_STATUS_EVIDENCE_TYPES = [
+    'sender_side_no_signal',
+    'story_owner_no_view',
+    'local_loaded',
+    'local_probe_blocked',
+    'manual_smoke_pending'
+];
+
+const PUBLIC_STATUS_SOURCE_TYPES = [
+    'maintainer',
+    'reviewed_community'
+];
+
+const PUBLIC_STATUS_PLATFORM_VALUES = [
+    'Instagram',
+    'Messenger',
+    'Facebook'
+];
+
+const PUBLIC_STATUS_FEATURE_VALUES = [
+    'Hide Seen',
+    'Hide Typing',
+    'Hide Story Views'
+];
+
 function assertStringArray(value, label) {
     if (!Array.isArray(value)) fail(`${label} must be an array`);
     for (const [index, item] of value.entries()) {
@@ -164,6 +222,40 @@ function assertExactStringSet(actual, expected, label) {
 
 function assertEqual(actual, expected, label) {
     if (actual !== expected) fail(`${label} must be ${JSON.stringify(expected)}`);
+}
+
+function assertBoolean(actual, expected, label) {
+    if (actual !== expected) fail(`${label} must be ${expected}`);
+}
+
+function assertEnum(actual, allowed, label) {
+    if (!allowed.includes(actual)) {
+        fail(`${label} must be one of ${allowed.join(', ')}`);
+    }
+}
+
+function assertObject(value, label) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        fail(`${label} must be an object`);
+    }
+}
+
+function assertNullableIsoDate(value, label) {
+    if (value === null) return;
+    if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
+        fail(`${label} must be null or an ISO date string`);
+    }
+}
+
+function assertHttpsUrl(value, label) {
+    if (typeof value !== 'string' || !value.startsWith('https://')) {
+        fail(`${label} must be an HTTPS URL`);
+    }
+}
+
+function assertNullableHttpsUrl(value, label) {
+    if (value === null) return;
+    assertHttpsUrl(value, label);
 }
 
 function assertOnlyKeys(value, allowedKeys, label) {
@@ -212,6 +304,202 @@ function assertPrivacyPolicyRequiredDisclosures() {
                 fail(`PRIVACY.md must include ${disclosure.label}`);
             }
         }
+    }
+}
+
+function assertPopupSurveyVersions() {
+    const tallyLinks = [...popupHtml.matchAll(/https:\/\/tally\.so\/r\/D4W0Jq\?[^"']+/g)].map(match => match[0]);
+    if (!tallyLinks.length) fail('dist/popup.html must include Tally feature survey links');
+
+    for (const link of tallyLinks) {
+        const versionMatch = link.match(/[?&](?:amp;)?version=([^&"']+)/);
+        if (!versionMatch) fail(`Tally survey link is missing a version parameter: ${link}`);
+        if (versionMatch[1] !== pkg.version) {
+            fail(`Tally survey link version ${versionMatch[1]} does not match package.json ${pkg.version}`);
+        }
+    }
+}
+
+function assertPopupPublicStatusLink() {
+    if (!popupHtml.includes('https://ghostify-extension.vercel.app/status')) {
+        fail('dist/popup.html must include the public verification status link');
+    }
+
+    if (!popupJs.includes('https://ghostify-extension.vercel.app/status.json')) {
+        fail('dist/js/popup.js must fetch the display-only public status feed');
+    }
+
+    if (!popupJs.includes('effectivePublicStatus') || !popupJs.includes('expiresAt')) {
+        fail('dist/js/popup.js must downgrade expired verified public statuses');
+    }
+}
+
+function assertStatusJsonContract() {
+    assertObject(statusJson, 'site/public/status.json');
+    if (stableJson(statusJson) !== stableJson(statusSourceJson)) {
+        fail('site/src/app/statusData.json must match site/public/status.json');
+    }
+    assertOnlyKeys(statusJson, [
+        'schemaVersion',
+        'product',
+        'productVersion',
+        'generatedAt',
+        'statusUrl',
+        'historyUrl',
+        'summary',
+        'policy',
+        'automationPolicy',
+        'communityVerification',
+        'entries',
+        'history'
+    ], 'site/public/status.json');
+    assertEqual(statusJson.schemaVersion, 1, 'site/public/status.json schemaVersion');
+    assertEqual(statusJson.productVersion, pkg.version, 'site/public/status.json productVersion');
+    assertHttpsUrl(statusJson.statusUrl, 'site/public/status.json statusUrl');
+    assertHttpsUrl(statusJson.historyUrl, 'site/public/status.json historyUrl');
+    assertNullableIsoDate(statusJson.generatedAt, 'site/public/status.json generatedAt');
+
+    assertObject(statusJson.summary, 'site/public/status.json summary');
+    assertOnlyKeys(statusJson.summary, ['publicStatus', 'label', 'message'], 'site/public/status.json summary');
+    assertEnum(statusJson.summary.publicStatus, PUBLIC_STATUS_VALUES, 'site/public/status.json summary.publicStatus');
+    if (!statusJson.summary.label || typeof statusJson.summary.label !== 'string') {
+        fail('site/public/status.json summary.label must be a non-empty string');
+    }
+    if (!statusJson.summary.message || typeof statusJson.summary.message !== 'string') {
+        fail('site/public/status.json summary.message must be a non-empty string');
+    }
+
+    assertObject(statusJson.policy, 'site/public/status.json policy');
+    assertOnlyKeys(statusJson.policy, [
+        'verificationCadence',
+        'verifiedStatusExpiresAfterDays',
+        'staleBehavior'
+    ], 'site/public/status.json policy');
+    if (!statusJson.policy.staleBehavior || !String(statusJson.policy.staleBehavior).includes('downgrade')) {
+        fail('site/public/status.json policy.staleBehavior must describe stale downgrade behavior');
+    }
+
+    assertObject(statusJson.automationPolicy, 'site/public/status.json automationPolicy');
+    assertOnlyKeys(statusJson.automationPolicy, [
+        'canFlagReports',
+        'canSummarizeReports',
+        'canDowngradeStatus',
+        'canMarkVerified'
+    ], 'site/public/status.json automationPolicy');
+    assertBoolean(statusJson.automationPolicy.canFlagReports, true, 'site/public/status.json automationPolicy.canFlagReports');
+    assertBoolean(statusJson.automationPolicy.canSummarizeReports, true, 'site/public/status.json automationPolicy.canSummarizeReports');
+    assertBoolean(statusJson.automationPolicy.canDowngradeStatus, true, 'site/public/status.json automationPolicy.canDowngradeStatus');
+    assertBoolean(statusJson.automationPolicy.canMarkVerified, false, 'site/public/status.json automationPolicy.canMarkVerified');
+
+    assertObject(statusJson.communityVerification, 'site/public/status.json communityVerification');
+    assertOnlyKeys(statusJson.communityVerification, [
+        'requiresMaintainerReview',
+        'publicCreditRequiresOptIn',
+        'screenshotsMustBeRedacted',
+        'privateMessagesAllowed',
+        'rawSubmissionsShownInPopup'
+    ], 'site/public/status.json communityVerification');
+    assertBoolean(statusJson.communityVerification.requiresMaintainerReview, true, 'site/public/status.json communityVerification.requiresMaintainerReview');
+    assertBoolean(statusJson.communityVerification.publicCreditRequiresOptIn, true, 'site/public/status.json communityVerification.publicCreditRequiresOptIn');
+    assertBoolean(statusJson.communityVerification.screenshotsMustBeRedacted, true, 'site/public/status.json communityVerification.screenshotsMustBeRedacted');
+    assertBoolean(statusJson.communityVerification.privateMessagesAllowed, false, 'site/public/status.json communityVerification.privateMessagesAllowed');
+    assertBoolean(statusJson.communityVerification.rawSubmissionsShownInPopup, false, 'site/public/status.json communityVerification.rawSubmissionsShownInPopup');
+
+    if (!Array.isArray(statusJson.entries) || !statusJson.entries.length) {
+        fail('site/public/status.json entries must be a non-empty array');
+    }
+    if (statusJson.entries.length > 32) {
+        fail('site/public/status.json entries must stay compact for popup use');
+    }
+
+    const expectedFeatureKeys = new Set();
+    for (const platform of PUBLIC_STATUS_PLATFORM_VALUES) {
+        for (const feature of PUBLIC_STATUS_FEATURE_VALUES) {
+            expectedFeatureKeys.add(`${platform}:${feature}`);
+        }
+    }
+    const actualFeatureKeys = new Set();
+
+    for (const [index, entry] of statusJson.entries.entries()) {
+        const label = `site/public/status.json entries[${index}]`;
+        assertObject(entry, label);
+        assertOnlyKeys(entry, [
+            'id',
+            'platform',
+            'feature',
+            'publicStatus',
+            'localEvidenceStatus',
+            'publicEvidenceType',
+            'sourceType',
+            'reviewer',
+            'reviewRecord',
+            'verifiedAt',
+            'expiresAt',
+            'relatedIssueUrl',
+            'notes'
+        ], label);
+        if (!entry.id || typeof entry.id !== 'string') fail(`${label}.id must be a non-empty string`);
+        assertEnum(entry.platform, PUBLIC_STATUS_PLATFORM_VALUES, `${label}.platform`);
+        assertEnum(entry.feature, PUBLIC_STATUS_FEATURE_VALUES, `${label}.feature`);
+        assertEnum(entry.publicStatus, PUBLIC_STATUS_VALUES, `${label}.publicStatus`);
+        assertEnum(entry.localEvidenceStatus, PUBLIC_STATUS_LOCAL_EVIDENCE_VALUES, `${label}.localEvidenceStatus`);
+        assertEnum(entry.publicEvidenceType, PUBLIC_STATUS_EVIDENCE_TYPES, `${label}.publicEvidenceType`);
+        assertEnum(entry.sourceType, PUBLIC_STATUS_SOURCE_TYPES, `${label}.sourceType`);
+        assertNullableIsoDate(entry.verifiedAt, `${label}.verifiedAt`);
+        assertNullableIsoDate(entry.expiresAt, `${label}.expiresAt`);
+        assertNullableHttpsUrl(entry.relatedIssueUrl, `${label}.relatedIssueUrl`);
+        if (!entry.reviewer || typeof entry.reviewer !== 'string') fail(`${label}.reviewer must be a non-empty string`);
+        if (!entry.reviewRecord || typeof entry.reviewRecord !== 'string') fail(`${label}.reviewRecord must be a non-empty string`);
+        if (!entry.notes || typeof entry.notes !== 'string') fail(`${label}.notes must be a non-empty string`);
+
+        if (VERIFIED_PUBLIC_STATUS_VALUES.has(entry.publicStatus)) {
+            if (!entry.verifiedAt) fail(`${label}.verifiedAt is required for verified public status`);
+            if (!entry.expiresAt) fail(`${label}.expiresAt is required for verified public status`);
+            if (Date.parse(entry.expiresAt) <= Date.parse(entry.verifiedAt)) {
+                fail(`${label}.expiresAt must be after verifiedAt`);
+            }
+            if (entry.localEvidenceStatus !== 'verified') {
+                fail(`${label}.localEvidenceStatus must be verified for verified public status`);
+            }
+        }
+
+        if (entry.publicStatus === 'maintainer_verified' && entry.sourceType !== 'maintainer') {
+            fail(`${label}.sourceType must be maintainer for maintainer_verified`);
+        }
+        if (entry.publicStatus === 'community_verified_reviewed' && entry.sourceType !== 'reviewed_community') {
+            fail(`${label}.sourceType must be reviewed_community for community_verified_reviewed`);
+        }
+
+        const featureKey = `${entry.platform}:${entry.feature}`;
+        if (actualFeatureKeys.has(featureKey)) {
+            fail(`site/public/status.json has duplicate public verification entry for ${featureKey}`);
+        }
+        actualFeatureKeys.add(featureKey);
+    }
+
+    for (const key of expectedFeatureKeys) {
+        if (!actualFeatureKeys.has(key)) {
+            fail(`site/public/status.json is missing public verification entry for ${key}`);
+        }
+    }
+
+    if (!Array.isArray(statusJson.history) || !statusJson.history.length) {
+        fail('site/public/status.json history must be a non-empty array');
+    }
+    for (const [index, item] of statusJson.history.entries()) {
+        const label = `site/public/status.json history[${index}]`;
+        assertObject(item, label);
+        assertOnlyKeys(item, ['date', 'publicStatus', 'title', 'summary'], label);
+        assertNullableIsoDate(item.date, `${label}.date`);
+        assertEnum(item.publicStatus, PUBLIC_STATUS_VALUES, `${label}.publicStatus`);
+        if (!item.title || typeof item.title !== 'string') fail(`${label}.title must be a non-empty string`);
+        if (!item.summary || typeof item.summary !== 'string') fail(`${label}.summary must be a non-empty string`);
+    }
+}
+
+function assertChangelogCoversPackageVersion() {
+    if (!changelog.includes(`## [${pkg.version}]`)) {
+        fail(`CHANGELOG.md must include a release heading for ${pkg.version}`);
     }
 }
 
@@ -280,6 +568,10 @@ assertExactStringSet(manifest.host_permissions, ALLOWED_HOST_PERMISSIONS, 'dist/
 assertNoOptionalPermissionFields(manifest);
 assertPrivacyPolicyCoversPermissions();
 assertPrivacyPolicyRequiredDisclosures();
+assertPopupSurveyVersions();
+assertPopupPublicStatusLink();
+assertChangelogCoversPackageVersion();
+assertStatusJsonContract();
 assertContentScripts(manifest.content_scripts, EXPECTED_CONTENT_SCRIPTS);
 assertWebAccessibleResources(manifest.web_accessible_resources, EXPECTED_WEB_ACCESSIBLE_RESOURCES);
 if (patterns.version !== pkg.version) {

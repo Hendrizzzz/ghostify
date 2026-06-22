@@ -73,7 +73,8 @@ npm run validate:extension
 
 The validator checks version synchronization, fallback config synchronization,
 manifest asset references, approved manifest permissions, approved host
-permissions, content-script matches, and web-accessible resource matches.
+permissions, content-script matches, web-accessible resource matches, public
+status JSON schema, popup public status links, and verification guardrails.
 
 ## 4. Changelog And Release Notes
 
@@ -105,6 +106,13 @@ git diff --exit-code -- dist/background.js dist/js/content.js dist/js/ghost.js d
 ```
 
 Do not package or upload if CI or local tests fail.
+
+For releases that touch the website or public verification status, build the
+site from `site/` before upload:
+
+```bash
+npm run build
+```
 
 `npm run validate:extension` also checks that manifest permissions and host
 permissions match the approved allowlist. Permission changes require a privacy
@@ -148,6 +156,7 @@ Test only with accounts and conversations you are allowed to use.
 - `GH-MSG-SEEN-001`:
   - Hide Seen is enabled and read receipt writes are blocked.
   - Sending a normal message still succeeds.
+- `GH-MSG-STORY-001`: Supported Messenger/Facebook story-view writes are blocked where the web surface exposes them, and normal navigation still works.
 - `GH-MSG-REQUESTS-001`: Message requests open and hydrate correctly.
 - Conversation navigation, media, and reload behavior remain usable.
 
@@ -157,6 +166,7 @@ Test only with accounts and conversations you are allowed to use.
   - Feed mini-chat and `/messages` or Messenger surfaces still load.
   - Hide Seen blocks read receipt writes.
   - Message requests open correctly.
+- `GH-FB-STORY-001`: Supported Facebook story-view writes are blocked and story media still loads.
 - `GH-FB-LOCAL-READ-001`: Facebook local read-state behavior is documented and not mistaken for a sent Seen signal.
 - `GH-FB-MEDIA-001`: video and media playback still work on non-message surfaces.
 
@@ -179,6 +189,15 @@ Confirm the release still matches `PRIVACY.md` and Chrome Web Store disclosures:
 - Chrome Web Store privacy fields still match actual behavior.
 - Reviewer test instructions are updated if behavior or permissions changed.
 - `GH-PRIVACY-001` is recorded as verified, manual-pending, gap, or not applicable.
+- `/status`, `/status/history`, and `/status.json` describe only reviewed
+  public verification data and never raw submissions or private evidence.
+- Public green status requires maintainer-reviewed sender-side or story-owner
+  proof where applicable.
+- Expired verified statuses downgrade visibly instead of staying green forever.
+- Automation may flag, summarize, or downgrade status; it must not mark a live
+  feature verified.
+- Public credit is opt-in only, screenshots are redacted, and private messages
+  are not requested.
 
 ## 9. Package For Chrome Web Store
 

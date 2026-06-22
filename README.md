@@ -5,6 +5,7 @@
 Privacy controls for Instagram, Facebook, and Messenger web.
 
 [Website](https://ghostify-extension.vercel.app) |
+[Status](https://ghostify-extension.vercel.app/status) |
 [Chrome Web Store](https://chromewebstore.google.com/detail/flpnibonbhdmnpgflnbemgghghhblmpm) |
 [Help & feedback](https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml)
 
@@ -22,9 +23,15 @@ Ghostify is a Manifest V3 browser extension that helps reduce social pressure on
 | --- | :---: | :---: | :---: |
 | Hide Seen / read receipts | Yes | Yes | Yes |
 | Hide typing indicators | Yes | Yes | Yes |
-| Hide story-view signals | Yes | Yes | Yes |
+| Hide story-view signals | Yes | Yes | Shared Facebook control |
 
 Facebook and Messenger share the same Messenger / Facebook controls in the popup.
+
+## Public Verification Status
+
+Ghostify publishes a public [Verification Status](https://ghostify-extension.vercel.app/status) page for the supported web surfaces. Status entries separate local extension checks from reviewed sender-side or story-owner verification, and verified entries expire instead of staying green indefinitely.
+
+Community reports can help downgrade or review a status, but public green verification requires maintainer review. Screenshots and recordings must be redacted, private messages should not be submitted, and public credit is opt-in only.
 
 ## Install
 
@@ -43,7 +50,9 @@ Install Ghostify from the [Chrome Web Store](https://chromewebstore.google.com/d
 
 ## Latest Release
 
-Use the Chrome Web Store badge above or [Releases](https://github.com/Hendrizzzz/Ghostify/releases) for the current published version and release notes.
+Use the Chrome Web Store badge above for the current published version. GitHub
+[Releases](https://github.com/Hendrizzzz/Ghostify/releases) contain source
+release notes when a matching GitHub release has been published.
 
 ## How It Works
 
@@ -53,7 +62,7 @@ Ghostify runs locally through browser extension APIs:
 - Content scripts and page-context patches handle modern Meta web app behavior that cannot be covered by static rules alone.
 - User settings are saved in extension storage and synced to open Instagram, Facebook, and Messenger tabs.
 
-Ghostify does not run a tracking server and does not collect, sell, or share user activity.
+Ghostify does not run a tracking server and does not collect, sell, or share user activity through the extension runtime. The popup may request Ghostify's public `status.json` feed to display verification summaries; that request does not include your messages, tab URLs, settings, or social media activity.
 
 ## Privacy
 
@@ -61,10 +70,10 @@ Ghostify is designed to work entirely inside your browser.
 
 It does not:
 
-- collect your messages
+- collect your messages through Ghostify's extension runtime
 - require a Ghostify account
 - ask for Instagram, Facebook, or Messenger passwords
-- send your browsing activity to a Ghostify server
+- send your browsing activity, messages, tab URLs, or settings to a Ghostify server
 
 See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
@@ -116,7 +125,7 @@ Found a bug, have an idea, want to share feedback, or need to ask a question?
 
 Use the guided form: [Help & feedback](https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml)
 
-Screenshots or short screen recordings are welcome when they help explain the issue. Helpful confirmed reports can be credited in Ghostify release notes and on the website, with permission.
+Screenshots or short screen recordings are welcome when they help explain the issue, but do not include private messages, credentials, or account-sensitive details. Helpful confirmed reports can be credited in Ghostify release notes and on the website, with permission.
 
 ## Contributing
 

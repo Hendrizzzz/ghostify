@@ -5,7 +5,7 @@ import { Plus, Minus } from 'lucide-react';
 const FAQS = [
   {
     q: 'Does Ghostify read my messages?',
-    a: "Ghostify inspects supported request and message metadata locally in your browser to identify read receipts, typing indicators, and story-view signals. It does not send your conversations to Ghostify, store raw messages, or ask for login credentials.",
+    a: "Ghostify transiently inspects supported request URLs, request payloads, and page or worker messages locally in your browser to identify read receipts, typing indicators, and story-view signals. It does not send your conversations to Ghostify, store raw messages, or ask for login credentials.",
   },
   {
     q: 'Does it work on mobile apps?',
@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: 'Can platforms break Ghostify\'s controls?',
-    a: "Yes. Meta updates their interfaces regularly and sometimes changes how presence signals are sent. When a platform update breaks a control, we investigate and push a fix — but there's no guarantee of instant coverage. Check the GitHub repo for known issues.",
+    a: "Yes. Meta updates their interfaces regularly and sometimes changes how presence signals are sent. When a platform update breaks a control, we investigate and push a fix, but there is no guarantee of instant coverage. Check the Status page for current public verification and the GitHub repo for known issues.",
   },
   {
     q: 'Does it store my activity?',
@@ -46,25 +46,28 @@ export function FAQSection() {
         padding: 'clamp(56px, 8vw, 100px) clamp(28px, 4vw, 56px)',
         maxWidth: 1280,
         margin: '0 auto',
+        background: 'var(--g-bg)',
       }}
     >
       <div className="faq-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'clamp(40px, 6vw, 80px)', alignItems: 'start' }}>
 
-        <div>
-          <div style={{ fontFamily: 'var(--g-mono)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--g-dim)', marginBottom: 16 }}>
-            Questions
-          </div>
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.65, margin: '0px 0px -18% 0px' }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h2 style={{ fontFamily: 'var(--g-sans)', fontSize: 22, fontWeight: 500, color: 'var(--g-white)', margin: '0 0 16px', lineHeight: 1.2, letterSpacing: 0 }}>
             Before you install.
           </h2>
-          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 13.5, lineHeight: 1.6, color: 'var(--g-body)', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--g-sans)', fontSize: 15, lineHeight: 1.6, color: 'var(--g-body)', margin: 0 }}>
             If something's missing,{' '}
             <a href="https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--g-body)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
               open an issue
             </a>
             .
           </p>
-        </div>
+        </motion.div>
 
         <div>
           {FAQS.map((faq, i) => (
@@ -94,7 +97,7 @@ export function FAQSection() {
                     transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
                     style={{ overflow: 'hidden' }}
                   >
-                    <p style={{ fontFamily: 'var(--g-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--g-body)', margin: '0 0 20px', paddingRight: 32, maxWidth: 580 }}>
+                    <p style={{ fontFamily: 'var(--g-sans)', fontSize: 15, lineHeight: 1.7, color: 'var(--g-body)', margin: '0 0 20px', paddingRight: 32, maxWidth: 580 }}>
                       {faq.a}
                     </p>
                   </motion.div>
@@ -112,7 +115,7 @@ export function FAQSection() {
         }
         @media (max-width: 480px) {
           .faq-layout button { padding: 16px 0 !important; }
-          .faq-layout button span { font-size: 14px !important; }
+          .faq-layout button span { font-size: 15px !important; }
         }
       `}</style>
     </section>
