@@ -1073,15 +1073,15 @@ function PrivacySignalConsole() {
             <stop offset="1" stopColor="#F0EBE0" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="hpvLineTyping" x1="-220" y1="180" x2="820" y2="180" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#D8A16F" stopOpacity="0" />
-            <stop offset="0.12" stopColor="#D8A16F" stopOpacity="0.25" />
-            <stop offset="0.76" stopColor="#D8A16F" stopOpacity="0.52" />
+            <stop stopColor="#FF1F2D" stopOpacity="0" />
+            <stop offset="0.12" stopColor="#FF1F2D" stopOpacity="0.2" />
+            <stop offset="0.76" stopColor="#FF1F2D" stopOpacity="0.46" />
             <stop offset="1" stopColor="#F0EBE0" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="hpvLineStory" x1="-220" y1="270" x2="820" y2="190" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#C46A4A" stopOpacity="0" />
-            <stop offset="0.12" stopColor="#C46A4A" stopOpacity="0.22" />
-            <stop offset="0.74" stopColor="#C46A4A" stopOpacity="0.48" />
+            <stop stopColor="#FF4B45" stopOpacity="0" />
+            <stop offset="0.12" stopColor="#FF4B45" stopOpacity="0.2" />
+            <stop offset="0.74" stopColor="#FF4B45" stopOpacity="0.43" />
             <stop offset="1" stopColor="#F0EBE0" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="hpvFlowFade" x1="-220" y1="0" x2="900" y2="0" gradientUnits="userSpaceOnUse">
@@ -1092,7 +1092,7 @@ function PrivacySignalConsole() {
           </linearGradient>
           <radialGradient id="hpvCoreHalo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(790 160) rotate(90) scale(124)">
             <stop stopColor="#F0EBE0" stopOpacity="0.06" />
-            <stop offset="0.4" stopColor="#D8A16F" stopOpacity="0.045" />
+            <stop offset="0.4" stopColor="#FF1F2D" stopOpacity="0.035" />
             <stop offset="1" stopColor="#0B0A08" stopOpacity="0" />
           </radialGradient>
           <mask id="hpvFlowMask" maskUnits="userSpaceOnUse" x="-240" y="0" width="1160" height="360">
@@ -1305,9 +1305,9 @@ export function HeroSection() {
           white-space: nowrap;
         }
         .hero-title span {
-          color: #C46A4A;
+          color: #FF4B45;
           font-style: italic;
-          text-shadow: 0 0 32px rgba(196,106,74,0.18);
+          text-shadow: 0 0 32px rgba(255,31,45,0.16);
         }
         .hero-subcopy {
           width: min(100%, 760px);
@@ -1345,9 +1345,9 @@ export function HeroSection() {
           transition: transform 0.16s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
         }
         .hero-primary-cta {
-          background: linear-gradient(135deg, #F4EDE1, #D8A16F 112%);
+          background: linear-gradient(135deg, #F4EDE1, #FF4B45 118%);
           color: #0B0A08;
-          box-shadow: 0 18px 46px rgba(216,161,111,0.18);
+          box-shadow: 0 18px 46px rgba(255,31,45,0.16);
         }
         .hero-secondary-cta {
           color: rgba(240,235,224,0.9);
@@ -1359,7 +1359,7 @@ export function HeroSection() {
           transform: translateY(-1px);
         }
         .hero-primary-cta:hover {
-          box-shadow: 0 20px 54px rgba(216,161,111,0.23);
+          box-shadow: 0 20px 54px rgba(255,31,45,0.22);
         }
         .hero-secondary-cta:hover {
           border-color: rgba(240,235,224,0.38);
@@ -1393,9 +1393,9 @@ export function HeroSection() {
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          background: rgba(216,161,111,0.1);
-          color: #D8A16F;
-          border: 1px solid rgba(216,161,111,0.18);
+          background: rgba(255,31,45,0.1);
+          color: #FF626B;
+          border: 1px solid rgba(255,31,45,0.18);
           flex: 0 0 auto;
         }
         .hero-proof-title {
@@ -1474,23 +1474,23 @@ export function HeroSection() {
           fill: rgba(240,235,224,0.76);
         }
         .hpv-input-typing {
-          fill: rgba(216,161,111,0.88);
+          fill: rgba(255,98,107,0.9);
         }
         .hpv-input-story-view {
-          fill: rgba(196,106,74,0.82);
+          fill: rgba(255,75,69,0.82);
         }
         .hpv-output-text {
-          fill: rgba(216,161,111,0.9);
+          fill: rgba(255,98,107,0.9);
           stroke-width: 3.25px;
         }
         .hpv-output-seen {
-          fill: rgba(216,161,111,0.88);
+          fill: rgba(255,98,107,0.88);
         }
         .hpv-output-typing {
           fill: rgba(240,235,224,0.86);
         }
         .hpv-output-story-view {
-          fill: rgba(216,161,111,0.88);
+          fill: rgba(255,98,107,0.88);
         }
         .hpv-type-crossed {
           text-decoration-line: line-through;
@@ -1498,7 +1498,7 @@ export function HeroSection() {
         }
         .hpv-core-burst path {
           fill: none;
-          stroke: rgba(216,161,111,0.14);
+          stroke: rgba(255,31,45,0.14);
           stroke-width: 1;
           stroke-linecap: round;
           stroke-dasharray: 2 7;
@@ -1508,7 +1508,7 @@ export function HeroSection() {
           filter: none;
         }
         .hpv-core-burst > circle:not(:first-child) {
-          fill: rgba(216,161,111,0.28);
+          fill: rgba(255,31,45,0.24);
           filter: none;
         }
         .hpv-output-lines {
@@ -1516,7 +1516,7 @@ export function HeroSection() {
         }
         .hpv-output-lines path {
           fill: none;
-          stroke: rgba(216,161,111,0.4);
+          stroke: rgba(255,31,45,0.35);
           stroke-width: 1.25;
           stroke-linecap: round;
           stroke-dasharray: 2 9;

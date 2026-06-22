@@ -170,7 +170,8 @@ function StatusRail({ entries }: { entries: readonly VerificationEntry[] }) {
   const segments = FEATURES.flatMap((feature) => {
     const entry = getFeatureEntry(entries, feature);
     const status = entry ? getEffectiveStatus(entry) : 'public_status_unavailable';
-    return Array.from({ length: 10 }, () => STATUS_META[status].tone);
+    const tone = STATUS_META[status].tone;
+    return Array.from({ length: 10 }, (_, index) => (tone === 'warn' && index % 3 !== 0 ? 'muted' : tone));
   });
 
   return (
@@ -317,6 +318,17 @@ export function StatusPage({ view }: StatusPageProps) {
 
       <style>{`
         .status-page {
+          --status-red: #ff1f2d;
+          --status-red-soft: rgba(255, 31, 45, 0.11);
+          --status-red-border: rgba(255, 31, 45, 0.38);
+          --status-red-text: #ff626b;
+          --status-surface: rgba(15,15,15,0.9);
+          --status-surface-soft: rgba(255,255,255,0.035);
+          --status-line: rgba(255,255,255,0.1);
+          --status-line-strong: rgba(255,255,255,0.16);
+          --status-text: rgba(245,245,245,0.86);
+          --status-muted: rgba(245,245,245,0.58);
+          --status-faint: rgba(245,245,245,0.42);
           min-height: 100svh;
           width: 100%;
           padding: 92px 20px 72px;
@@ -351,10 +363,10 @@ export function StatusPage({ view }: StatusPageProps) {
           justify-content: center;
           gap: 8px;
           padding: 0 14px;
-          border: 1px solid rgba(240,235,224,0.14);
+          border: 1px solid var(--status-line-strong);
           border-radius: 6px;
-          background: rgba(240,235,224,0.035);
-          color: rgba(240,235,224,0.86);
+          background: var(--status-surface-soft);
+          color: var(--status-text);
           font-family: var(--g-sans);
           font-size: 0.9rem;
           font-weight: 650;
@@ -362,26 +374,26 @@ export function StatusPage({ view }: StatusPageProps) {
         }
         .status-topbar a:hover,
         .status-actions a:hover {
-          border-color: rgba(216,161,111,0.42);
+          border-color: var(--status-red-border);
           color: var(--g-white);
-          background: rgba(216,161,111,0.07);
+          background: var(--status-red-soft);
         }
         .status-notice,
         .status-panel {
           overflow: hidden;
-          border: 1px solid rgba(240,235,224,0.14);
+          border: 1px solid var(--status-line);
           border-radius: 8px;
-          background: rgba(13,12,10,0.82);
-          box-shadow: 0 16px 44px rgba(0,0,0,0.24);
+          background: var(--status-surface);
+          box-shadow: 0 16px 44px rgba(0,0,0,0.3);
         }
         .status-notice {
           margin-bottom: 26px;
         }
         .status-notice-warn {
-          border-color: rgba(216,161,111,0.42);
+          border-color: var(--status-red-border);
         }
         .status-notice-bad {
-          border-color: rgba(223,118,95,0.46);
+          border-color: var(--status-red-border);
         }
         .status-notice-ok {
           border-color: rgba(117,216,141,0.36);
@@ -392,9 +404,9 @@ export function StatusPage({ view }: StatusPageProps) {
           gap: 10px;
           min-height: 54px;
           padding: 0 18px;
-          border-bottom: 1px solid rgba(240,235,224,0.08);
-          background: rgba(216,161,111,0.11);
-          color: #F0C38E;
+          border-bottom: 1px solid var(--status-line);
+          background: var(--status-red-soft);
+          color: var(--status-red-text);
           font-family: var(--g-sans);
           font-size: 0.98rem;
         }
@@ -407,8 +419,8 @@ export function StatusPage({ view }: StatusPageProps) {
           min-height: 24px;
           padding: 0 9px;
           border-radius: 5px;
-          background: rgba(216,161,111,0.15);
-          color: #D8A16F;
+          background: var(--status-red-soft);
+          color: var(--status-red-text);
           font-family: var(--g-sans);
           font-size: 0.78rem;
           font-weight: 700;
@@ -426,7 +438,7 @@ export function StatusPage({ view }: StatusPageProps) {
         .status-history-row p,
         .status-footnote {
           margin: 8px 0 0;
-          color: rgba(240,235,224,0.72);
+          color: rgba(245,245,245,0.7);
           font-family: var(--g-sans);
           font-size: 0.91rem;
           line-height: 1.55;
@@ -438,7 +450,7 @@ export function StatusPage({ view }: StatusPageProps) {
           flex-wrap: wrap;
           gap: 7px 10px;
           margin-top: 12px;
-          color: rgba(240,235,224,0.52);
+          color: var(--status-muted);
           font-family: var(--g-sans);
           font-size: 0.84rem;
           line-height: 1.45;
@@ -451,7 +463,7 @@ export function StatusPage({ view }: StatusPageProps) {
           margin-left: 10px;
           vertical-align: middle;
           border-radius: 999px;
-          background: rgba(240,235,224,0.28);
+          background: rgba(245,245,245,0.24);
         }
         .status-panel {
           margin-top: 0;
@@ -463,7 +475,7 @@ export function StatusPage({ view }: StatusPageProps) {
           justify-content: space-between;
           gap: 12px;
           padding: 0 18px;
-          border-bottom: 1px solid rgba(240,235,224,0.08);
+          border-bottom: 1px solid var(--status-line);
         }
         .status-panel-head h2 {
           margin: 0;
@@ -475,13 +487,13 @@ export function StatusPage({ view }: StatusPageProps) {
           letter-spacing: 0;
         }
         .status-panel-head span {
-          color: rgba(240,235,224,0.48);
+          color: var(--status-faint);
           font-family: var(--g-sans);
           font-size: 0.86rem;
         }
         .status-platform-row {
           padding: 16px 18px;
-          border-bottom: 1px solid rgba(240,235,224,0.08);
+          border-bottom: 1px solid var(--status-line);
         }
         .status-platform-row:last-child {
           border-bottom: 0;
@@ -515,7 +527,7 @@ export function StatusPage({ view }: StatusPageProps) {
           align-items: center;
           gap: 6px;
           margin-top: 4px;
-          color: rgba(240,235,224,0.52);
+          color: var(--status-muted);
           font-family: var(--g-sans);
           font-size: 0.86rem;
           line-height: 1.35;
@@ -527,8 +539,8 @@ export function StatusPage({ view }: StatusPageProps) {
           min-height: 24px;
           padding: 0 8px;
           border-radius: 999px;
-          border: 1px solid rgba(240,235,224,0.1);
-          background: rgba(240,235,224,0.035);
+          border: 1px solid var(--status-line);
+          background: var(--status-surface-soft);
           font-family: var(--g-sans);
           font-size: 0.78rem;
           font-weight: 700;
@@ -538,13 +550,13 @@ export function StatusPage({ view }: StatusPageProps) {
           color: #75D88D;
         }
         .status-warn {
-          color: #D8A16F;
+          color: var(--status-red-text);
         }
         .status-bad {
-          color: #DF765F;
+          color: var(--status-red);
         }
         .status-muted {
-          color: rgba(240,235,224,0.56);
+          color: var(--status-muted);
         }
         .status-rail {
           display: grid;
@@ -555,19 +567,19 @@ export function StatusPage({ view }: StatusPageProps) {
         .status-rail-segment {
           height: 14px;
           border-radius: 2px;
-          background: rgba(240,235,224,0.14);
+          background: rgba(255,255,255,0.09);
         }
         .status-rail-ok {
           background: #54C786;
         }
         .status-rail-warn {
-          background: #D8A16F;
+          background: var(--status-red);
         }
         .status-rail-bad {
-          background: #DF765F;
+          background: var(--status-red);
         }
         .status-rail-muted {
-          background: rgba(240,235,224,0.18);
+          background: rgba(255,255,255,0.12);
         }
         .status-feature-list {
           display: grid;
@@ -577,7 +589,7 @@ export function StatusPage({ view }: StatusPageProps) {
         }
         .status-feature-row {
           min-width: 0;
-          color: rgba(240,235,224,0.56);
+          color: var(--status-muted);
           font-family: var(--g-sans);
           font-size: 0.8rem;
           line-height: 1.35;
@@ -599,7 +611,7 @@ export function StatusPage({ view }: StatusPageProps) {
         .status-footnote {
           max-width: 640px;
           margin: 36px auto 0;
-          color: rgba(240,235,224,0.48);
+          color: var(--status-faint);
           text-align: center;
           font-size: 0.78rem;
         }
@@ -612,13 +624,13 @@ export function StatusPage({ view }: StatusPageProps) {
           gap: 12px;
           align-items: start;
           padding: 16px 18px;
-          border-bottom: 1px solid rgba(240,235,224,0.08);
+          border-bottom: 1px solid var(--status-line);
         }
         .status-history-row:last-child {
           border-bottom: 0;
         }
         .status-history-row time {
-          color: rgba(240,235,224,0.52);
+          color: var(--status-muted);
           font-family: var(--g-sans);
           font-size: 0.86rem;
           line-height: 1.3;

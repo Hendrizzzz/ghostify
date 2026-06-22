@@ -173,8 +173,8 @@ export function LimitsSection() {
           width: 5px;
           height: 5px;
           border-radius: 999px;
-          background: #D8A16F;
-          box-shadow: 0 0 16px rgba(216,161,111,0.4);
+          background: #FF1F2D;
+          box-shadow: 0 0 16px rgba(255,31,45,0.34);
         }
         .limits-intro h2 {
           margin: 0 0 26px;
@@ -204,9 +204,9 @@ export function LimitsSection() {
           line-height: 1;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: rgba(216,161,111,0.76);
+          color: rgba(255,98,107,0.82);
           text-decoration: none;
-          border-bottom: 1px solid rgba(216,161,111,0.24);
+          border-bottom: 1px solid rgba(255,31,45,0.28);
           padding-bottom: 4px;
           transition: color 0.18s ease, border-color 0.18s ease;
         }
@@ -264,13 +264,13 @@ export function LimitsSection() {
           vector-effect: non-scaling-stroke;
         }
         .boundary-tick {
-          stroke: rgba(216,161,111,0.38);
+          stroke: rgba(255,31,45,0.42);
           stroke-width: 1;
           vector-effect: non-scaling-stroke;
         }
         .boundary-dot {
-          fill: #D8A16F;
-          opacity: 0.58;
+          fill: #FF1F2D;
+          opacity: 0.62;
         }
         .boundary-core-ring {
           fill: rgba(11,10,8,0.42);
@@ -317,7 +317,7 @@ export function LimitsSection() {
           font-family: var(--g-display);
           font-size: clamp(0.68rem, 0.76vi, 0.78rem);
           font-style: italic;
-          color: rgba(216,161,111,0.66);
+          color: rgba(255,98,107,0.72);
         }
         .limits-core-dots {
           position: absolute;
@@ -331,7 +331,7 @@ export function LimitsSection() {
           width: 0.18rem;
           height: 0.18rem;
           border-radius: 999px;
-          background: rgba(216,161,111,0.72);
+          background: rgba(255,31,45,0.72);
         }
         .limit-callout {
           position: relative;
@@ -385,7 +385,7 @@ export function LimitsSection() {
           display: block;
           width: 30px;
           height: 1px;
-          background: rgba(216,161,111,0.48);
+          background: rgba(255,31,45,0.42);
         }
         .limit-callout h3 {
           margin: 0 0 12px;
