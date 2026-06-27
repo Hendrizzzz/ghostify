@@ -20,10 +20,8 @@
     msgSeen: true,
     msgStory: true
   };
-  var STATUS_REQUEST_TIMEOUT_MS = 350;
   (async function init() {
     syncUserSettings();
-    attachStatusCheckListener();
     let config = await fetchLocalConfig() || await getStoredConfig();
     sendConfigToGhost(config);
   })();
@@ -88,58 +86,5 @@
         sendSettingsToPage(newSettings);
       }
     });
-  }
-  function attachStatusCheckListener() {
-    var _a;
-    if (!((_a = chrome.runtime) == null ? void 0 : _a.onMessage)) return;
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (!message || message.type !== "GHOSTIFY_STATUS_CHECK") return false;
-      requestPageStatus().then((pageStatus) => {
-        sendResponse({
-          contentScript: true,
-          page: pageStatus
-        });
-      });
-      return true;
-    });
-  }
-  function requestPageStatus() {
-    return new Promise((resolve) => {
-      const requestId = createStatusRequestId();
-      let settled = false;
-      const cleanup = () => {
-        window.removeEventListener("message", handleStatusResponse);
-      };
-      const finish = (status) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        cleanup();
-        resolve(status);
-      };
-      const timeout = setTimeout(() => {
-        finish({
-          loaded: false,
-          reason: "timeout"
-        });
-      }, STATUS_REQUEST_TIMEOUT_MS);
-      function handleStatusResponse(event) {
-        if (event.source !== window) return;
-        const data = event.data || {};
-        if (data.source !== "GHOSTIFY_PAGE") return;
-        if (data.type !== "GHOSTIFY_STATUS_RESPONSE") return;
-        if (data.requestId !== requestId) return;
-        finish(data.status || { loaded: false, reason: "empty-response" });
-      }
-      window.addEventListener("message", handleStatusResponse);
-      window.postMessage({
-        type: "GHOSTIFY_STATUS_REQUEST",
-        source: "GHOSTIFY_EXTENSION",
-        requestId
-      }, "*");
-    });
-  }
-  function createStatusRequestId() {
-    return `ghostify-status-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   }
 })();

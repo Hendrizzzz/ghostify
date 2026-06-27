@@ -2991,14 +2991,6 @@
           });
         }
       }
-      if (event.data.type === "GHOSTIFY_STATUS_REQUEST") {
-        window.postMessage({
-          type: "GHOSTIFY_STATUS_RESPONSE",
-          source: "GHOSTIFY_PAGE",
-          requestId: event.data.requestId,
-          status: createStatusSnapshot()
-        }, "*");
-      }
     });
     hookWebSocket();
     if (isInstagram || isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy) {
@@ -3028,37 +3020,5 @@
         KILLED_FEATURES.add(feature);
       }
     }
-  }
-  function createStatusSnapshot() {
-    const counters = {
-      blockedWorkerMessages: readCount("__GHOSTIFY_BLOCKED_WORKER_MESSAGES__"),
-      sanitizedWorkerMessages: readCount("__GHOSTIFY_SANITIZED_WORKER_MESSAGES__"),
-      sanitizedSeenBridgeMessages: readCount("__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__"),
-      sanitizedNetworkMessages: readCount("__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__"),
-      blockedTypingExportCalls: readCount("__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__"),
-      blockedReadExportCalls: readCount("__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__"),
-      sanitizedReadExportCalls: readCount("__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__")
-    };
-    return {
-      loaded: true,
-      host: window.location.hostname,
-      settingsReady: SETTINGS_READY,
-      recentActivity: Object.values(counters).some((value) => value > 0),
-      hooks: {
-        ghost: !!window.__GHOSTIFY_GHOST_HOOKED__,
-        fetch: !!window.__GHOSTIFY_FETCH_HOOKED__,
-        xhr: !!window.__GHOSTIFY_XHR_HOOKED__,
-        websocket: !!window.__GHOSTIFY_WEBSOCKET_HOOKED__,
-        visibility: !!window.__GHOSTIFY_VISIBILITY_HOOKED__,
-        instagram: !!window.__GHOSTIFY_INSTAGRAM_PROTECTION__,
-        facebook: !!window.__GHOSTIFY_FACEBOOK_PROTECTION__,
-        messenger: !!window.__GHOSTIFY_MESSENGER_PROTECTION__
-      },
-      counters
-    };
-  }
-  function readCount(name) {
-    const value = Number(window[name] || 0);
-    return Number.isFinite(value) && value > 0 ? value : 0;
   }
 })();
