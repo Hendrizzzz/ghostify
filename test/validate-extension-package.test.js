@@ -352,6 +352,50 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusPath, statusJson } = readStatusJson(fixtureRoot);
+    delete statusJson.provenWorking;
+    writeStatusJsonPair(fixtureRoot, statusJson);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing proven-working timeline');
+    assert.match(
+        result.stderr,
+        /site\/public\/status\.json provenWorking must be an object/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
+    statusJson.provenWorking.currentWindowStartedAt = '2026-06-28';
+    writeStatusJsonPair(fixtureRoot, statusJson);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject future current working windows');
+    assert.match(
+        result.stderr,
+        /site\/public\/status\.json provenWorking currentWindowStartedAt must not be after lastVerifiedAt/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
+    statusJson.history = statusJson.history.filter(
+        item => item.date !== statusJson.provenWorking.previousWindowStartedAt
+    );
+    writeStatusJsonPair(fixtureRoot, statusJson);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject status history missing the proven working timeline');
+    assert.match(
+        result.stderr,
+        /site\/public\/status\.json history must include provenWorking\.previousWindowStartedAt/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
     statusJson.automationPolicy.canMarkVerified = true;
     writeStatusJsonPair(fixtureRoot, statusJson);
 

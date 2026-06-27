@@ -4128,41 +4128,55 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         popupJs.includes('close-labs'),
         'Popup Labs view should stay compact and use local view switching'
     );
+    const headerHtml = popupHtml.slice(
+        popupHtml.indexOf('<header class="header">'),
+        popupHtml.indexOf('</header>') + '</header>'.length
+    );
     assert(
-        popupHtml.includes('class="verification-panel"') &&
-        popupHtml.includes('id="public-status-link"') &&
-        popupHtml.includes('id="public-status-summary"') &&
-        popupHtml.includes('id="public-status-action"') &&
-        popupHtml.includes('>Verification</span>') &&
-        popupHtml.includes('id="local-refresh" hidden') &&
-        popupHtml.includes('id="local-refresh-message"') &&
-        popupHtml.includes('id="status-refresh"') &&
+        headerHtml.includes('id="public-status-link"') &&
+        headerHtml.includes('id="public-status-summary"') &&
+        !headerHtml.includes('id="public-status-action"') &&
+        !headerHtml.includes('>Verification</span>') &&
+        !popupHtml.includes('>View</span>') &&
+        popupCss.includes('.header-verification') &&
+        popupCss.includes('width: 112px;') &&
+        popupCss.includes('max-width: 112px;') &&
+        popupCss.includes('min-height: 20px;') &&
+        popupCss.includes('align-self: flex-end;') &&
+        popupCss.includes('text-overflow: ellipsis;') &&
+        !popupHtml.includes('class="verification-panel"') &&
+        !popupHtml.includes('id="local-refresh"') &&
+        !popupHtml.includes('id="local-refresh-message"') &&
+        !popupHtml.includes('id="status-refresh"') &&
+        !popupHtml.includes('Refresh this tab to load Ghostify.') &&
         !popupHtml.includes('Status Check') &&
         !popupHtml.includes('id="status-pill"') &&
         !popupHtml.includes('id="status-message"') &&
-        popupJs.includes('GHOSTIFY_STATUS_CHECK') &&
-        popupJs.includes("document.getElementById('status-refresh')?.addEventListener('click', refreshActiveStatusTab)") &&
-        popupJs.includes('refreshActiveStatusTab') &&
-        popupJs.includes('chrome.tabs.reload') &&
-        popupJs.includes('{ frameId: 0 }') &&
-        popupJs.includes('SUPPORTED_TAB_URL_PATTERNS') &&
-        popupJs.includes('getStatusTargetTab') &&
-        popupJs.includes('url: SUPPORTED_TAB_URL_PATTERNS') &&
-        popupJs.includes('hasRequiredHooks') &&
-        popupJs.includes("target?.platform === 'instagram'") &&
-        popupJs.includes("target?.platform === 'messenger'") &&
-        popupJs.includes("target?.platform === 'facebook'") &&
-        popupJs.includes("state === 'needsRefresh' || state === 'someChecksFailed'") &&
+        !popupJs.includes('GHOSTIFY_STATUS_CHECK') &&
+        !popupJs.includes('refreshActiveStatusTab') &&
+        !popupJs.includes('chrome.tabs.reload') &&
+        !popupJs.includes('SUPPORTED_TAB_URL_PATTERNS') &&
+        !popupJs.includes('getStatusTargetTab') &&
+        !popupJs.includes('hasRequiredHooks') &&
+        !popupJs.includes('state === \'needsRefresh\' || state === \'someChecksFailed\'') &&
+        !popupJs.includes("summaryElement.textContent = 'Status unavailable.';") &&
+        !popupJs.includes('PACKAGED_PUBLIC_STATUS') &&
+        !popupJs.includes('fallbackPublicStatusSummary') &&
+        !popupJs.includes('last packaged proof') &&
+        !popupJs.includes('2026-06-27T00:00:00Z') &&
+        popupJs.includes('formatCompactWorkingSummary') &&
+        popupJs.includes('provenWorking') &&
         !popupJs.includes('dataset.action') &&
-        popupCss.includes('.verification-panel') &&
-        popupCss.includes('.local-refresh[hidden]') &&
+        !popupCss.includes('.verification-panel') &&
+        !popupCss.includes('.local-refresh') &&
+        !popupCss.includes('.status-refresh') &&
         !popupJs.includes('smoke test') &&
         !popupJs.includes('Local hooks active.') &&
         !popupJs.includes('platformMayHaveChanged') &&
         !popupHtml.includes('Seen is definitely blocked') &&
         !popupHtml.includes('sender-side') &&
         !popupHtml.includes('sender-side Seen is verified'),
-        'Popup should keep public Verification as the persistent trust row and show local refresh guidance only when needed'
+        'Popup should keep compact public status proof in the header and remove the local Ghostify-loaded checker'
     );
 
     for (const file of issueTemplateFiles) {
@@ -4239,11 +4253,28 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     );
 }
 
-function testPopupStatusDecisionRequiresPlatformHooks() {
+function testLocalStatusCheckerIsRemovedFromPopupRuntime() {
+    const popupSource = fs.readFileSync('dist/js/popup.js', 'utf8');
+    const contentSource = fs.readFileSync('src/content.js', 'utf8');
+    const ghostSource = fs.readFileSync('src/ghost.js', 'utf8');
+
+    for (const source of [popupSource, contentSource, ghostSource]) {
+        assert(
+            !source.includes('GHOSTIFY_STATUS_CHECK') &&
+            !source.includes('GHOSTIFY_STATUS_REQUEST') &&
+            !source.includes('GHOSTIFY_STATUS_RESPONSE') &&
+            !source.includes('createStatusSnapshot'),
+            'Popup and runtime code should not keep the removed local Ghostify-loaded checker'
+        );
+    }
+}
+
+function testPopupPublicStatusSummaryUsesWorkingProofDate() {
     const popupSource = fs.readFileSync('dist/js/popup.js', 'utf8');
     const context = {
         console,
-        URL,
+        Date,
+        Intl,
         setTimeout,
         clearTimeout,
         window: null,
@@ -4257,8 +4288,7 @@ function testPopupStatusDecisionRequiresPlatformHooks() {
                     get() { },
                     set() { }
                 }
-            },
-            tabs: {}
+            }
         },
         document: {
             addEventListener() { },
@@ -4269,49 +4299,99 @@ function testPopupStatusDecisionRequiresPlatformHooks() {
     context.window = context;
     vm.runInNewContext(popupSource, context, { filename: 'popup.js' });
 
-    const coreHooks = {
-        ghost: true,
-        fetch: true,
-        xhr: true,
-        websocket: true,
-        visibility: true
+    const workingEntry = {
+        publicStatus: 'maintainer_verified',
+        verifiedAt: '2026-06-27T00:00:00Z',
+        expiresAt: '2026-07-11T00:00:00Z'
+    };
+    const workingData = {
+        schemaVersion: 1,
+        productVersion: pkg.version,
+        provenWorking: {
+            lastVerifiedAt: '2026-06-27T00:00:00Z',
+            currentWindowStartedAt: '2026-06-04'
+        },
+        entries: Array.from({ length: 9 }, () => ({ ...workingEntry }))
     };
 
     assert.strictEqual(
-        context.hasRequiredHooks({ hooks: { ...coreHooks, instagram: true } }, { platform: 'instagram' }),
-        true,
-        'Instagram popup status should pass only when the Instagram platform hook is loaded'
+        context.summarizePublicStatus(workingData, new Date('2026-06-27T12:00:00Z')),
+        'Working today',
+        'Popup should summarize a fully green status feed as the last all-working proof date'
     );
     assert.strictEqual(
-        context.hasRequiredHooks({ hooks: { ...coreHooks } }, { platform: 'instagram' }),
-        false,
-        'Instagram popup status must not pass on core hooks alone'
+        context.summarizePublicStatus(workingData, new Date('2026-06-28T12:00:00Z')),
+        'Working Jun 27',
+        'Popup should avoid saying today after the proof date has passed'
     );
+}
+
+async function testPopupFetchFailureDoesNotClaimWorking() {
+    const popupSource = fs.readFileSync('dist/js/popup.js', 'utf8');
+    const classNames = new Set();
+    const summaryElement = { textContent: '' };
+    const linkElement = {
+        attributes: new Map(),
+        classList: {
+            add(name) { classNames.add(name); },
+            remove(name) { classNames.delete(name); },
+            contains(name) { return classNames.has(name); }
+        },
+        setAttribute(name, value) {
+            this.attributes.set(name, value);
+        },
+        getAttribute(name) {
+            return this.attributes.get(name) || null;
+        }
+    };
+    const context = {
+        console,
+        Date,
+        Intl,
+        Promise,
+        setTimeout,
+        clearTimeout,
+        AbortController: undefined,
+        fetch: () => Promise.reject(new Error('public feed unavailable')),
+        window: null,
+        chrome: {
+            runtime: {
+                getManifest: () => ({ version: pkg.version }),
+                lastError: null
+            },
+            storage: {
+                local: {
+                    get() { },
+                    set() { }
+                }
+            }
+        },
+        document: {
+            addEventListener() { },
+            querySelectorAll() { return []; },
+            getElementById(id) {
+                if (id === 'public-status-summary') return summaryElement;
+                if (id === 'public-status-link') return linkElement;
+                return null;
+            }
+        }
+    };
+    context.window = context;
+    vm.runInNewContext(popupSource, context, { filename: 'popup.js' });
+
+    await context.updatePublicStatusSummary();
+
     assert.strictEqual(
-        context.hasRequiredHooks({ hooks: { ...coreHooks, messenger: true } }, { platform: 'messenger' }),
-        true,
-        'Messenger popup status should require the Messenger platform hook'
+        summaryElement.textContent,
+        'Check status',
+        'Popup should show a neutral compact fallback when the public status feed cannot load'
     );
-    assert.strictEqual(
-        context.hasRequiredHooks({ hooks: { ...coreHooks, facebook: true } }, { platform: 'facebook' }),
-        true,
-        'Facebook popup status should require the Facebook platform hook'
+    assert(
+        !summaryElement.textContent.toLowerCase().includes('working') &&
+        !linkElement.getAttribute('aria-label').toLowerCase().includes('working'),
+        'Popup fetch failures must not claim the controls are working'
     );
-    assert.strictEqual(
-        context.hasRequiredHooks({ hooks: { ...coreHooks, facebook: true } }, { platform: 'messenger' }),
-        false,
-        'Messenger popup status must not pass because only Facebook hook loaded'
-    );
-    assert.strictEqual(
-        context.hasRequiredHooks({ hooks: { ...coreHooks, instagram: true } }, { platform: 'unknown' }),
-        false,
-        'Unknown platform status must not pass'
-    );
-    assert.strictEqual(
-        context.getPlatformKey('https://www.fbsbx.com/maw_proxy_page?x=1'),
-        'messenger',
-        'MAW proxy frame status should be treated as Messenger readiness'
-    );
+    assert(linkElement.classList.contains('is-fallback'), 'Popup should mark the public-status link as fallback on fetch failure');
 }
 
 function testReleaseDocsIncludeMessengerFacebookStorySmokeIds() {
@@ -4324,40 +4404,6 @@ function testReleaseDocsIncludeMessengerFacebookStorySmokeIds() {
             `${smokeId} should be part of release smoke coverage when public copy claims Messenger/Facebook story-view support`
         );
     }
-}
-
-function testGhostStatusCheckReportsLocalHookReadiness() {
-    const instagramWindow = makeGhostPage({
-        hostname: 'www.instagram.com',
-        pathname: '/direct/inbox/',
-        href: 'https://www.instagram.com/direct/inbox/'
-    });
-    let response;
-
-    instagramWindow.addEventListener('message', (event) => {
-        if (event.data?.type === 'GHOSTIFY_STATUS_RESPONSE') {
-            response = event.data;
-        }
-    });
-
-    instagramWindow.postMessage({
-        type: 'GHOSTIFY_STATUS_REQUEST',
-        source: 'GHOSTIFY_EXTENSION',
-        requestId: 'test-status'
-    });
-
-    assert.strictEqual(response?.requestId, 'test-status', 'Ghostify should echo the popup status request id');
-    assert.strictEqual(response.status.loaded, true, 'Ghostify status should report that main-world hooks loaded');
-    assert.strictEqual(response.status.settingsReady, true, 'Ghostify status should report that settings reached the page');
-    assert.strictEqual(response.status.hooks.ghost, true, 'Ghostify status should include the main ghost hook');
-    assert.strictEqual(response.status.hooks.fetch, true, 'Ghostify status should include the fetch hook');
-    assert.strictEqual(response.status.hooks.xhr, true, 'Ghostify status should include the XHR hook');
-    assert.strictEqual(response.status.hooks.websocket, true, 'Ghostify status should include the WebSocket hook');
-    assert.strictEqual(response.status.hooks.visibility, true, 'Ghostify status should include the visibility hook');
-    assert.strictEqual(response.status.hooks.instagram, true, 'Ghostify status should include the active platform hook');
-    assert.strictEqual(response.status.hooks.facebook, false, 'Ghostify status should not claim inactive platform hooks are ready');
-    assert.strictEqual(response.status.hooks.messenger, false, 'Ghostify status should not claim inactive platform hooks are ready');
-    assert.strictEqual(response.status.href, undefined, 'Ghostify status should not expose page URLs to the popup');
 }
 
 async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
@@ -4511,9 +4557,10 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestText();
     testPopupMessengerSeenNoteExplainsLocalFacebookReadUi();
     testPopupSupportLinksUseGuidedIssueForms();
-    testPopupStatusDecisionRequiresPlatformHooks();
+    testLocalStatusCheckerIsRemovedFromPopupRuntime();
+    testPopupPublicStatusSummaryUsesWorkingProofDate();
+    await testPopupFetchFailureDoesNotClaimWorking();
     testReleaseDocsIncludeMessengerFacebookStorySmokeIds();
-    testGhostStatusCheckReportsLocalHookReadiness();
     await testMessageRequestClickGraceKeepsTransportAndBridgeNative();
     console.log('messenger send-stability regression tests passed');
 })().catch(error => {

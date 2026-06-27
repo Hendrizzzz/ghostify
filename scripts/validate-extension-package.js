@@ -247,6 +247,12 @@ function assertNullableIsoDate(value, label) {
     }
 }
 
+function assertIsoDate(value, label) {
+    if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
+        fail(`${label} must be an ISO date string`);
+    }
+}
+
 function assertHttpsUrl(value, label) {
     if (typeof value !== 'string' || !value.startsWith('https://')) {
         fail(`${label} must be an HTTPS URL`);
@@ -350,6 +356,7 @@ function assertStatusJsonContract() {
         'policy',
         'automationPolicy',
         'communityVerification',
+        'provenWorking',
         'entries',
         'history'
     ], 'site/public/status.json');
@@ -404,6 +411,8 @@ function assertStatusJsonContract() {
     assertBoolean(statusJson.communityVerification.screenshotsMustBeRedacted, true, 'site/public/status.json communityVerification.screenshotsMustBeRedacted');
     assertBoolean(statusJson.communityVerification.privateMessagesAllowed, false, 'site/public/status.json communityVerification.privateMessagesAllowed');
     assertBoolean(statusJson.communityVerification.rawSubmissionsShownInPopup, false, 'site/public/status.json communityVerification.rawSubmissionsShownInPopup');
+
+    assertProvenWorkingTimeline(statusJson);
 
     if (!Array.isArray(statusJson.entries) || !statusJson.entries.length) {
         fail('site/public/status.json entries must be a non-empty array');
@@ -483,6 +492,17 @@ function assertStatusJsonContract() {
         }
     }
 
+    if (statusJson.summary.publicStatus === 'maintainer_verified') {
+        for (const [index, entry] of statusJson.entries.entries()) {
+            if (entry.publicStatus !== 'maintainer_verified') {
+                fail(`site/public/status.json entries[${index}].publicStatus must be maintainer_verified when summary is maintainer_verified`);
+            }
+            if (Date.parse(entry.verifiedAt) !== Date.parse(statusJson.provenWorking.lastVerifiedAt)) {
+                fail(`site/public/status.json entries[${index}].verifiedAt must match provenWorking.lastVerifiedAt`);
+            }
+        }
+    }
+
     if (!Array.isArray(statusJson.history) || !statusJson.history.length) {
         fail('site/public/status.json history must be a non-empty array');
     }
@@ -494,6 +514,90 @@ function assertStatusJsonContract() {
         assertEnum(item.publicStatus, PUBLIC_STATUS_VALUES, `${label}.publicStatus`);
         if (!item.title || typeof item.title !== 'string') fail(`${label}.title must be a non-empty string`);
         if (!item.summary || typeof item.summary !== 'string') fail(`${label}.summary must be a non-empty string`);
+    }
+    assertHistoryCoversProvenWorkingTimeline(statusJson);
+}
+
+function assertHistoryCoversProvenWorkingTimeline(statusJsonValue) {
+    const historyStatusDates = new Set(
+        statusJsonValue.history.map(item => `${item.date}|${item.publicStatus}`)
+    );
+    const requiredEvents = [
+        ['lastVerifiedAt', 'maintainer_verified'],
+        ['currentWindowStartedAt', 'maintainer_verified'],
+        ['fixReleasedAt', 'maintainer_verified'],
+        ['interruptionVerifiedAt', 'known_issue'],
+        ['interruptionReportedAt', 'known_issue'],
+        ['previousWindowStartedAt', 'maintainer_verified']
+    ];
+
+    for (const [field, publicStatus] of requiredEvents) {
+        const date = toIsoDatePart(statusJsonValue.provenWorking[field]);
+        if (!historyStatusDates.has(`${date}|${publicStatus}`)) {
+            fail(`site/public/status.json history must include provenWorking.${field} (${date}) as ${publicStatus}`);
+        }
+    }
+}
+
+function toIsoDatePart(value) {
+    return String(value).slice(0, 10);
+}
+
+function assertProvenWorkingTimeline(statusJsonValue) {
+    const label = 'site/public/status.json provenWorking';
+    const timeline = statusJsonValue.provenWorking;
+    assertObject(timeline, label);
+    assertOnlyKeys(timeline, [
+        'previousWindowStartedAt',
+        'previousWindowEndedAt',
+        'interruptionReportedAt',
+        'interruptionVerifiedAt',
+        'fixReleasedAt',
+        'currentWindowStartedAt',
+        'lastVerifiedAt',
+        'summary'
+    ], label);
+
+    for (const field of [
+        'previousWindowStartedAt',
+        'previousWindowEndedAt',
+        'interruptionReportedAt',
+        'interruptionVerifiedAt',
+        'fixReleasedAt',
+        'currentWindowStartedAt',
+        'lastVerifiedAt'
+    ]) {
+        assertIsoDate(timeline[field], `${label}.${field}`);
+    }
+    if (!timeline.summary || typeof timeline.summary !== 'string') {
+        fail(`${label}.summary must be a non-empty string`);
+    }
+
+    const previousStartedAt = Date.parse(timeline.previousWindowStartedAt);
+    const previousEndedAt = Date.parse(timeline.previousWindowEndedAt);
+    const interruptionReportedAt = Date.parse(timeline.interruptionReportedAt);
+    const interruptionVerifiedAt = Date.parse(timeline.interruptionVerifiedAt);
+    const fixReleasedAt = Date.parse(timeline.fixReleasedAt);
+    const currentWindowStartedAt = Date.parse(timeline.currentWindowStartedAt);
+    const lastVerifiedAt = Date.parse(timeline.lastVerifiedAt);
+
+    if (previousStartedAt > previousEndedAt) {
+        fail(`${label} previousWindowStartedAt must not be after previousWindowEndedAt`);
+    }
+    if (previousEndedAt > interruptionReportedAt) {
+        fail(`${label} previousWindowEndedAt must not be after interruptionReportedAt`);
+    }
+    if (interruptionReportedAt > interruptionVerifiedAt) {
+        fail(`${label} interruptionReportedAt must not be after interruptionVerifiedAt`);
+    }
+    if (interruptionVerifiedAt > fixReleasedAt) {
+        fail(`${label} interruptionVerifiedAt must not be after fixReleasedAt`);
+    }
+    if (fixReleasedAt > currentWindowStartedAt) {
+        fail(`${label} fixReleasedAt must not be after currentWindowStartedAt`);
+    }
+    if (currentWindowStartedAt > lastVerifiedAt) {
+        fail(`${label} currentWindowStartedAt must not be after lastVerifiedAt`);
     }
 }
 

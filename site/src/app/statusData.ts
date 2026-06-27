@@ -60,6 +60,16 @@ export type StatusData = {
     privateMessagesAllowed: boolean;
     rawSubmissionsShownInPopup: boolean;
   };
+  provenWorking: {
+    previousWindowStartedAt: string;
+    previousWindowEndedAt: string;
+    interruptionReportedAt: string;
+    interruptionVerifiedAt: string;
+    fixReleasedAt: string;
+    currentWindowStartedAt: string;
+    lastVerifiedAt: string;
+    summary: string;
+  };
   entries: VerificationEntry[];
   history: Array<{
     date: string;
