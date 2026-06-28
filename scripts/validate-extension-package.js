@@ -340,6 +340,20 @@ function assertPopupPublicStatusLink() {
     }
 }
 
+function assertPopupPlatformLinks() {
+    const expectedLinks = [
+        ['Instagram', 'https://instagram.com/'],
+        ['Messenger', 'https://messenger.com/'],
+        ['Facebook', 'https://facebook.com/']
+    ];
+
+    for (const [label, href] of expectedLinks) {
+        if (!popupHtml.includes(`href="${href}"`)) {
+            fail(`dist/popup.html must link ${label} to ${href}`);
+        }
+    }
+}
+
 function assertStatusJsonContract() {
     assertObject(statusJson, 'site/public/status.json');
     if (stableJson(statusJson) !== stableJson(statusSourceJson)) {
@@ -674,6 +688,7 @@ assertPrivacyPolicyCoversPermissions();
 assertPrivacyPolicyRequiredDisclosures();
 assertPopupSurveyVersions();
 assertPopupPublicStatusLink();
+assertPopupPlatformLinks();
 assertChangelogCoversPackageVersion();
 assertStatusJsonContract();
 assertContentScripts(manifest.content_scripts, EXPECTED_CONTENT_SCRIPTS);

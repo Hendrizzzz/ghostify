@@ -306,6 +306,22 @@ withFixture(fixtureRoot => {
 });
 
 withFixture(fixtureRoot => {
+    const popupPath = path.join(fixtureRoot, 'dist', 'popup.html');
+    fs.writeFileSync(
+        popupPath,
+        fs.readFileSync(popupPath, 'utf8').replace('https://facebook.com/', 'https://example.com/')
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing popup Facebook link');
+    assert.match(
+        result.stderr,
+        new RegExp('dist/popup.html must link Facebook to https://facebook.com/'),
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
     const changelogPath = path.join(fixtureRoot, 'CHANGELOG.md');
     fs.writeFileSync(
         changelogPath,

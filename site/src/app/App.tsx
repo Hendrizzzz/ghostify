@@ -172,7 +172,42 @@ export default function App() {
           fill: rgba(212,106,82,0.32);
         }
         .site-bg-ghosts {
-          color: rgba(239,226,208,0.032);
+          display: none;
+        }
+        .site-bg-ghost {
+          position: absolute;
+          width: clamp(7.75rem, 9.4vw, 12rem);
+          aspect-ratio: 1;
+          transform-origin: 50% 50%;
+          pointer-events: none;
+          opacity: 0.04;
+          border-radius: 48% 48% 20% 20% / 34% 34% 20% 20%;
+          background:
+            radial-gradient(ellipse at 37% 38%, rgba(0,0,0,0.42) 0 8%, transparent 9.5%),
+            radial-gradient(ellipse at 63% 38%, rgba(0,0,0,0.42) 0 8%, transparent 9.5%),
+            radial-gradient(circle at 16% 100%, transparent 0 12%, rgba(239,226,208,0.9) 13% 100%),
+            radial-gradient(circle at 38% 100%, transparent 0 12%, rgba(239,226,208,0.9) 13% 100%),
+            radial-gradient(circle at 62% 100%, transparent 0 12%, rgba(239,226,208,0.9) 13% 100%),
+            radial-gradient(circle at 84% 100%, transparent 0 12%, rgba(239,226,208,0.9) 13% 100%),
+            linear-gradient(rgba(239,226,208,0.9), rgba(239,226,208,0.9));
+          filter: blur(0.2px);
+        }
+        .site-bg-ghost-a {
+          top: clamp(21rem, 10.2%, 34rem);
+          right: max(-2rem, -2.4vw);
+          transform: rotate(3deg);
+        }
+        .site-bg-ghost-b {
+          top: 44.3%;
+          left: max(-3.7rem, -3.6vw);
+          width: clamp(7.25rem, 8.9vw, 11.25rem);
+          transform: rotate(-6deg);
+        }
+        .site-bg-ghost-c {
+          top: 68.3%;
+          right: clamp(2.2rem, 3vw, 4.4rem);
+          width: clamp(8rem, 10.25vw, 12.5rem);
+          transform: rotate(4deg);
         }
         .site-shell main > section:not(.status-page) {
           position: relative;
@@ -253,8 +288,18 @@ export default function App() {
           .site-smoke-lines {
             opacity: 0.2;
           }
-          .site-bg-ghosts {
-            color: rgba(239,226,208,0.026);
+          .site-bg-ghost {
+            width: clamp(5.25rem, 22vw, 7rem);
+            opacity: 0.032;
+          }
+          .site-bg-ghost-a {
+            right: -1.8rem;
+          }
+          .site-bg-ghost-b {
+            left: -2.7rem;
+          }
+          .site-bg-ghost-c {
+            right: -1.4rem;
           }
           html { scroll-padding-top: 68px; }
           body { overflow-x: hidden; }
@@ -324,6 +369,9 @@ function SiteAtmosphere() {
           <use href="#siteAtmosphereGhost" x="1388" y="2870" width="164" height="200" />
         </g>
       </svg>
+      <div className="site-bg-ghost site-bg-ghost-a" aria-hidden="true" />
+      <div className="site-bg-ghost site-bg-ghost-b" aria-hidden="true" />
+      <div className="site-bg-ghost site-bg-ghost-c" aria-hidden="true" />
     </div>
   );
 }
