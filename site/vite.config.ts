@@ -1,36 +1,34 @@
-import { defineConfig } from 'vite'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
+import { copyFileSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { defineConfig, type Plugin } from 'vite';
+import react from '@vitejs/plugin-react';
 
+const statusSource = resolve(process.cwd(), 'src/app/statusData.json');
 
-function figmaAssetResolver() {
+function publicStatusFeed(): Plugin {
   return {
-    name: 'figma-asset-resolver',
-    resolveId(id) {
-      if (id.startsWith('figma:asset/')) {
-        const filename = id.replace('figma:asset/', '')
-        return path.resolve(__dirname, 'src/assets', filename)
-      }
+    name: 'ghostify-public-status-feed',
+    configureServer(server) {
+      server.middlewares.use((request, response, next) => {
+        if (request.url?.split('?')[0] !== '/status.json') {
+          next();
+          return;
+        }
+
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.setHeader('Access-Control-Allow-Origin', '*');
+        response.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+        response.end(readFileSync(statusSource));
+      });
     },
-  }
+    closeBundle() {
+      copyFileSync(statusSource, resolve(process.cwd(), 'dist/status.json'));
+    },
+  };
 }
 
 export default defineConfig({
-  plugins: [
-    figmaAssetResolver(),
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-
-  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
-  assetsInclude: ['**/*.svg', '**/*.csv'],
-})
+  publicDir: 'public',
+  plugins: [react(), publicStatusFeed()],
+});

@@ -405,6 +405,7 @@ function assertStatusJsonContract() {
         'product',
         'productVersion',
         'generatedAt',
+        'release',
         'statusUrl',
         'historyUrl',
         'summary',
@@ -421,6 +422,34 @@ function assertStatusJsonContract() {
     assertHttpsUrl(statusJson.historyUrl, 'site/public/status.json historyUrl');
     assertNullableIsoDate(statusJson.generatedAt, 'site/public/status.json generatedAt');
 
+    assertObject(statusJson.release, 'site/public/status.json release');
+    assertOnlyKeys(statusJson.release, [
+        'channel',
+        'publishedVersion',
+        'checkedAt',
+        'matchesVerificationBuild',
+        'storeUrl'
+    ], 'site/public/status.json release');
+    assertEqual(statusJson.release.channel, 'Chrome Web Store', 'site/public/status.json release.channel');
+    if (!statusJson.release.publishedVersion || typeof statusJson.release.publishedVersion !== 'string') {
+        fail('site/public/status.json release.publishedVersion must be a non-empty string');
+    }
+    assertNullableIsoDate(statusJson.release.checkedAt, 'site/public/status.json release.checkedAt');
+    assertHttpsUrl(statusJson.release.storeUrl, 'site/public/status.json release.storeUrl');
+    assertEqual(
+        statusJson.release.storeUrl,
+        'https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm',
+        'site/public/status.json release.storeUrl'
+    );
+    assertEqual(
+        statusJson.release.matchesVerificationBuild,
+        statusJson.release.publishedVersion === statusJson.productVersion,
+        'site/public/status.json release.matchesVerificationBuild'
+    );
+    if (Date.parse(statusJson.generatedAt) < Date.parse(statusJson.release.checkedAt)) {
+        fail('site/public/status.json generatedAt must not predate release.checkedAt');
+    }
+
     assertObject(statusJson.summary, 'site/public/status.json summary');
     assertOnlyKeys(statusJson.summary, ['publicStatus', 'label', 'message'], 'site/public/status.json summary');
     assertEnum(statusJson.summary.publicStatus, PUBLIC_STATUS_VALUES, 'site/public/status.json summary.publicStatus');
@@ -429,6 +458,9 @@ function assertStatusJsonContract() {
     }
     if (!statusJson.summary.message || typeof statusJson.summary.message !== 'string') {
         fail('site/public/status.json summary.message must be a non-empty string');
+    }
+    if (!statusJson.release.matchesVerificationBuild && VERIFIED_PUBLIC_STATUS_VALUES.has(statusJson.summary.publicStatus)) {
+        fail('site/public/status.json summary cannot be verified when the published Store version differs from the verification build');
     }
 
     assertObject(statusJson.policy, 'site/public/status.json policy');
@@ -506,6 +538,9 @@ function assertStatusJsonContract() {
         assertEnum(entry.platform, PUBLIC_STATUS_PLATFORM_VALUES, `${label}.platform`);
         assertEnum(entry.feature, PUBLIC_STATUS_FEATURE_VALUES, `${label}.feature`);
         assertEnum(entry.publicStatus, PUBLIC_STATUS_VALUES, `${label}.publicStatus`);
+        if (!statusJson.release.matchesVerificationBuild && VERIFIED_PUBLIC_STATUS_VALUES.has(entry.publicStatus)) {
+            fail(`${label}.publicStatus cannot be verified when the published Store version differs from the verification build`);
+        }
         assertEnum(entry.localEvidenceStatus, PUBLIC_STATUS_LOCAL_EVIDENCE_VALUES, `${label}.localEvidenceStatus`);
         assertEnum(entry.publicEvidenceType, PUBLIC_STATUS_EVIDENCE_TYPES, `${label}.publicEvidenceType`);
         assertEnum(entry.sourceType, PUBLIC_STATUS_SOURCE_TYPES, `${label}.sourceType`);

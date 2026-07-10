@@ -55,7 +55,15 @@ export function GhostSVG({
   );
 }
 
-export function GhostMark({ size = 24 }: { size?: number }) {
+export function GhostMark({
+  size = 24,
+  bodyColor = '#0F0F0D',
+  eyeColor = '#FFFFFF',
+}: {
+  size?: number;
+  bodyColor?: string;
+  eyeColor?: string;
+}) {
   return (
     <svg
       width={size}
@@ -64,8 +72,8 @@ export function GhostMark({ size = 24 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path fill="#F6F1EA" d={GHOST_PATH} />
-      <path fill="#161314" d={EYES_PATH} />
+      <path fill={bodyColor} d={GHOST_PATH} />
+      <path fill={eyeColor} d={EYES_PATH} />
       <path fill="white" fillOpacity={0.45} d={HIGHLIGHT_PATH} />
     </svg>
   );

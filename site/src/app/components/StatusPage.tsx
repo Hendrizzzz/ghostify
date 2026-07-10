@@ -1,7 +1,6 @@
 import {
   AlertTriangle,
   ArrowLeft,
-  CalendarDays,
   CheckCircle2,
   Clock3,
   ExternalLink,
@@ -14,6 +13,7 @@ import {
   STATUS_LABELS,
   formatStatusDate,
   getEffectiveStatus,
+  getPublicReleaseStatus,
   getWorstStatus,
   type PublicVerificationStatus,
   type VerificationEntry,
@@ -70,8 +70,10 @@ function getFeatureEntry(entries: readonly VerificationEntry[], feature: Feature
 
 function formatStatusDetail(entry: VerificationEntry | null) {
   if (!entry) return 'No public record';
-  if (entry.verifiedAt) return `Verified ${formatStatusDate(entry.verifiedAt)}`;
-  return STATUS_META[getEffectiveStatus(entry)].short;
+  const status = getEffectiveStatus(entry);
+  const isVerified = status === 'maintainer_verified' || status === 'community_verified_reviewed';
+  if (entry.verifiedAt) return `${isVerified ? 'Verified' : 'Last verified'} ${formatStatusDate(entry.verifiedAt)}`;
+  return STATUS_META[status].short;
 }
 
 function PlatformLogo({ platform }: { platform: PlatformName }) {
@@ -132,33 +134,67 @@ function StatusIcon({ status, size = 16 }: { status: PublicVerificationStatus; s
   return <HelpCircle size={size} strokeWidth={1.8} />;
 }
 
-function StatusPill({ status }: { status: PublicVerificationStatus }) {
+function StatusPill({ status, label }: { status: PublicVerificationStatus; label?: string }) {
   const meta = STATUS_META[status];
   return (
     <span className={`status-pill status-${meta.tone}`}>
       <StatusIcon status={status} size={14} />
-      {meta.short}
+      {label ?? meta.short}
     </span>
   );
 }
 
 function CurrentNotice() {
-  const overallStatus = getWorstStatus(STATUS_DATA.entries);
+  const overallStatus = getPublicReleaseStatus();
   const meta = STATUS_META[overallStatus];
+  const releaseMismatch = !STATUS_DATA.release.matchesVerificationBuild;
+  const mismatchPrimary = releaseMismatch && overallStatus === 'not_recently_verified';
+  const statusExpired = overallStatus === 'stale' || overallStatus === 'not_recently_verified';
+  const label = mismatchPrimary
+    ? 'Store build needs matching verification'
+    : statusExpired
+      ? 'Live verification needs a recheck'
+      : STATUS_LABELS[overallStatus];
+  const heading = mismatchPrimary
+    ? 'Store and verification builds differ'
+    : statusExpired
+      ? 'Verification window expired'
+      : overallStatus === 'under_review'
+        ? 'Verification in progress'
+        : STATUS_DATA.summary.label;
+  const message = mismatchPrimary
+    ? `The Chrome Web Store version recorded on ${formatStatusDate(STATUS_DATA.release.checkedAt)} is v${STATUS_DATA.release.publishedVersion}. The feature records below refer to repository build v${STATUS_DATA.productVersion}, so they are not Store-build proof until the versions match.`
+    : statusExpired
+      ? 'The most recent live evidence is outside its verification window. The dated records remain visible, but the controls need a new maintainer review before the page can show a current green status.'
+      : STATUS_DATA.summary.message;
 
   return (
     <section className={`status-notice status-notice-${meta.tone}`} aria-label="Current status summary">
       <div className="status-notice-head">
         <StatusIcon status={overallStatus} size={18} />
-        <strong>{STATUS_DATA.summary.label}</strong>
+        <strong>{label}</strong>
       </div>
       <div className="status-notice-body">
-        <span className="status-version-pill">v{STATUS_DATA.productVersion}</span>
-        <h2>{STATUS_DATA.summary.label === 'Under review' ? 'Verification in progress' : STATUS_DATA.summary.label}</h2>
-        <p>{STATUS_DATA.summary.message}</p>
+        <div className="status-version-row">
+          <span className="status-version-pill">Verification build v{STATUS_DATA.productVersion}</span>
+          <span className="status-version-pill">Store v{STATUS_DATA.release.publishedVersion}</span>
+        </div>
+        <h2>{heading}</h2>
+        <p>{message}</p>
+        {releaseMismatch && !mismatchPrimary && (
+          <p className="status-secondary-warning">
+            The Store also publishes v{STATUS_DATA.release.publishedVersion}, while these records describe repository build v{STATUS_DATA.productVersion}.
+          </p>
+        )}
+        {releaseMismatch && (
+          <a className="status-release-link" href={STATUS_DATA.release.storeUrl} target="_blank" rel="noopener noreferrer">
+            Open the Chrome Web Store listing <ExternalLink size={13} strokeWidth={1.8} />
+          </a>
+        )}
         <div className="status-notice-meta">
           <span>{STATUS_LABELS[overallStatus]}</span>
           <span>Generated {formatStatusDate(STATUS_DATA.generatedAt)}</span>
+          <span>Store checked {formatStatusDate(STATUS_DATA.release.checkedAt)}</span>
           <span>{STATUS_DATA.policy.verificationCadence}</span>
         </div>
       </div>
@@ -185,6 +221,9 @@ function StatusRail({ entries }: { entries: readonly VerificationEntry[] }) {
 
 function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[number]; entries: VerificationEntry[] }) {
   const platformStatus = getPlatformWorstStatus(entries);
+  const verifiedBuildOnly = !STATUS_DATA.release.matchesVerificationBuild && (
+    platformStatus === 'maintainer_verified' || platformStatus === 'community_verified_reviewed'
+  );
 
   return (
     <article className="status-platform-row">
@@ -193,7 +232,10 @@ function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[numbe
         <div>
           <div className="status-platform-title">
             <strong>{platform.name}</strong>
-            <StatusPill status={platformStatus} />
+            <StatusPill
+              status={platformStatus}
+              label={verifiedBuildOnly ? `Verified in v${STATUS_DATA.productVersion}` : undefined}
+            />
           </div>
           <div className="status-platform-sub">
             <span>{platform.componentLabel}</span>
@@ -226,8 +268,8 @@ function SystemStatus() {
   return (
     <section className="status-panel" aria-labelledby="system-status-heading">
       <div className="status-panel-head">
-        <h2 id="system-status-heading">System status</h2>
-        <span>Public checks</span>
+        <h2 id="system-status-heading">Verification build checks</h2>
+        <span>Repository v{STATUS_DATA.productVersion}</span>
       </div>
       <div className="status-platform-list">
         {PLATFORMS.map((platform) => (
@@ -262,55 +304,10 @@ function StatusFootnote() {
   );
 }
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
 type HistoryItem = (typeof STATUS_DATA.history)[number];
 
-function parseStatusDay(value: string) {
-  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function formatIsoDay(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function buildDailyWorkingRows(startValue: string, endValue: string, title: string): HistoryItem[] {
-  const start = parseStatusDay(startValue).getTime();
-  const end = parseStatusDay(endValue).getTime();
-  const rows: HistoryItem[] = [];
-
-  for (let cursor = end; cursor >= start; cursor -= ONE_DAY_MS) {
-    const date = formatIsoDay(new Date(cursor));
-    rows.push({
-      date,
-      publicStatus: 'maintainer_verified',
-      title,
-      summary: `Maintainer daily status record kept supported Instagram, Messenger, and Facebook controls marked working on ${formatStatusDate(date)}.`,
-    });
-  }
-
-  return rows;
-}
-
 function buildVisibleHistory(): HistoryItem[] {
-  const eventRows = STATUS_DATA.history.filter(
-    (item) => item.title !== 'Fix launched and current working window restarted' && item.title !== 'Previous working window began',
-  );
-  const lastVerifiedDay = formatIsoDay(parseStatusDay(STATUS_DATA.provenWorking.lastVerifiedAt));
-  const currentWindowEnd = formatIsoDay(new Date(parseStatusDay(lastVerifiedDay).getTime() - ONE_DAY_MS));
-  const currentRows = buildDailyWorkingRows(
-    STATUS_DATA.provenWorking.currentWindowStartedAt,
-    currentWindowEnd,
-    'Daily verification recorded',
-  );
-  const previousRows = buildDailyWorkingRows(
-    STATUS_DATA.provenWorking.previousWindowStartedAt,
-    STATUS_DATA.provenWorking.previousWindowEndedAt,
-    'Daily verification recorded',
-  );
-
-  return [...eventRows, ...currentRows, ...previousRows].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  return [...STATUS_DATA.history].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 }
 
 function CurrentStatus() {
@@ -340,7 +337,7 @@ function HistoryStatus() {
       </div>
       <section className="status-panel" aria-labelledby="history-heading">
         <div className="status-panel-head">
-          <h2 id="history-heading">Daily updates</h2>
+          <h2 id="history-heading">Verification history</h2>
           <span>Public record</span>
         </div>
         <div className="status-history-list">
@@ -475,6 +472,29 @@ export function StatusPage({ view }: StatusPageProps) {
           font-family: var(--g-sans);
           font-size: 0.78rem;
           font-weight: 700;
+        }
+        .status-version-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .status-release-link {
+          min-height: 38px;
+          margin-top: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          color: var(--status-red-text);
+          font-family: var(--g-sans);
+          font-size: 0.8rem;
+          font-weight: 700;
+          text-underline-offset: 4px;
+        }
+        .status-secondary-warning {
+          padding: 9px 11px;
+          border-left: 2px solid var(--status-red-text);
+          background: var(--status-red-soft);
+          color: var(--status-text) !important;
         }
         .status-notice h2 {
           margin: 18px 0 0;

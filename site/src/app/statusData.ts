@@ -35,6 +35,13 @@ export type StatusData = {
   product: string;
   productVersion: string;
   generatedAt: string;
+  release: {
+    channel: 'Chrome Web Store';
+    publishedVersion: string;
+    checkedAt: string;
+    matchesVerificationBuild: boolean;
+    storeUrl: string;
+  };
   statusUrl: string;
   historyUrl: string;
   summary: {
@@ -130,6 +137,23 @@ export function getWorstStatus(entries: readonly VerificationEntry[], now = new 
   return entries
     .map((entry) => getEffectiveStatus(entry, now))
     .sort((left, right) => STATUS_WEIGHT[right] - STATUS_WEIGHT[left])[0] || 'public_status_unavailable';
+}
+
+export function getPublicReleaseStatus(now = new Date()): PublicVerificationStatus {
+  const verificationStatus = getWorstStatus(STATUS_DATA.entries, now);
+  const evidenceExpired = STATUS_DATA.entries.some((entry) => {
+    if (!entry.expiresAt) return false;
+    const expiry = new Date(entry.expiresAt);
+    return !Number.isNaN(expiry.getTime()) && expiry.getTime() <= now.getTime();
+  });
+  if (evidenceExpired && verificationStatus === 'not_recently_verified') {
+    return 'stale';
+  }
+  const verifiedStatus = verificationStatus === 'maintainer_verified' || verificationStatus === 'community_verified_reviewed';
+  if (!STATUS_DATA.release.matchesVerificationBuild && verifiedStatus) {
+    return 'not_recently_verified';
+  }
+  return verificationStatus;
 }
 
 export function formatStatusDate(value: string | null): string {

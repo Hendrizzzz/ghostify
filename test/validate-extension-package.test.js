@@ -94,6 +94,48 @@ withFixture(fixtureRoot => {
 });
 
 withFixture(fixtureRoot => {
+    const { statusJson } = readStatusJson(fixtureRoot);
+    statusJson.summary.publicStatus = 'maintainer_verified';
+    writeStatusJsonPair(fixtureRoot, statusJson);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject a verified summary for a different Store build');
+    assert.match(
+        result.stderr,
+        /summary cannot be verified when the published Store version differs/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const { statusJson } = readStatusJson(fixtureRoot);
+    statusJson.entries[0].publicStatus = 'maintainer_verified';
+    writeStatusJsonPair(fixtureRoot, statusJson);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject a verified entry for a different Store build');
+    assert.match(
+        result.stderr,
+        /entries\[0\]\.publicStatus cannot be verified when the published Store version differs/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
+    const { statusJson } = readStatusJson(fixtureRoot);
+    statusJson.generatedAt = '2026-07-09T20:00:00Z';
+    writeStatusJsonPair(fixtureRoot, statusJson);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject a feed generated before its Store check');
+    assert.match(
+        result.stderr,
+        /generatedAt must not predate release\.checkedAt/,
+        result.stderr || result.stdout
+    );
+});
+
+withFixture(fixtureRoot => {
     const contentPath = path.join(fixtureRoot, 'src', 'content.js');
     const source = fs.readFileSync(contentPath, 'utf8');
     assert(
@@ -458,6 +500,8 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusPath, statusJson } = readStatusJson(fixtureRoot);
+    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'maintainer_verified';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
     statusJson.entries[0].expiresAt = null;
@@ -474,6 +518,8 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusPath, statusJson } = readStatusJson(fixtureRoot);
+    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'maintainer_verified';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
     statusJson.entries[0].expiresAt = '2026-07-04T00:00:00Z';
@@ -491,6 +537,8 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusPath, statusJson } = readStatusJson(fixtureRoot);
+    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'community_verified_reviewed';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
     statusJson.entries[0].expiresAt = '2026-07-04T00:00:00Z';
