@@ -132,9 +132,10 @@ function SignalPill({
 }) {
   const isTyping = label === 'typing';
   const height = compact ? 44 : 36;
+  const opacityValues = kind === 'input' ? '0;0;1;1;0;0' : '0;0;1;1;0;0';
   const opacityKeyTimes = kind === 'input'
-    ? '0;0.02;0.2583;0.2889;1'
-    : '0;0.025;0.25;0.2778;1';
+    ? '0;0.006;0.02;0.25;0.29;1'
+    : '0;0.02;0.04;0.2917;0.3194;1';
   return (
     <g className={`signal-svg-pill signal-svg-pill-${kind}${compact ? ' signal-svg-pill-compact' : ''}${isTyping ? ' signal-svg-pill-typing' : ''}`} opacity="0">
       <rect x={width / -2} y={height / -2} width={width} height={height} rx={height / 2} />
@@ -142,10 +143,7 @@ function SignalPill({
       {isTyping && (
         <g className="signal-typing-dots" transform={`translate(${compact ? 25 : 29} 0)`}>
           {[0, 1, 2].map((dot) => (
-            <circle cx={dot * 6} cy="0" r="1.8" key={dot}>
-              <animate attributeName="opacity" values=".55;1;.55" dur="1.2s" begin={`${dot * 0.14}s`} repeatCount="indefinite" />
-              <animate attributeName="cy" values="0;-1.5;0" dur="1.2s" begin={`${dot * 0.14}s`} repeatCount="indefinite" />
-            </circle>
+            <circle cx={dot * 6} cy="0" r="1.8" key={dot} style={{ animationDelay: `${dot * 0.14}s` }} />
           ))}
         </g>
       )}
@@ -155,13 +153,13 @@ function SignalPill({
         repeatCount="indefinite"
         calcMode="linear"
         keyPoints="0;1;1"
-        keyTimes="0;0.2778;1"
+        keyTimes="0;0.3194;1"
       >
         <mpath href={`#${pathId}`} />
       </animateMotion>
       <animate
         attributeName="opacity"
-        values="0;1;1;0;0"
+        values={opacityValues}
         keyTimes={opacityKeyTimes}
         dur="7.2s"
         begin={begin}
@@ -204,6 +202,9 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
           <path id={`${prefix}-out-seen`} d={paths.outSeen} />
           <path id={`${prefix}-out-typing`} d={paths.outTyping} />
           <path id={`${prefix}-out-story`} d={paths.outStory} />
+          <clipPath id={`${prefix}-input-clip`}>
+            <rect x="0" y="0" width={compact ? 400 : 604} height={compact ? 210 : 420} />
+          </clipPath>
           <linearGradient
             id={`${prefix}-output-zone-fill`}
             x1={compact ? '200' : '600'}
@@ -264,12 +265,23 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
         </g>
 
         <g className="signal-motion">
-          <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-7.2s" kind="input" compact={compact} />
-          <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-4.8s" kind="input" compact={compact} />
-          <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-2.4s" kind="input" compact={compact} />
-          <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-5.2s" kind="output" compact={compact} />
-          <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-2.8s" kind="output" compact={compact} />
-          <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-0.4s" kind="output" compact={compact} />
+          <g clipPath={`url(#${prefix}-input-clip)`}>
+            <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-7.2s" kind="input" compact={compact} />
+            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-6s" kind="input" compact={compact} />
+            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-4.8s" kind="input" compact={compact} />
+            <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-3.6s" kind="input" compact={compact} />
+            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-2.4s" kind="input" compact={compact} />
+            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-1.2s" kind="input" compact={compact} />
+          </g>
+
+          <g>
+            <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-4.9s" kind="output" compact={compact} />
+            <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-3.7s" kind="output" compact={compact} />
+            <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-2.5s" kind="output" compact={compact} />
+            <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-1.3s" kind="output" compact={compact} />
+            <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-0.1s" kind="output" compact={compact} />
+            <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-6.1s" kind="output" compact={compact} />
+          </g>
         </g>
 
         <g className="signal-static-labels">
@@ -286,21 +298,10 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
 }
 
 function HeroSignalFlow() {
-  const [compact, setCompact] = useState(() => (
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 1080px)').matches
-  ));
-
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 1080px)');
-    const update = () => setCompact(query.matches);
-    update();
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-
   return (
     <div className="hero-signal-flow" aria-hidden="true">
-      <SignalDiagram compact={compact} />
+      <SignalDiagram />
+      <SignalDiagram compact />
 
       <div className="signal-processor">
         <GhostMark size={148} bodyColor="#0f0f0d" eyeColor="#ffffff" />
