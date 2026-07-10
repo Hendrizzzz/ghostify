@@ -193,16 +193,28 @@ function HeroDetails() {
       frame = window.requestAnimationFrame(() => {
         const x = event.clientX / window.innerWidth - 0.5;
         const y = event.clientY / window.innerHeight - 0.5;
+        const detailsBox = details.getBoundingClientRect();
         tiles.forEach((tile, index) => {
           const depth = 7 + (index % 4) * 3;
-          tile.style.setProperty('--mouse-x', `${(x * depth).toFixed(2)}px`);
-          tile.style.setProperty('--mouse-y', `${(y * depth).toFixed(2)}px`);
+          const centerX = detailsBox.left + tile.offsetLeft + tile.offsetWidth / 2;
+          const centerY = detailsBox.top + tile.offsetTop + tile.offsetHeight / 2;
+          const dx = centerX - event.clientX;
+          const dy = centerY - event.clientY;
+          const distance = Math.max(1, Math.hypot(dx, dy));
+          const proximity = Math.max(0, 1 - distance / 150);
+          const repel = proximity * proximity * 34;
+          const repelX = dx / distance * repel;
+          const repelY = dy / distance * repel;
+          tile.style.setProperty('--mouse-x', `${(x * depth + repelX).toFixed(2)}px`);
+          tile.style.setProperty('--mouse-y', `${(y * depth + repelY).toFixed(2)}px`);
+          tile.classList.toggle('is-avoiding', proximity > 0.12);
         });
       });
     };
     const reset = () => tiles.forEach((tile) => {
       tile.style.setProperty('--mouse-x', '0px');
       tile.style.setProperty('--mouse-y', '0px');
+      tile.classList.remove('is-avoiding');
     });
     window.addEventListener('pointermove', update, { passive: true });
     document.documentElement.addEventListener('mouseleave', reset);
@@ -215,14 +227,14 @@ function HeroDetails() {
 
   return (
     <div className="hero-details" aria-hidden="true" ref={detailsRef}>
-      <span className="hero-detail hero-detail-instagram"><PlatformLogo platform="instagram" size={34} /></span>
-      <span className="hero-detail hero-detail-messenger"><PlatformLogo platform="messenger" size={36} /></span>
-      <span className="hero-detail hero-detail-facebook"><PlatformLogo platform="facebook" size={36} /></span>
-      <span className="hero-detail hero-detail-seen"><EyeOff size={27} /></span>
-      <span className="hero-detail hero-detail-typing"><MessageCircle size={27} /></span>
-      <span className="hero-detail hero-detail-story"><ImageIcon size={27} /></span>
-      <span className="hero-detail hero-detail-local"><ShieldCheck size={27} /></span>
-      <span className="hero-detail hero-detail-browser"><Globe2 size={27} /></span>
+      <span className="hero-detail hero-detail-instagram"><i className="hero-detail-stage"><PlatformLogo platform="instagram" size={34} /></i></span>
+      <span className="hero-detail hero-detail-messenger"><i className="hero-detail-stage"><PlatformLogo platform="messenger" size={36} /></i></span>
+      <span className="hero-detail hero-detail-facebook"><i className="hero-detail-stage"><PlatformLogo platform="facebook" size={36} /></i></span>
+      <span className="hero-detail hero-detail-seen"><i className="hero-detail-stage"><EyeOff size={27} /></i></span>
+      <span className="hero-detail hero-detail-typing"><i className="hero-detail-stage"><MessageCircle size={27} /></i></span>
+      <span className="hero-detail hero-detail-story"><i className="hero-detail-stage"><ImageIcon size={27} /></i></span>
+      <span className="hero-detail hero-detail-local"><i className="hero-detail-stage"><ShieldCheck size={27} /></i></span>
+      <span className="hero-detail hero-detail-browser"><i className="hero-detail-stage"><Globe2 size={27} /></i></span>
     </div>
   );
 }
@@ -440,7 +452,7 @@ export function HomePage() {
         <HeroDetails />
         <div className="home-hero-inner">
           <div className="home-hero-copy">
-            <h1>No <em>seen.</em><br />No pressure.</h1>
+            <h1>No <em>seen.</em> No pressure.</h1>
             <p>Ghostify gives you control over supported Seen, Typing, and Story View signals on Instagram, Messenger, and Facebook — directly in your browser.</p>
             <div className="home-hero-actions">
               <StoreCta />
@@ -551,8 +563,8 @@ export function HomePage() {
       <section className="home-final">
         <div>
           <div className="home-final-badges">
-            <span><span className="chrome-logo" aria-hidden="true"><span /></span>Chrome</span>
-            <span><span className="edge-logo" aria-hidden="true" />Edge</span>
+            <span><img className="browser-logo" src="/chrome-current.svg" alt="" />Chrome</span>
+            <span><img className="browser-logo" src="/edge-current.svg" alt="" />Edge</span>
             <span><ShieldCheck size={15} aria-hidden="true" />Free</span>
           </div>
           <h2>Ghostify, wherever you browse.</h2>

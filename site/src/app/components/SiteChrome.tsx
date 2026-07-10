@@ -10,7 +10,7 @@ export const EDGE_STORE_URL =
 export const GITHUB_URL = 'https://github.com/Hendrizzzz/Ghostify';
 
 function ChromeLogo() {
-  return <span className="chrome-logo" aria-hidden="true"><span /></span>;
+  return <img className="browser-logo" src="/chrome-current.svg" alt="" />;
 }
 
 export function StoreCta({
