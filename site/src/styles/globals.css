@@ -50,6 +50,12 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 86px;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 body {

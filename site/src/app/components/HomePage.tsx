@@ -3,6 +3,7 @@ import {
   ArrowDown,
   ArrowUpRight,
   Check,
+  CircleCheck,
   Code2,
   EyeOff,
   Globe2,
@@ -127,10 +128,20 @@ function SignalPill({
   begin: string;
   kind: 'input' | 'output';
 }) {
+  const isTyping = label === 'typing';
   return (
-    <g className={`signal-svg-pill signal-svg-pill-${kind}`} opacity="0">
+    <g className={`signal-svg-pill signal-svg-pill-${kind}${isTyping ? ' signal-svg-pill-typing' : ''}`} opacity="0">
       <rect x={width / -2} y="-18" width={width} height="36" rx="18" />
-      <text textAnchor="middle" dominantBaseline="middle">{label}</text>
+      <text x={isTyping ? -9 : 0} textAnchor="middle" dominantBaseline="middle">{label}</text>
+      {isTyping && (
+        <g className="signal-typing-dots" transform="translate(23 0)">
+          {[0, 1, 2].map((dot) => (
+            <circle cx={dot * 7} cy="0" r="2" key={dot}>
+              <animate attributeName="opacity" values=".25;1;.25" dur="1.05s" begin={`${dot * 0.16}s`} repeatCount="indefinite" />
+            </circle>
+          ))}
+        </g>
+      )}
       <animateMotion dur="5.6s" begin={begin} repeatCount="indefinite" calcMode="linear">
         <mpath href={`#${pathId}`} />
       </animateMotion>
@@ -159,7 +170,7 @@ function HeroSignalFlow() {
 
         <g className="signal-motion">
           <SignalPill label="seen" pathId="signal-in-seen" width={78} begin="0s" kind="input" />
-          <SignalPill label="typing" pathId="signal-in-typing" width={82} begin="0.55s" kind="input" />
+          <SignalPill label="typing" pathId="signal-in-typing" width={112} begin="0.55s" kind="input" />
           <SignalPill label="story-view" pathId="signal-in-story" width={104} begin="1.1s" kind="input" />
           <SignalPill label="seen-receipt blocked" pathId="signal-out-seen" width={174} begin="2.8s" kind="output" />
           <SignalPill label="typing blocked" pathId="signal-out-typing" width={126} begin="3.35s" kind="output" />
@@ -238,6 +249,27 @@ function HeroDetails() {
       <span className="hero-detail hero-detail-chrome"><i className="hero-detail-stage"><img src="/chrome-current.svg" alt="" /></i></span>
       <span className="hero-detail hero-detail-brave"><i className="hero-detail-stage"><img src="/brave-current.svg?v=2" alt="" /></i></span>
       <span className="hero-detail hero-detail-opera"><i className="hero-detail-stage"><img src="/opera-current.svg?v=2" alt="" /></i></span>
+      <span className="hero-detail hero-detail-arc"><i className="hero-detail-stage"><img src="/arc-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-vivaldi"><i className="hero-detail-stage"><img src="/vivaldi-current.svg" alt="" /></i></span>
+    </div>
+  );
+}
+
+function PlatformControlMap() {
+  return (
+    <div className="platform-control-map" aria-label="Instagram has its own controls. Messenger and Facebook share a control group.">
+      <div className="control-map-lane control-map-lane-own">
+        <span className="control-map-logo"><PlatformLogo platform="instagram" size={30} /></span>
+        <i aria-hidden="true" />
+        <span className="control-map-label"><b>Own controls</b><small>Instagram</small></span>
+      </div>
+      <div className="control-map-lane control-map-lane-shared">
+        <span className="control-map-logo"><PlatformLogo platform="messenger" size={30} /></span>
+        <i aria-hidden="true" />
+        <span className="control-map-label"><b>Shared group</b><small>one switch state</small></span>
+        <i aria-hidden="true" />
+        <span className="control-map-logo"><PlatformLogo platform="facebook" size={30} /></span>
+      </div>
     </div>
   );
 }
@@ -246,10 +278,17 @@ function PrivacyIllustration() {
   return (
     <div className="privacy-illustration" aria-hidden="true">
       <div className="privacy-browser">
-        <div className="privacy-browser-bar"><i /><i /><i /></div>
+        <div className="privacy-browser-bar">
+          <span className="privacy-window-dots"><i /><i /><i /></span>
+          <span className="privacy-browser-url"><LockKeyhole size={11} /> supported tab</span>
+        </div>
         <div className="privacy-browser-body">
-          <span /><span /><span />
-          <GhostMark size={72} />
+          <div className="privacy-signal-list">
+            <span><EyeOff size={15} /><b>Seen receipt</b><CircleCheck size={15} /></span>
+            <span><MessageCircle size={15} /><b>Typing signal</b><CircleCheck size={15} /></span>
+            <span><CirclePlay size={15} /><b>Story view</b><CircleCheck size={15} /></span>
+          </div>
+          <span className="privacy-browser-ghost"><GhostMark size={76} bodyColor="#0f0f0d" eyeColor="#ffffff" /></span>
         </div>
       </div>
       <span className="privacy-visual-chip privacy-visual-chip-local">stays local</span>
@@ -323,6 +362,25 @@ function FootprintSection() {
   );
 }
 
+function FeatureSignalRail({ platform }: { platform: MetaPlatform }) {
+  const focus = platform === 'messenger' ? 'seen' : 'story';
+  const signals = [
+    { key: 'seen', label: 'Seen', icon: <EyeOff size={15} /> },
+    { key: 'typing', label: 'Typing', icon: <MessageCircle size={15} /> },
+    { key: 'story', label: 'Story views', icon: <CirclePlay size={15} /> },
+  ];
+
+  return (
+    <div className={`feature-signal-rail feature-signal-focus-${focus}`} aria-label="Supported controls shown in this recording">
+      {signals.map((signal) => (
+        <span className={signal.key === focus ? 'is-active' : undefined} key={signal.key}>
+          {signal.icon}{signal.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function FeatureScroll() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -385,24 +443,35 @@ function FeatureScroll() {
   return (
     <section className="feature-scroll" id="features" ref={sectionRef}>
       <div className="feature-scroll-sticky">
-        <div className="feature-scroll-copy" key={`copy-${activeFeature.platform}`}>
-          <div className="feature-platform-name">
-            <PlatformLogo platform={activeFeature.platform} size={38} />
-            <span>{activeFeature.name}</span>
+        <div className="feature-scroll-copy">
+          <div className="feature-copy-changing" key={`copy-${activeFeature.platform}`}>
+            <div className="feature-platform-name">
+              <PlatformLogo platform={activeFeature.platform} size={38} />
+              <span>{activeFeature.name}</span>
+            </div>
+            <h2>{activeFeature.title}</h2>
+            <p>{activeFeature.body}</p>
           </div>
-          <h2>{activeFeature.title}</h2>
-          <p>{activeFeature.body}</p>
-          <a href="/status">See current verification <ArrowUpRight size={16} aria-hidden="true" /></a>
+          <div className="feature-scroll-tools">
+            <FeatureSignalRail platform={activeFeature.platform} />
+            <a href="/status">See current verification <ArrowUpRight size={16} aria-hidden="true" /></a>
+          </div>
         </div>
 
         <figure className="feature-scroll-media" key={`media-${activeFeature.platform}`}>
-          <img
-            src={activeFeature.src}
-            alt={`${activeFeature.name} running with Ghostify in the browser`}
-            width={activeFeature.width}
-            height={activeFeature.height}
-            decoding="async"
-          />
+          <div className="feature-media-frame">
+            <div className="feature-media-meta" aria-hidden="true">
+              <span><ShieldCheck size={14} />Signal held before send</span>
+              <span><i />Original Ghostify capture</span>
+            </div>
+            <img
+              src={activeFeature.src}
+              alt={`${activeFeature.name} running with Ghostify in the browser`}
+              width={activeFeature.width}
+              height={activeFeature.height}
+              decoding="async"
+            />
+          </div>
         </figure>
 
         <div className="feature-scroll-nav" role="group" aria-label="Jump to a platform recording">
@@ -430,6 +499,7 @@ function FeatureScroll() {
             </div>
             <h2>{feature.title}</h2>
             <p>{feature.body}</p>
+            <FeatureSignalRail platform={feature.platform} />
             <img
               src={feature.src}
               alt={`${feature.name} running with Ghostify in the browser`}
@@ -475,7 +545,7 @@ export function HomePage() {
       <section className="platforms-flat" id="platforms">
         <header>
           <h2>Six switches.<br />Three familiar places.</h2>
-          <p>Instagram gets its own control set. Messenger and Facebook share another, while every supported signal stays independently switchable.</p>
+          <PlatformControlMap />
         </header>
         <div className="platform-card-grid">
           {PLATFORMS.map((item) => (
