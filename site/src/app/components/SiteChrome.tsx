@@ -92,7 +92,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-lead">
         <a className="brand-lockup brand-lockup-footer" href="/" aria-label="Ghostify home">
-          <span className="brand-mark"><GhostMark size={30} /></span>
+          <span className="brand-mark"><GhostMark size={43} bodyColor="#ffffff" eyeColor="#0f0f0d" /></span>
           <span>Ghostify</span>
         </a>
         <p>Quiet, browser-local privacy controls for Meta web apps.</p>

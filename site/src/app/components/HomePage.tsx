@@ -132,9 +132,10 @@ function SignalPill({
 }) {
   const isTyping = label === 'typing';
   const height = compact ? 44 : 36;
+  const opacityValues = kind === 'input' ? '0;0;1;1;0;0' : '0;0;1;1;0;0';
   const opacityKeyTimes = kind === 'input'
-    ? '0;0.02;0.2583;0.2889;1'
-    : '0;0.025;0.25;0.2778;1';
+    ? '0;0.006;0.02;0.25;0.29;1'
+    : '0;0.02;0.04;0.2917;0.3194;1';
   return (
     <g className={`signal-svg-pill signal-svg-pill-${kind}${compact ? ' signal-svg-pill-compact' : ''}${isTyping ? ' signal-svg-pill-typing' : ''}`} opacity="0">
       <rect x={width / -2} y={height / -2} width={width} height={height} rx={height / 2} />
@@ -142,10 +143,7 @@ function SignalPill({
       {isTyping && (
         <g className="signal-typing-dots" transform={`translate(${compact ? 25 : 29} 0)`}>
           {[0, 1, 2].map((dot) => (
-            <circle cx={dot * 6} cy="0" r="1.8" key={dot}>
-              <animate attributeName="opacity" values=".55;1;.55" dur="1.2s" begin={`${dot * 0.14}s`} repeatCount="indefinite" />
-              <animate attributeName="cy" values="0;-1.5;0" dur="1.2s" begin={`${dot * 0.14}s`} repeatCount="indefinite" />
-            </circle>
+            <circle cx={dot * 6} cy="0" r="1.8" key={dot} style={{ animationDelay: `${dot * 0.14}s` }} />
           ))}
         </g>
       )}
@@ -155,13 +153,13 @@ function SignalPill({
         repeatCount="indefinite"
         calcMode="linear"
         keyPoints="0;1;1"
-        keyTimes="0;0.2778;1"
+        keyTimes="0;0.3194;1"
       >
         <mpath href={`#${pathId}`} />
       </animateMotion>
       <animate
         attributeName="opacity"
-        values="0;1;1;0;0"
+        values={opacityValues}
         keyTimes={opacityKeyTimes}
         dur="7.2s"
         begin={begin}
@@ -178,23 +176,23 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
         inSeen: 'M62 54C82 142 138 126 200 202',
         inTyping: 'M200 28C200 94 200 148 200 202',
         inStory: 'M338 54C318 142 262 126 200 202',
-        outSeen: 'M200 222C176 276 150 304 140 370',
+        outSeen: 'M200 222C224 276 250 304 260 370',
         outTyping: 'M200 222C200 284 200 326 200 388',
-        outStory: 'M200 222C224 276 250 304 260 370',
+        outStory: 'M200 222C176 276 150 304 140 370',
       }
     : {
-        inSeen: 'M180 70C232 224 376 152 600 268',
-        inTyping: 'M600 34C600 132 600 196 600 268',
-        inStory: 'M1020 70C968 224 824 152 600 268',
-        outSeen: 'M600 292C480 368 324 346 180 514',
-        outTyping: 'M600 292C600 372 600 438 600 532',
-        outStory: 'M600 292C720 368 876 346 1020 514',
+        inSeen: 'M72 70C300 70 420 145 600 210',
+        inTyping: 'M36 210C300 210 440 210 600 210',
+        inStory: 'M72 350C300 350 420 275 600 210',
+        outSeen: 'M600 210C780 275 900 350 1128 350',
+        outTyping: 'M600 210C820 210 970 210 1164 210',
+        outStory: 'M600 210C780 145 900 70 1128 70',
       };
 
   return (
     <svg
       className={`signal-network signal-network-${compact ? 'compact' : 'desktop'}`}
-      viewBox={compact ? '0 0 400 420' : '0 0 1200 560'}
+      viewBox={compact ? '0 0 400 420' : '0 0 1200 420'}
       preserveAspectRatio="xMidYMid meet"
     >
         <defs>
@@ -204,29 +202,95 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
           <path id={`${prefix}-out-seen`} d={paths.outSeen} />
           <path id={`${prefix}-out-typing`} d={paths.outTyping} />
           <path id={`${prefix}-out-story`} d={paths.outStory} />
+          <clipPath id={`${prefix}-input-clip`}>
+            <rect x="0" y="0" width={compact ? 400 : 604} height={compact ? 210 : 420} />
+          </clipPath>
+          <linearGradient
+            id={`${prefix}-output-zone-fill`}
+            x1={compact ? '200' : '600'}
+            y1={compact ? '210' : '210'}
+            x2={compact ? '200' : '1200'}
+            y2={compact ? '420' : '210'}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0" stopColor="#8b70dd" stopOpacity="0.13" />
+            <stop offset="1" stopColor="#8b70dd" stopOpacity="0.025" />
+          </linearGradient>
+          <linearGradient
+            id={`${prefix}-output-band-stroke`}
+            x1={compact ? '200' : '600'}
+            y1={compact ? '210' : '210'}
+            x2={compact ? '200' : '1200'}
+            y2={compact ? '420' : '210'}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0" stopColor="#8b70dd" stopOpacity="0.18" />
+            <stop offset="1" stopColor="#8b70dd" stopOpacity="0.045" />
+          </linearGradient>
         </defs>
+
+        <path
+          className="signal-output-zone"
+          fill={`url(#${prefix}-output-zone-fill)`}
+          d={compact
+            ? 'M200 210C154 268 94 318 38 398C140 378 260 378 362 398C306 318 246 268 200 210Z'
+            : 'M600 210C760 116 930 34 1180 44C1210 148 1210 272 1180 376C930 386 760 304 600 210Z'}
+        />
+
+        <g className="signal-output-bands" stroke={`url(#${prefix}-output-band-stroke)`}>
+          <use href={`#${prefix}-out-seen`} />
+          <use href={`#${prefix}-out-typing`} />
+          <use href={`#${prefix}-out-story`} />
+        </g>
 
         <g className="signal-network-lines">
           <use href={`#${prefix}-in-seen`} /><use href={`#${prefix}-in-typing`} /><use href={`#${prefix}-in-story`} />
-          <use href={`#${prefix}-out-seen`} /><use href={`#${prefix}-out-typing`} /><use href={`#${prefix}-out-story`} />
+          <use href={`#${prefix}-out-seen`} />
+          <use href={`#${prefix}-out-typing`} />
+          <use href={`#${prefix}-out-story`} />
+        </g>
+
+        <g className="signal-route-nodes">
+          {compact ? (
+            <>
+              <circle cx="62" cy="54" r="4" /><circle cx="200" cy="28" r="4" /><circle cx="338" cy="54" r="4" />
+              <circle className="signal-route-node-output" cx="260" cy="370" r="4" /><circle className="signal-route-node-output" cx="200" cy="388" r="4" /><circle className="signal-route-node-output" cx="140" cy="370" r="4" />
+            </>
+          ) : (
+            <>
+              <circle cx="72" cy="70" r="5" /><circle cx="36" cy="210" r="5" /><circle cx="72" cy="350" r="5" />
+              <circle className="signal-route-node-output" cx="1128" cy="350" r="5" /><circle className="signal-route-node-output" cx="1164" cy="210" r="5" /><circle className="signal-route-node-output" cx="1128" cy="70" r="5" />
+            </>
+          )}
         </g>
 
         <g className="signal-motion">
-          <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-7.2s" kind="input" compact={compact} />
-          <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-4.8s" kind="input" compact={compact} />
-          <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-2.4s" kind="input" compact={compact} />
-          <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 270} begin="-5.2s" kind="output" compact={compact} />
-          <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 195} begin="-2.8s" kind="output" compact={compact} />
-          <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 235} begin="-0.4s" kind="output" compact={compact} />
+          <g clipPath={`url(#${prefix}-input-clip)`}>
+            <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-7.2s" kind="input" compact={compact} />
+            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-6s" kind="input" compact={compact} />
+            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-4.8s" kind="input" compact={compact} />
+            <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-3.6s" kind="input" compact={compact} />
+            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-2.4s" kind="input" compact={compact} />
+            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-1.2s" kind="input" compact={compact} />
+          </g>
+
+          <g>
+            <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-4.9s" kind="output" compact={compact} />
+            <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-3.7s" kind="output" compact={compact} />
+            <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-2.5s" kind="output" compact={compact} />
+            <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-1.3s" kind="output" compact={compact} />
+            <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-0.1s" kind="output" compact={compact} />
+            <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-6.1s" kind="output" compact={compact} />
+          </g>
         </g>
 
         <g className="signal-static-labels">
           {compact ? (
             <><text x="62" y="50">seen</text><text x="200" y="24">typing</text><text x="338" y="50">story-view</text>
-            <text x="140" y="388">seen-receipt blocked</text><text x="200" y="410">typing blocked</text><text x="260" y="388">story-view blocked</text></>
+            <text x="260" y="388">seen-receipt blocked</text><text x="200" y="410">typing blocked</text><text x="140" y="388">story-view blocked</text></>
           ) : (
-            <><text x="180" y="64">seen</text><text x="600" y="30">typing</text><text x="1020" y="64">story-view</text>
-            <text x="180" y="530">seen-receipt blocked</text><text x="600" y="548">typing blocked</text><text x="1020" y="530">story-view blocked</text></>
+            <><text x="72" y="58">seen</text><text x="36" y="196">typing</text><text x="72" y="338">story-view</text>
+            <text x="1128" y="338">seen-receipt blocked</text><text x="1164" y="196">typing blocked</text><text x="1128" y="58">story-view blocked</text></>
           )}
         </g>
       </svg>
@@ -234,21 +298,10 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
 }
 
 function HeroSignalFlow() {
-  const [compact, setCompact] = useState(() => (
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 1080px)').matches
-  ));
-
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 1080px)');
-    const update = () => setCompact(query.matches);
-    update();
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-
   return (
     <div className="hero-signal-flow" aria-hidden="true">
-      <SignalDiagram compact={compact} />
+      <SignalDiagram />
+      <SignalDiagram compact />
 
       <div className="signal-processor">
         <GhostMark size={148} bodyColor="#0f0f0d" eyeColor="#ffffff" />
@@ -413,6 +466,8 @@ function FootprintSection() {
     };
   }, []);
 
+  const runtimeSize = packageSize * (36.5 / 258.8);
+
   return (
     <section className="footprint-section" ref={sectionRef}>
       <header>
@@ -421,7 +476,7 @@ function FootprintSection() {
       </header>
       <div className="footprint-metrics">
         <article><strong>{packageSize.toFixed(1)}<span>KiB</span></strong><small>installed package</small></article>
-        <article><strong>36.5<span>KiB</span></strong><small>runtime JavaScript, gzip</small></article>
+        <article><strong>{runtimeSize.toFixed(1)}<span>KiB</span></strong><small>runtime JavaScript, gzip</small></article>
         <article><strong>0</strong><small>tracking relays</small></article>
         <article><strong>0</strong><small>Ghostify accounts required</small></article>
       </div>

@@ -192,8 +192,8 @@ svg {
 }
 
 .brand-lockup-footer .brand-mark {
-  border-radius: 10px;
-  background: var(--paper);
+  border-radius: 0;
+  background: transparent;
 }
 
 .primary-nav {

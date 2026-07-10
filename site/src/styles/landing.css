@@ -58,8 +58,8 @@
 .site-root .brand-lockup-footer .brand-mark {
   width: 43px;
   height: 43px;
-  border-radius: 12px;
-  background: var(--home-cream);
+  border-radius: 0;
+  background: transparent;
 }
 
 .site-root .site-header .primary-nav {
@@ -227,7 +227,7 @@
 
 .hero-signal-flow {
   width: min(100%, 1240px);
-  height: 520px;
+  height: 460px;
   margin: -12px auto 0;
   position: relative;
   overflow: visible;
@@ -237,19 +237,54 @@
 .signal-network {
   width: 100%;
   height: 100%;
+  position: absolute;
+  inset: 0;
   display: block;
   overflow: visible;
+  opacity: 1;
+  visibility: visible;
 }
 
 .signal-network-compact {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .signal-network-lines use {
   fill: none;
   stroke: rgba(15, 15, 13, 0.18);
   stroke-width: 1.25;
-  stroke-dasharray: 3 7;
+  stroke-linecap: round;
+}
+
+.signal-network-lines use:nth-child(-n + 3) {
+  stroke-dasharray: 2 9;
+}
+
+.signal-network-lines use:nth-child(n + 4) {
+  stroke: rgba(139, 112, 221, 0.42);
+  stroke-width: 1.5;
+}
+
+.signal-output-bands use {
+  fill: none;
+  stroke-width: 28;
+  stroke-linecap: round;
+}
+
+.signal-route-nodes circle {
+  fill: var(--home-cream);
+  stroke: rgba(15, 15, 13, 0.34);
+  stroke-width: 1.25;
+}
+
+.signal-route-nodes .signal-route-node-output {
+  fill: var(--home-ink);
+  stroke: var(--home-accent);
+}
+
+.signal-svg-pill {
+  opacity: 0;
 }
 
 .signal-svg-pill rect {
@@ -276,6 +311,8 @@
 
 .signal-typing-dots circle {
   fill: var(--home-accent);
+  opacity: 0.58;
+  animation: signalTypingDot 1.2s ease-in-out infinite;
 }
 
 .signal-svg-pill-output rect {
@@ -296,6 +333,11 @@
   text-anchor: middle;
 }
 
+@keyframes signalTypingDot {
+  0%, 100% { opacity: 0.55; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-1.5px); }
+}
+
 .signal-processor {
   width: 150px;
   height: 150px;
@@ -306,6 +348,18 @@
   display: grid;
   place-items: center;
   filter: drop-shadow(12px 14px 0 var(--home-accent));
+  transform: translate(-50%, -50%);
+}
+
+.signal-processor::before {
+  content: '';
+  width: 2px;
+  height: 224px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -1;
+  background: linear-gradient(transparent, rgba(139, 112, 221, 0.42), transparent);
   transform: translate(-50%, -50%);
 }
 
@@ -1648,11 +1702,13 @@
   }
 
   .signal-network-desktop {
-    display: none;
+    opacity: 0;
+    visibility: hidden;
   }
 
   .signal-network-compact {
-    display: block;
+    opacity: 1;
+    visibility: visible;
   }
 
   .hero-detail {
