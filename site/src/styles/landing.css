@@ -1649,6 +1649,29 @@
     font-size: clamp(4rem, 6.5vw, 6.2rem);
   }
 
+  .feature-signal-rail {
+    width: min(100%, 360px);
+    min-height: 50px;
+    padding: 4px;
+  }
+
+  .feature-signal-rail::before {
+    width: calc((100% - 8px) / 3);
+    height: calc(100% - 8px);
+    left: 4px;
+    top: 4px;
+  }
+
+  .feature-signal-rail span {
+    min-height: 40px;
+    font-size: 13.5px;
+  }
+
+  .feature-signal-rail svg {
+    width: 17px;
+    height: 17px;
+  }
+
   .platform-card {
     min-height: 420px;
     padding: 24px;
@@ -1764,6 +1787,21 @@
 
   .mobile-feature-list article > p {
     max-width: 620px;
+  }
+
+  .mobile-feature-list .feature-signal-rail {
+    width: min(100%, 560px);
+    min-height: 54px;
+  }
+
+  .mobile-feature-list .feature-signal-rail span {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .mobile-feature-list .feature-signal-rail svg {
+    width: 18px;
+    height: 18px;
   }
 
   .mobile-feature-list img {
@@ -1980,6 +2018,17 @@
 
   .feature-signal-rail {
     margin-top: 22px;
+  }
+
+  .mobile-feature-list .feature-signal-rail span {
+    padding-inline: 4px;
+    gap: 5px;
+    font-size: 12.5px;
+  }
+
+  .mobile-feature-list .feature-signal-rail svg {
+    width: 15px;
+    height: 15px;
   }
 
   .mobile-feature-list img {
