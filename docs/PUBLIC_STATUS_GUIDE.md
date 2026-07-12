@@ -6,10 +6,13 @@ not release notes, maintainer reminders, or instructions to ourselves.
 ## Write from the user's point of view
 
 - Lead with what a user may experience.
-- Say what is happening now and when another update can be expected.
+- Say what is happening now. Mention another update only when a concrete
+  schedule exists and someone is responsible for publishing it.
 - Use calm, direct language: “Some users may…” or “We are investigating…”
 - Avoid internal imperatives and workflow terms such as “must be published,”
   “maintainer-approved,” “repository proof,” or “verification build pending.”
+- Avoid unsupported promises such as “we’ll share another update.” State the
+  current condition and direct people to the status page instead.
 - Keep each history entry contemporaneous. An entry may only state what was
   known on its recorded date; it must not describe a future outcome.
 - Put internal evidence, reviewer, and release information in structured data,

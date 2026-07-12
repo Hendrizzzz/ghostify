@@ -636,7 +636,8 @@ function assertStatusJsonContract() {
         /\bmaintainer-approved\b/i,
         /\brepository (?:build|proof|evidence)\b/i,
         /\bverification build pending\b/i,
-        /\bstatus-enabled store build\b/i
+        /\bstatus-enabled store build\b/i,
+        /\b(?:we(?:’|')ll|we will) share another update\b/i
     ];
     for (const phrase of internalPhrases) {
         if (publicCopy.some(value => phrase.test(value))) {

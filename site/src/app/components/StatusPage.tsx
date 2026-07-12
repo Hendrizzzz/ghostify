@@ -167,7 +167,7 @@ function CurrentNotice() {
         <p>{message}</p>
         {releaseMismatch && (
           <p className="status-secondary-warning">
-            Chrome Web Store v{STATUS_DATA.release.publishedVersion} does not include live popup status yet. You can continue checking this page for updates.
+            Chrome Web Store v{STATUS_DATA.release.publishedVersion} does not include the popup status indicator. This page remains the source for Ghostify status.
           </p>
         )}
         {releaseMismatch && (

@@ -15,8 +15,8 @@
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
     "publicStatus": "under_review",
-    "label": "Live status rollout in progress",
-    "message": "Some users may not see live status in the extension popup yet. We’re rolling out an update and will share another update when it’s available."
+    "label": "Popup status indicator not yet available",
+    "message": "The current Chrome Web Store version does not include the status indicator shown in the extension popup."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -169,8 +169,8 @@
       "date": "2026-07-12",
       "publicStatus": "under_review",
       "eventType": "investigation",
-      "title": "Live status is not yet available in the extension popup",
-      "summary": "Some users may not see live status in the extension popup yet. We’re rolling out an update and will share another update when it’s available."
+      "title": "Popup status indicator not yet available",
+      "summary": "The current Chrome Web Store version does not include the status indicator shown in the extension popup."
     },
     {
       "date": "2026-06-27",

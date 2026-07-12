@@ -23,7 +23,7 @@ const YELLOW_MODES = {
         label: 'Reports received',
         title: 'Bug reports received',
         recordPrefix: 'Reports recorded',
-        message: labels => `We’re looking into reports affecting ${labels}. We’ll share another update as we learn more.`
+        message: labels => `We’re looking into reports affecting ${labels}.`
     },
     'in-progress': {
         publicStatus: 'work_in_progress',
