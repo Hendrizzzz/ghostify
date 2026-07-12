@@ -8,6 +8,7 @@ import {
   History,
   Info,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import {
   STATUS_DATA,
   STATUS_LABELS,
@@ -166,7 +167,7 @@ function CurrentNotice() {
         <p>{message}</p>
         {releaseMismatch && (
           <p className="status-secondary-warning">
-            The Store also publishes v{STATUS_DATA.release.publishedVersion}, while these records describe repository build v{STATUS_DATA.productVersion}.
+            Chrome Web Store v{STATUS_DATA.release.publishedVersion} does not include live popup status yet. You can continue checking this page for updates.
           </p>
         )}
         {releaseMismatch && (
@@ -185,19 +186,178 @@ function CurrentNotice() {
   );
 }
 
-function StatusRail({ entries }: { entries: readonly VerificationEntry[] }) {
-  const segments = FEATURES.flatMap((feature) => {
-    const entry = getFeatureEntry(entries, feature);
-    const status = entry ? getEffectiveStatus(entry) : 'public_status_unavailable';
-    const tone = STATUS_META[status].tone;
-    return Array.from({ length: 10 }, (_, index) => (tone === 'warn' && index % 3 !== 0 ? 'muted' : tone));
+type TimelineTone = 'clear' | 'update' | 'issue' | 'review' | 'quiet' | 'outside' | 'upcoming';
+
+type TimelineDay = {
+  date: string;
+  tone: TimelineTone;
+  label: string;
+  detail: string;
+  column: number;
+  row: number;
+};
+
+function toDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function toneForStatus(status: PublicVerificationStatus): TimelineTone {
+  if (status === 'known_issue') return 'issue';
+  if (status === 'under_review' || status === 'work_in_progress') return 'review';
+  if (status === 'maintainer_verified' || status === 'community_verified_reviewed') return 'clear';
+  return 'quiet';
+}
+
+function toneForEvent(event: (typeof STATUS_DATA.history)[number]): TimelineTone {
+  if (event.eventType === 'release' || event.eventType === 'fix') return 'update';
+  return toneForStatus(event.publicStatus);
+}
+
+function buildTimelineDays(year: number, today: Date): TimelineDay[] {
+  const launchTime = Date.parse(`${STATUS_DATA.release.publishedAt}T00:00:00Z`);
+  const yearStart = new Date(Date.UTC(year, 0, 1));
+  const calendarStart = new Date(yearStart);
+  calendarStart.setUTCDate(calendarStart.getUTCDate() - calendarStart.getUTCDay());
+  const events = [...STATUS_DATA.history].sort((left, right) => Date.parse(left.date) - Date.parse(right.date));
+  const eventByDate = new Map(events.map((event) => [event.date, event]));
+  const cellCount = 54 * 7;
+
+  return Array.from({ length: cellCount }, (_, index) => {
+    const current = new Date(calendarStart);
+    current.setUTCDate(calendarStart.getUTCDate() + index);
+    const date = toDateKey(current);
+    const time = current.getTime();
+    const inYear = current.getUTCFullYear() === year;
+    const event = eventByDate.get(date);
+    const latestEvent = events.filter((item) => Date.parse(item.date) <= time).at(-1);
+    let tone: TimelineTone = 'quiet';
+    let label = 'No status update recorded';
+    let detail = 'There was no public status update recorded for this day.';
+
+    if (!inYear || time < launchTime) {
+      tone = 'outside';
+      label = time < launchTime ? 'Before the Chrome Web Store launch' : 'Outside this year';
+      detail = time < launchTime
+        ? `Ghostify launched on the Chrome Web Store on ${formatStatusDate(STATUS_DATA.release.publishedAt)}.`
+        : 'This date is outside the selected year.';
+    } else if (time > today.getTime()) {
+      tone = 'upcoming';
+      label = 'Upcoming date';
+      detail = 'No status is available for a future date.';
+    } else if (latestEvent) {
+      tone = toneForStatus(latestEvent.publicStatus);
+      label = tone === 'clear' ? 'No known issue recorded' : tone === 'issue' ? 'Known issue' : 'Under review';
+      detail = tone === 'clear'
+        ? 'No newer issue was recorded after the latest status update.'
+        : latestEvent.summary;
+    }
+
+    if (event) {
+      tone = toneForEvent(event);
+      label = event.title;
+      detail = event.summary;
+    }
+
+    return {
+      date,
+      tone,
+      label,
+      detail,
+      column: Math.floor(index / 7) + 1,
+      row: (index % 7) + 1,
+    };
   });
+}
+
+function VerificationTimeline() {
+  const today = useMemo(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }, []);
+  const launchYear = new Date(`${STATUS_DATA.release.publishedAt}T00:00:00Z`).getUTCFullYear();
+  const currentYear = Math.max(launchYear, today.getUTCFullYear());
+  const years = Array.from({ length: currentYear - launchYear + 1 }, (_, index) => currentYear - index);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const days = useMemo(() => buildTimelineDays(selectedYear, today), [selectedYear, today]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const selected = selectedDate
+    ? days.find((day) => day.date === selectedDate && day.date.startsWith(`${selectedYear}-`)) ?? null
+    : null;
+  const latestUpdate = STATUS_DATA.history[0];
+  const detail = selected ?? {
+    date: latestUpdate.date,
+    tone: toneForEvent(latestUpdate),
+    label: latestUpdate.title,
+    detail: latestUpdate.summary,
+  };
+  const months = useMemo(() => Array.from({ length: 12 }, (_, month) => {
+    const first = new Date(Date.UTC(selectedYear, month, 1));
+    const firstFullWeek = new Date(first);
+    firstFullWeek.setUTCDate(first.getUTCDate() + ((7 - first.getUTCDay()) % 7));
+    const firstCell = days.find((day) => day.date === toDateKey(firstFullWeek));
+    return {
+      label: new Intl.DateTimeFormat('en', { month: 'short', timeZone: 'UTC' }).format(first),
+      column: firstCell?.column ?? 1,
+    };
+  }), [days, selectedYear]);
+
+  const changeYear = (year: number) => {
+    setSelectedYear(year);
+    setSelectedDate(null);
+  };
 
   return (
-    <div className="status-rail" aria-hidden="true">
-      {segments.map((tone, index) => (
-        <span className={`status-rail-segment status-rail-${tone}`} key={index} />
-      ))}
+    <div className="status-timeline" aria-label="Dated verification timeline">
+      <div className="status-timeline-head">
+        <div>
+          <strong>Status calendar</strong>
+          <span>From the Chrome Web Store launch to today</span>
+        </div>
+        <div className="status-timeline-years" aria-label="Choose a status year">
+          {years.map((year) => (
+            <button type="button" className={year === selectedYear ? 'is-active' : undefined} onClick={() => changeYear(year)} key={year}>
+              {year}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="status-timeline-legend" aria-hidden="true">
+        <span className="is-clear">No known issue</span>
+        <span className="is-update">Product update</span>
+        <span className="is-review">Under review</span>
+        <span className="is-issue">Known issue</span>
+        <span className="is-quiet">No update</span>
+      </div>
+      <div className="status-calendar-wrap">
+        <div className="status-calendar-months" aria-hidden="true">
+          {months.map((month) => <span style={{ gridColumn: month.column }} key={month.label}>{month.label}</span>)}
+        </div>
+        <div className="status-calendar-body">
+          <div className="status-calendar-weekdays" aria-hidden="true"><span>Mon</span><span>Wed</span><span>Fri</span></div>
+          <div className={`status-calendar-days${selectedDate ? ' has-selection' : ''}`}>
+            {days.map((day) => (
+              <button
+                type="button"
+                className={`status-calendar-day is-${day.tone}${selectedDate === day.date ? ' is-selected' : ''}${day.column <= 3 ? ' is-tooltip-left' : ''}${day.column >= 52 ? ' is-tooltip-right' : ''}`}
+                style={{ gridColumn: day.column, gridRow: day.row }}
+                aria-label={`${formatStatusDate(day.date)}: ${day.label}`}
+                aria-pressed={selectedDate === day.date}
+                onClick={() => setSelectedDate((current) => current === day.date ? null : day.date)}
+                key={day.date}
+              >
+                <span className="status-calendar-tooltip" role="tooltip">
+                  <b>{formatStatusDate(day.date)}</b>{day.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className={`status-timeline-detail is-${detail.tone}`} aria-live="polite">
+        <time>{formatStatusDate(detail.date)}</time>
+        <strong>{detail.label}</strong>
+        <p>{detail.detail}</p>
+      </div>
     </div>
   );
 }
@@ -227,8 +387,6 @@ function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[numbe
         </div>
       </div>
 
-      <StatusRail entries={entries} />
-
       <div className="status-feature-list">
         {FEATURES.map((feature) => {
           const entry = getFeatureEntry(entries, feature);
@@ -254,6 +412,7 @@ function SystemStatus() {
         <h2 id="system-status-heading">Verification build checks</h2>
         <span>Repository v{STATUS_DATA.productVersion}</span>
       </div>
+      <VerificationTimeline />
       <div className="status-platform-list">
         {PLATFORMS.map((platform) => (
           <PlatformRow key={platform.name} platform={platform} entries={grouped[platform.name]} />
@@ -281,8 +440,7 @@ function StatusActions() {
 function StatusFootnote() {
   return (
     <p className="status-footnote">
-      Status is public and evidence is reviewed before a feature turns green. Private messages, credentials, screenshots,
-      and raw submissions are never published.
+      Dated checks are shown here so you can see what was known, and when it was known.
     </p>
   );
 }
@@ -293,9 +451,24 @@ function buildVisibleHistory(): HistoryItem[] {
   return [...STATUS_DATA.history];
 }
 
+function buildHistoryGroups() {
+  const groups = new Map<string, HistoryItem[]>();
+  buildVisibleHistory().forEach((item) => {
+    const key = item.date.slice(0, 7);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  });
+  return [...groups.entries()].map(([key, items]) => ({
+    key,
+    label: new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+      .format(new Date(`${key}-01T00:00:00Z`)),
+    items,
+  }));
+}
+
 function CurrentStatus() {
   return (
     <>
+      <a className="status-home-link" href="/"><ArrowLeft size={15} /> Back to Ghostify</a>
       <div className="status-topbar">
         <h1>Ghostify Status</h1>
         <a href="/status/history">View history</a>
@@ -311,12 +484,9 @@ function CurrentStatus() {
 function HistoryStatus() {
   return (
     <>
+      <a className="status-home-link" href="/status"><ArrowLeft size={15} /> Current status</a>
       <div className="status-topbar">
         <h1>Status history</h1>
-        <a href="/status">
-          <ArrowLeft size={15} strokeWidth={1.8} />
-          Current status
-        </a>
       </div>
       <section className="status-panel" aria-labelledby="history-heading">
         <div className="status-panel-head">
@@ -324,16 +494,21 @@ function HistoryStatus() {
           <span>Public record</span>
         </div>
         <div className="status-history-list">
-          {buildVisibleHistory().map((item) => (
-            <article className="status-history-row" key={`${item.date}-${item.title}`}>
-              <StatusIcon status={item.publicStatus} size={16} />
-              <time>{formatStatusDate(item.date)}</time>
-              <div>
-                <strong>{item.title}</strong>
-                <p>{item.summary}</p>
-              </div>
-              <StatusPill status={item.publicStatus} />
-            </article>
+          {buildHistoryGroups().map((group) => (
+            <section className="status-history-group" aria-labelledby={`history-${group.key}`} key={group.key}>
+              <h3 id={`history-${group.key}`}>{group.label}</h3>
+              {group.items.map((item) => (
+                <article className="status-history-row" key={`${item.date}-${item.title}`}>
+                  <StatusIcon status={item.publicStatus} size={16} />
+                  <time>{formatStatusDate(item.date)}</time>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.summary}</p>
+                  </div>
+                  <StatusPill status={item.publicStatus} />
+                </article>
+              ))}
+            </section>
           ))}
         </div>
       </section>

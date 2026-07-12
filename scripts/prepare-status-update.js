@@ -19,21 +19,27 @@ const QA_IDS = {
 const YELLOW_MODES = {
     reported: {
         publicStatus: 'under_review',
+        eventType: 'investigation',
         label: 'Reports received',
         title: 'Bug reports received',
-        recordPrefix: 'Reports recorded'
+        recordPrefix: 'Reports recorded',
+        message: labels => `We’re looking into reports affecting ${labels}. We’ll share another update as we learn more.`
     },
     'in-progress': {
         publicStatus: 'work_in_progress',
+        eventType: 'investigation',
         label: 'Working on it',
         title: 'Fix work in progress',
-        recordPrefix: 'Work in progress recorded'
+        recordPrefix: 'Work in progress recorded',
+        message: labels => `We’ve identified an issue affecting ${labels} and are working on a fix.`
     },
     'known-issue': {
         publicStatus: 'known_issue',
+        eventType: 'incident',
         label: 'Known issue',
         title: 'Issue confirmed',
-        recordPrefix: 'Known issue recorded'
+        recordPrefix: 'Known issue recorded',
+        message: labels => `Some users may have trouble with ${labels}. We’re working on it.`
     }
 };
 
@@ -142,8 +148,8 @@ function prepareVerifiedStatus(input, { date, generatedAt }) {
     status.generatedAt = generatedAt;
     status.summary = {
         publicStatus: 'maintainer_verified',
-        label: `Verified ${longDate}`,
-        message: `The maintainer confirmed that all supported controls are working on ${longDate}.`
+        label: 'All supported controls operational',
+        message: `All supported controls were checked on ${longDate} and are working normally.`
     };
 
     status.entries = status.entries.map(entry => {
@@ -165,8 +171,9 @@ function prepareVerifiedStatus(input, { date, generatedAt }) {
     prependHistory(status, {
         date,
         publicStatus: 'maintainer_verified',
-        title: 'All supported controls verified',
-        summary: `The maintainer confirmed that all supported controls are working on v${status.productVersion}.`
+        eventType: 'verification',
+        title: 'All supported controls operational',
+        summary: `All supported controls were checked on ${longDate} and are working normally.`
     });
 
     return status;
@@ -201,7 +208,7 @@ function prepareYellowStatus(input, { mode, date, generatedAt, featureIds, issue
         };
     });
 
-    const defaultMessage = `${modeConfig.label} for ${affectedLabels.join(', ')}.`;
+    const defaultMessage = modeConfig.message(affectedLabels.join(', '));
     status.summary = {
         publicStatus: modeConfig.publicStatus,
         label: modeConfig.label,
@@ -210,6 +217,7 @@ function prepareYellowStatus(input, { mode, date, generatedAt, featureIds, issue
     prependHistory(status, {
         date,
         publicStatus: modeConfig.publicStatus,
+        eventType: modeConfig.eventType,
         title: modeConfig.title,
         summary: note || defaultMessage
     });
