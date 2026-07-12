@@ -671,36 +671,73 @@
 
 .feature-media-frame {
   width: min(100%, 760px);
+  position: relative;
+  padding-top: 76px;
 }
 
-.feature-media-meta {
-  min-height: 38px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  border-bottom: 1px solid rgba(15, 15, 13, 0.17);
-  color: rgba(15, 15, 13, 0.58);
+.feature-media-sketch {
+  height: 112px;
+  position: absolute;
+  top: 0;
+  left: -15%;
+  right: -2%;
+  pointer-events: none;
 }
 
-.feature-media-meta span {
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
+.feature-media-sketch > svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.feature-media-meta i {
-  width: 6px;
-  height: 6px;
+.feature-media-sketch path {
+  fill: none;
+  stroke: rgba(15, 15, 13, 0.22);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 8;
+}
+
+.feature-media-sketch circle { fill: var(--home-accent); }
+
+.feature-sketch-platform,
+.feature-sketch-ghost,
+.feature-sketch-spark {
+  position: absolute;
+  display: grid;
+  place-items: center;
+}
+
+.feature-sketch-platform {
+  width: 28px;
+  height: 28px;
+  left: 13%;
+  top: 44px;
   border-radius: 50%;
-  background: #26815c;
-  box-shadow: 0 0 0 3px rgba(38, 129, 92, 0.12);
+  background: var(--home-accent);
+}
+
+.feature-sketch-platform::before {
+  color: rgba(15, 15, 13, 0.2);
+  content: '+';
+  font: 500 11px/1 var(--font-sans);
+}
+
+.feature-media-sketch-messenger .feature-sketch-platform { background: #1686ed; }
+.feature-media-sketch-instagram .feature-sketch-platform { background: #d62976; }
+.feature-media-sketch-facebook .feature-sketch-platform { background: #1877f2; }
+.feature-sketch-ghost { right: 22%; top: 3px; transform: rotate(5deg); filter: drop-shadow(8px 8px 0 rgba(136, 115, 207, 0.7)); }
+.feature-sketch-spark { right: 2%; top: 23px; color: var(--home-accent); font-size: 28px; transform: rotate(14deg); }
+
+.feature-media-sketch-messenger .feature-sketch-spark { color: #1686ed; }
+.feature-media-sketch-instagram .feature-sketch-spark { color: #d62976; }
+.feature-media-sketch-facebook .feature-sketch-spark { color: #1877f2; }
+
+@media (max-width: 760px) {
+  .feature-media-frame { padding-top: 54px; }
+  .feature-media-sketch { height: 82px; left: 0; }
+  .feature-sketch-platform { left: 5%; top: 30px; }
+  .feature-sketch-ghost { right: 18%; transform: scale(.82) rotate(5deg); }
+  .feature-sketch-spark { font-size: 22px; }
 }
 
 .feature-scroll-media img {
@@ -2513,6 +2550,28 @@
   width: min(100%, 1280px);
 }
 
+.site-root.is-status-view .status-page .status-home-link {
+  width: fit-content;
+  min-height: 38px;
+  margin-bottom: 26px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(15, 15, 13, 0.18);
+  border-radius: 999px;
+  color: var(--home-ink);
+  background: rgba(243, 238, 226, 0.72);
+  font: 650 12px/1 var(--font-sans);
+  text-decoration: none;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.site-root.is-status-view .status-page .status-home-link:hover {
+  background: var(--home-lavender);
+  transform: translateX(-3px);
+}
+
 .site-root.is-status-view .status-page .status-topbar {
   margin-bottom: 42px;
   align-items: flex-end;
@@ -2593,14 +2652,15 @@
 }
 
 .site-root.is-status-view .status-page .status-notice h2 {
-  max-width: 800px;
+  max-width: none;
   margin-top: 28px;
   color: var(--home-cream);
   font-family: var(--font-editorial);
-  font-size: clamp(2.6rem, 4vw, 4.5rem);
+  font-size: clamp(2.6rem, 3.7vw, 3.8rem);
   font-weight: 430;
   letter-spacing: -0.045em;
   line-height: 0.96;
+  white-space: nowrap;
 }
 
 .site-root.is-status-view .status-page .status-notice p,
@@ -2651,6 +2711,264 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.site-root.is-status-view .status-page .status-timeline {
+  margin: 18px 0 0;
+  padding: 22px;
+  border: 1px solid rgba(15, 15, 13, 0.15);
+  border-radius: 20px;
+  background: rgba(243, 238, 226, 0.72);
+  font-family: var(--font-sans);
+}
+
+.site-root.is-status-view .status-page .status-timeline-head {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.site-root.is-status-view .status-page .status-timeline-head > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.site-root.is-status-view .status-page .status-timeline-head strong {
+  color: var(--home-ink);
+  font-size: 14px;
+}
+
+.site-root.is-status-view .status-page .status-timeline-head span {
+  color: rgba(15, 15, 13, 0.52);
+  font-size: 11px;
+}
+
+.site-root.is-status-view .status-page .status-timeline-years {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.site-root.is-status-view .status-page .status-timeline-years button {
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(15, 15, 13, 0.15);
+  border-radius: 999px;
+  color: rgba(15, 15, 13, 0.62);
+  background: transparent;
+  font: 650 11px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.site-root.is-status-view .status-page .status-timeline-years button.is-active {
+  color: var(--home-cream);
+  background: var(--home-ink);
+}
+
+.site-root.is-status-view .status-page .status-timeline-legend {
+  margin-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: rgba(15, 15, 13, 0.56);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.site-root.is-status-view .status-page .status-timeline-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.site-root.is-status-view .status-page .status-timeline-legend span::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: rgba(15, 15, 13, 0.12);
+  content: '';
+}
+
+.site-root.is-status-view .status-page .status-timeline-legend .is-clear::before,
+.site-root.is-status-view .status-page .status-calendar-day.is-clear { background: var(--home-accent); }
+.site-root.is-status-view .status-page .status-timeline-legend .is-update::before,
+.site-root.is-status-view .status-page .status-calendar-day.is-update { background: #278e72; }
+.site-root.is-status-view .status-page .status-timeline-legend .is-review::before,
+.site-root.is-status-view .status-page .status-calendar-day.is-review { background: #b9a8ef; }
+.site-root.is-status-view .status-page .status-timeline-legend .is-issue::before,
+.site-root.is-status-view .status-page .status-calendar-day.is-issue { background: #d85d4a; }
+.site-root.is-status-view .status-page .status-timeline-legend .is-quiet::before,
+.site-root.is-status-view .status-page .status-calendar-day.is-quiet { background: rgba(15, 15, 13, 0.16); }
+.site-root.is-status-view .status-page .status-calendar-day.is-outside { background: transparent; box-shadow: inset 0 0 0 1px rgba(15, 15, 13, 0.12); }
+.site-root.is-status-view .status-page .status-calendar-day.is-upcoming { background: rgba(15, 15, 13, 0.055); }
+
+.site-root.is-status-view .status-page .status-calendar-wrap {
+  width: 100%;
+  margin-top: -46px;
+  padding: 46px 0 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-root.is-status-view .status-page .status-calendar-wrap::-webkit-scrollbar { display: none; }
+
+.site-root.is-status-view .status-page .status-calendar-months {
+  min-width: 690px;
+  margin-left: 34px;
+  display: grid;
+  grid-template-columns: repeat(54, minmax(8px, 1fr));
+  gap: 3px;
+}
+
+.site-root.is-status-view .status-page .status-calendar-months span {
+  margin-bottom: 7px;
+  color: rgba(15, 15, 13, 0.68);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.site-root.is-status-view .status-page .status-calendar-body {
+  min-width: 724px;
+  padding-bottom: 4px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 6px;
+}
+
+.site-root.is-status-view .status-page .status-calendar-weekdays {
+  height: 102px;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  align-items: center;
+  color: rgba(15, 15, 13, 0.46);
+  font-size: 9px;
+}
+
+.site-root.is-status-view .status-page .status-calendar-weekdays span:nth-child(1) { grid-row: 2; }
+.site-root.is-status-view .status-page .status-calendar-weekdays span:nth-child(2) { grid-row: 4; }
+.site-root.is-status-view .status-page .status-calendar-weekdays span:nth-child(3) { grid-row: 6; }
+
+.site-root.is-status-view .status-page .status-calendar-days {
+  height: 102px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(54, minmax(8px, 1fr));
+  grid-template-rows: repeat(7, minmax(8px, 1fr));
+  gap: 3px;
+}
+
+.site-root.is-status-view .status-page .status-calendar-day {
+  width: 100%;
+  height: 100%;
+  min-width: 8px;
+  min-height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: visible;
+  position: relative;
+}
+
+.site-root.is-status-view .status-page .status-calendar-day:hover {
+  z-index: 2;
+  filter: brightness(0.88);
+}
+
+.site-root.is-status-view .status-page .status-calendar-days.has-selection .status-calendar-day:not(.is-selected) {
+  opacity: 0.36;
+}
+
+.site-root.is-status-view .status-page .status-calendar-days.has-selection .status-calendar-day:not(.is-selected):hover,
+.site-root.is-status-view .status-page .status-calendar-days.has-selection .status-calendar-day:not(.is-selected):focus-visible {
+  opacity: 0.78;
+}
+
+.site-root.is-status-view .status-page .status-calendar-day:focus-visible,
+.site-root.is-status-view .status-page .status-calendar-day.is-selected {
+  outline: 0;
+  z-index: 3;
+  box-shadow:
+    0 0 0 2px #6f59c8,
+    0 0 12px rgba(111, 89, 200, 0.5);
+  filter: none;
+  opacity: 1;
+}
+
+.site-root.is-status-view .status-page .status-calendar-tooltip {
+  width: max-content;
+  max-width: 290px;
+  padding: 8px 10px;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  display: grid;
+  gap: 3px;
+  border-radius: 8px;
+  color: var(--home-cream);
+  background: var(--home-ink);
+  box-shadow: 0 10px 28px rgba(15, 15, 13, 0.2);
+  font: 600 10px/1.25 var(--font-sans);
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%);
+}
+
+.site-root.is-status-view .status-page .status-calendar-tooltip b {
+  color: var(--home-lavender);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.site-root.is-status-view .status-page .status-calendar-day:hover .status-calendar-tooltip,
+.site-root.is-status-view .status-page .status-calendar-day:focus-visible .status-calendar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.site-root.is-status-view .status-page .status-calendar-day.is-tooltip-left .status-calendar-tooltip {
+  left: 0;
+  transform: none;
+}
+
+.site-root.is-status-view .status-page .status-calendar-day.is-tooltip-right .status-calendar-tooltip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.site-root.is-status-view .status-page .status-timeline-detail {
+  margin-top: 20px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 108px minmax(160px, .7fr) minmax(0, 1.3fr);
+  align-items: baseline;
+  gap: 16px;
+  border-left: 4px solid rgba(15, 15, 13, 0.16);
+  background: rgba(15, 15, 13, 0.035);
+}
+
+.site-root.is-status-view .status-page .status-timeline-detail.is-clear { border-left-color: var(--home-accent); }
+.site-root.is-status-view .status-page .status-timeline-detail.is-update { border-left-color: #278e72; }
+.site-root.is-status-view .status-page .status-timeline-detail.is-review { border-left-color: #b9a8ef; }
+.site-root.is-status-view .status-page .status-timeline-detail.is-issue { border-left-color: #d85d4a; }
+.site-root.is-status-view .status-page .status-timeline-detail time {
+  color: rgba(15, 15, 13, 0.52);
+  font-size: 11px;
+}
+.site-root.is-status-view .status-page .status-timeline-detail strong { font-size: 13px; }
+.site-root.is-status-view .status-page .status-timeline-detail p {
+  margin: 0;
+  color: rgba(15, 15, 13, 0.6);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .site-root.is-status-view .status-page .status-platform-row {
@@ -2736,6 +3054,18 @@
   margin-top: 8px;
 }
 
+.site-root.is-status-view .status-page .status-history-group h3 {
+  margin: 0;
+  padding: 28px 18px 12px;
+  color: rgba(15, 15, 13, 0.62);
+  font: 680 13px/1 var(--font-sans);
+  letter-spacing: .02em;
+}
+
+.site-root.is-status-view .status-page .status-history-group + .status-history-group h3 {
+  border-top: 1px solid rgba(15, 15, 13, 0.14);
+}
+
 .site-root.is-status-view .status-page .status-history-row {
   min-height: 118px;
   padding: 26px 18px;
@@ -2756,6 +3086,7 @@
   .site-root.is-status-view .status-page .status-platform-row {
     min-height: 0;
   }
+
 }
 
 @media (max-width: 620px) {
@@ -2787,6 +3118,29 @@
 
   .site-root.is-status-view .status-page {
     padding: 108px 14px 76px;
+    overflow-x: clip;
+  }
+
+  .site-root.is-status-view .status-page *,
+  .site-root.is-status-view .status-page *::before,
+  .site-root.is-status-view .status-page *::after {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .site-root.is-status-view .status-page .status-shell,
+  .site-root.is-status-view .status-page .status-topbar,
+  .site-root.is-status-view .status-page .status-notice,
+  .site-root.is-status-view .status-page .status-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .site-root.is-status-view .status-page .status-shell {
+    contain: inline-size;
   }
 
   .site-root.is-status-view .status-page .status-topbar {
@@ -2795,7 +3149,70 @@
   }
 
   .site-root.is-status-view .status-page .status-topbar h1 {
-    font-size: clamp(3.8rem, 17vw, 5.7rem);
+    width: 100%;
+    max-width: 100%;
+    font-size: clamp(3rem, 15vw, 4.2rem);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .site-root.is-status-view .status-page .status-topbar a,
+  .site-root.is-status-view .status-page .status-actions a {
+    box-sizing: border-box;
+  }
+
+  .site-root.is-status-view .status-page .status-notice h2,
+  .site-root.is-status-view .status-page .status-notice p,
+  .site-root.is-status-view .status-page .status-secondary-warning,
+  .site-root.is-status-view .status-page .status-history-row strong,
+  .site-root.is-status-view .status-page .status-history-row p {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .site-root.is-status-view .status-page .status-notice h2 {
+    width: 100%;
+    font-size: clamp(2.15rem, 11vw, 3rem);
+  }
+
+  .site-root.is-status-view .status-page .status-panel-head > span {
+    display: none;
+  }
+
+  .site-root.is-status-view .status-page .status-notice-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .site-root.is-status-view .status-page .status-notice-meta span::after {
+    display: none !important;
+  }
+
+  .site-root.is-status-view .status-page .status-timeline {
+    padding: 16px;
+  }
+
+  .site-root.is-status-view .status-page .status-timeline-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .site-root.is-status-view .status-page .status-timeline-years {
+    justify-content: flex-start;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-months {
+    max-width: none;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-body {
+    max-width: none;
+  }
+
+  .site-root.is-status-view .status-page .status-timeline-detail {
+    grid-template-columns: 1fr;
+    gap: 7px;
   }
 
   .site-root.is-status-view .status-page .status-notice-body {

@@ -35,6 +35,7 @@ export type StatusData = {
   generatedAt: string;
   release: {
     channel: 'Chrome Web Store';
+    publishedAt: string;
     publishedVersion: string;
     checkedAt: string;
     matchesVerificationBuild: boolean;
@@ -69,6 +70,7 @@ export type StatusData = {
   history: Array<{
     date: string;
     publicStatus: PublicVerificationStatus;
+    eventType: 'release' | 'fix' | 'verification' | 'incident' | 'investigation';
     title: string;
     summary: string;
   }>;

@@ -5,6 +5,7 @@
   "generatedAt": "2026-07-12T09:20:13Z",
   "release": {
     "channel": "Chrome Web Store",
+    "publishedAt": "2026-02-06",
     "publishedVersion": "2.0.3",
     "checkedAt": "2026-07-12T09:20:13Z",
     "matchesVerificationBuild": false,
@@ -14,11 +15,11 @@
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
     "publicStatus": "under_review",
-    "label": "Store update pending",
-    "message": "The status-enabled v2.0.4 build must be published and verified before installed popups can receive live status updates."
+    "label": "Live status rollout in progress",
+    "message": "Some users may not see live status in the extension popup yet. We’re rolling out an update and will share another update when it’s available."
   },
   "policy": {
-    "verificationCadence": "Updated by a maintainer-approved pull request after reports, work progress, or full verification.",
+    "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
     "latestMergedUpdateWins": true,
     "ageDoesNotChangeStatus": true
   },
@@ -167,38 +168,93 @@
     {
       "date": "2026-07-12",
       "publicStatus": "under_review",
-      "title": "Status-enabled Store build pending",
-      "summary": "The status-enabled v2.0.4 build must be published and verified before installed popups can receive live status updates."
+      "eventType": "investigation",
+      "title": "Live status is not yet available in the extension popup",
+      "summary": "Some users may not see live status in the extension popup yet. We’re rolling out an update and will share another update when it’s available."
     },
     {
       "date": "2026-06-27",
       "publicStatus": "maintainer_verified",
-      "title": "All supported controls proven working",
-      "summary": "Maintainer smoke review confirmed the supported controls on repository build v2.0.4. This is historical repository evidence, not proof for the currently published Store build."
+      "eventType": "verification",
+      "title": "Supported controls passed today's review",
+      "summary": "Checked the supported Instagram, Messenger, and Facebook controls on v2.0.4. Every control included in today's review passed."
+    },
+    {
+      "date": "2026-06-10",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 2.0.3 published",
+      "summary": "Ghostify 2.0.3 became available on the Chrome Web Store."
+    },
+    {
+      "date": "2026-06-05",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 2.0.2 published",
+      "summary": "Ghostify 2.0.2 became available on the Chrome Web Store."
     },
     {
       "date": "2026-06-04",
       "publicStatus": "maintainer_verified",
-      "title": "Fix launched and current working window restarted",
-      "summary": "The fix shipped on June 4, 2026. From this date through June 27, 2026, the supported controls were treated as working again after daily maintainer verification."
+      "eventType": "fix",
+      "title": "Ghostify 2.0.1 published",
+      "summary": "Ghostify 2.0.1 became available on the Chrome Web Store with the Instagram Hide Story Views fix."
     },
     {
       "date": "2026-06-02",
       "publicStatus": "known_issue",
-      "title": "Breakage verified and fix work started",
-      "summary": "The May 29 reports were confirmed on June 2, 2026, and maintainer fix work started from that verified breakage."
+      "eventType": "incident",
+      "title": "Instagram Hide Story Views issue confirmed",
+      "summary": "We confirmed an issue affecting Hide Story Views on Instagram and began working on a fix."
     },
     {
       "date": "2026-05-29",
       "publicStatus": "known_issue",
-      "title": "Breakage reports received",
-      "summary": "Credible reports said Ghostify had broken on supported Meta surfaces, ending the prior green window until the issue was verified and fixed."
+      "eventType": "incident",
+      "title": "Instagram Hide Story Views reports received",
+      "summary": "Some users reported that Hide Story Views was not working on Instagram. We began investigating."
     },
     {
       "date": "2026-02-28",
       "publicStatus": "maintainer_verified",
-      "title": "Previous working window began",
-      "summary": "Ghostify was proven working from February 28, 2026 through May 28, 2026, before the May 29 breakage reports."
+      "eventType": "verification",
+      "title": "Supported controls passed review",
+      "summary": "Completed a review of the supported controls available in this build. The checks performed today passed."
+    },
+    {
+      "date": "2026-02-24",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 2.0.0 published",
+      "summary": "Ghostify 2.0.0 became available on the Chrome Web Store."
+    },
+    {
+      "date": "2026-02-17",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 1.0.3 published",
+      "summary": "Ghostify 1.0.3 became available on the Chrome Web Store."
+    },
+    {
+      "date": "2026-02-12",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 1.0.2 published",
+      "summary": "Ghostify 1.0.2 became available on the Chrome Web Store."
+    },
+    {
+      "date": "2026-02-09",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 1.0.1 published",
+      "summary": "Ghostify 1.0.1 became available on the Chrome Web Store."
+    },
+    {
+      "date": "2026-02-06",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 1.0.0 published",
+      "summary": "Ghostify became available on the Chrome Web Store."
     }
   ]
 }

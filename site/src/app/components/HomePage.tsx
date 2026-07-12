@@ -81,11 +81,7 @@ const PLATFORMS: Array<{
   { platform: 'facebook', name: 'Facebook', url: 'facebook.com', qualifier: 'Shared settings with Messenger' },
 ];
 
-const AI_PROMPT = [
-  'Give me an independent assessment of Ghostify, a browser extension for supported Seen, Typing, and Story View controls on Instagram, Messenger, and Facebook.',
-  'Review its public website at https://ghostify-extension.vercel.app and source at https://github.com/Hendrizzzz/Ghostify.',
-  'Explain what it does, its privacy model, important limitations, and whether its public claims are supported by the available evidence.',
-].join(' ');
+const AI_PROMPT = 'Hey, what do you think of Ghostify? Take a quick look at https://ghostify-extension.vercel.app and tell me what it does, who it is for, and anything useful to know before installing it.';
 
 const AI_LINKS = [
   { name: 'ChatGPT', href: `https://chatgpt.com/?q=${encodeURIComponent(AI_PROMPT)}` },
@@ -473,7 +469,7 @@ function FootprintSection() {
     <section className="footprint-section" ref={sectionRef}>
       <header>
         <h2>Small enough to stay out of the way.</h2>
-        <p>Measured from the current 2.0.4 build—not an old marketing number.</p>
+        <p>A quick look at the current v2.0.4 build.</p>
       </header>
       <div className="footprint-metrics">
         <article><strong>{packageSize.toFixed(1)}<span>KiB</span></strong><small>installed package</small></article>
@@ -583,9 +579,15 @@ function FeatureScroll() {
 
         <figure className="feature-scroll-media" key={`media-${activeFeature.platform}`}>
           <div className="feature-media-frame">
-            <div className="feature-media-meta" aria-hidden="true">
-              <span><ShieldCheck size={14} />Signal held before send</span>
-              <span><i />Original Ghostify capture</span>
+            <div className={`feature-media-sketch feature-media-sketch-${activeFeature.platform}`} aria-hidden="true">
+              <svg viewBox="0 0 760 104" preserveAspectRatio="none">
+                <path d="M8 74C152 74 212 18 354 30C478 40 557 86 752 38" />
+                <circle cx="8" cy="74" r="4" />
+                <circle cx="752" cy="38" r="4" />
+              </svg>
+              <span className="feature-sketch-platform" />
+              <span className="feature-sketch-ghost"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
+              <span className="feature-sketch-spark">✦</span>
             </div>
             <img
               src={activeFeature.src}

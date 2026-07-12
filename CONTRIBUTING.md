@@ -62,6 +62,11 @@ publish yellow only after review and merge. The latest merged update remains
 active regardless of age. A green proposal is rejected when the recorded Store
 version differs from the verification build.
 
+Public status headlines, summaries, history entries, and calendar semantics
+must follow [docs/PUBLIC_STATUS_GUIDE.md](docs/PUBLIC_STATUS_GUIDE.md). The
+public page describes user impact; internal release instructions and evidence
+language stay in structured fields or maintainer-only workflow.
+
 Optional local guard:
 
 ```bash

@@ -8092,8 +8092,10 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         !headerHtml.includes('>Verification</span>') &&
         !popupHtml.includes('>View</span>') &&
         popupCss.includes('.header-verification') &&
-        popupCss.includes('--status-green: #2ee58d;') &&
-        popupCss.includes('--status-yellow: #f1bd4b;') &&
+        popupCss.includes('--status-green: #27835f;') &&
+        popupCss.includes('--status-yellow: #c98b20;') &&
+        popupCss.includes('.header-verification .status-icon') &&
+        popupCss.includes('box-shadow: none;') &&
         popupCss.includes('.header-verification[data-status="verified"]') &&
         !popupCss.includes('--status-red') &&
         !popupCss.includes('data-status="issue"') &&

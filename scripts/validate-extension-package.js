@@ -442,12 +442,15 @@ function assertStatusJsonContract() {
     assertObject(statusJson.release, 'site/src/app/statusData.json release');
     assertOnlyKeys(statusJson.release, [
         'channel',
+        'publishedAt',
         'publishedVersion',
         'checkedAt',
         'matchesVerificationBuild',
         'storeUrl'
     ], 'site/src/app/statusData.json release');
     assertEqual(statusJson.release.channel, 'Chrome Web Store', 'site/src/app/statusData.json release.channel');
+    assertIsoDate(statusJson.release.publishedAt, 'site/src/app/statusData.json release.publishedAt');
+    assertEqual(statusJson.release.publishedAt, '2026-02-06', 'site/src/app/statusData.json release.publishedAt');
     if (!statusJson.release.publishedVersion || typeof statusJson.release.publishedVersion !== 'string') {
         fail('site/src/app/statusData.json release.publishedVersion must be a non-empty string');
     }
@@ -606,9 +609,10 @@ function assertStatusJsonContract() {
     for (const [index, item] of statusJson.history.entries()) {
         const label = `site/src/app/statusData.json history[${index}]`;
         assertObject(item, label);
-        assertOnlyKeys(item, ['date', 'publicStatus', 'title', 'summary'], label);
+        assertOnlyKeys(item, ['date', 'publicStatus', 'eventType', 'title', 'summary'], label);
         assertNullableIsoDate(item.date, `${label}.date`);
         assertEnum(item.publicStatus, PUBLIC_STATUS_VALUES, `${label}.publicStatus`);
+        assertEnum(item.eventType, ['release', 'fix', 'verification', 'incident', 'investigation'], `${label}.eventType`);
         if (!item.title || typeof item.title !== 'string') fail(`${label}.title must be a non-empty string`);
         if (!item.summary || typeof item.summary !== 'string') fail(`${label}.summary must be a non-empty string`);
         if (Date.parse(`${item.date}T00:00:00Z`) > Date.parse(statusJson.generatedAt)) {
@@ -620,6 +624,24 @@ function assertStatusJsonContract() {
     }
     if (statusJson.history[0].publicStatus !== statusJson.summary.publicStatus) {
         fail('site/src/app/statusData.json summary.publicStatus must match the latest history record');
+    }
+
+    const publicCopy = [
+        statusJson.summary.label,
+        statusJson.summary.message,
+        ...statusJson.history.flatMap(item => [item.title, item.summary])
+    ];
+    const internalPhrases = [
+        /\bmust be published\b/i,
+        /\bmaintainer-approved\b/i,
+        /\brepository (?:build|proof|evidence)\b/i,
+        /\bverification build pending\b/i,
+        /\bstatus-enabled store build\b/i
+    ];
+    for (const phrase of internalPhrases) {
+        if (publicCopy.some(value => phrase.test(value))) {
+            fail(`site/src/app/statusData.json public copy contains internal workflow language: ${phrase}`);
+        }
     }
 }
 
