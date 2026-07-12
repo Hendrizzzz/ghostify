@@ -16,6 +16,7 @@ import {
   STATUS_DATA,
   STATUS_LABELS,
   formatStatusDate,
+  getLastVerifiedAt,
   getPublicReleaseStatus,
 } from '../statusData';
 import { GhostMark } from './GhostSVG';
@@ -639,7 +640,7 @@ function FeatureScroll() {
 
 export function HomePage() {
   const releaseStatus = getPublicReleaseStatus();
-  const lastVerified = formatStatusDate(STATUS_DATA.provenWorking.lastVerifiedAt);
+  const lastVerified = formatStatusDate(getLastVerifiedAt());
 
   return (
     <div className="home-page">

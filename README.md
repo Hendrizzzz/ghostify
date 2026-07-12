@@ -29,9 +29,20 @@ Facebook and Messenger share the same Messenger / Facebook controls in the popup
 
 ## Public Verification Status
 
-Ghostify publishes a public [Verification Status](https://ghostify-extension.vercel.app/status) page for the supported web surfaces. Status entries separate local extension checks from reviewed sender-side or story-owner verification, and verified entries expire instead of staying green indefinitely.
+Ghostify publishes a public [Verification Status](https://ghostify-extension.vercel.app/status) page for the supported web surfaces. The latest merged maintainer update remains authoritative until a newer status PR is merged; age alone never changes green to yellow.
 
 Community reports can help downgrade or review a status, but public green verification requires maintainer review. Screenshots and recordings must be redacted, private messages should not be submitted, and public credit is opt-in only.
+
+The popup follows the latest dated status record. A working record shows a green
+dot with its month and day, regardless of how old that date is. A report,
+confirmed issue, work-in-progress, or review record shows a yellow dot with that record's month
+and day. A scheduled workflow can prepare a daily verification PR, but it does
+not publish green automatically; merging the PR is the maintainer's explicit
+confirmation after completing the linked smoke checklist.
+The workflow refreshes one pending daily PR instead of creating duplicates, so an unmerged proposal never changes the live website or popup.
+Installed popups receive JSON-only status updates after the status-capable
+extension build and its website host permission have first been published
+through the Chrome Web Store.
 
 ## Install
 
@@ -79,7 +90,8 @@ See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
 ## Known Behavior
 
-On `facebook.com`, Hide Seen preserves Facebook's native unread state when you open an unread chat, including the bold row and blue unread indicator. Sender-side Seen state remains the authoritative privacy verification.
+Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read
+with Hide Seen on, let us know.
 
 Meta changes Instagram, Facebook, and Messenger often. If something stops working, update Ghostify to the latest version, reload the affected tab, and report it if the issue continues.
 

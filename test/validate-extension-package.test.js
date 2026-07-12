@@ -6,6 +6,7 @@ const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const pkg = require('../package.json');
+const { prepareStatusUpdate } = require('../scripts/prepare-status-update');
 
 function copyFixture() {
     const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-validate-'));
@@ -18,11 +19,6 @@ function copyFixture() {
 
     fs.cpSync(path.join(repoRoot, 'dist'), path.join(fixtureRoot, 'dist'), { recursive: true });
     fs.cpSync(path.join(repoRoot, 'src'), path.join(fixtureRoot, 'src'), { recursive: true });
-    fs.mkdirSync(path.join(fixtureRoot, 'site', 'public'), { recursive: true });
-    fs.copyFileSync(
-        path.join(repoRoot, 'site', 'public', 'status.json'),
-        path.join(fixtureRoot, 'site', 'public', 'status.json')
-    );
     fs.mkdirSync(path.join(fixtureRoot, 'site', 'src', 'app'), { recursive: true });
     fs.copyFileSync(
         path.join(repoRoot, 'site', 'src', 'app', 'statusData.json'),
@@ -63,7 +59,7 @@ function writeManifest(manifestPath, manifest) {
 }
 
 function readStatusJson(fixtureRoot) {
-    const statusPath = path.join(fixtureRoot, 'site', 'public', 'status.json');
+    const statusPath = path.join(fixtureRoot, 'site', 'src', 'app', 'statusData.json');
     return {
         statusPath,
         statusJson: JSON.parse(fs.readFileSync(statusPath, 'utf8'))
@@ -75,7 +71,6 @@ function writeStatusJson(statusPath, statusJson) {
 }
 
 function writeStatusJsonPair(fixtureRoot, statusJson) {
-    writeStatusJson(path.join(fixtureRoot, 'site', 'public', 'status.json'), statusJson);
     writeStatusJson(path.join(fixtureRoot, 'site', 'src', 'app', 'statusData.json'), statusJson);
 }
 
@@ -94,31 +89,64 @@ withFixture(fixtureRoot => {
 });
 
 withFixture(fixtureRoot => {
+    const publicDir = path.join(fixtureRoot, 'site', 'public');
+    fs.mkdirSync(publicDir, { recursive: true });
+    fs.copyFileSync(
+        path.join(fixtureRoot, 'site', 'src', 'app', 'statusData.json'),
+        path.join(publicDir, 'status.json')
+    );
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject a duplicate public status source');
+    assert.match(result.stderr, /must not exist/, result.stderr || result.stdout);
+});
+
+withFixture(fixtureRoot => {
     const { statusJson } = readStatusJson(fixtureRoot);
-    statusJson.summary.publicStatus = 'maintainer_verified';
-    writeStatusJsonPair(fixtureRoot, statusJson);
+    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.matchesVerificationBuild = true;
+    const proposal = prepareStatusUpdate(statusJson, {
+        mode: 'verified',
+        date: '2026-07-12',
+        generatedAt: '2026-07-12T10:15:00Z'
+    });
+    writeStatusJsonPair(fixtureRoot, proposal);
 
     const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject a verified summary for a different Store build');
-    assert.match(
-        result.stderr,
-        /summary cannot be verified when the published Store version differs/,
-        result.stderr || result.stdout
-    );
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+});
+
+withFixture(fixtureRoot => {
+    const { statusJson } = readStatusJson(fixtureRoot);
+    statusJson.summary.publicStatus = 'maintainer_verified';
+    statusJson.history[0].publicStatus = 'maintainer_verified';
+    writeStatusJsonPair(fixtureRoot, statusJson);
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject green summary for a different Store build');
+    assert.match(result.stderr, /summary cannot be verified/, result.stderr || result.stdout);
 });
 
 withFixture(fixtureRoot => {
     const { statusJson } = readStatusJson(fixtureRoot);
     statusJson.entries[0].publicStatus = 'maintainer_verified';
     writeStatusJsonPair(fixtureRoot, statusJson);
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject green feature status for a different Store build');
+    assert.match(result.stderr, /publicStatus cannot be verified/, result.stderr || result.stdout);
+});
+
+withFixture(fixtureRoot => {
+    const { statusJson } = readStatusJson(fixtureRoot);
+    const proposal = prepareStatusUpdate(statusJson, {
+        mode: 'known-issue',
+        date: '2026-07-12',
+        generatedAt: '2026-07-12T10:30:00Z',
+        featureIds: ['messenger-hide-typing'],
+        note: 'Messenger Hide Typing has a confirmed issue.'
+    });
+    writeStatusJsonPair(fixtureRoot, proposal);
 
     const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject a verified entry for a different Store build');
-    assert.match(
-        result.stderr,
-        /entries\[0\]\.publicStatus cannot be verified when the published Store version differs/,
-        result.stderr || result.stdout
-    );
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
 });
 
 withFixture(fixtureRoot => {
@@ -217,6 +245,21 @@ withFixture(fixtureRoot => {
         /PRIVACY\.md must justify https:\/\/www\.fbsbx\.com\/\* host permission/,
         result.stderr || result.stdout
     );
+});
+
+withFixture(fixtureRoot => {
+    const privacyPath = path.join(fixtureRoot, 'PRIVACY.md');
+    fs.writeFileSync(
+        privacyPath,
+        fs.readFileSync(privacyPath, 'utf8').replace(
+            'fetch the display-only public status JSON',
+            'show status information'
+        )
+    );
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject missing public status host disclosure');
+    assert.match(result.stderr, /public status feed host disclosure/, result.stderr || result.stdout);
 });
 
 withFixture(fixtureRoot => {
@@ -335,7 +378,7 @@ withFixture(fixtureRoot => {
     fs.writeFileSync(
         privacyPath,
         fs.readFileSync(privacyPath, 'utf8').replace(
-            'GitHub issue forms or Tally forms',
+            'GitHub issue forms',
             'feedback links'
         )
     );
@@ -353,14 +396,14 @@ withFixture(fixtureRoot => {
     const popupPath = path.join(fixtureRoot, 'dist', 'popup.html');
     fs.writeFileSync(
         popupPath,
-        fs.readFileSync(popupPath, 'utf8').replace(`version=${pkg.version}`, 'version=0.0.0')
+        fs.readFileSync(popupPath, 'utf8').replace('</main>', '<a href="https://tally.so/r/test">Feature survey</a></main>')
     );
 
     const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject stale popup survey versions');
+    assert.notStrictEqual(result.status, 0, 'validator should reject restored popup survey UI');
     assert.match(
         result.stderr,
-        new RegExp(`Tally survey link version 0\\.0\\.0 does not match package\\.json ${pkg.version.replace(/\./g, '\\.')}`),
+        /dist\/popup\.html must not include Labs or feature-survey UI/,
         result.stderr || result.stdout
     );
 });
@@ -406,68 +449,29 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject stale public status version');
     assert.match(
         result.stderr,
-        new RegExp(`site/public/status\\.json productVersion must be "${pkg.version.replace(/\./g, '\\.')}"`),
+        new RegExp(`site/src/app/statusData\\.json productVersion must be "${pkg.version.replace(/\./g, '\\.')}"`),
         result.stderr || result.stdout
     );
 });
 
 withFixture(fixtureRoot => {
-    const statusSourcePath = path.join(fixtureRoot, 'site', 'src', 'app', 'statusData.json');
-    const statusSourceJson = JSON.parse(fs.readFileSync(statusSourcePath, 'utf8'));
-    statusSourceJson.summary.label = 'Drifted';
-    fs.writeFileSync(statusSourcePath, `${JSON.stringify(statusSourceJson, null, 2)}\n`);
-
-    const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject drift between site status source and public JSON');
-    assert.match(
-        result.stderr,
-        /site\/src\/app\/statusData\.json must match site\/public\/status\.json/,
-        result.stderr || result.stdout
-    );
-});
-
-withFixture(fixtureRoot => {
-    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
-    delete statusJson.provenWorking;
+    const { statusJson } = readStatusJson(fixtureRoot);
+    statusJson.history[0].date = '2026-06-26';
     writeStatusJsonPair(fixtureRoot, statusJson);
 
     const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject missing proven-working timeline');
-    assert.match(
-        result.stderr,
-        /site\/public\/status\.json provenWorking must be an object/,
-        result.stderr || result.stdout
-    );
+    assert.notStrictEqual(result.status, 0, 'validator should reject history that is not newest-first');
+    assert.match(result.stderr, /history must be newest-first/, result.stderr || result.stdout);
 });
 
 withFixture(fixtureRoot => {
-    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
-    statusJson.provenWorking.currentWindowStartedAt = '2026-06-28';
+    const { statusJson } = readStatusJson(fixtureRoot);
+    statusJson.history[0].date = '2026-02-31';
     writeStatusJsonPair(fixtureRoot, statusJson);
 
     const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject future current working windows');
-    assert.match(
-        result.stderr,
-        /site\/public\/status\.json provenWorking currentWindowStartedAt must not be after lastVerifiedAt/,
-        result.stderr || result.stdout
-    );
-});
-
-withFixture(fixtureRoot => {
-    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
-    statusJson.history = statusJson.history.filter(
-        item => item.date !== statusJson.provenWorking.previousWindowStartedAt
-    );
-    writeStatusJsonPair(fixtureRoot, statusJson);
-
-    const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject status history missing the proven working timeline');
-    assert.match(
-        result.stderr,
-        /site\/public\/status\.json history must include provenWorking\.previousWindowStartedAt/,
-        result.stderr || result.stdout
-    );
+    assert.notStrictEqual(result.status, 0, 'validator should reject impossible calendar dates');
+    assert.match(result.stderr, /must be an ISO date string/, result.stderr || result.stdout);
 });
 
 withFixture(fixtureRoot => {
@@ -479,7 +483,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject auto-green public status policy');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json automationPolicy\.canMarkVerified must be false/,
+        /site\/src\/app\/statusData\.json automationPolicy\.canMarkVerified must be false/,
         result.stderr || result.stdout
     );
 });
@@ -493,7 +497,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject private messages in verification proof');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json communityVerification\.privateMessagesAllowed must be false/,
+        /site\/src\/app\/statusData\.json communityVerification\.privateMessagesAllowed must be false/,
         result.stderr || result.stdout
     );
 });
@@ -504,25 +508,6 @@ withFixture(fixtureRoot => {
     statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'maintainer_verified';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
-    statusJson.entries[0].expiresAt = null;
-    writeStatusJsonPair(fixtureRoot, statusJson);
-
-    const result = runValidator(fixtureRoot);
-    assert.notStrictEqual(result.status, 0, 'validator should reject verified public status without expiry');
-    assert.match(
-        result.stderr,
-        /site\/public\/status\.json entries\[0\]\.expiresAt is required for verified public status/,
-        result.stderr || result.stdout
-    );
-});
-
-withFixture(fixtureRoot => {
-    const { statusPath, statusJson } = readStatusJson(fixtureRoot);
-    statusJson.release.publishedVersion = statusJson.productVersion;
-    statusJson.release.matchesVerificationBuild = true;
-    statusJson.entries[0].publicStatus = 'maintainer_verified';
-    statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
-    statusJson.entries[0].expiresAt = '2026-07-04T00:00:00Z';
     statusJson.entries[0].localEvidenceStatus = 'manual_pending';
     writeStatusJsonPair(fixtureRoot, statusJson);
 
@@ -530,7 +515,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject verified public status with manual-pending local evidence');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json entries\[0\]\.localEvidenceStatus must be verified for verified public status/,
+        /site\/src\/app\/statusData\.json entries\[0\]\.localEvidenceStatus must be verified for verified public status/,
         result.stderr || result.stdout
     );
 });
@@ -541,7 +526,6 @@ withFixture(fixtureRoot => {
     statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'community_verified_reviewed';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
-    statusJson.entries[0].expiresAt = '2026-07-04T00:00:00Z';
     statusJson.entries[0].localEvidenceStatus = 'verified';
     statusJson.entries[0].sourceType = 'maintainer';
     writeStatusJsonPair(fixtureRoot, statusJson);
@@ -550,7 +534,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject community verified status without reviewed community source');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json entries\[0\]\.sourceType must be reviewed_community for community_verified_reviewed/,
+        /site\/src\/app\/statusData\.json entries\[0\]\.sourceType must be reviewed_community for community_verified_reviewed/,
         result.stderr || result.stdout
     );
 });
@@ -564,7 +548,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject non-HTTPS public status issue URLs');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json entries\[0\]\.relatedIssueUrl must be an HTTPS URL/,
+        /site\/src\/app\/statusData\.json entries\[0\]\.relatedIssueUrl must be an HTTPS URL/,
         result.stderr || result.stdout
     );
 });
@@ -578,7 +562,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject duplicate platform/feature public status rows');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json has duplicate public verification entry for Instagram:Hide Seen/,
+        /site\/src\/app\/statusData\.json has duplicate public verification entry for Instagram:Hide Seen/,
         result.stderr || result.stdout
     );
 });
@@ -592,7 +576,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject unexpected raw public status fields');
     assert.match(
         result.stderr,
-        /Unexpected site\/public\/status\.json field: rawSubmissions/,
+        /Unexpected site\/src\/app\/statusData\.json field: rawSubmissions/,
         result.stderr || result.stdout
     );
 });
@@ -606,7 +590,7 @@ withFixture(fixtureRoot => {
     assert.notStrictEqual(result.status, 0, 'validator should reject missing platform/feature public status rows');
     assert.match(
         result.stderr,
-        /site\/public\/status\.json is missing public verification entry for Facebook:Hide Seen/,
+        /site\/src\/app\/statusData\.json is missing public verification entry for Facebook:Hide Seen/,
         result.stderr || result.stdout
     );
 });

@@ -27,6 +27,17 @@ Ghostify has four main runtime pieces:
 The extension popup is currently a static asset under `dist/`. Its JavaScript
 reads the manifest version, writes `ghostifySettings` to `chrome.storage.local`,
 and depends on open pages receiving those setting changes through `src/content.js`.
+It also reads the display-only public status feed. The latest dated history
+record controls the popup: a working record is green, while a report, confirmed
+issue, or review record is yellow. The popup shows that record's month and day
+without changing its color merely because the record is old.
+
+The daily verification workflow refreshes one status-data PR for maintainer review.
+Automation never merges those PRs or treats automated checks as live Meta proof.
+The public feed changes only after the maintainer completes the smoke checklist
+and merges the proposal. Scheduled automation does not propose green while the
+latest merged state is yellow. Manual workflow dispatch supports report,
+work-in-progress, confirmed-issue, and full-verification proposals.
 
 ## Manifest And Injection Model
 
@@ -39,6 +50,8 @@ Important manifest properties:
 - Host permissions for Instagram, Messenger, Facebook, and `www.fbsbx.com`.
   The `www.fbsbx.com` match is broader than the MAW proxy path, so runtime
   checks gate Messenger-specific behavior to `/maw_proxy_page`.
+- A host permission for `ghostify-extension.vercel.app`, used only by the popup
+  to fetch the display-only `/status.json` feed.
 - `src/content.js` bundle injected as `dist/js/content.js` in the `ISOLATED`
   world at `document_start`
 - `src/ghost.js` bundle injected as `dist/js/ghost.js` in the `MAIN` world at

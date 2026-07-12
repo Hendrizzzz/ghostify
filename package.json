@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "test": "npm run build && npm run test:modules && node test/messenger-send-stability.test.js && npm run test:validator && npm run test:package",
+    "test": "npm run build && npm run test:modules && node test/messenger-send-stability.test.js && npm run test:status && npm run test:validator && npm run test:package",
     "test:modules": "node test/settings-defaults.test.js && node test/module-registry.test.js && node test/module-flags.test.js",
     "test:validator": "node test/validate-extension-package.test.js",
+    "test:status": "node test/prepare-status-update.test.js && node test/daily-verification-git.test.js",
     "test:package": "node test/package-extension.test.js",
     "package:extension": "node scripts/package-extension.js",
     "validate:extension": "node scripts/validate-extension-package.js",

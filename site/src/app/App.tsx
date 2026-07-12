@@ -23,7 +23,7 @@ export default function App() {
       url = 'https://ghostify-extension.vercel.app/status/history';
     } else if (statusView === 'current') {
       title = 'Public verification status — Ghostify';
-      copy = 'Current, time-limited public verification for Ghostify controls on supported Meta web apps.';
+      copy = 'The latest maintainer-approved public status for Ghostify controls on supported Meta web apps.';
       url = 'https://ghostify-extension.vercel.app/status';
     }
 

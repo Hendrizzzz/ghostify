@@ -54,6 +54,14 @@ Use these evidence statuses when reporting validation:
 PR descriptions should include files changed, commands run, whether `dist/`
 was rebuilt, manual smoke tests performed or still pending, and known risks.
 
+Scheduled verification PRs are deliberately not auto-merged. One pending daily
+PR is refreshed until the maintainer completes the live checks and merges it.
+While the latest merged state is yellow, scheduled automation cannot propose a
+green replacement. Manual `reported`, `in-progress`, and `known-issue` modes
+publish yellow only after review and merge. The latest merged update remains
+active regardless of age. A green proposal is rejected when the recorded Store
+version differs from the verification build.
+
 Optional local guard:
 
 ```bash

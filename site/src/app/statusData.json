@@ -2,25 +2,25 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.0.4",
-  "generatedAt": "2026-07-09T21:32:49Z",
+  "generatedAt": "2026-07-12T09:20:13Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedVersion": "2.0.3",
-    "checkedAt": "2026-07-09T21:32:49Z",
+    "checkedAt": "2026-07-12T09:20:13Z",
     "matchesVerificationBuild": false,
     "storeUrl": "https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm"
   },
   "statusUrl": "https://ghostify-extension.vercel.app/status",
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
-    "publicStatus": "not_recently_verified",
-    "label": "Store build needs matching verification",
-    "message": "The Chrome Web Store version recorded on July 9, 2026 UTC is v2.0.3, while the feature evidence below describes repository build v2.0.4. The records remain public, but they are not Store-build proof until the versions match."
+    "publicStatus": "under_review",
+    "label": "Store update pending",
+    "message": "The status-enabled v2.0.4 build must be published and verified before installed popups can receive live status updates."
   },
   "policy": {
-    "verificationCadence": "Reviewed after each release and after credible platform-change reports.",
-    "verifiedStatusExpiresAfterDays": 14,
-    "staleBehavior": "Verified live-platform statuses downgrade after expiresAt instead of staying green."
+    "verificationCadence": "Updated by a maintainer-approved pull request after reports, work progress, or full verification.",
+    "latestMergedUpdateWins": true,
+    "ageDoesNotChangeStatus": true
   },
   "automationPolicy": {
     "canFlagReports": true,
@@ -40,14 +40,13 @@
       "id": "instagram-hide-seen",
       "platform": "Instagram",
       "feature": "Hide Seen",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-IG-SEEN-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Instagram Hide Seen."
     },
@@ -55,14 +54,13 @@
       "id": "instagram-hide-typing",
       "platform": "Instagram",
       "feature": "Hide Typing",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-IG-TYPING-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Instagram Hide Typing."
     },
@@ -70,14 +68,13 @@
       "id": "instagram-hide-story-views",
       "platform": "Instagram",
       "feature": "Hide Story Views",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-IG-STORY-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Instagram Hide Story Views."
     },
@@ -85,14 +82,13 @@
       "id": "messenger-hide-seen",
       "platform": "Messenger",
       "feature": "Hide Seen",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-MSG-SEEN-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Messenger Hide Seen."
     },
@@ -100,14 +96,13 @@
       "id": "messenger-hide-typing",
       "platform": "Messenger",
       "feature": "Hide Typing",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-MSG-TYPING-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Messenger Hide Typing."
     },
@@ -115,14 +110,13 @@
       "id": "messenger-hide-story-views",
       "platform": "Messenger",
       "feature": "Hide Story Views",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-MSG-STORY-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Messenger Hide Story Views."
     },
@@ -130,14 +124,13 @@
       "id": "facebook-hide-seen",
       "platform": "Facebook",
       "feature": "Hide Seen",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-FB-SEEN-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass. Facebook may still make chats look read locally; sender-side Seen remains the proof target."
     },
@@ -145,14 +138,13 @@
       "id": "facebook-hide-typing",
       "platform": "Facebook",
       "feature": "Hide Typing",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-FB-TYPING-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Facebook Hide Typing."
     },
@@ -160,24 +152,29 @@
       "id": "facebook-hide-story-views",
       "platform": "Facebook",
       "feature": "Hide Story Views",
-      "publicStatus": "not_recently_verified",
+      "publicStatus": "under_review",
       "localEvidenceStatus": "verified",
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
       "reviewRecord": "GH-FB-STORY-001 reviewed working on 2026-06-27 for v2.0.4",
       "verifiedAt": "2026-06-27T00:00:00Z",
-      "expiresAt": "2026-07-11T00:00:00Z",
       "relatedIssueUrl": null,
       "notes": "Included in the June 27, 2026 maintainer smoke pass for Facebook Hide Story Views."
     }
   ],
   "history": [
     {
+      "date": "2026-07-12",
+      "publicStatus": "under_review",
+      "title": "Status-enabled Store build pending",
+      "summary": "The status-enabled v2.0.4 build must be published and verified before installed popups can receive live status updates."
+    },
+    {
       "date": "2026-06-27",
       "publicStatus": "maintainer_verified",
       "title": "All supported controls proven working",
-      "summary": "Maintainer smoke review confirmed the supported Instagram, Messenger, and Facebook controls working on v2.0.4. This is the popup proof date."
+      "summary": "Maintainer smoke review confirmed the supported controls on repository build v2.0.4. This is historical repository evidence, not proof for the currently published Store build."
     },
     {
       "date": "2026-06-04",
@@ -203,15 +200,5 @@
       "title": "Previous working window began",
       "summary": "Ghostify was proven working from February 28, 2026 through May 28, 2026, before the May 29 breakage reports."
     }
-  ],
-  "provenWorking": {
-    "previousWindowStartedAt": "2026-02-28",
-    "previousWindowEndedAt": "2026-05-28",
-    "interruptionReportedAt": "2026-05-29",
-    "interruptionVerifiedAt": "2026-06-02",
-    "fixReleasedAt": "2026-06-04",
-    "currentWindowStartedAt": "2026-06-04",
-    "lastVerifiedAt": "2026-06-27T00:00:00Z",
-    "summary": "Verified working from February 28 through May 28, 2026; reports arrived on May 29; breakage was confirmed on June 2; the fix launched June 4; daily working verification resumed from June 4 through June 27, 2026."
-  }
+  ]
 }

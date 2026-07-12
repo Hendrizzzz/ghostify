@@ -18,27 +18,7 @@ const ELEMENT_MAP = {
 };
 
 const PUBLIC_STATUS_FEED_URL = 'https://ghostify-extension.vercel.app/status.json';
-const PUBLIC_STATUS_TIMEOUT_MS = 1200;
-
-const PUBLIC_STATUS_LABELS = {
-    maintainer_verified: 'Maintainer verified',
-    community_verified_reviewed: 'Community verified',
-    under_review: 'Under review',
-    not_recently_verified: 'Not recently verified',
-    known_issue: 'Known issue',
-    stale: 'Stale',
-    public_status_unavailable: 'Public status unavailable'
-};
-
-const PUBLIC_STATUS_WEIGHT = {
-    known_issue: 60,
-    public_status_unavailable: 55,
-    under_review: 50,
-    stale: 40,
-    not_recently_verified: 30,
-    community_verified_reviewed: 10,
-    maintainer_verified: 0
-};
+const PUBLIC_STATUS_TIMEOUT_MS = 4000;
 
 const PUBLIC_STATUS_VERIFIED = new Set([
     'maintainer_verified',
@@ -48,7 +28,6 @@ const PUBLIC_STATUS_VERIFIED = new Set([
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     attachEventListeners();
-    attachViewListeners();
     updatePublicStatusSummary();
 
     const manifestData = chrome.runtime.getManifest();
@@ -82,25 +61,6 @@ function attachEventListeners() {
     });
 }
 
-function attachViewListeners() {
-    const mainView = document.getElementById('main-view');
-    const labsView = document.getElementById('labs-view');
-
-    document.getElementById('open-labs')?.addEventListener('click', () => {
-        if (!mainView || !labsView) return;
-        mainView.hidden = true;
-        labsView.hidden = false;
-        labsView.querySelector('a, button')?.focus();
-    });
-
-    document.getElementById('close-labs')?.addEventListener('click', () => {
-        if (!mainView || !labsView) return;
-        labsView.hidden = true;
-        mainView.hidden = false;
-        document.getElementById('open-labs')?.focus();
-    });
-}
-
 function saveSettings() {
     const settings = {
         igTyping: document.getElementById('ig-typing')?.checked ?? true,
@@ -122,16 +82,19 @@ async function updatePublicStatusSummary() {
     try {
         const data = await fetchPublicStatus();
         const summary = summarizePublicStatus(data);
+        const tone = getPublicStatusTone(data);
         summaryElement.textContent = summary;
         if (linkElement) {
             linkElement.classList.remove('is-fallback');
-            linkElement.setAttribute('aria-label', `Open Ghostify status page. ${summary}.`);
+            linkElement.dataset.status = tone;
+            linkElement.setAttribute('aria-label', buildPublicStatusAriaLabel(tone, summary));
         }
     } catch (e) {
-        const summary = 'Check status';
+        const summary = 'Review';
         summaryElement.textContent = summary;
         if (linkElement) {
             linkElement.classList.add('is-fallback');
+            linkElement.dataset.status = 'review';
             linkElement.setAttribute('aria-label', 'Open Ghostify status page. Public status feed unavailable.');
         }
     }
@@ -171,45 +134,42 @@ function validatePublicStatusData(data) {
     if (data.schemaVersion !== 1) throw new Error('unsupported status schema');
     if (!Array.isArray(data.entries)) throw new Error('missing status entries');
     if (data.entries.length > 32) throw new Error('status feed too large');
-    if (!data.provenWorking || typeof data.provenWorking !== 'object') throw new Error('missing proven working timeline');
+    if (!Array.isArray(data.history) || !data.history.length) throw new Error('missing status history');
 }
 
-function summarizePublicStatus(data, now = new Date()) {
+function summarizePublicStatus(data) {
+    const latestRecord = latestPublicStatusRecord(data.history || []);
+    return formatStatusRecordDate(latestRecord) || formatLastVerifiedDate(data) || 'Review';
+}
+
+function getPublicStatusTone(data) {
+    if (data.release?.matchesVerificationBuild === false) return 'review';
+    const latestRecord = latestPublicStatusRecord(data.history || []);
+    if (latestRecord && PUBLIC_STATUS_VERIFIED.has(latestRecord.publicStatus)) return 'verified';
+    return 'review';
+}
+
+function latestPublicStatusRecord(history) {
+    return history.find(record => record?.date && record?.publicStatus) || null;
+}
+
+function buildPublicStatusAriaLabel(tone, summary) {
+    if (tone === 'verified') return `Open Ghostify status page. Verified ${summary}.`;
+    return `Open Ghostify status page. Reports or review recorded ${summary}.`;
+}
+
+function formatStatusRecordDate(record) {
+    if (!record?.date) return '';
+    const date = new Date(record.date);
+    if (Number.isNaN(date.getTime())) return '';
+    return formatShortUtcDate(date);
+}
+
+function formatLastVerifiedDate(data) {
     const entries = data.entries || [];
-    const worstStatus = entries
-        .map(entry => effectivePublicStatus(entry.publicStatus, entry.expiresAt, now))
-        .sort((left, right) => (PUBLIC_STATUS_WEIGHT[right] || 0) - (PUBLIC_STATUS_WEIGHT[left] || 0))[0] || 'public_status_unavailable';
-
-    if (worstStatus === 'maintainer_verified' || worstStatus === 'community_verified_reviewed') {
-        return formatCompactWorkingSummary(data, entries, now) || 'Working';
-    }
-
-    return `${PUBLIC_STATUS_LABELS[worstStatus] || 'Under review'}.`;
-}
-
-function effectivePublicStatus(publicStatus, expiresAt, now = new Date()) {
-    if (!PUBLIC_STATUS_VERIFIED.has(publicStatus)) {
-        return publicStatus || 'public_status_unavailable';
-    }
-
-    if (!expiresAt) return 'stale';
-    const expiry = new Date(expiresAt);
-    if (Number.isNaN(expiry.getTime()) || expiry.getTime() <= now.getTime()) {
-        return 'stale';
-    }
-
-    return publicStatus;
-}
-
-function formatCompactWorkingSummary(data, entries, now = new Date()) {
-    const provenDate = data.provenWorking?.lastVerifiedAt ? new Date(data.provenWorking.lastVerifiedAt) : latestVerificationDate(entries);
-    if (!provenDate || Number.isNaN(provenDate.getTime())) return '';
-
-    if (sameUtcDay(provenDate, now)) {
-        return 'Working today';
-    }
-
-    return `Working ${formatShortUtcDate(provenDate)}`;
+    const verifiedDate = latestVerificationDate(entries);
+    if (!verifiedDate || Number.isNaN(verifiedDate.getTime())) return '';
+    return formatShortUtcDate(verifiedDate);
 }
 
 function latestVerificationDate(entries) {
@@ -219,14 +179,6 @@ function latestVerificationDate(entries) {
         .sort((left, right) => right.getTime() - left.getTime());
 
     return verifiedDates[0] || null;
-}
-
-function sameUtcDay(left, right) {
-    return (
-        left.getUTCFullYear() === right.getUTCFullYear() &&
-        left.getUTCMonth() === right.getUTCMonth() &&
-        left.getUTCDate() === right.getUTCDate()
-    );
 }
 
 function formatShortUtcDate(date) {

@@ -12,7 +12,8 @@
         "https://*.instagram.com/*",
         "https://*.messenger.com/*",
         "https://*.facebook.com/*",
-        "https://www.fbsbx.com/*"
+        "https://www.fbsbx.com/*",
+        "https://ghostify-extension.vercel.app/*"
     ],
     "background": {
         "service_worker": "background.js"

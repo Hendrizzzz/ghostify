@@ -42,9 +42,7 @@ export function SiteHeader() {
   const publicStatus = getPublicReleaseStatus();
   const statusTone = publicStatus === 'maintainer_verified' || publicStatus === 'community_verified_reviewed'
     ? 'good'
-    : publicStatus === 'known_issue' || publicStatus === 'public_status_unavailable'
-      ? 'bad'
-      : 'warn';
+    : 'warn';
 
   useEffect(() => {
     const update = () => setIsScrolled(window.scrollY > 24);

@@ -4,9 +4,8 @@ export type PublicVerificationStatus =
   | 'maintainer_verified'
   | 'community_verified_reviewed'
   | 'under_review'
-  | 'not_recently_verified'
+  | 'work_in_progress'
   | 'known_issue'
-  | 'stale'
   | 'public_status_unavailable';
 
 export type VerificationEntry = {
@@ -25,7 +24,6 @@ export type VerificationEntry = {
   reviewer: string;
   reviewRecord: string;
   verifiedAt: string | null;
-  expiresAt: string | null;
   relatedIssueUrl: string | null;
   notes: string;
 };
@@ -51,8 +49,8 @@ export type StatusData = {
   };
   policy: {
     verificationCadence: string;
-    verifiedStatusExpiresAfterDays: number;
-    staleBehavior: string;
+    latestMergedUpdateWins: boolean;
+    ageDoesNotChangeStatus: boolean;
   };
   automationPolicy: {
     canFlagReports: boolean;
@@ -66,16 +64,6 @@ export type StatusData = {
     screenshotsMustBeRedacted: boolean;
     privateMessagesAllowed: boolean;
     rawSubmissionsShownInPopup: boolean;
-  };
-  provenWorking: {
-    previousWindowStartedAt: string;
-    previousWindowEndedAt: string;
-    interruptionReportedAt: string;
-    interruptionVerifiedAt: string;
-    fixReleasedAt: string;
-    currentWindowStartedAt: string;
-    lastVerifiedAt: string;
-    summary: string;
   };
   entries: VerificationEntry[];
   history: Array<{
@@ -92,9 +80,8 @@ export const STATUS_LABELS: Record<PublicVerificationStatus, string> = {
   maintainer_verified: 'Maintainer verified',
   community_verified_reviewed: 'Community verified, reviewed',
   under_review: 'Under review',
-  not_recently_verified: 'Not recently verified',
+  work_in_progress: 'Work in progress',
   known_issue: 'Known issue',
-  stale: 'Stale',
   public_status_unavailable: 'Public status unavailable',
 };
 
@@ -102,34 +89,15 @@ const STATUS_WEIGHT: Record<PublicVerificationStatus, number> = {
   known_issue: 60,
   public_status_unavailable: 55,
   under_review: 50,
-  stale: 40,
-  not_recently_verified: 30,
+  work_in_progress: 50,
   community_verified_reviewed: 10,
   maintainer_verified: 0,
 };
 
-const VERIFIED_STATUSES = new Set<PublicVerificationStatus>([
-  'maintainer_verified',
-  'community_verified_reviewed',
-]);
-
 export function getEffectiveStatus(
-  entry: Pick<VerificationEntry, 'publicStatus' | 'expiresAt'>,
-  now = new Date(),
+  entry: Pick<VerificationEntry, 'publicStatus'>,
+  _now = new Date(),
 ): PublicVerificationStatus {
-  if (!VERIFIED_STATUSES.has(entry.publicStatus)) {
-    return entry.publicStatus;
-  }
-
-  if (!entry.expiresAt) {
-    return 'stale';
-  }
-
-  const expiry = new Date(entry.expiresAt);
-  if (Number.isNaN(expiry.getTime()) || expiry.getTime() <= now.getTime()) {
-    return 'stale';
-  }
-
   return entry.publicStatus;
 }
 
@@ -140,20 +108,19 @@ export function getWorstStatus(entries: readonly VerificationEntry[], now = new 
 }
 
 export function getPublicReleaseStatus(now = new Date()): PublicVerificationStatus {
-  const verificationStatus = getWorstStatus(STATUS_DATA.entries, now);
-  const evidenceExpired = STATUS_DATA.entries.some((entry) => {
-    if (!entry.expiresAt) return false;
-    const expiry = new Date(entry.expiresAt);
-    return !Number.isNaN(expiry.getTime()) && expiry.getTime() <= now.getTime();
-  });
-  if (evidenceExpired && verificationStatus === 'not_recently_verified') {
-    return 'stale';
-  }
-  const verifiedStatus = verificationStatus === 'maintainer_verified' || verificationStatus === 'community_verified_reviewed';
-  if (!STATUS_DATA.release.matchesVerificationBuild && verifiedStatus) {
-    return 'not_recently_verified';
-  }
-  return verificationStatus;
+  void now;
+  if (!STATUS_DATA.release.matchesVerificationBuild && (
+    STATUS_DATA.summary.publicStatus === 'maintainer_verified' ||
+    STATUS_DATA.summary.publicStatus === 'community_verified_reviewed'
+  )) return 'under_review';
+  return STATUS_DATA.summary.publicStatus;
+}
+
+export function getLastVerifiedAt(): string | null {
+  return STATUS_DATA.entries
+    .map((entry) => entry.verifiedAt)
+    .filter((value): value is string => Boolean(value) && !Number.isNaN(Date.parse(value)))
+    .sort((left, right) => Date.parse(right) - Date.parse(left))[0] || null;
 }
 
 export function formatStatusDate(value: string | null): string {

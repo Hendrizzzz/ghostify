@@ -83,8 +83,10 @@ const contentSource = fs.readFileSync(repoPath('src', 'content.js'), 'utf8');
 const popupHtml = fs.readFileSync(repoPath('dist', 'popup.html'), 'utf8');
 const popupJs = fs.readFileSync(repoPath('dist', 'js', 'popup.js'), 'utf8');
 const changelog = fs.readFileSync(repoPath('CHANGELOG.md'), 'utf8');
-const statusJson = readJson(repoPath('site', 'public', 'status.json'));
-const statusSourceJson = readJson(repoPath('site', 'src', 'app', 'statusData.json'));
+const statusJson = readJson(repoPath('site', 'src', 'app', 'statusData.json'));
+if (fs.existsSync(repoPath('site', 'public', 'status.json'))) {
+    fail('site/public/status.json must not exist; site/src/app/statusData.json is the canonical source');
+}
 const fallbackConfig = readFallbackConfig(contentSource);
 
 const ALLOWED_PERMISSIONS = [
@@ -96,7 +98,8 @@ const ALLOWED_HOST_PERMISSIONS = [
     'https://*.instagram.com/*',
     'https://*.messenger.com/*',
     'https://*.facebook.com/*',
-    'https://www.fbsbx.com/*'
+    'https://www.fbsbx.com/*',
+    'https://ghostify-extension.vercel.app/*'
 ];
 
 const ALL_PLATFORM_MATCHES = [
@@ -128,6 +131,13 @@ const REQUIRED_PRIVACY_DISCLOSURES = [
         ]
     },
     {
+        label: 'public status feed host disclosure',
+        phrases: [
+            'https://ghostify-extension.vercel.app/*',
+            'fetch the display-only public status JSON'
+        ]
+    },
+    {
         label: 'Chrome Web Store Limited Use disclosure',
         phrases: [
             'Chrome Web Store User Data Policy',
@@ -137,7 +147,7 @@ const REQUIRED_PRIVACY_DISCLOSURES = [
     {
         label: 'voluntary feedback disclosure',
         phrases: [
-            'GitHub issue forms or Tally forms',
+            'GitHub issue forms',
             'Do not submit private messages, credentials, or account-sensitive details'
         ]
     }
@@ -187,9 +197,8 @@ const PUBLIC_STATUS_VALUES = [
     'maintainer_verified',
     'community_verified_reviewed',
     'under_review',
-    'not_recently_verified',
+    'work_in_progress',
     'known_issue',
-    'stale',
     'public_status_unavailable'
 ];
 
@@ -283,13 +292,28 @@ function assertObject(value, label) {
 
 function assertNullableIsoDate(value, label) {
     if (value === null) return;
-    if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
-        fail(`${label} must be null or an ISO date string`);
-    }
+    assertIsoDate(value, label);
 }
 
 function assertIsoDate(value, label) {
-    if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
+    if (typeof value !== 'string') fail(`${label} must be an ISO date string`);
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (dateOnly) {
+        const [, year, month, day] = dateOnly;
+        const parsed = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+        if (
+            parsed.getUTCFullYear() === Number(year) &&
+            parsed.getUTCMonth() === Number(month) - 1 &&
+            parsed.getUTCDate() === Number(day)
+        ) return;
+        fail(`${label} must be an ISO date string`);
+    }
+    const timestamp = new Date(value);
+    if (
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value) ||
+        Number.isNaN(timestamp.getTime()) ||
+        timestamp.toISOString().replace('.000Z', 'Z') !== value
+    ) {
         fail(`${label} must be an ISO date string`);
     }
 }
@@ -354,16 +378,13 @@ function assertPrivacyPolicyRequiredDisclosures() {
     }
 }
 
-function assertPopupSurveyVersions() {
-    const tallyLinks = [...popupHtml.matchAll(/https:\/\/tally\.so\/r\/D4W0Jq\?[^"']+/g)].map(match => match[0]);
-    if (!tallyLinks.length) fail('dist/popup.html must include Tally feature survey links');
+function assertPopupHasNoLabsOrSurvey() {
+    if (/\bLabs\b/.test(popupHtml) || popupHtml.includes('tally.so') || /feature survey/i.test(popupHtml)) {
+        fail('dist/popup.html must not include Labs or feature-survey UI');
+    }
 
-    for (const link of tallyLinks) {
-        const versionMatch = link.match(/[?&](?:amp;)?version=([^&"']+)/);
-        if (!versionMatch) fail(`Tally survey link is missing a version parameter: ${link}`);
-        if (versionMatch[1] !== pkg.version) {
-            fail(`Tally survey link version ${versionMatch[1]} does not match package.json ${pkg.version}`);
-        }
+    if (popupJs.includes('attachViewListeners') || popupJs.includes('open-labs') || popupJs.includes('labs-view')) {
+        fail('dist/js/popup.js must not include removed Labs navigation');
     }
 }
 
@@ -376,8 +397,8 @@ function assertPopupPublicStatusLink() {
         fail('dist/js/popup.js must fetch the display-only public status feed');
     }
 
-    if (!popupJs.includes('effectivePublicStatus') || !popupJs.includes('expiresAt')) {
-        fail('dist/js/popup.js must downgrade expired verified public statuses');
+    if (!popupJs.includes('latestPublicStatusRecord') || !popupJs.includes('data.history')) {
+        fail('dist/js/popup.js must derive popup color and date from the latest public status record');
     }
 }
 
@@ -396,10 +417,7 @@ function assertPopupPlatformLinks() {
 }
 
 function assertStatusJsonContract() {
-    assertObject(statusJson, 'site/public/status.json');
-    if (stableJson(statusJson) !== stableJson(statusSourceJson)) {
-        fail('site/src/app/statusData.json must match site/public/status.json');
-    }
+    assertObject(statusJson, 'site/src/app/statusData.json');
     assertOnlyKeys(statusJson, [
         'schemaVersion',
         'product',
@@ -412,100 +430,95 @@ function assertStatusJsonContract() {
         'policy',
         'automationPolicy',
         'communityVerification',
-        'provenWorking',
         'entries',
         'history'
-    ], 'site/public/status.json');
-    assertEqual(statusJson.schemaVersion, 1, 'site/public/status.json schemaVersion');
-    assertEqual(statusJson.productVersion, pkg.version, 'site/public/status.json productVersion');
-    assertHttpsUrl(statusJson.statusUrl, 'site/public/status.json statusUrl');
-    assertHttpsUrl(statusJson.historyUrl, 'site/public/status.json historyUrl');
-    assertNullableIsoDate(statusJson.generatedAt, 'site/public/status.json generatedAt');
+    ], 'site/src/app/statusData.json');
+    assertEqual(statusJson.schemaVersion, 1, 'site/src/app/statusData.json schemaVersion');
+    assertEqual(statusJson.productVersion, pkg.version, 'site/src/app/statusData.json productVersion');
+    assertHttpsUrl(statusJson.statusUrl, 'site/src/app/statusData.json statusUrl');
+    assertHttpsUrl(statusJson.historyUrl, 'site/src/app/statusData.json historyUrl');
+    assertNullableIsoDate(statusJson.generatedAt, 'site/src/app/statusData.json generatedAt');
 
-    assertObject(statusJson.release, 'site/public/status.json release');
+    assertObject(statusJson.release, 'site/src/app/statusData.json release');
     assertOnlyKeys(statusJson.release, [
         'channel',
         'publishedVersion',
         'checkedAt',
         'matchesVerificationBuild',
         'storeUrl'
-    ], 'site/public/status.json release');
-    assertEqual(statusJson.release.channel, 'Chrome Web Store', 'site/public/status.json release.channel');
+    ], 'site/src/app/statusData.json release');
+    assertEqual(statusJson.release.channel, 'Chrome Web Store', 'site/src/app/statusData.json release.channel');
     if (!statusJson.release.publishedVersion || typeof statusJson.release.publishedVersion !== 'string') {
-        fail('site/public/status.json release.publishedVersion must be a non-empty string');
+        fail('site/src/app/statusData.json release.publishedVersion must be a non-empty string');
     }
-    assertNullableIsoDate(statusJson.release.checkedAt, 'site/public/status.json release.checkedAt');
-    assertHttpsUrl(statusJson.release.storeUrl, 'site/public/status.json release.storeUrl');
+    assertNullableIsoDate(statusJson.release.checkedAt, 'site/src/app/statusData.json release.checkedAt');
+    assertHttpsUrl(statusJson.release.storeUrl, 'site/src/app/statusData.json release.storeUrl');
     assertEqual(
         statusJson.release.storeUrl,
         'https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm',
-        'site/public/status.json release.storeUrl'
+        'site/src/app/statusData.json release.storeUrl'
     );
     assertEqual(
         statusJson.release.matchesVerificationBuild,
         statusJson.release.publishedVersion === statusJson.productVersion,
-        'site/public/status.json release.matchesVerificationBuild'
+        'site/src/app/statusData.json release.matchesVerificationBuild'
     );
     if (Date.parse(statusJson.generatedAt) < Date.parse(statusJson.release.checkedAt)) {
-        fail('site/public/status.json generatedAt must not predate release.checkedAt');
+        fail('site/src/app/statusData.json generatedAt must not predate release.checkedAt');
     }
 
-    assertObject(statusJson.summary, 'site/public/status.json summary');
-    assertOnlyKeys(statusJson.summary, ['publicStatus', 'label', 'message'], 'site/public/status.json summary');
-    assertEnum(statusJson.summary.publicStatus, PUBLIC_STATUS_VALUES, 'site/public/status.json summary.publicStatus');
+    assertObject(statusJson.summary, 'site/src/app/statusData.json summary');
+    assertOnlyKeys(statusJson.summary, ['publicStatus', 'label', 'message'], 'site/src/app/statusData.json summary');
+    assertEnum(statusJson.summary.publicStatus, PUBLIC_STATUS_VALUES, 'site/src/app/statusData.json summary.publicStatus');
     if (!statusJson.summary.label || typeof statusJson.summary.label !== 'string') {
-        fail('site/public/status.json summary.label must be a non-empty string');
+        fail('site/src/app/statusData.json summary.label must be a non-empty string');
     }
     if (!statusJson.summary.message || typeof statusJson.summary.message !== 'string') {
-        fail('site/public/status.json summary.message must be a non-empty string');
+        fail('site/src/app/statusData.json summary.message must be a non-empty string');
     }
     if (!statusJson.release.matchesVerificationBuild && VERIFIED_PUBLIC_STATUS_VALUES.has(statusJson.summary.publicStatus)) {
-        fail('site/public/status.json summary cannot be verified when the published Store version differs from the verification build');
+        fail('site/src/app/statusData.json summary cannot be verified when the published Store version differs from the verification build');
     }
-
-    assertObject(statusJson.policy, 'site/public/status.json policy');
+    assertObject(statusJson.policy, 'site/src/app/statusData.json policy');
     assertOnlyKeys(statusJson.policy, [
         'verificationCadence',
-        'verifiedStatusExpiresAfterDays',
-        'staleBehavior'
-    ], 'site/public/status.json policy');
-    if (!statusJson.policy.staleBehavior || !String(statusJson.policy.staleBehavior).includes('downgrade')) {
-        fail('site/public/status.json policy.staleBehavior must describe stale downgrade behavior');
-    }
+        'latestMergedUpdateWins',
+        'ageDoesNotChangeStatus'
+    ], 'site/src/app/statusData.json policy');
+    assertBoolean(statusJson.policy.latestMergedUpdateWins, true, 'site/src/app/statusData.json policy.latestMergedUpdateWins');
+    assertBoolean(statusJson.policy.ageDoesNotChangeStatus, true, 'site/src/app/statusData.json policy.ageDoesNotChangeStatus');
 
-    assertObject(statusJson.automationPolicy, 'site/public/status.json automationPolicy');
+    assertObject(statusJson.automationPolicy, 'site/src/app/statusData.json automationPolicy');
     assertOnlyKeys(statusJson.automationPolicy, [
         'canFlagReports',
         'canSummarizeReports',
         'canDowngradeStatus',
         'canMarkVerified'
-    ], 'site/public/status.json automationPolicy');
-    assertBoolean(statusJson.automationPolicy.canFlagReports, true, 'site/public/status.json automationPolicy.canFlagReports');
-    assertBoolean(statusJson.automationPolicy.canSummarizeReports, true, 'site/public/status.json automationPolicy.canSummarizeReports');
-    assertBoolean(statusJson.automationPolicy.canDowngradeStatus, true, 'site/public/status.json automationPolicy.canDowngradeStatus');
-    assertBoolean(statusJson.automationPolicy.canMarkVerified, false, 'site/public/status.json automationPolicy.canMarkVerified');
+    ], 'site/src/app/statusData.json automationPolicy');
+    assertBoolean(statusJson.automationPolicy.canFlagReports, true, 'site/src/app/statusData.json automationPolicy.canFlagReports');
+    assertBoolean(statusJson.automationPolicy.canSummarizeReports, true, 'site/src/app/statusData.json automationPolicy.canSummarizeReports');
+    assertBoolean(statusJson.automationPolicy.canDowngradeStatus, true, 'site/src/app/statusData.json automationPolicy.canDowngradeStatus');
+    assertBoolean(statusJson.automationPolicy.canMarkVerified, false, 'site/src/app/statusData.json automationPolicy.canMarkVerified');
 
-    assertObject(statusJson.communityVerification, 'site/public/status.json communityVerification');
+    assertObject(statusJson.communityVerification, 'site/src/app/statusData.json communityVerification');
     assertOnlyKeys(statusJson.communityVerification, [
         'requiresMaintainerReview',
         'publicCreditRequiresOptIn',
         'screenshotsMustBeRedacted',
         'privateMessagesAllowed',
         'rawSubmissionsShownInPopup'
-    ], 'site/public/status.json communityVerification');
-    assertBoolean(statusJson.communityVerification.requiresMaintainerReview, true, 'site/public/status.json communityVerification.requiresMaintainerReview');
-    assertBoolean(statusJson.communityVerification.publicCreditRequiresOptIn, true, 'site/public/status.json communityVerification.publicCreditRequiresOptIn');
-    assertBoolean(statusJson.communityVerification.screenshotsMustBeRedacted, true, 'site/public/status.json communityVerification.screenshotsMustBeRedacted');
-    assertBoolean(statusJson.communityVerification.privateMessagesAllowed, false, 'site/public/status.json communityVerification.privateMessagesAllowed');
-    assertBoolean(statusJson.communityVerification.rawSubmissionsShownInPopup, false, 'site/public/status.json communityVerification.rawSubmissionsShownInPopup');
-
-    assertProvenWorkingTimeline(statusJson);
+    ], 'site/src/app/statusData.json communityVerification');
+    assertBoolean(statusJson.communityVerification.requiresMaintainerReview, true, 'site/src/app/statusData.json communityVerification.requiresMaintainerReview');
+    assertBoolean(statusJson.communityVerification.publicCreditRequiresOptIn, true, 'site/src/app/statusData.json communityVerification.publicCreditRequiresOptIn');
+    assertBoolean(statusJson.communityVerification.screenshotsMustBeRedacted, true, 'site/src/app/statusData.json communityVerification.screenshotsMustBeRedacted');
+    assertBoolean(statusJson.communityVerification.privateMessagesAllowed, false, 'site/src/app/statusData.json communityVerification.privateMessagesAllowed');
+    assertBoolean(statusJson.communityVerification.rawSubmissionsShownInPopup, false, 'site/src/app/statusData.json communityVerification.rawSubmissionsShownInPopup');
 
     if (!Array.isArray(statusJson.entries) || !statusJson.entries.length) {
-        fail('site/public/status.json entries must be a non-empty array');
+        fail('site/src/app/statusData.json entries must be a non-empty array');
     }
     if (statusJson.entries.length > 32) {
-        fail('site/public/status.json entries must stay compact for popup use');
+        fail('site/src/app/statusData.json entries must stay compact for popup use');
     }
 
     const expectedFeatureKeys = new Set();
@@ -517,7 +530,7 @@ function assertStatusJsonContract() {
     const actualFeatureKeys = new Set();
 
     for (const [index, entry] of statusJson.entries.entries()) {
-        const label = `site/public/status.json entries[${index}]`;
+        const label = `site/src/app/statusData.json entries[${index}]`;
         assertObject(entry, label);
         assertOnlyKeys(entry, [
             'id',
@@ -530,7 +543,6 @@ function assertStatusJsonContract() {
             'reviewer',
             'reviewRecord',
             'verifiedAt',
-            'expiresAt',
             'relatedIssueUrl',
             'notes'
         ], label);
@@ -545,7 +557,6 @@ function assertStatusJsonContract() {
         assertEnum(entry.publicEvidenceType, PUBLIC_STATUS_EVIDENCE_TYPES, `${label}.publicEvidenceType`);
         assertEnum(entry.sourceType, PUBLIC_STATUS_SOURCE_TYPES, `${label}.sourceType`);
         assertNullableIsoDate(entry.verifiedAt, `${label}.verifiedAt`);
-        assertNullableIsoDate(entry.expiresAt, `${label}.expiresAt`);
         assertNullableHttpsUrl(entry.relatedIssueUrl, `${label}.relatedIssueUrl`);
         if (!entry.reviewer || typeof entry.reviewer !== 'string') fail(`${label}.reviewer must be a non-empty string`);
         if (!entry.reviewRecord || typeof entry.reviewRecord !== 'string') fail(`${label}.reviewRecord must be a non-empty string`);
@@ -553,10 +564,6 @@ function assertStatusJsonContract() {
 
         if (VERIFIED_PUBLIC_STATUS_VALUES.has(entry.publicStatus)) {
             if (!entry.verifiedAt) fail(`${label}.verifiedAt is required for verified public status`);
-            if (!entry.expiresAt) fail(`${label}.expiresAt is required for verified public status`);
-            if (Date.parse(entry.expiresAt) <= Date.parse(entry.verifiedAt)) {
-                fail(`${label}.expiresAt must be after verifiedAt`);
-            }
             if (entry.localEvidenceStatus !== 'verified') {
                 fail(`${label}.localEvidenceStatus must be verified for verified public status`);
             }
@@ -571,123 +578,48 @@ function assertStatusJsonContract() {
 
         const featureKey = `${entry.platform}:${entry.feature}`;
         if (actualFeatureKeys.has(featureKey)) {
-            fail(`site/public/status.json has duplicate public verification entry for ${featureKey}`);
+            fail(`site/src/app/statusData.json has duplicate public verification entry for ${featureKey}`);
         }
         actualFeatureKeys.add(featureKey);
     }
 
     for (const key of expectedFeatureKeys) {
         if (!actualFeatureKeys.has(key)) {
-            fail(`site/public/status.json is missing public verification entry for ${key}`);
+            fail(`site/src/app/statusData.json is missing public verification entry for ${key}`);
         }
     }
 
     if (statusJson.summary.publicStatus === 'maintainer_verified') {
         for (const [index, entry] of statusJson.entries.entries()) {
             if (entry.publicStatus !== 'maintainer_verified') {
-                fail(`site/public/status.json entries[${index}].publicStatus must be maintainer_verified when summary is maintainer_verified`);
+                fail(`site/src/app/statusData.json entries[${index}].publicStatus must be maintainer_verified when summary is maintainer_verified`);
             }
-            if (Date.parse(entry.verifiedAt) !== Date.parse(statusJson.provenWorking.lastVerifiedAt)) {
-                fail(`site/public/status.json entries[${index}].verifiedAt must match provenWorking.lastVerifiedAt`);
+            if (String(entry.verifiedAt).slice(0, 10) !== statusJson.history[0]?.date) {
+                fail(`site/src/app/statusData.json entries[${index}].verifiedAt must match the latest history date`);
             }
         }
     }
 
     if (!Array.isArray(statusJson.history) || !statusJson.history.length) {
-        fail('site/public/status.json history must be a non-empty array');
+        fail('site/src/app/statusData.json history must be a non-empty array');
     }
     for (const [index, item] of statusJson.history.entries()) {
-        const label = `site/public/status.json history[${index}]`;
+        const label = `site/src/app/statusData.json history[${index}]`;
         assertObject(item, label);
         assertOnlyKeys(item, ['date', 'publicStatus', 'title', 'summary'], label);
         assertNullableIsoDate(item.date, `${label}.date`);
         assertEnum(item.publicStatus, PUBLIC_STATUS_VALUES, `${label}.publicStatus`);
         if (!item.title || typeof item.title !== 'string') fail(`${label}.title must be a non-empty string`);
         if (!item.summary || typeof item.summary !== 'string') fail(`${label}.summary must be a non-empty string`);
-    }
-    assertHistoryCoversProvenWorkingTimeline(statusJson);
-}
-
-function assertHistoryCoversProvenWorkingTimeline(statusJsonValue) {
-    const historyStatusDates = new Set(
-        statusJsonValue.history.map(item => `${item.date}|${item.publicStatus}`)
-    );
-    const requiredEvents = [
-        ['lastVerifiedAt', 'maintainer_verified'],
-        ['currentWindowStartedAt', 'maintainer_verified'],
-        ['fixReleasedAt', 'maintainer_verified'],
-        ['interruptionVerifiedAt', 'known_issue'],
-        ['interruptionReportedAt', 'known_issue'],
-        ['previousWindowStartedAt', 'maintainer_verified']
-    ];
-
-    for (const [field, publicStatus] of requiredEvents) {
-        const date = toIsoDatePart(statusJsonValue.provenWorking[field]);
-        if (!historyStatusDates.has(`${date}|${publicStatus}`)) {
-            fail(`site/public/status.json history must include provenWorking.${field} (${date}) as ${publicStatus}`);
+        if (Date.parse(`${item.date}T00:00:00Z`) > Date.parse(statusJson.generatedAt)) {
+            fail(`${label}.date must not be after generatedAt`);
+        }
+        if (index > 0 && Date.parse(item.date) > Date.parse(statusJson.history[index - 1].date)) {
+            fail('site/src/app/statusData.json history must be newest-first; same-day records keep array order');
         }
     }
-}
-
-function toIsoDatePart(value) {
-    return String(value).slice(0, 10);
-}
-
-function assertProvenWorkingTimeline(statusJsonValue) {
-    const label = 'site/public/status.json provenWorking';
-    const timeline = statusJsonValue.provenWorking;
-    assertObject(timeline, label);
-    assertOnlyKeys(timeline, [
-        'previousWindowStartedAt',
-        'previousWindowEndedAt',
-        'interruptionReportedAt',
-        'interruptionVerifiedAt',
-        'fixReleasedAt',
-        'currentWindowStartedAt',
-        'lastVerifiedAt',
-        'summary'
-    ], label);
-
-    for (const field of [
-        'previousWindowStartedAt',
-        'previousWindowEndedAt',
-        'interruptionReportedAt',
-        'interruptionVerifiedAt',
-        'fixReleasedAt',
-        'currentWindowStartedAt',
-        'lastVerifiedAt'
-    ]) {
-        assertIsoDate(timeline[field], `${label}.${field}`);
-    }
-    if (!timeline.summary || typeof timeline.summary !== 'string') {
-        fail(`${label}.summary must be a non-empty string`);
-    }
-
-    const previousStartedAt = Date.parse(timeline.previousWindowStartedAt);
-    const previousEndedAt = Date.parse(timeline.previousWindowEndedAt);
-    const interruptionReportedAt = Date.parse(timeline.interruptionReportedAt);
-    const interruptionVerifiedAt = Date.parse(timeline.interruptionVerifiedAt);
-    const fixReleasedAt = Date.parse(timeline.fixReleasedAt);
-    const currentWindowStartedAt = Date.parse(timeline.currentWindowStartedAt);
-    const lastVerifiedAt = Date.parse(timeline.lastVerifiedAt);
-
-    if (previousStartedAt > previousEndedAt) {
-        fail(`${label} previousWindowStartedAt must not be after previousWindowEndedAt`);
-    }
-    if (previousEndedAt > interruptionReportedAt) {
-        fail(`${label} previousWindowEndedAt must not be after interruptionReportedAt`);
-    }
-    if (interruptionReportedAt > interruptionVerifiedAt) {
-        fail(`${label} interruptionReportedAt must not be after interruptionVerifiedAt`);
-    }
-    if (interruptionVerifiedAt > fixReleasedAt) {
-        fail(`${label} interruptionVerifiedAt must not be after fixReleasedAt`);
-    }
-    if (fixReleasedAt > currentWindowStartedAt) {
-        fail(`${label} fixReleasedAt must not be after currentWindowStartedAt`);
-    }
-    if (currentWindowStartedAt > lastVerifiedAt) {
-        fail(`${label} currentWindowStartedAt must not be after lastVerifiedAt`);
+    if (statusJson.history[0].publicStatus !== statusJson.summary.publicStatus) {
+        fail('site/src/app/statusData.json summary.publicStatus must match the latest history record');
     }
 }
 
@@ -762,7 +694,7 @@ assertExactStringSet(manifest.host_permissions, ALLOWED_HOST_PERMISSIONS, 'dist/
 assertNoOptionalPermissionFields(manifest);
 assertPrivacyPolicyCoversPermissions();
 assertPrivacyPolicyRequiredDisclosures();
-assertPopupSurveyVersions();
+assertPopupHasNoLabsOrSurvey();
 assertPopupPublicStatusLink();
 assertPopupPlatformLinks();
 assertChangelogCoversPackageVersion();

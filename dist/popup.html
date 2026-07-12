@@ -15,9 +15,9 @@
                 <img src="icons/icon32.png" alt="" class="header-icon">
                 <h1>Ghostify</h1>
             </a>
-            <a class="header-verification" id="public-status-link" href="https://ghostify-extension.vercel.app/status" target="_blank" rel="noopener noreferrer" aria-label="Open Ghostify status page">
-                <span class="feature-icon status-icon" aria-hidden="true"></span>
-                <span class="verification-summary" id="public-status-summary">Check status</span>
+            <a class="header-verification" id="public-status-link" href="https://ghostify-extension.vercel.app/status" target="_blank" rel="noopener noreferrer" aria-label="Open Ghostify status page. Verification needs review." data-status="review">
+                <span class="status-icon" aria-hidden="true"></span>
+                <span class="verification-summary" id="public-status-summary">Review</span>
             </a>
         </header>
 
@@ -68,7 +68,7 @@
                         <span class="row-label">
                             <span class="feature-icon seen-icon" aria-hidden="true"></span>
                             <span>Hide Seen</span>
-                            <button class="info-icon" type="button" aria-label="Ghostify keeps unread Facebook chats bold with the blue unread dot when you open them." data-tooltip="Ghostify keeps unread Facebook chats bold with the blue unread dot when you open them.">i</button>
+                            <button class="info-icon" type="button" aria-label="Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know." data-tooltip="Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know.">i</button>
                         </span>
                         <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
                     </div>
@@ -88,50 +88,11 @@
                     </div>
                 </div>
             </section>
-
-            <section class="compact-links" aria-label="More Ghostify options">
-                <button class="nav-row" id="open-labs" type="button">
-                    <span class="row-label">
-                        <span class="feature-icon labs-icon" aria-hidden="true"></span>
-                        <span>Labs</span>
-                    </span>
-                    <span class="row-action">Vote</span>
-                </button>
-            </section>
-        </section>
-
-        <section class="view" id="labs-view" aria-label="Labs feedback" hidden>
-            <button class="back-row" id="close-labs" type="button">
-                <span aria-hidden="true">&lt;</span>
-                <span>Labs</span>
-            </button>
-
-            <div class="card labs-card">
-                <a class="labs-row" href="https://tally.so/r/D4W0Jq?source=popup_labs&amp;feature=instagram_video_controls&amp;version=2.0.4" target="_blank" rel="noopener noreferrer">
-                    <span class="labs-row-title">Instagram Video Controls</span>
-                    <span class="vote-pill">Vote</span>
-                </a>
-                <a class="labs-row" href="https://tally.so/r/D4W0Jq?source=popup_labs&amp;feature=per_site_control_presets&amp;version=2.0.4" target="_blank" rel="noopener noreferrer">
-                    <span class="labs-row-title">Per-site Control Presets</span>
-                    <span class="vote-pill">Vote</span>
-                </a>
-                <a class="labs-row" href="https://tally.so/r/D4W0Jq?source=popup_labs&amp;feature=compatibility_alerts&amp;version=2.0.4" target="_blank" rel="noopener noreferrer">
-                    <span class="labs-row-title">Compatibility Alerts</span>
-                    <span class="vote-pill">Vote</span>
-                </a>
-            </div>
-
-            <a class="trust-row" href="https://github.com/Hendrizzzz/Ghostify/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">
-                <span>Trust &amp; Permissions</span>
-                <span>Open</span>
-            </a>
         </section>
 
         <footer class="footer">
             <span id="version-number"></span>
             <nav class="footer-links" aria-label="Ghostify links">
-                <a class="footer-link survey-link" href="https://tally.so/r/D4W0Jq?source=popup_footer&amp;version=2.0.4" target="_blank" rel="noopener noreferrer" aria-label="Open the Ghostify feature survey" data-tooltip="Share which Labs ideas you want next. Do not include private messages.">Feature survey</a>
-                <span class="footer-separator" aria-hidden="true">/</span>
                 <a class="footer-link support-link" href="https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml" target="_blank" rel="noopener noreferrer" aria-label="Get help or share feedback using a guided GitHub form" data-tooltip="Helpful bug reports or ideas will be credited in release notes and on the website, with permission.">Help &amp; feedback</a>
             </nav>
         </footer>

@@ -181,6 +181,8 @@ Confirm the release still matches `PRIVACY.md` and Chrome Web Store disclosures:
 - No remote code execution or remotely hosted extension logic was added.
 - Every manifest permission and host permission is still justified in
   `PRIVACY.md` and in the Chrome Web Store dashboard.
+- The `ghostify-extension.vercel.app` host permission is disclosed as a
+  display-only status-feed request and tested in the packaged popup.
 - No new host permissions were added without a clear user-facing reason.
 - `declarativeNetRequest` is still used only for local dynamic privacy rules.
 - User preferences remain in `chrome.storage.local`.
@@ -193,9 +195,18 @@ Confirm the release still matches `PRIVACY.md` and Chrome Web Store disclosures:
   public verification data and never raw submissions or private evidence.
 - Public green status requires maintainer-reviewed sender-side or story-owner
   proof where applicable.
-- Expired verified statuses downgrade visibly instead of staying green forever.
+- The latest merged status remains authoritative; age alone never changes a
+  working record from green to yellow.
+- The website and popup both derive their color and date from the canonical
+  status JSON and preserve the full dated history.
 - Automation may flag, summarize, or downgrade status; it must not mark a live
   feature verified.
+- Daily verification PRs are proposals only. Merge one only after completing its
+  live smoke checklist; the merge is the maintainer's explicit approval.
+- Use `reported` for unconfirmed reports, `in-progress` while work continues,
+  `known-issue` for confirmed breakage, and `verified` only after everything is
+  confirmed working. Verify selected feature ids, public note, and optional
+  GitHub issue URL before merge.
 - Public credit is opt-in only, screenshots are redacted, and private messages
   are not requested.
 

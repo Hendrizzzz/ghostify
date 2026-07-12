@@ -1,0 +1,223 @@
+name: Daily verification PR
+
+on:
+  schedule:
+    - cron: "15 0 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Status update to propose
+        required: true
+        type: choice
+        default: verified
+        options:
+          - verified
+          - reported
+          - in-progress
+          - known-issue
+      features:
+        description: Comma-separated feature ids for a yellow update
+        required: false
+        type: string
+      issue_url:
+        description: Optional Ghostify GitHub issue URL
+        required: false
+        type: string
+      note:
+        description: Public, privacy-safe status description
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: public-status-pr
+  cancel-in-progress: false
+
+jobs:
+  propose-status:
+    name: Propose public status update
+    runs-on: ubuntu-24.04
+    env:
+      MODE: ${{ github.event.inputs.mode || 'verified' }}
+      FEATURES: ${{ github.event.inputs.features || '' }}
+      ISSUE_URL: ${{ github.event.inputs.issue_url || '' }}
+      NOTE: ${{ github.event.inputs.note || '' }}
+      EVENT_NAME: ${{ github.event_name }}
+      DAILY_BRANCH: chore/status-daily-verification
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+
+      - name: Define proposal
+        id: proposal
+        shell: bash
+        run: |
+          today="$(date -u +%F)"
+          generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          if [[ "$MODE" == "verified" ]]; then
+            branch="$DAILY_BRANCH"
+            title="chore(status): Verify supported controls on ${today}"
+          else
+            branch="fix/status-${MODE}-${today}-${GITHUB_RUN_NUMBER}"
+            title="fix(status): Record ${MODE} update on ${today}"
+          fi
+          {
+            echo "today=$today"
+            echo "generated_at=$generated_at"
+            echo "base_sha=$(git rev-parse HEAD)"
+            echo "branch=$branch"
+            echo "title=$title"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check proposal eligibility
+        id: eligible
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const { isGreenProposalEligible } = require('./scripts/prepare-status-update');
+          const status = JSON.parse(fs.readFileSync('site/src/app/statusData.json', 'utf8'));
+          const eligibility = isGreenProposalEligible(status, { scheduled: process.env.EVENT_NAME === 'schedule' });
+          const latestStatusIsGreen = eligibility.latestStatusIsGreen;
+          const ready = process.env.MODE !== 'verified' || eligibility.ready;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `ready=${ready}\nlatestStatusIsGreen=${latestStatusIsGreen}\n`);
+          if (!ready) {
+            const reason = !eligibility.storeBuildMatches
+              ? `Store v${status.release.publishedVersion} does not match build v${status.productVersion}.`
+              : 'The latest merged status is yellow; scheduled automation cannot turn it green.';
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `No green PR prepared: ${reason}\n`);
+          }
+          NODE
+
+      - name: Close stale daily PR while live status is yellow
+        if: github.event_name == 'schedule' && steps.eligible.outputs.ready != 'true'
+        shell: bash
+        run: |
+          pr_number="$(gh pr list --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr_number" ]]; then
+            gh pr close "$pr_number" --comment "Closed automatically because a green daily proposal is no longer eligible. Scheduled automation cannot overwrite yellow status or verify a build that differs from the published Store version."
+          fi
+
+      - name: Prepare canonical status JSON
+        if: steps.eligible.outputs.ready == 'true'
+        shell: bash
+        env:
+          TODAY: ${{ steps.proposal.outputs.today }}
+          GENERATED_AT: ${{ steps.proposal.outputs.generated_at }}
+        run: |
+          args=(--mode "$MODE" --date "$TODAY" --generated-at "$GENERATED_AT")
+          if [[ "$MODE" != "verified" ]]; then
+            args+=(--features "$FEATURES")
+            [[ -n "$ISSUE_URL" ]] && args+=(--issue-url "$ISSUE_URL")
+            [[ -n "$NOTE" ]] && args+=(--note "$NOTE")
+          fi
+          node scripts/prepare-status-update.js "${args[@]}"
+
+      - name: Install extension dependencies
+        if: steps.eligible.outputs.ready == 'true'
+        run: npm ci
+
+      - name: Validate extension and status contract
+        if: steps.eligible.outputs.ready == 'true'
+        run: npm run ci
+
+      - name: Install site dependencies
+        if: steps.eligible.outputs.ready == 'true'
+        run: npm ci
+        working-directory: site
+
+      - name: Build status site
+        if: steps.eligible.outputs.ready == 'true'
+        run: npm run build
+        working-directory: site
+
+      - name: Push or refresh proposal branch
+        if: steps.eligible.outputs.ready == 'true'
+        shell: bash
+        env:
+          BRANCH: ${{ steps.proposal.outputs.branch }}
+          TITLE: ${{ steps.proposal.outputs.title }}
+          BASE_SHA: ${{ steps.proposal.outputs.base_sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          if [[ "$(git rev-parse origin/main)" != "$BASE_SHA" ]]; then
+            echo "main changed while this proposal was being validated; aborting instead of publishing stale status data" >&2
+            exit 1
+          fi
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" || true
+          git switch -C "$BRANCH" origin/main
+          git add site/src/app/statusData.json
+          git commit -m "$TITLE"
+          if [[ "$MODE" == "verified" ]]; then
+            git push --force-with-lease --set-upstream origin "$BRANCH"
+          else
+            git push --set-upstream origin "$BRANCH"
+          fi
+
+      - name: Open or refresh maintainer approval PR
+        if: steps.eligible.outputs.ready == 'true'
+        shell: bash
+        env:
+          BRANCH: ${{ steps.proposal.outputs.branch }}
+          TITLE: ${{ steps.proposal.outputs.title }}
+          TODAY: ${{ steps.proposal.outputs.today }}
+        run: |
+          if [[ "$MODE" == "verified" ]]; then
+            cat > "$RUNNER_TEMP/pr-body.md" <<EOF
+          ## Daily verification — ${TODAY}
+
+          Merge only after manually verifying the supported controls. Until this PR is merged, the website and popup keep showing the latest previously merged status.
+
+          - [ ] GH-IG-SEEN-001
+          - [ ] GH-IG-TYPING-001
+          - [ ] GH-IG-STORY-001
+          - [ ] GH-MSG-SEEN-001
+          - [ ] GH-MSG-TYPING-001
+          - [ ] GH-MSG-STORY-001
+          - [ ] GH-MSG-REQUESTS-001 still loads normally
+          - [ ] GH-FB-SEEN-001
+          - [ ] GH-FB-TYPING-001
+          - [ ] GH-FB-STORY-001
+          - [ ] GH-FB-MEDIA-001 still plays normally
+
+          Merging is the maintainer confirmation that everything is working. Automated checks do not independently prove live Meta behavior, and this workflow never auto-merges.
+          EOF
+          else
+            cat > "$RUNNER_TEMP/pr-body.md" <<EOF
+          ## Public status update — ${TODAY}
+
+          This PR proposes a yellow **${MODE}** update for: ${FEATURES}.
+
+          - [ ] The affected feature ids are correct.
+          - [ ] The description is accurate and contains no private messages, credentials, names, or account-sensitive details.
+          - [ ] The update should be visible to users after merge and deployment.
+
+          Merging publishes this update to the website and popup status feed. This workflow never auto-merges.
+          EOF
+          fi
+
+          pr_number="$(gh pr list --state open --head "$BRANCH" --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr_number" ]]; then
+            gh pr edit "$pr_number" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
+          else
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
+          fi

@@ -11,7 +11,28 @@ grouped by version, with the most recent changes first.
 
 ## [Unreleased]
 
-- No unreleased changes yet.
+### Added
+
+- Added a daily GitHub Actions workflow that proposes dated public verification
+  updates in a pull request for explicit maintainer approval.
+- Added a manual known-issue mode that can propose a yellow popup status for
+  selected supported controls without exposing raw reports in the extension.
+- Added report and work-in-progress status modes, a single refreshable daily
+  verification PR, and automatic protection against scheduled green updates
+  overwriting a yellow live status.
+
+### Changed
+
+- Restored the popup to the focused privacy-control layout by removing Labs and
+  the feature survey.
+- Simplified popup status to the latest dated status record: green for working,
+  or yellow for reports, confirmed issues, and review states.
+- Made the latest merged status authoritative indefinitely and consolidated the
+  website and popup feed onto one canonical committed JSON source.
+- Added the exact website host permission required for the popup's status fetch
+  and kept green verification blocked until the published Store build matches.
+- Updated the Facebook Hide Seen help text to state that the previous bug is
+  fixed and ask users to report it if it returns.
 
 ## [2.0.4] - 2026-06-20
 
@@ -50,8 +71,7 @@ grouped by version, with the most recent changes first.
 ### Changed
 
 - Updated the extension version to `2.0.4` across package metadata,
-  Manifest V3 metadata, bundled privacy patterns, generated scripts, and popup
-  survey links.
+  Manifest V3 metadata, bundled privacy patterns, and generated scripts.
 - Changed the popup trust surface so public Verification is the only
   persistent trust row, while local refresh guidance appears only when a
   supported tab needs reload.
@@ -73,8 +93,6 @@ grouped by version, with the most recent changes first.
   Facebook readiness no longer passes on core hooks alone.
 - Replaced unsupported issue-form upload fields with safe screenshot/video
   guidance.
-- Added stale-status handling so old verified public statuses downgrade after
-  their `expiresAt` value.
 
 ### Verification
 

@@ -7986,11 +7986,11 @@ function testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestTe
 function testPopupMessengerSeenNoteExplainsPreservedFacebookUnreadUi() {
     const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
     const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
-    const note = 'Ghostify keeps unread Facebook chats bold with the blue unread dot when you open them.';
+    const note = 'Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know.';
 
     assert(
         popupHtml.includes(note),
-        'Messenger/Facebook Hide Seen should explain preserved Facebook unread UI in concise user-facing wording'
+        'Messenger/Facebook Hide Seen should state that the previous bug is fixed and ask users to report a regression'
     );
     assert(
         popupHtml.includes(`data-tooltip="${note}"`),
@@ -8020,15 +8020,7 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     const popupJs = fs.readFileSync('dist/js/popup.js', 'utf8');
     const privacyPolicy = fs.readFileSync('PRIVACY.md', 'utf8');
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
-    const surveyBaseUrl = 'https://tally.so/r/D4W0Jq';
-    const footerSurveyUrl = `${surveyBaseUrl}?source=popup_footer&amp;version=${pkg.version}`;
-    const labsSurveyUrls = [
-        `${surveyBaseUrl}?source=popup_labs&amp;feature=instagram_video_controls&amp;version=${pkg.version}`,
-        `${surveyBaseUrl}?source=popup_labs&amp;feature=per_site_control_presets&amp;version=${pkg.version}`,
-        `${surveyBaseUrl}?source=popup_labs&amp;feature=compatibility_alerts&amp;version=${pkg.version}`
-    ];
     const directHelpFormUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml';
-    const surveyTooltip = 'Share which Labs ideas you want next. Do not include private messages.';
     const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
     const directHelpPlaceholder = 'Example: On facebook.com, I clicked New message requests and it opened a blank chat page instead of the request list. I expected Ghostify to keep the real UI working while Seen stays blocked.';
     const issueTemplateFiles = [
@@ -8060,19 +8052,11 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Popup should open one guided Help & feedback draft directly instead of the issue chooser'
     );
     assert(
-        popupHtml.includes(`href="${footerSurveyUrl}"`) &&
-        popupHtml.includes('Per-site Control Presets') &&
-        popupHtml.includes(`data-tooltip="${surveyTooltip}"`),
-        'Popup should include the Tally feature survey as a quiet Labs vote path'
-    );
-    assert(
-        popupHtml.includes('class="footer-link survey-link"') &&
         popupHtml.includes('class="footer-link support-link"') &&
         popupHtml.includes('id="version-number"') &&
-        popupCss.includes('.survey-link::after') &&
-        popupCss.includes('left: -88px;') &&
-        popupCss.includes('width: 220px;'),
-        'Popup footer should keep the quiet version, Feature survey, and Help & feedback layout'
+        !popupHtml.includes('footer-separator') &&
+        !popupHtml.includes('Feature survey'),
+        'Popup footer should keep only the version and Help & feedback link'
     );
     assert(
         popupCss.includes('.footer-link:hover::after') &&
@@ -8080,57 +8064,21 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Popup footer should reveal helpful text on hover and keyboard focus'
     );
     assert(
-        popupHtml.includes('id="open-labs"') &&
-        popupHtml.includes('id="labs-view"') &&
-        !popupHtml.includes('Pick the next Labs idea to test') &&
-        popupHtml.includes('Instagram Video Controls') &&
-        !popupHtml.includes('Cleaner Instagram Videos &amp; Reels') &&
-        !popupHtml.includes('Fewer distractions around the player') &&
-        popupHtml.includes('Per-site Control Presets') &&
-        popupHtml.includes('Compatibility Alerts') &&
-        !popupHtml.includes('Save Instagram View-Once Media') &&
-        !popupHtml.includes('Re-watch or download one-time photos/videos') &&
-        !popupHtml.includes('View Deleted Messages') &&
-        !popupHtml.includes('Only messages deleted after Ghostify saw them') &&
-        !popupHtml.includes('Clean Facebook Videos') &&
-        !popupHtml.includes('Save Facebook Media') &&
-        !popupHtml.includes('View-Once Media Preview') &&
-        !popupHtml.includes('Clean Video Player</span>') &&
-        !popupHtml.includes('Save Best Available Media</span>') &&
-        !popupHtml.includes('View Once Privacy Lab') &&
-        !popupHtml.includes('Message Memory') &&
-        labsSurveyUrls.every(url => popupHtml.includes(`href="${url}"`)) &&
-        (popupHtml.match(/https:\/\/tally\.so\/r\/D4W0Jq/g) || []).length >= 4 &&
-        !popupHtml.includes('docs.google.com/forms') &&
-        !popupHtml.includes('feature_request.yml&title=Vote%3A') &&
-        !popupHtml.includes('<input type="checkbox" disabled'),
-        'Popup Labs should route quiet Vote rows to the shared Tally survey instead of Google Forms or GitHub issue drafts'
+        !popupHtml.includes('Labs') &&
+        !popupHtml.includes('tally.so') &&
+        !popupHtml.includes('id="open-labs"') &&
+        !popupHtml.includes('id="labs-view"') &&
+        !popupJs.includes('attachViewListeners') &&
+        !popupJs.includes('open-labs') &&
+        !popupCss.includes('.labs-row') &&
+        !popupCss.includes('.survey-link'),
+        'Popup should remove Labs and feature-survey UI completely'
     );
     assert(
-        privacyPolicy.includes('GitHub issue forms or Tally forms') &&
-        privacyPolicy.includes('privacy practices of GitHub or Tally') &&
-        !privacyPolicy.includes('Google Forms'),
-        'Privacy policy should disclose Tally as the external feature survey provider'
-    );
-    assert(
-        popupCss.includes('.labs-row') &&
-        popupCss.includes('.labs-row-title') &&
-        popupCss.includes('.vote-pill') &&
-        !popupCss.includes('.labs-row-copy') &&
-        !popupCss.includes('.labs-row-detail') &&
-        !popupCss.includes('.labs-note') &&
-        popupCss.includes('padding: 8px 12px 14px;') &&
-        popupCss.includes('line-height: 1.25;') &&
-        popupCss.includes('min-height: 42px;') &&
-        /\.row-label\s*\{[^}]*font-weight:\s*400;/.test(popupCss) &&
-        /\.labs-row-title\s*\{[^}]*font-weight:\s*400;/.test(popupCss) &&
-        /\.trust-row\s*\{[^}]*font-weight:\s*400;/.test(popupCss) &&
-        !popupCss.includes('0 0 10px var(--ghost-red-glow)') &&
-        popupCss.includes('.trust-row') &&
-        popupJs.includes('attachViewListeners') &&
-        popupJs.includes('open-labs') &&
-        popupJs.includes('close-labs'),
-        'Popup Labs view should stay compact and use local view switching'
+        privacyPolicy.includes('GitHub issue forms') &&
+        !privacyPolicy.includes('Tally') &&
+        !privacyPolicy.includes('feature surveys'),
+        'Privacy policy should match the remaining GitHub feedback path'
     );
     const headerHtml = popupHtml.slice(
         popupHtml.indexOf('<header class="header">'),
@@ -8139,15 +8087,16 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     assert(
         headerHtml.includes('id="public-status-link"') &&
         headerHtml.includes('id="public-status-summary"') &&
+        headerHtml.includes('data-status="review"') &&
         !headerHtml.includes('id="public-status-action"') &&
         !headerHtml.includes('>Verification</span>') &&
         !popupHtml.includes('>View</span>') &&
         popupCss.includes('.header-verification') &&
-        popupCss.includes('width: 112px;') &&
-        popupCss.includes('max-width: 112px;') &&
-        popupCss.includes('min-height: 20px;') &&
-        popupCss.includes('align-self: flex-end;') &&
-        popupCss.includes('text-overflow: ellipsis;') &&
+        popupCss.includes('--status-green: #2ee58d;') &&
+        popupCss.includes('--status-yellow: #f1bd4b;') &&
+        popupCss.includes('.header-verification[data-status="verified"]') &&
+        !popupCss.includes('--status-red') &&
+        !popupCss.includes('data-status="issue"') &&
         !popupHtml.includes('class="verification-panel"') &&
         !popupHtml.includes('id="local-refresh"') &&
         !popupHtml.includes('id="local-refresh-message"') &&
@@ -8168,9 +8117,10 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         !popupJs.includes('fallbackPublicStatusSummary') &&
         !popupJs.includes('last packaged proof') &&
         !popupJs.includes('2026-06-27T00:00:00Z') &&
-        popupJs.includes('formatCompactWorkingSummary') &&
-        popupJs.includes('provenWorking') &&
-        !popupJs.includes('dataset.action') &&
+        popupJs.includes('latestPublicStatusRecord') &&
+        popupJs.includes('formatStatusRecordDate') &&
+        popupJs.includes('getPublicStatusTone') &&
+        popupJs.includes("linkElement.dataset.status = tone") &&
         !popupCss.includes('.verification-panel') &&
         !popupCss.includes('.local-refresh') &&
         !popupCss.includes('.status-refresh') &&
@@ -8303,30 +8253,90 @@ function testPopupPublicStatusSummaryUsesWorkingProofDate() {
     context.window = context;
     vm.runInNewContext(popupSource, context, { filename: 'popup.js' });
 
-    const workingEntry = {
+    const currentStatus = JSON.parse(fs.readFileSync('site/src/app/statusData.json', 'utf8'));
+    assert.strictEqual(
+        context.summarizePublicStatus(currentStatus),
+        'Jul 12',
+        'Popup should show the date from the latest committed status record'
+    );
+    assert.strictEqual(
+        context.getPublicStatusTone(currentStatus),
+        'review',
+        'A pending Store build should remain yellow until the status-enabled build is published and verified'
+    );
+
+      const workingEntry = {
         publicStatus: 'maintainer_verified',
-        verifiedAt: '2026-06-27T00:00:00Z',
-        expiresAt: '2026-07-11T00:00:00Z'
+        verifiedAt: '2026-06-27T00:00:00Z'
     };
     const workingData = {
         schemaVersion: 1,
         productVersion: pkg.version,
-        provenWorking: {
-            lastVerifiedAt: '2026-06-27T00:00:00Z',
-            currentWindowStartedAt: '2026-06-04'
-        },
+        release: { matchesVerificationBuild: true },
+        history: [{
+            date: '2026-06-27',
+            publicStatus: 'maintainer_verified'
+        }],
         entries: Array.from({ length: 9 }, () => ({ ...workingEntry }))
     };
 
     assert.strictEqual(
         context.summarizePublicStatus(workingData, new Date('2026-06-27T12:00:00Z')),
-        'Working today',
-        'Popup should summarize a fully green status feed as the last all-working proof date'
+        'Jun 27',
+        'Popup green state should show only the month and day of the latest proof'
     );
     assert.strictEqual(
         context.summarizePublicStatus(workingData, new Date('2026-06-28T12:00:00Z')),
-        'Working Jun 27',
-        'Popup should avoid saying today after the proof date has passed'
+        'Jun 27',
+        'Popup proof date should stay compact and omit the year'
+    );
+    assert.strictEqual(
+        context.getPublicStatusTone(workingData, new Date('2026-06-28T12:00:00Z')),
+        'verified',
+        'Current reviewed proof should use the green status tone'
+    );
+    assert.strictEqual(
+        context.getPublicStatusTone({
+            ...workingData,
+            release: { matchesVerificationBuild: false }
+        }),
+        'review',
+        'A verified record for a build that differs from the Store build must not render green'
+    );
+    assert.strictEqual(
+        context.getPublicStatusTone({
+            ...workingData,
+            history: [
+                { date: '2026-06-20', publicStatus: 'under_review' },
+                { date: '2026-06-27', publicStatus: 'maintainer_verified' }
+            ]
+        }),
+        'review',
+        'The first merged history record must remain authoritative even when its display date is older'
+    );
+    assert.strictEqual(
+        context.getPublicStatusTone({
+            ...workingData,
+            history: [{ date: '2026-07-12', publicStatus: 'under_review' }]
+        }),
+        'review',
+        'A later report or review record should use the yellow tone'
+    );
+    assert.strictEqual(
+        context.summarizePublicStatus({
+            ...workingData,
+            history: [{ date: '2026-07-12', publicStatus: 'known_issue' }]
+        }),
+        'Jul 12',
+        'A report record should show its month and day instead of a generic Review label'
+    );
+    assert.strictEqual(
+        context.getPublicStatusTone({
+            ...workingData,
+            history: [{ date: '2026-07-12', publicStatus: 'known_issue' }]
+        }),
+        'review',
+        'Confirmed reports should also use the yellow report tone'
     );
 }
 
@@ -8335,6 +8345,7 @@ async function testPopupFetchFailureDoesNotClaimWorking() {
     const classNames = new Set();
     const summaryElement = { textContent: '' };
     const linkElement = {
+        dataset: {},
         attributes: new Map(),
         classList: {
             add(name) { classNames.add(name); },
@@ -8387,7 +8398,7 @@ async function testPopupFetchFailureDoesNotClaimWorking() {
 
     assert.strictEqual(
         summaryElement.textContent,
-        'Check status',
+        'Review',
         'Popup should show a neutral compact fallback when the public status feed cannot load'
     );
     assert(
@@ -8396,6 +8407,7 @@ async function testPopupFetchFailureDoesNotClaimWorking() {
         'Popup fetch failures must not claim the controls are working'
     );
     assert(linkElement.classList.contains('is-fallback'), 'Popup should mark the public-status link as fallback on fetch failure');
+    assert.strictEqual(linkElement.dataset.status, 'review', 'Popup fetch failures should use the yellow review tone');
 }
 
 function testReleaseDocsIncludeMessengerFacebookStorySmokeIds() {

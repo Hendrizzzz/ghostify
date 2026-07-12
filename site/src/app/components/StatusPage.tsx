@@ -44,9 +44,8 @@ const STATUS_META: Record<
   maintainer_verified: { short: 'Working', tone: 'ok' },
   community_verified_reviewed: { short: 'Working', tone: 'ok' },
   under_review: { short: 'Under review', tone: 'warn' },
-  not_recently_verified: { short: 'Needs recheck', tone: 'warn' },
-  stale: { short: 'Needs recheck', tone: 'warn' },
-  known_issue: { short: 'Known issue', tone: 'bad' },
+  work_in_progress: { short: 'Working on it', tone: 'warn' },
+  known_issue: { short: 'Known issue', tone: 'warn' },
   public_status_unavailable: { short: 'Unavailable', tone: 'muted' },
 };
 
@@ -148,25 +147,9 @@ function CurrentNotice() {
   const overallStatus = getPublicReleaseStatus();
   const meta = STATUS_META[overallStatus];
   const releaseMismatch = !STATUS_DATA.release.matchesVerificationBuild;
-  const mismatchPrimary = releaseMismatch && overallStatus === 'not_recently_verified';
-  const statusExpired = overallStatus === 'stale' || overallStatus === 'not_recently_verified';
-  const label = mismatchPrimary
-    ? 'Store build needs matching verification'
-    : statusExpired
-      ? 'Live verification needs a recheck'
-      : STATUS_LABELS[overallStatus];
-  const heading = mismatchPrimary
-    ? 'Store and verification builds differ'
-    : statusExpired
-      ? 'Verification window expired'
-      : overallStatus === 'under_review'
-        ? 'Verification in progress'
-        : STATUS_DATA.summary.label;
-  const message = mismatchPrimary
-    ? `The Chrome Web Store version recorded on ${formatStatusDate(STATUS_DATA.release.checkedAt)} is v${STATUS_DATA.release.publishedVersion}. The feature records below refer to repository build v${STATUS_DATA.productVersion}, so they are not Store-build proof until the versions match.`
-    : statusExpired
-      ? 'The most recent live evidence is outside its verification window. The dated records remain visible, but the controls need a new maintainer review before the page can show a current green status.'
-      : STATUS_DATA.summary.message;
+  const label = STATUS_LABELS[overallStatus];
+  const heading = STATUS_DATA.summary.label;
+  const message = STATUS_DATA.summary.message;
 
   return (
     <section className={`status-notice status-notice-${meta.tone}`} aria-label="Current status summary">
@@ -181,7 +164,7 @@ function CurrentNotice() {
         </div>
         <h2>{heading}</h2>
         <p>{message}</p>
-        {releaseMismatch && !mismatchPrimary && (
+        {releaseMismatch && (
           <p className="status-secondary-warning">
             The Store also publishes v{STATUS_DATA.release.publishedVersion}, while these records describe repository build v{STATUS_DATA.productVersion}.
           </p>
@@ -307,7 +290,7 @@ function StatusFootnote() {
 type HistoryItem = (typeof STATUS_DATA.history)[number];
 
 function buildVisibleHistory(): HistoryItem[] {
-  return [...STATUS_DATA.history].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  return [...STATUS_DATA.history];
 }
 
 function CurrentStatus() {
@@ -366,10 +349,10 @@ export function StatusPage({ view }: StatusPageProps) {
 
       <style>{`
         .status-page {
-          --status-red: #D46A52;
-          --status-red-soft: rgba(212, 106, 82, 0.12);
-          --status-red-border: rgba(212, 106, 82, 0.4);
-          --status-red-text: #E48B6D;
+          --status-red: #f1bd4b;
+          --status-red-soft: rgba(241, 189, 75, 0.12);
+          --status-red-border: rgba(241, 189, 75, 0.4);
+          --status-red-text: #f1bd4b;
           --status-surface: rgba(20,18,16,0.92);
           --status-surface-soft: rgba(239,226,208,0.04);
           --status-line: rgba(239,226,208,0.1);

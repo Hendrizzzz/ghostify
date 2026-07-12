@@ -12,7 +12,7 @@ For the privacy controls described in this policy, Ghostify's extension runtime 
 
 These privacy controls operate locally on your device ("client-side"). Ghostify transiently inspects request URLs, request payloads, and supported page or worker messages inside your browser to identify privacy signals such as read receipts, typing indicators, and story-view writes. Ghostify does not send this inspected data to a Ghostify server and does not store raw messages, credentials, browsing history, or social media content.
 
-The popup can fetch a public verification-status JSON file from Ghostify's website so it can show whether supported features are verified, under review, stale, or unavailable. This status feed is not personalized and is not used to collect your social media activity.
+The popup can fetch a public verification-status JSON file from Ghostify's website so it can show whether the latest merged update is verified or needs attention. This status feed is not personalized and is not used to collect your social media activity.
 
 ### 2.1. Permissions Justification
 To function correctly, the Extension requires specific permissions:
@@ -20,6 +20,7 @@ To function correctly, the Extension requires specific permissions:
 *   **Messenger host permission (`https://*.messenger.com/*`):** Required to inject local privacy controls on Messenger pages and block supported read receipt, typing, and story-view signals before they leave your browser.
 *   **Facebook host permission (`https://*.facebook.com/*`):** Required to inject local privacy controls on Facebook pages, including Messenger surfaces inside Facebook.
 *   **Facebook Messenger proxy frame host permission (`https://www.fbsbx.com/*`):** Required for Messenger proxy frames used by Facebook. The host permission is broader than the proxy path, so Ghostify limits Messenger-specific runtime behavior to supported Messenger proxy pages.
+*   **Ghostify status host permission (`https://ghostify-extension.vercel.app/*`):** Used only by the popup to fetch the display-only public status JSON. It does not grant Ghostify access to other tabs or send extension settings, tab URLs, messages, or social media activity.
 *   **Storage permission (`storage`):** Used to save your preferences (e.g., "Hide Seen: ON") and cached bundled configuration locally in your browser's `chrome.storage.local`.
 *   **Declarative Net Request permission (`declarativeNetRequest`):** Used to register local browser rules that block supported privacy signals without sending your data to a Ghostify server.
 
@@ -32,7 +33,7 @@ The Extension uses configuration files bundled with the installed extension pack
 *   **Data transmitted:** No blocking-pattern configuration fetch is made to a third-party server. The separate public status feed described above is display-only and does not configure privacy blocking behavior.
 
 ## 4. Voluntary Feedback and Verification Reports
-The extension may link to GitHub issue forms or Tally forms for optional feedback, feature surveys, bug reports, and public verification reports. Those pages open outside the extension runtime and are governed by the privacy practices of GitHub or Tally. Do not submit private messages, credentials, or account-sensitive details in feedback forms.
+The extension may link to GitHub issue forms for optional feedback, bug reports, and public verification reports. Those pages open outside the extension runtime and are governed by GitHub's privacy practices. Do not submit private messages, credentials, or account-sensitive details in feedback forms.
 
 Verification evidence is reviewed before it can affect public green status. Screenshots or recordings should be redacted before submission, and public contributor credit is used only when the reporter explicitly opts in.
 
