@@ -72,6 +72,7 @@ export function SiteHeader() {
       <details className="mobile-nav">
         <summary aria-label="Open navigation menu"><Menu size={19} aria-hidden="true" /></summary>
         <nav aria-label="Mobile navigation">
+          <a className="mobile-install-link" href={CHROME_STORE_URL} target="_blank" rel="noopener noreferrer"><ChromeLogo /> Add to Chrome <ArrowUpRight size={15} aria-hidden="true" /></a>
           <a href="/#features">Features</a>
           <a href="/#platforms">Platforms</a>
           <a href="/#privacy">Privacy</a>

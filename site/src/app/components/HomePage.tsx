@@ -13,7 +13,6 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import {
-  STATUS_DATA,
   STATUS_LABELS,
   formatStatusDate,
   getLastVerifiedAt,
@@ -81,7 +80,7 @@ const PLATFORMS: Array<{
   { platform: 'facebook', name: 'Facebook', url: 'facebook.com', qualifier: 'Shared settings with Messenger' },
 ];
 
-const AI_PROMPT = 'Hey, what do you think of Ghostify? Take a quick look at https://ghostify-extension.vercel.app and tell me what it does, who it is for, and anything useful to know before installing it.';
+const AI_PROMPT = 'Review Ghostify independently using https://ghostify-extension.vercel.app and its linked public source. Explain what it does, who it is for, how its permissions and privacy model work, and any current limitations or verification caveats someone should know before installing.';
 
 const AI_LINKS = [
   { name: 'ChatGPT', href: `https://chatgpt.com/?q=${encodeURIComponent(AI_PROMPT)}` },
@@ -91,12 +90,20 @@ const AI_LINKS = [
 
 const FAQS = [
   {
+    q: 'Why does Chrome say Ghostify can read and change data on these sites?',
+    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Meta’s own web-messaging proxy; Ghostify does not send your conversations, social activity, or tab URLs to a Ghostify server.',
+  },
+  {
     q: 'Does Ghostify read my messages?',
     a: 'Ghostify transiently inspects supported request URLs, payloads, and page or worker messages locally to identify privacy signals. It does not send conversations to Ghostify, store raw messages, or ask for social media passwords.',
   },
   {
     q: 'Does it work in the mobile apps?',
     a: 'No. Ghostify is a browser extension for the web versions of Instagram, Facebook, and Messenger. It cannot affect the native iOS or Android apps.',
+  },
+  {
+    q: 'Which browsers are officially supported?',
+    a: 'Chrome and Microsoft Edge are Ghostify\'s official store builds. Opera, Opera GX, Opera Air, Brave, Vivaldi, Arc, Dia, Yandex Browser, and NAVER Whale can use the Chrome build where the browser permits Chrome Web Store extensions; browser-specific policies can change.',
   },
   {
     q: 'Can I choose different controls for each platform?',
@@ -173,17 +180,11 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
         inSeen: 'M62 54C82 142 138 126 200 202',
         inTyping: 'M200 28C200 94 200 148 200 202',
         inStory: 'M338 54C318 142 262 126 200 202',
-        outSeen: 'M200 222C224 276 250 304 260 370',
-        outTyping: 'M200 222C200 284 200 326 200 388',
-        outStory: 'M200 222C176 276 150 304 140 370',
       }
     : {
         inSeen: 'M72 70C300 70 420 145 600 210',
         inTyping: 'M36 210C300 210 440 210 600 210',
         inStory: 'M72 350C300 350 420 275 600 210',
-        outSeen: 'M600 210C780 275 900 350 1128 350',
-        outTyping: 'M600 210C820 210 970 210 1164 210',
-        outStory: 'M600 210C780 145 900 70 1128 70',
       };
 
   return (
@@ -196,67 +197,23 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
           <path id={`${prefix}-in-seen`} d={paths.inSeen} />
           <path id={`${prefix}-in-typing`} d={paths.inTyping} />
           <path id={`${prefix}-in-story`} d={paths.inStory} />
-          <path id={`${prefix}-out-seen`} d={paths.outSeen} />
-          <path id={`${prefix}-out-typing`} d={paths.outTyping} />
-          <path id={`${prefix}-out-story`} d={paths.outStory} />
           <clipPath id={`${prefix}-input-clip`}>
             <rect x="0" y="0" width={compact ? 400 : 604} height={compact ? 210 : 420} />
           </clipPath>
-          <linearGradient
-            id={`${prefix}-output-zone-fill`}
-            x1={compact ? '200' : '600'}
-            y1={compact ? '210' : '210'}
-            x2={compact ? '200' : '1200'}
-            y2={compact ? '420' : '210'}
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0" stopColor="#8b70dd" stopOpacity="0.13" />
-            <stop offset="1" stopColor="#8b70dd" stopOpacity="0.025" />
-          </linearGradient>
-          <linearGradient
-            id={`${prefix}-output-band-stroke`}
-            x1={compact ? '200' : '600'}
-            y1={compact ? '210' : '210'}
-            x2={compact ? '200' : '1200'}
-            y2={compact ? '420' : '210'}
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0" stopColor="#8b70dd" stopOpacity="0.18" />
-            <stop offset="1" stopColor="#8b70dd" stopOpacity="0.045" />
-          </linearGradient>
         </defs>
-
-        <path
-          className="signal-output-zone"
-          fill={`url(#${prefix}-output-zone-fill)`}
-          d={compact
-            ? 'M200 210C154 268 94 318 38 398C140 378 260 378 362 398C306 318 246 268 200 210Z'
-            : 'M600 210C760 116 930 34 1180 44C1210 148 1210 272 1180 376C930 386 760 304 600 210Z'}
-        />
-
-        <g className="signal-output-bands" stroke={`url(#${prefix}-output-band-stroke)`}>
-          <use href={`#${prefix}-out-seen`} />
-          <use href={`#${prefix}-out-typing`} />
-          <use href={`#${prefix}-out-story`} />
-        </g>
 
         <g className="signal-network-lines">
           <use href={`#${prefix}-in-seen`} /><use href={`#${prefix}-in-typing`} /><use href={`#${prefix}-in-story`} />
-          <use href={`#${prefix}-out-seen`} />
-          <use href={`#${prefix}-out-typing`} />
-          <use href={`#${prefix}-out-story`} />
         </g>
 
         <g className="signal-route-nodes">
           {compact ? (
             <>
               <circle cx="62" cy="54" r="4" /><circle cx="200" cy="28" r="4" /><circle cx="338" cy="54" r="4" />
-              <circle className="signal-route-node-output" cx="260" cy="370" r="4" /><circle className="signal-route-node-output" cx="200" cy="388" r="4" /><circle className="signal-route-node-output" cx="140" cy="370" r="4" />
             </>
           ) : (
             <>
               <circle cx="72" cy="70" r="5" /><circle cx="36" cy="210" r="5" /><circle cx="72" cy="350" r="5" />
-              <circle className="signal-route-node-output" cx="1128" cy="350" r="5" /><circle className="signal-route-node-output" cx="1164" cy="210" r="5" /><circle className="signal-route-node-output" cx="1128" cy="70" r="5" />
             </>
           )}
         </g>
@@ -264,30 +221,17 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
         <g className="signal-motion">
           <g clipPath={`url(#${prefix}-input-clip)`}>
             <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-7.2s" kind="input" compact={compact} />
-            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-6s" kind="input" compact={compact} />
-            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-4.8s" kind="input" compact={compact} />
-            <SignalPill label="seen" pathId={`${prefix}-in-seen`} width={compact ? 70 : 104} begin="-3.6s" kind="input" compact={compact} />
-            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-2.4s" kind="input" compact={compact} />
-            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-1.2s" kind="input" compact={compact} />
+            <SignalPill label="story-view" pathId={`${prefix}-in-story`} width={compact ? 104 : 150} begin="-4.8s" kind="input" compact={compact} />
+            <SignalPill label="typing" pathId={`${prefix}-in-typing`} width={compact ? 108 : 150} begin="-2.4s" kind="input" compact={compact} />
           </g>
 
-          <g>
-            <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-4.9s" kind="output" compact={compact} />
-            <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-3.7s" kind="output" compact={compact} />
-            <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-2.5s" kind="output" compact={compact} />
-            <SignalPill label="seen-receipt blocked" pathId={`${prefix}-out-seen`} width={compact ? 164 : 205} begin="-1.3s" kind="output" compact={compact} />
-            <SignalPill label="story-view blocked" pathId={`${prefix}-out-story`} width={compact ? 158 : 190} begin="-0.1s" kind="output" compact={compact} />
-            <SignalPill label="typing blocked" pathId={`${prefix}-out-typing`} width={compact ? 132 : 160} begin="-6.1s" kind="output" compact={compact} />
-          </g>
         </g>
 
         <g className="signal-static-labels">
           {compact ? (
-            <><text x="62" y="50">seen</text><text x="200" y="24">typing</text><text x="338" y="50">story-view</text>
-            <text x="260" y="388">seen-receipt blocked</text><text x="200" y="410">typing blocked</text><text x="140" y="388">story-view blocked</text></>
+            <><text x="62" y="50">seen</text><text x="200" y="24">typing</text><text x="338" y="50">story-view</text></>
           ) : (
-            <><text x="72" y="58">seen</text><text x="36" y="196">typing</text><text x="72" y="338">story-view</text>
-            <text x="1128" y="338">seen-receipt blocked</text><text x="1164" y="196">typing blocked</text><text x="1128" y="58">story-view blocked</text></>
+            <><text x="72" y="58">seen</text><text x="36" y="196">typing</text><text x="72" y="338">story-view</text></>
           )}
         </g>
       </svg>
@@ -295,13 +239,72 @@ function SignalDiagram({ compact = false }: { compact?: boolean }) {
 }
 
 function HeroSignalFlow() {
+  const flowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const flow = flowRef.current;
+    if (!flow) return;
+    const diagrams = Array.from(flow.querySelectorAll<SVGSVGElement>('.signal-network'));
+    let visible = true;
+    let wasPlaying = true;
+    const sync = () => {
+      const shouldPlay = visible && !document.hidden;
+      flow.classList.toggle('is-motion-paused', !shouldPlay);
+
+      if (!shouldPlay) {
+        diagrams.forEach((diagram) => diagram.pauseAnimations());
+        wasPlaying = false;
+        return;
+      }
+
+      if (!wasPlaying) {
+        diagrams.forEach((diagram) => {
+          diagram.pauseAnimations();
+          diagram.setCurrentTime(0);
+          diagram.unpauseAnimations();
+        });
+        flow.getAnimations({ subtree: true }).forEach((animation) => {
+          animation.currentTime = 0;
+          animation.play();
+        });
+      } else {
+        diagrams.forEach((diagram) => diagram.unpauseAnimations());
+      }
+      wasPlaying = true;
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    }, { rootMargin: '140px 0px' });
+    observer.observe(flow);
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', sync);
+    };
+  }, []);
+
   return (
-    <div className="hero-signal-flow" aria-hidden="true">
+    <div className="hero-signal-flow" aria-hidden="true" ref={flowRef}>
       <SignalDiagram />
       <SignalDiagram compact />
 
+      <div className="signal-collage">
+        <span className="signal-paper signal-paper-incoming">
+          <b>Signals head out.</b>
+        </span>
+        <span className="signal-paper signal-paper-onward">
+          <b>The page carries on.</b>
+        </span>
+        <svg className="signal-pencil-work" viewBox="0 0 1200 420" preserveAspectRatio="none">
+          <path className="signal-pencil-arrow" d="M248 122C356 108 445 137 523 184M511 166L523 184L502 181" />
+        </svg>
+      </div>
+
       <div className="signal-processor">
+        <span className="signal-catch-ring" />
         <GhostMark size={148} bodyColor="#0f0f0d" eyeColor="#ffffff" />
+        <span className="signal-catch-stamp"><b>held</b><small>in this browser</small></span>
       </div>
     </div>
   );
@@ -368,6 +371,11 @@ function HeroDetails() {
       <span className="hero-detail hero-detail-opera"><i className="hero-detail-stage"><img src="/opera-current.svg?v=2" alt="" /></i></span>
       <span className="hero-detail hero-detail-arc"><i className="hero-detail-stage"><img src="/arc-current.svg" alt="" /></i></span>
       <span className="hero-detail hero-detail-vivaldi"><i className="hero-detail-stage"><img src="/vivaldi-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-opera-gx"><i className="hero-detail-stage"><img src="/opera-gx-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-dia"><i className="hero-detail-stage"><img src="/dia-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-opera-air"><i className="hero-detail-stage"><img src="/opera-air-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-yandex"><i className="hero-detail-stage"><img src="/yandex-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-whale"><i className="hero-detail-stage"><img src="/whale-current.svg" alt="" /></i></span>
     </div>
   );
 }
@@ -375,18 +383,20 @@ function HeroDetails() {
 function PlatformControlMap() {
   return (
     <div className="platform-control-map" aria-label="Instagram has its own controls. Messenger and Facebook share a control group.">
-      <div className="control-map-lane control-map-lane-own">
-        <span className="control-map-logo"><PlatformLogo platform="instagram" size={30} /></span>
-        <i aria-hidden="true" />
-        <span className="control-map-label"><b>Own controls</b><small>Instagram</small></span>
-      </div>
-      <div className="control-map-lane control-map-lane-shared">
-        <span className="control-map-logo"><PlatformLogo platform="messenger" size={30} /></span>
-        <i aria-hidden="true" />
-        <span className="control-map-label"><b>Shared group</b><small>one switch state</small></span>
-        <i aria-hidden="true" />
-        <span className="control-map-logo"><PlatformLogo platform="facebook" size={30} /></span>
-      </div>
+      <article className="control-map-note control-map-note-own">
+        <PlatformLogo platform="instagram" size={36} />
+        <span><small>Instagram</small><strong>Keeps its own switches.</strong></span>
+        <em>separate, on purpose</em>
+      </article>
+      <article className="control-map-note control-map-note-shared">
+        <span className="control-map-pair">
+          <i><PlatformLogo platform="messenger" size={32} /></i>
+          <i><PlatformLogo platform="facebook" size={32} /></i>
+        </span>
+        <span><small>Messenger + Facebook</small><strong>Move together.</strong></span>
+        <em>one shared set</em>
+      </article>
+      <span className="control-map-pencil" aria-hidden="true">two rhythms, three places</span>
     </div>
   );
 }
@@ -411,22 +421,6 @@ function PrivacyIllustration() {
       <span className="privacy-visual-chip privacy-visual-chip-local">stays local</span>
       <span className="privacy-visual-chip privacy-visual-chip-account">no account</span>
     </div>
-  );
-}
-
-function FactMarquee() {
-  return (
-    <section className="fact-marquee" aria-label="Ghostify facts">
-      <div className="fact-marquee-track">
-        {[0, 1].map((copy) => (
-          <div className="fact-marquee-group" aria-hidden={copy === 1 ? 'true' : undefined} key={copy}>
-            {FACTS.map((fact) => (
-              <span key={fact}><i aria-hidden="true" />{fact}</span>
-            ))}
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -466,16 +460,182 @@ function FootprintSection() {
   const runtimeSize = packageSize * (36.5 / 258.8);
 
   return (
-    <section className="footprint-section" ref={sectionRef}>
+    <section className="footprint-section" data-scroll-scene ref={sectionRef}>
       <header>
-        <h2>Small enough to stay out of the way.</h2>
-        <p>A quick look at the current v2.0.4 build.</p>
+        <h2>Built to stay out of your way.</h2>
+        <p>A compact footprint, no tracking relays, and no account standing between you and the controls.</p>
       </header>
       <div className="footprint-metrics">
-        <article><strong>{packageSize.toFixed(1)}<span>KiB</span></strong><small>installed package</small></article>
-        <article><strong>{runtimeSize.toFixed(1)}<span>KiB</span></strong><small>runtime JavaScript, gzip</small></article>
+        <article><strong>{packageSize.toFixed(1)} <span>KiB</span></strong><small>installed package</small></article>
+        <article><strong>{runtimeSize.toFixed(1)} <span>KiB</span></strong><small>runtime JavaScript, gzip</small></article>
         <article><strong>0</strong><small>tracking relays</small></article>
         <article><strong>0</strong><small>Ghostify accounts required</small></article>
+      </div>
+    </section>
+  );
+}
+
+function ScrollChoreography() {
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const scenes = Array.from(document.querySelectorAll<HTMLElement>('[data-scroll-scene]'));
+    const reveals = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+
+    if (reducedMotion) {
+      reveals.forEach((item) => item.classList.add('is-visible'));
+      scenes.forEach((scene) => scene.style.setProperty('--scene-progress', '0.5'));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add('is-visible');
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    reveals.forEach((item) => observer.observe(item));
+
+    const sceneStates = scenes.map((scene) => ({ scene, current: 0, target: 0 }));
+    const measure = () => {
+      sceneStates.forEach((state) => {
+        const { scene } = state;
+        const rect = scene.getBoundingClientRect();
+        const distance = window.innerHeight + rect.height;
+        const progress = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / Math.max(1, distance)));
+        state.target = progress;
+      });
+    };
+
+    measure();
+    sceneStates.forEach((state) => {
+      state.current = state.target;
+      state.scene.style.setProperty('--scene-progress', state.current.toFixed(3));
+    });
+
+    let frame = 0;
+    let needsMeasure = false;
+    let lastTime = performance.now();
+    const update = (now: number) => {
+      frame = 0;
+      if (needsMeasure) {
+        measure();
+        needsMeasure = false;
+      }
+
+      const elapsed = Math.min(64, Math.max(0, now - lastTime));
+      const blend = 1 - Math.exp(-elapsed / 150);
+      let isSettling = false;
+      sceneStates.forEach((state) => {
+        const difference = state.target - state.current;
+        if (Math.abs(difference) > 0.0005) {
+          state.current += difference * blend;
+          isSettling = true;
+        } else {
+          state.current = state.target;
+        }
+        state.scene.style.setProperty('--scene-progress', state.current.toFixed(3));
+      });
+      lastTime = now;
+      if (isSettling) frame = window.requestAnimationFrame(update);
+    };
+    const requestUpdate = () => {
+      needsMeasure = true;
+      if (!frame) {
+        lastTime = performance.now();
+        frame = window.requestAnimationFrame(update);
+      }
+    };
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return null;
+}
+
+function FactMarquee() {
+  const marqueeRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const marquee = marqueeRef.current;
+    if (!marquee) return;
+    const track = marquee.querySelector<HTMLElement>('.fact-marquee-track');
+    if (!track) return;
+    let visible = true;
+    const sync = () => {
+      track.style.animationPlayState = visible && !document.hidden ? 'running' : 'paused';
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    }, { rootMargin: '120px 0px' });
+    observer.observe(marquee);
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', sync);
+    };
+  }, []);
+
+  return (
+    <section className="fact-marquee" aria-label="Ghostify facts" ref={marqueeRef}>
+      <div className="fact-marquee-track">
+        {[0, 1].map((copy) => (
+          <div className="fact-marquee-group" aria-hidden={copy === 1 ? 'true' : undefined} key={copy}>
+            {FACTS.map((fact) => <span key={fact}><i aria-hidden="true" />{fact}</span>)}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function InstallRhythm() {
+  return (
+    <section className="install-rhythm" aria-labelledby="install-rhythm-title" data-scroll-scene>
+      <header data-reveal>
+        <h2 id="install-rhythm-title">One minute.<br />Then it disappears.</h2>
+        <p>Three small moves, then Ghostify settles into the background.</p>
+      </header>
+      <div className="install-rhythm-path" data-reveal>
+        <span className="install-path-line" aria-hidden="true"><i /></span>
+        <span className="install-path-ghost" aria-hidden="true"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
+        <ol>
+        <li><span>01</span><div><strong>Add Ghostify</strong><small>Install from Chrome or Edge.</small></div></li>
+        <li><span>02</span><div><strong>Reload your Meta tabs</strong><small>Let Ghostify start before the page does.</small></div></li>
+        <li><span>03</span><div><strong>Choose your quiet</strong><small>Switch Seen, Typing, and Story Views independently.</small></div></li>
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+function EvidenceSection() {
+  return (
+    <section className="evidence-section" data-scroll-scene>
+      <div className="evidence-card" data-reveal>
+        <div className="evidence-lead">
+          <h2>Don&apos;t take<br />our word for it.</h2>
+          <p>Open a ready-made prompt asking it to review Ghostify&apos;s public website, source, privacy model, and current limitations.</p>
+        </div>
+        <div className="evidence-actions">
+          {AI_LINKS.map((item) => (
+            <a href={item.href} target="_blank" rel="noopener noreferrer" key={item.name}>
+              Ask {item.name}
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+        <div className="evidence-proof" aria-label="Ghostify public evidence">
+          <span><Code2 size={20} aria-hidden="true" /><strong>Public source</strong></span>
+          <span><LockKeyhole size={20} aria-hidden="true" /><strong>Permission boundary</strong></span>
+          <span><ShieldCheck size={20} aria-hidden="true" /><strong>Dated verification</strong></span>
+        </div>
+        <span className="evidence-ghost" aria-hidden="true"><GhostMark size={170} /></span>
       </div>
     </section>
   );
@@ -504,6 +664,7 @@ function FeatureScroll() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeFeature = FEATURES[activeIndex];
+  const signalNote = activeFeature.platform === 'messenger' ? 'Seen stays here.' : 'Story view stays here.';
 
   useEffect(() => {
     const preload = () => {
@@ -579,15 +740,18 @@ function FeatureScroll() {
 
         <figure className="feature-scroll-media" key={`media-${activeFeature.platform}`}>
           <div className="feature-media-frame">
-            <div className={`feature-media-sketch feature-media-sketch-${activeFeature.platform}`} aria-hidden="true">
-              <svg viewBox="0 0 760 104" preserveAspectRatio="none">
-                <path d="M8 74C152 74 212 18 354 30C478 40 557 86 752 38" />
-                <circle cx="8" cy="74" r="4" />
-                <circle cx="752" cy="38" r="4" />
+            <div className={`feature-signal-note feature-signal-note-${activeFeature.platform}`} aria-hidden="true">
+              <span className="feature-note-tape" />
+              <span className="feature-note-source"><PlatformLogo platform={activeFeature.platform} size={25} /><small>{activeFeature.name} on the web</small></span>
+              <strong>{signalNote}</strong>
+              <em>Ghostify holds it in this browser.</em>
+              <span className="feature-note-stamp"><GhostMark size={25} bodyColor="#f3eee2" eyeColor="#0f0f0d" /><b>local</b></span>
+              <svg className="feature-note-arrow" viewBox="0 0 120 64" preserveAspectRatio="none">
+                <path className="feature-note-arrow-halo" d="M8 8C34 10 50 22 63 43C73 56 91 57 108 48" />
+                <path className="feature-note-arrow-halo" d="M97 42L109 48L101 58" />
+                <path className="feature-note-arrow-ink" d="M8 8C34 10 50 22 63 43C73 56 91 57 108 48" />
+                <path className="feature-note-arrow-ink" d="M97 42L109 48L101 58" />
               </svg>
-              <span className="feature-sketch-platform" />
-              <span className="feature-sketch-ghost"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
-              <span className="feature-sketch-spark">✦</span>
             </div>
             <img
               src={activeFeature.src}
@@ -646,6 +810,7 @@ export function HomePage() {
 
   return (
     <div className="home-page">
+      <ScrollChoreography />
       <section className="home-hero">
         <HeroDetails />
         <div className="home-hero-inner">
@@ -657,6 +822,11 @@ export function HomePage() {
               <a href="#features">See it in action <ArrowDown size={16} aria-hidden="true" /></a>
             </div>
             <p className="home-hero-fineprint">No Ghostify account or social password required.</p>
+            <div className="hero-trust-row" aria-label="Ghostify trust summary">
+              <span><Code2 size={14} aria-hidden="true" />Open source</span>
+              <span><LockKeyhole size={14} aria-hidden="true" />Browser-local controls</span>
+              <a href="/status"><ShieldCheck size={14} aria-hidden="true" />Checked {lastVerified}</a>
+            </div>
           </div>
 
           <div className="home-hero-art">
@@ -667,14 +837,14 @@ export function HomePage() {
 
       <FeatureScroll />
 
-      <section className="platforms-flat" id="platforms">
-        <header>
-          <h2>Six switches.<br />Three familiar places.</h2>
+      <section className="platforms-flat" id="platforms" data-scroll-scene>
+        <header data-reveal>
+          <h2>Three controls.<br />Two groups. Three places.</h2>
           <PlatformControlMap />
         </header>
         <div className="platform-card-grid">
           {PLATFORMS.map((item) => (
-            <article className={`platform-card platform-card-${item.platform}`} key={item.platform}>
+            <article className={`platform-card platform-card-${item.platform}`} key={item.platform} data-reveal>
               <header>
                 <PlatformLogo platform={item.platform} size={54} />
                 <span><strong>{item.name}</strong><small>{item.url}</small></span>
@@ -691,29 +861,29 @@ export function HomePage() {
         <a className="platforms-status" href="/status">Coverage changes with the platforms. See verification dated {lastVerified}. <ArrowUpRight size={16} aria-hidden="true" /></a>
       </section>
 
-      <section className="privacy-flat" id="privacy">
-        <div className="privacy-flat-lead">
+      <section className="privacy-flat" id="privacy" data-scroll-scene>
+        <div className="privacy-flat-lead" data-reveal>
           <h2>Local by default.<br />Open to inspection.</h2>
           <div className="privacy-flat-aside">
             <PrivacyIllustration />
             <p>Ghostify checks supported signal traffic inside the browser tab. Conversations are not sent to Ghostify, and the free controls need no Ghostify account.</p>
           </div>
         </div>
-        <div className="privacy-flat-points">
-          <article>
+        <div className="privacy-flat-points" data-reveal>
+          <article tabIndex={0}>
             <ShieldCheck size={26} aria-hidden="true" />
             <div><h3>You choose each signal.</h3><p>Seen, typing, and story-view controls stay separate.</p></div>
           </article>
-          <article>
+          <article tabIndex={0}>
             <LockKeyhole size={26} aria-hidden="true" />
             <div><h3>Normal browsing stays intact.</h3><p>Messages, navigation, and media continue while supported privacy signals are targeted.</p></div>
           </article>
-          <article>
+          <article tabIndex={0}>
             <Code2 size={26} aria-hidden="true" />
             <div><h3>The evidence is public.</h3><p>Read the source and check dated verification whenever Meta changes its web apps.</p></div>
           </article>
         </div>
-        <div className="privacy-flat-links">
+        <div className="privacy-flat-links" data-reveal>
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"><Code2 size={22} aria-hidden="true" /><span><strong>Read the source</strong>Ghostify Core is MIT licensed.</span><ArrowUpRight size={17} aria-hidden="true" /></a>
           <a href={`${GITHUB_URL}/blob/main/PRIVACY.md`} target="_blank" rel="noopener noreferrer"><LockKeyhole size={22} aria-hidden="true" /><span><strong>Review every permission</strong>See what runs locally and why.</span><ArrowUpRight size={17} aria-hidden="true" /></a>
           <a href="/status"><ShieldCheck size={22} aria-hidden="true" /><span><strong>Check public status</strong>{STATUS_LABELS[releaseStatus]}.</span><ArrowUpRight size={17} aria-hidden="true" /></a>
@@ -722,44 +892,31 @@ export function HomePage() {
 
       <FootprintSection />
       <FactMarquee />
+      <InstallRhythm />
 
-      <section className="faq-flat">
-        <header>
+      <section className="faq-flat" data-scroll-scene>
+        <header data-reveal>
           <h2>Before you install.</h2>
           <p>Plain answers, without the disappearing fine print.</p>
         </header>
-        <div className="faq-flat-list">
-          {FAQS.map((item) => (
+        <div className="faq-flat-list" data-reveal>
+          {FAQS.map((item, index) => (
             <details key={item.q}>
-              <summary>{item.q}<span aria-hidden="true">+</span></summary>
+              <summary>
+                <span className="faq-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <strong className="faq-question">{item.q}</strong>
+                <span className="faq-toggle" aria-hidden="true"><i /><i /></span>
+              </summary>
               <p>{item.a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      <section className="ai-opinion">
-        <div>
-          <h2>Let your favorite AI take an independent look.</h2>
-          <p>Open a ready-made prompt asking it to review Ghostify’s public website, source, privacy model, and current limitations.</p>
-          <div className="ai-opinion-actions">
-            {AI_LINKS.map((item) => (
-              <a href={item.href} target="_blank" rel="noopener noreferrer" key={item.name}>
-                Ask {item.name}<ArrowUpRight size={16} aria-hidden="true" />
-              </a>
-            ))}
-          </div>
-          <div className="ai-opinion-proof" aria-label="What the prompt asks the AI to review">
-            <span><Code2 size={18} aria-hidden="true" />Public source</span>
-            <span><LockKeyhole size={18} aria-hidden="true" />Permission boundary</span>
-            <span><ShieldCheck size={18} aria-hidden="true" />Dated verification</span>
-          </div>
-          <span className="ai-opinion-ghost" aria-hidden="true"><GhostMark size={180} /></span>
-        </div>
-      </section>
+      <EvidenceSection />
 
-      <section className="home-final">
-        <div>
+      <section className="home-final" data-scroll-scene>
+        <div data-reveal>
           <div className="home-final-badges">
             <span><img className="browser-logo" src="/chrome-current.svg" alt="" />Chrome</span>
             <span><img className="browser-logo" src="/edge-current.svg" alt="" />Edge</span>
