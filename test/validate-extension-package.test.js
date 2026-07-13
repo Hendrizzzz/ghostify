@@ -170,13 +170,14 @@ withFixture(fixtureRoot => {
         !source.includes('const DEFAULT_SETTINGS'),
         'validator fixture should cover the moved DEFAULT_SETTINGS layout'
     );
-    fs.writeFileSync(contentPath, source.replace('version: "2.0.4"', 'version: "0.0.0"'));
+    fs.writeFileSync(contentPath, source.replace(`version: "${pkg.version}"`, 'version: "0.0.0"'));
 
     const result = runValidator(fixtureRoot);
     assert.notStrictEqual(result.status, 0, 'validator should still parse moved FALLBACK_CONFIG layout');
-    assert.match(
-        result.stderr,
-        /src\/content\.js fallback config version 0\.0\.0 does not match package\.json 2\.0\.4/,
+    assert(
+        result.stderr.includes(
+            `src/content.js fallback config version 0.0.0 does not match package.json ${pkg.version}`
+        ),
         result.stderr || result.stdout
     );
 });

@@ -11,6 +11,8 @@ grouped by version, with the most recent changes first.
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-07-14
+
 ### Added
 
 - Added a daily GitHub Actions workflow that proposes dated public verification
@@ -31,8 +33,12 @@ grouped by version, with the most recent changes first.
   website and popup feed onto one canonical committed JSON source.
 - Added the exact website host permission required for the popup's status fetch
   and kept green verification blocked until the published Store build matches.
-- Updated the Facebook Hide Seen help text to state that the previous bug is
-  fixed and ask users to report it if it returns.
+- Redesigned the popup with a low-glare dark palette, clearer control grouping,
+  calmer active states, and improved text and icon contrast.
+- Removed the outdated Facebook Hide Seen information tooltip so the control
+  remains focused and uncluttered.
+- Added a delayed status-pill description sourced from the latest public status
+  record, without repeating the compact verification date.
 
 ## [2.0.4] - 2026-06-20
 

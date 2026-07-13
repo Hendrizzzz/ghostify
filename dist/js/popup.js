@@ -77,13 +77,16 @@ function saveSettings() {
 async function updatePublicStatusSummary() {
     const summaryElement = document.getElementById('public-status-summary');
     const linkElement = document.getElementById('public-status-link');
+    const tooltipElement = document.getElementById('public-status-tooltip');
     if (!summaryElement) return;
 
     try {
         const data = await fetchPublicStatus();
         const summary = summarizePublicStatus(data);
         const tone = getPublicStatusTone(data);
+        const description = getPublicStatusDescription(data);
         summaryElement.textContent = summary;
+        if (tooltipElement) tooltipElement.textContent = description;
         if (linkElement) {
             linkElement.classList.remove('is-fallback');
             linkElement.dataset.status = tone;
@@ -92,6 +95,7 @@ async function updatePublicStatusSummary() {
     } catch (e) {
         const summary = 'Review';
         summaryElement.textContent = summary;
+        if (tooltipElement) tooltipElement.textContent = 'Public status details are temporarily unavailable.';
         if (linkElement) {
             linkElement.classList.add('is-fallback');
             linkElement.dataset.status = 'review';
@@ -140,6 +144,11 @@ function validatePublicStatusData(data) {
 function summarizePublicStatus(data) {
     const latestRecord = latestPublicStatusRecord(data.history || []);
     return formatStatusRecordDate(latestRecord) || formatLastVerifiedDate(data) || 'Review';
+}
+
+function getPublicStatusDescription(data) {
+    const latestRecord = latestPublicStatusRecord(data.history || []);
+    return latestRecord?.summary || latestRecord?.title || 'Open the public status page for the latest review.';
 }
 
 function getPublicStatusTone(data) {

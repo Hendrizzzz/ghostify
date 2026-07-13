@@ -7983,18 +7983,18 @@ function testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestTe
     );
 }
 
-function testPopupMessengerSeenNoteExplainsPreservedFacebookUnreadUi() {
+function testPopupMessengerSeenNoteIsRemoved() {
     const popupHtml = fs.readFileSync('dist/popup.html', 'utf8');
     const popupCss = fs.readFileSync('dist/css/popup.css', 'utf8');
     const note = 'Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know.';
 
     assert(
-        popupHtml.includes(note),
-        'Messenger/Facebook Hide Seen should state that the previous bug is fixed and ask users to report a regression'
+        !popupHtml.includes(note),
+        'Messenger/Facebook Hide Seen should not display the previous regression notice'
     );
     assert(
-        popupHtml.includes(`data-tooltip="${note}"`),
-        'Messenger/Facebook Hide Seen should use a custom tooltip so it appears immediately'
+        !popupHtml.includes(`data-tooltip="${note}"`),
+        'Messenger/Facebook Hide Seen should not keep the previous regression tooltip'
     );
     assert(
         !popupHtml.includes(' title='),
@@ -8006,11 +8006,9 @@ function testPopupMessengerSeenNoteExplainsPreservedFacebookUnreadUi() {
         'Messenger/Facebook Hide Seen tooltip should avoid technical verification language'
     );
     assert(
-        popupCss.includes('.info-icon::after') &&
-        popupCss.includes('content: attr(data-tooltip);') &&
-        popupCss.includes('white-space: normal;') &&
-        popupCss.includes('transition: none;'),
-        'Messenger/Facebook Hide Seen tooltip should wrap and appear without hover delay'
+        !popupCss.includes('.info-icon') &&
+        !popupHtml.includes('class="info-icon"'),
+        'Messenger/Facebook Hide Seen should not keep unused info-button styling or markup'
     );
 }
 
@@ -8087,6 +8085,8 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     assert(
         headerHtml.includes('id="public-status-link"') &&
         headerHtml.includes('id="public-status-summary"') &&
+        headerHtml.includes('id="public-status-tooltip"') &&
+        headerHtml.includes('aria-describedby="public-status-tooltip"') &&
         headerHtml.includes('data-status="review"') &&
         !headerHtml.includes('id="public-status-action"') &&
         !headerHtml.includes('>Verification</span>') &&
@@ -8097,6 +8097,8 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         popupCss.includes('.header-verification .status-icon') &&
         popupCss.includes('box-shadow: none;') &&
         popupCss.includes('.header-verification[data-status="verified"]') &&
+        popupCss.includes('.header-verification:hover .status-tooltip') &&
+        popupCss.includes('550ms') &&
         !popupCss.includes('--status-red') &&
         !popupCss.includes('data-status="issue"') &&
         !popupHtml.includes('class="verification-panel"') &&
@@ -8266,6 +8268,16 @@ function testPopupPublicStatusSummaryUsesWorkingProofDate() {
         'review',
         'A pending Store build should remain yellow until the status-enabled build is published and verified'
     );
+    assert.strictEqual(
+        context.getPublicStatusDescription(currentStatus),
+        currentStatus.history[0].summary,
+        'Popup status tooltip should use the latest public JSON summary'
+    );
+    assert(
+        !context.getPublicStatusDescription(currentStatus).includes('Jul 12') &&
+        !context.getPublicStatusDescription(currentStatus).includes('July 12'),
+        'Popup status tooltip should not repeat the compact status date'
+    );
 
       const workingEntry = {
         publicStatus: 'maintainer_verified',
@@ -8346,6 +8358,7 @@ async function testPopupFetchFailureDoesNotClaimWorking() {
     const popupSource = fs.readFileSync('dist/js/popup.js', 'utf8');
     const classNames = new Set();
     const summaryElement = { textContent: '' };
+    const tooltipElement = { textContent: '' };
     const linkElement = {
         dataset: {},
         attributes: new Map(),
@@ -8389,6 +8402,7 @@ async function testPopupFetchFailureDoesNotClaimWorking() {
             getElementById(id) {
                 if (id === 'public-status-summary') return summaryElement;
                 if (id === 'public-status-link') return linkElement;
+                if (id === 'public-status-tooltip') return tooltipElement;
                 return null;
             }
         }
@@ -8410,6 +8424,11 @@ async function testPopupFetchFailureDoesNotClaimWorking() {
     );
     assert(linkElement.classList.contains('is-fallback'), 'Popup should mark the public-status link as fallback on fetch failure');
     assert.strictEqual(linkElement.dataset.status, 'review', 'Popup fetch failures should use the yellow review tone');
+    assert.strictEqual(
+        tooltipElement.textContent,
+        'Public status details are temporarily unavailable.',
+        'Popup status tooltip should remain honest when the public feed cannot load'
+    );
 }
 
 function testReleaseDocsIncludeMessengerFacebookStorySmokeIds() {
@@ -8592,7 +8611,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMessageRequestClicksTemporarilyRestoreNativeFocus();
     testFacebookNestedMessageRequestClicksTemporarilyRestoreNativeFocus();
     testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestText();
-    testPopupMessengerSeenNoteExplainsPreservedFacebookUnreadUi();
+    testPopupMessengerSeenNoteIsRemoved();
     testPopupSupportLinksUseGuidedIssueForms();
     testLocalStatusCheckerIsRemovedFromPopupRuntime();
     testPopupPublicStatusSummaryUsesWorkingProofDate();

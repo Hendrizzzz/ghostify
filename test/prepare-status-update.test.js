@@ -37,11 +37,16 @@ function testVerifiedProposalUpdatesEverySupportedControlWithoutExpiry() {
 }
 
 function testVerifiedProposalRejectsStoreBuildMismatch() {
-    assert.throws(() => prepareStatusUpdate(source, {
-        mode: 'verified',
-        date: '2026-07-12',
-        generatedAt: '2026-07-12T10:15:00Z'
-    }), /Store v2\.0\.3 does not match build v2\.0\.4/);
+    assert.throws(
+        () => prepareStatusUpdate(source, {
+            mode: 'verified',
+            date: '2026-07-12',
+            generatedAt: '2026-07-12T10:15:00Z'
+        }),
+        error => error.message.includes(
+            `Store v${source.release.publishedVersion} does not match build v${source.productVersion}`
+        )
+    );
 }
 
 function testReportedProposalTurnsSelectedControlAndOverallStatusYellow() {

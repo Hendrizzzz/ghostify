@@ -15,9 +15,10 @@
                 <img src="icons/icon32.png" alt="" class="header-icon">
                 <h1>Ghostify</h1>
             </a>
-            <a class="header-verification" id="public-status-link" href="https://ghostify-extension.vercel.app/status" target="_blank" rel="noopener noreferrer" aria-label="Open Ghostify status page. Verification needs review." data-status="review">
+            <a class="header-verification" id="public-status-link" href="https://ghostify-extension.vercel.app/status" target="_blank" rel="noopener noreferrer" aria-label="Open Ghostify status page. Verification needs review." aria-describedby="public-status-tooltip" data-status="review">
                 <span class="status-icon" aria-hidden="true"></span>
                 <span class="verification-summary" id="public-status-summary">Review</span>
+                <span class="status-tooltip" id="public-status-tooltip" role="tooltip">Public status details are loading.</span>
             </a>
         </header>
 
@@ -68,7 +69,6 @@
                         <span class="row-label">
                             <span class="feature-icon seen-icon" aria-hidden="true"></span>
                             <span>Hide Seen</span>
-                            <button class="info-icon" type="button" aria-label="Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know." data-tooltip="Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know.">i</button>
                         </span>
                         <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
                     </div>
