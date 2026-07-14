@@ -241,9 +241,15 @@ the generated ZIP. Record `GH-PKG-001` as verified.
 
 - Verify the Store listing shows the approved version.
 - Install or update from the Store and perform a brief popup/load smoke test.
-- Create or update the Git tag `vX.Y.Z`.
-- Create a GitHub Release using the matching `CHANGELOG.md` section.
-- Attach or reference the release ZIP checksum as appropriate.
+- Open **Actions -> Publish GitHub Release -> Run workflow** on `main`.
+- Enter the exact `package.json` version and confirm that it is approved and
+  live in the Chrome Web Store.
+- Let the workflow rerun CI, rebuild and verify the package, extract the
+  matching `CHANGELOG.md` section, create tag `vX.Y.Z`, publish the GitHub
+  Release, and attach the ZIP and SHA-256 checksum.
+- Do not create the tag manually before running the workflow. If the workflow
+  fails, fix the reported release gate instead of bypassing it with a manual
+  release.
 - Close linked issues and thank reporters only when public credit permission exists.
 - Watch new issues for platform regressions after publication.
 

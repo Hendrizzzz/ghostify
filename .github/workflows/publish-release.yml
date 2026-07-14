@@ -1,0 +1,116 @@
+name: Publish GitHub Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version from package.json (for example, 2.0.5)
+        required: true
+        type: string
+      chrome_web_store_approved:
+        description: Confirm this version is approved and live in the Chrome Web Store
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Validate, package, and publish
+    runs-on: ubuntu-24.04
+
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      STORE_APPROVED: ${{ inputs.chrome_web_store_approved }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Validate release request
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::GitHub Releases must be published from main."
+            exit 1
+          fi
+
+          if [[ "${STORE_APPROVED}" != "true" ]]; then
+            echo "::error::Confirm that this version is approved and live in the Chrome Web Store."
+            exit 1
+          fi
+
+          if [[ ! "${RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must use X.Y.Z format."
+            exit 1
+          fi
+
+          package_version="$(node -p "require('./package.json').version")"
+          if [[ "${RELEASE_VERSION}" != "${package_version}" ]]; then
+            echo "::error::Requested v${RELEASE_VERSION} does not match package.json v${package_version}."
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/v${RELEASE_VERSION}" >/dev/null 2>&1; then
+            echo "::error::Tag v${RELEASE_VERSION} already exists."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release validation
+        run: npm run ci
+
+      - name: Build Chrome Web Store package
+        run: npm run package:extension -- --expected-tag "v${RELEASE_VERSION}"
+
+      - name: Verify Chrome Web Store package
+        run: npm run test:package
+
+      - name: Prepare release notes
+        run: node scripts/extract-release-notes.js "${RELEASE_VERSION}" > release-notes.md
+
+      - name: Publish GitHub Release
+        shell: bash
+        run: |
+          zip="ghostify-v${RELEASE_VERSION}-chrome-web-store.zip"
+          checksum="${zip}.sha256"
+
+          gh release create "v${RELEASE_VERSION}" \
+            "${zip}#Chrome Web Store package" \
+            "${checksum}#SHA-256 checksum" \
+            --target "${GITHUB_SHA}" \
+            --title "Ghostify v${RELEASE_VERSION}" \
+            --notes-file release-notes.md \
+            --latest \
+            --fail-on-no-commits
+
+      - name: Summarize release
+        shell: bash
+        run: |
+          {
+            echo "## Ghostify v${RELEASE_VERSION}"
+            echo
+            echo "Published the Git tag and GitHub Release after Chrome Web Store approval."
+            echo
+            echo "- Package: \`ghostify-v${RELEASE_VERSION}-chrome-web-store.zip\`"
+            echo "- Checksum: \`ghostify-v${RELEASE_VERSION}-chrome-web-store.zip.sha256\`"
+          } >> "${GITHUB_STEP_SUMMARY}"

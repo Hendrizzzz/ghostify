@@ -11,6 +11,12 @@ grouped by version, with the most recent changes first.
 
 ## [Unreleased]
 
+### Added
+
+- Added a guarded manual GitHub Release workflow that validates the approved
+  Store version, reruns CI, rebuilds the release package, extracts matching
+  changelog notes, creates the version tag, and publishes the ZIP and checksum.
+
 ## [2.0.4] - 2026-07-14
 
 ### Added
