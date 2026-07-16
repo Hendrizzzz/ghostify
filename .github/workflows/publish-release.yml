@@ -28,17 +28,16 @@ jobs:
     env:
       RELEASE_VERSION: ${{ inputs.version }}
       STORE_APPROVED: ${{ inputs.chrome_web_store_approved }}
-      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Check out main
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24.x
           cache: npm
@@ -90,6 +89,8 @@ jobs:
 
       - name: Publish GitHub Release
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           zip="ghostify-v${RELEASE_VERSION}-chrome-web-store.zip"
           checksum="${zip}.sha256"
