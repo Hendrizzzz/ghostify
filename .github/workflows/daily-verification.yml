@@ -47,17 +47,17 @@ jobs:
       NOTE: ${{ github.event.inputs.note || '' }}
       EVENT_NAME: ${{ github.event_name }}
       DAILY_BRANCH: chore/status-daily-verification
-      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Check out main
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24.x
           cache: npm
@@ -109,6 +109,8 @@ jobs:
       - name: Close stale daily PR while live status is yellow
         if: github.event_name == 'schedule' && steps.eligible.outputs.ready != 'true'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           pr_number="$(gh pr list --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
           if [[ -n "$pr_number" ]]; then
@@ -155,7 +157,9 @@ jobs:
           BRANCH: ${{ steps.proposal.outputs.branch }}
           TITLE: ${{ steps.proposal.outputs.title }}
           BASE_SHA: ${{ steps.proposal.outputs.base_sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          gh auth setup-git
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
@@ -180,6 +184,7 @@ jobs:
           BRANCH: ${{ steps.proposal.outputs.branch }}
           TITLE: ${{ steps.proposal.outputs.title }}
           TODAY: ${{ steps.proposal.outputs.today }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [[ "$MODE" == "verified" ]]; then
             cat > "$RUNNER_TEMP/pr-body.md" <<EOF
