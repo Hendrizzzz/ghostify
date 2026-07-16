@@ -433,7 +433,7 @@ function FootprintSection() {
     const section = sectionRef.current;
     if (!section) return;
     let frame = 0;
-    const finish = () => setPackageSize(258.8);
+    const finish = () => setPackageSize(62.49);
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       finish();
       return;
@@ -444,7 +444,7 @@ function FootprintSection() {
       const startedAt = performance.now();
       const tick = (now: number) => {
         const progress = Math.min(1, (now - startedAt) / 1600);
-        setPackageSize(258.8 * progress);
+        setPackageSize(62.49 * progress);
         if (progress < 1) frame = window.requestAnimationFrame(tick);
       };
       frame = window.requestAnimationFrame(tick);
@@ -457,7 +457,7 @@ function FootprintSection() {
     };
   }, []);
 
-  const runtimeSize = packageSize * (36.5 / 258.8);
+  const runtimeSize = packageSize * (36.5 / 62.49);
 
   return (
     <section className="footprint-section" data-scroll-scene ref={sectionRef}>
@@ -466,7 +466,7 @@ function FootprintSection() {
         <p>A compact footprint, no tracking relays, and no account standing between you and the controls.</p>
       </header>
       <div className="footprint-metrics">
-        <article><strong>{packageSize.toFixed(1)} <span>KiB</span></strong><small>installed package</small></article>
+        <article><strong>{packageSize.toFixed(2)} <span>KiB</span></strong><small>Chrome Web Store size</small></article>
         <article><strong>{runtimeSize.toFixed(1)} <span>KiB</span></strong><small>runtime JavaScript, gzip</small></article>
         <article><strong>0</strong><small>tracking relays</small></article>
         <article><strong>0</strong><small>Ghostify accounts required</small></article>
@@ -665,6 +665,11 @@ function FeatureScroll() {
   const [activeIndex, setActiveIndex] = useState(0);
   const activeFeature = FEATURES[activeIndex];
   const signalNote = activeFeature.platform === 'messenger' ? 'Seen stays here.' : 'Story view stays here.';
+  const atmosphereWord = activeFeature.platform === 'messenger'
+    ? 'held'
+    : activeFeature.platform === 'instagram'
+      ? 'quiet'
+      : 'local';
 
   useEffect(() => {
     const preload = () => {
@@ -722,7 +727,7 @@ function FeatureScroll() {
 
   return (
     <section className="feature-scroll" id="features" ref={sectionRef}>
-      <div className="feature-scroll-sticky">
+      <div className="feature-scroll-sticky" data-atmosphere={atmosphereWord}>
         <div className="feature-scroll-copy">
           <div className="feature-copy-changing" key={`copy-${activeFeature.platform}`}>
             <div className="feature-platform-name">
@@ -753,13 +758,15 @@ function FeatureScroll() {
                 <path className="feature-note-arrow-ink" d="M97 42L109 48L101 58" />
               </svg>
             </div>
-            <img
-              src={activeFeature.src}
-              alt={`${activeFeature.name} running with Ghostify in the browser`}
-              width={activeFeature.width}
-              height={activeFeature.height}
-              decoding="async"
-            />
+            <div className={`feature-media-crop feature-media-crop-${activeFeature.platform}`}>
+              <img
+                src={activeFeature.src}
+                alt={`${activeFeature.name} running with Ghostify in the browser`}
+                width={activeFeature.width}
+                height={activeFeature.height}
+                decoding="async"
+              />
+            </div>
           </div>
         </figure>
 
@@ -839,7 +846,7 @@ export function HomePage() {
 
       <section className="platforms-flat" id="platforms" data-scroll-scene>
         <header data-reveal>
-          <h2>Three controls.<br />Two groups. Three places.</h2>
+          <h2>Three controls.<br /><span>Two groups. Three places.</span></h2>
           <PlatformControlMap />
         </header>
         <div className="platform-card-grid">

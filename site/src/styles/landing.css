@@ -710,28 +710,37 @@
 }
 
 .feature-scroll-sticky::before {
-  content: '';
-  width: min(66vw, 980px);
-  height: 128svh;
+  content: attr(data-atmosphere);
   position: absolute;
-  top: -14svh;
-  right: -12vw;
+  top: 50%;
+  left: calc(50% - clamp(74px, 5.5vw, 94px));
   z-index: -1;
-  background: radial-gradient(ellipse at 58% 48%, rgba(216, 210, 255, 0.98) 0 34%, rgba(216, 210, 255, 0.72) 51%, rgba(216, 210, 255, 0.24) 68%, rgba(216, 210, 255, 0) 82%);
-  filter: blur(10px);
-  transform: translate3d(0, calc(var(--feature-progress) * -4svh), 0) rotate(2deg);
+  color: rgba(15, 15, 13, 0.075);
+  font-family: var(--font-editorial);
+  font-size: clamp(4rem, 5.2vw, 6rem);
+  font-style: italic;
+  font-weight: 450;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  text-orientation: mixed;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  transform: translate3d(0, -50%, 0) rotate(180deg);
   transform-origin: center;
+  pointer-events: none;
 }
 
 .feature-scroll-copy {
-  height: 820px;
+  min-height: min(720px, calc(100svh - 216px));
   position: relative;
   z-index: 3;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .feature-copy-changing {
+  min-height: 380px;
   padding-top: 10px;
   align-self: start;
   animation: featureCopyIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -779,13 +788,14 @@
 }
 
 .feature-scroll-tools {
-  min-height: 104px;
-  padding-bottom: 48px;
-  align-self: end;
+  min-height: 0;
+  margin-top: clamp(40px, 5svh, 58px);
+  padding-bottom: 0;
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .feature-scroll-tools .feature-signal-rail {
@@ -976,12 +986,12 @@
 
 .feature-note-arrow-halo {
   stroke: var(--home-cream);
-  stroke-width: 7;
+  stroke-width: 5.5;
 }
 
 .feature-note-arrow-ink {
   stroke: var(--home-accent);
-  stroke-width: 2.6;
+  stroke-width: 1.25;
 }
 
 @media (max-width: 760px) {
@@ -994,6 +1004,18 @@
   .feature-note-stamp svg { width: 20px; height: 20px; }
 }
 
+.feature-media-crop {
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(15, 15, 13, 0.18);
+  border-radius: 14px;
+  box-shadow: 0 38px 90px rgba(15, 15, 13, 0.24);
+}
+
+.feature-media-crop-facebook img {
+  margin-bottom: -10px;
+}
+
 .feature-scroll-media img {
   width: auto;
   height: auto;
@@ -1001,9 +1023,6 @@
   max-height: 760px;
   display: block;
   object-fit: contain;
-  border: 1px solid rgba(15, 15, 13, 0.18);
-  border-radius: 14px;
-  box-shadow: 0 38px 90px rgba(15, 15, 13, 0.24);
 }
 
 @keyframes featureCopyIn {
@@ -1062,7 +1081,7 @@
 }
 
 .platforms-flat {
-  padding: clamp(96px, 10vw, 140px) max(32px, calc((100vw - 1280px) / 2));
+  padding: clamp(84px, 8vw, 112px) max(32px, calc((100vw - 1280px) / 2));
   position: relative;
   overflow: hidden;
   background: linear-gradient(180deg, var(--home-grey) 0, var(--home-cream) 165px, var(--home-cream) 100%);
@@ -1109,6 +1128,12 @@
   max-width: 800px;
   font-size: clamp(2.9rem, 3.65vw, 4.3rem);
   line-height: 0.98;
+}
+
+@media (min-width: 1081px) {
+  .platforms-flat h2 span {
+    white-space: nowrap;
+  }
 }
 
 .platform-control-map {
@@ -1383,7 +1408,7 @@
 .privacy-flat {
   width: calc(100% - 32px);
   margin: 48px 16px;
-  padding: clamp(82px, 8vw, 118px) max(32px, calc((100vw - 1420px) / 2));
+  padding: clamp(64px, 5vw, 84px) max(32px, calc((100vw - 1420px) / 2));
   overflow: hidden;
   border: 1px solid rgba(243, 238, 226, 0.12);
   border-radius: 44px;
@@ -1415,7 +1440,7 @@
 }
 
 .privacy-illustration {
-  min-height: 290px;
+  min-height: 250px;
   position: relative;
 }
 
@@ -1558,7 +1583,7 @@
 }
 
 .privacy-flat-points {
-  margin-top: clamp(48px, 5vw, 72px);
+  margin-top: clamp(36px, 3.5vw, 48px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid rgba(243, 238, 226, 0.16);
@@ -1566,8 +1591,8 @@
 }
 
 .privacy-flat-points article {
-  min-height: 178px;
-  padding: 32px 34px 32px 0;
+  min-height: 150px;
+  padding: 26px 34px 26px 0;
   display: flex;
   align-items: flex-start;
   gap: 18px;
@@ -1622,7 +1647,7 @@
 }
 
 .privacy-flat-links {
-  margin-top: 34px;
+  margin-top: 24px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
@@ -1863,7 +1888,7 @@
 .install-rhythm li small { color: var(--home-text-secondary); font-size: 13px; line-height: 1.5; }
 
 .privacy-flat-links a {
-  min-height: 78px;
+  min-height: 70px;
   padding: 16px 18px;
   display: grid;
   grid-template-columns: 28px 1fr auto;
@@ -2374,7 +2399,7 @@
   }
 
   .feature-scroll-copy {
-    height: calc(100svh - 144px);
+    min-height: calc(100svh - 176px);
   }
 
   .feature-copy-changing h2 {
@@ -2383,7 +2408,7 @@
   }
 
   .feature-scroll-tools {
-    min-height: 94px;
+    margin-top: clamp(32px, 4svh, 46px);
     padding-bottom: 0;
   }
 
@@ -2464,6 +2489,7 @@
 
   .feature-scroll {
     height: auto;
+    scroll-margin-top: 84px;
   }
 
   .feature-scroll-sticky {
