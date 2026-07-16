@@ -46,7 +46,7 @@ const STATUS_META: Record<
   community_verified_reviewed: { short: 'Working', tone: 'ok' },
   under_review: { short: 'Under review', tone: 'warn' },
   work_in_progress: { short: 'Working on it', tone: 'warn' },
-  known_issue: { short: 'Known issue', tone: 'warn' },
+  known_issue: { short: 'Known issue', tone: 'bad' },
   public_status_unavailable: { short: 'Unavailable', tone: 'muted' },
 };
 
@@ -176,9 +176,7 @@ function CurrentNotice() {
           </a>
         )}
         <div className="status-notice-meta">
-          <span>{STATUS_LABELS[overallStatus]}</span>
-          <span>Generated {formatStatusDate(STATUS_DATA.generatedAt)}</span>
-          <span>Store checked {formatStatusDate(STATUS_DATA.release.checkedAt)}</span>
+          <span>{STATUS_LABELS[overallStatus]} {formatStatusDate(STATUS_DATA.generatedAt)}</span>
           <span>{STATUS_DATA.policy.verificationCadence}</span>
         </div>
       </div>
@@ -356,7 +354,7 @@ function VerificationTimeline() {
       </div>
       <div className="status-timeline-legend" aria-hidden="true">
         <span className="is-clear">No known issue</span>
-        <span className="is-update">Product update marker</span>
+        <span className="is-update">Product update</span>
         <span className="is-review">Under review</span>
         <span className="is-issue">Known issue</span>
         <span className="is-quiet">No update</span>

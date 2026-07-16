@@ -1091,7 +1091,7 @@
   content: 'held';
   position: absolute;
   left: -18px;
-  bottom: -44px;
+  bottom: -20px;
   color: rgba(15, 15, 13, 0.045);
   font-family: var(--font-editorial);
   font-size: clamp(10rem, 19vw, 20rem);
@@ -1666,7 +1666,7 @@
   content: 'local';
   position: absolute;
   right: -10px;
-  bottom: -54px;
+  bottom: -26px;
   color: rgba(15, 15, 13, 0.04);
   font-family: var(--font-editorial);
   font-size: clamp(10rem, 22vw, 24rem);
@@ -1761,9 +1761,7 @@
   grid-template-columns: minmax(300px, 0.82fr) minmax(560px, 1.18fr);
   align-items: center;
   gap: clamp(56px, 9vw, 140px);
-  background:
-    radial-gradient(circle at 84% 20%, rgba(136, 115, 207, 0.14), transparent 25%),
-    linear-gradient(135deg, var(--home-cream), var(--home-grey));
+  background: var(--home-grey);
 }
 
 .install-rhythm::before {
@@ -2241,7 +2239,7 @@
   content: 'quiet';
   position: absolute;
   right: -20px;
-  bottom: -46px;
+  bottom: -22px;
   color: rgba(15, 15, 13, 0.055);
   font-family: var(--font-editorial);
   font-size: clamp(9rem, 18vw, 19rem);
@@ -3185,7 +3183,12 @@
   }
 
   .evidence-lead h2 { font-size: clamp(2.3rem, 9.6vw, 2.75rem); }
-  .evidence-actions { width: 100%; display: grid; }
+  .evidence-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
   .evidence-actions a { width: 100%; }
   .evidence-proof { grid-template-columns: 1fr; }
   .evidence-proof > span { min-height: 58px; border-right: 0; border-bottom: 1px solid rgba(15, 15, 13, 0.16); }
@@ -3416,6 +3419,10 @@
   --status-red-text: #8873cf;
   --status-surface: #e9e4d7;
   --status-surface-soft: rgba(243, 238, 226, 0.72);
+  --status-update: #278e72;
+  --status-update-soft: rgba(39, 142, 114, 0.2);
+  --status-issue: #c95d3e;
+  --status-issue-soft: rgba(201, 93, 62, 0.1);
   --status-line: rgba(15, 15, 13, 0.14);
   --status-line-strong: rgba(15, 15, 13, 0.22);
   --status-text: rgba(15, 15, 13, 0.84);
@@ -3682,9 +3689,8 @@
 .site-root.is-status-view .status-page .status-timeline-legend .is-clear::before,
 .site-root.is-status-view .status-page .status-calendar-day.is-clear { background: var(--home-accent); }
 .site-root.is-status-view .status-page .status-timeline-legend .is-update::before {
-  box-sizing: border-box;
-  border: 2px solid #278e72;
-  background: transparent;
+  border-radius: 3px;
+  background: var(--status-update);
 }
 .site-root.is-status-view .status-page .status-timeline-legend .is-review::before,
 .site-root.is-status-view .status-page .status-calendar-day.is-review { background: #b9a8ef; }
@@ -3765,13 +3771,8 @@
   position: relative;
 }
 
-.site-root.is-status-view .status-page .status-calendar-day.has-update::after {
-  position: absolute;
-  inset: -2px;
-  border: 1px solid #278e72;
-  border-radius: 5px;
-  content: '';
-  pointer-events: none;
+.site-root.is-status-view .status-page .status-calendar-day.has-update {
+  background: var(--status-update);
 }
 
 .site-root.is-status-view .status-page .status-calendar-day:hover {
@@ -3924,7 +3925,11 @@
 
 .site-root.is-status-view .status-page .status-warn { color: var(--home-accent); }
 .site-root.is-status-view .status-page .status-ok { color: #287a50; }
-.site-root.is-status-view .status-page .status-bad { color: #9e3f32; }
+.site-root.is-status-view .status-page .status-pill.status-bad {
+  border-color: rgba(201, 93, 62, 0.28);
+  color: var(--status-issue);
+  background: var(--status-issue-soft);
+}
 
 .site-root.is-status-view .status-page .status-rail-segment {
   height: 10px;
@@ -3934,7 +3939,7 @@
 
 .site-root.is-status-view .status-page .status-rail-ok { background: #287a50; }
 .site-root.is-status-view .status-page .status-rail-warn { background: var(--home-accent); }
-.site-root.is-status-view .status-page .status-rail-bad { background: #9e3f32; }
+.site-root.is-status-view .status-page .status-rail-bad { background: var(--status-issue); }
 .site-root.is-status-view .status-page .status-rail-muted { background: rgba(15, 15, 13, 0.1); }
 
 .site-root.is-status-view .status-page .status-feature-list {

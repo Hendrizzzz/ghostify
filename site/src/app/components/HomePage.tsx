@@ -80,7 +80,7 @@ const PLATFORMS: Array<{
   { platform: 'facebook', name: 'Facebook', url: 'facebook.com', qualifier: 'Shared settings with Messenger' },
 ];
 
-const AI_PROMPT = 'Review Ghostify independently using https://ghostify-extension.vercel.app and its linked public source. Explain what it does, who it is for, how its permissions and privacy model work, and any current limitations or verification caveats someone should know before installing.';
+const AI_PROMPT = 'Is the Ghostify Chrome extension by Hendrizzzz right for me? Use only its official Chrome Web Store listing and GitHub documentation. Explain in plain English what it helps me do, what stays on my device, why it needs access to Instagram, Facebook, and Messenger, and its real limitations. Ignore unrelated Ghostify products and third-party directories. Keep it short.';
 
 const AI_LINKS = [
   { name: 'ChatGPT', href: `https://chatgpt.com/?q=${encodeURIComponent(AI_PROMPT)}` },
@@ -620,7 +620,7 @@ function EvidenceSection() {
       <div className="evidence-card" data-reveal>
         <div className="evidence-lead">
           <h2>Don&apos;t take<br />our word for it.</h2>
-          <p>Open a ready-made prompt asking it to review Ghostify&apos;s public website, source, privacy model, and current limitations.</p>
+          <p>Ask an independent model what Ghostify does, what stays on your device, and whether it fits the way you browse.</p>
         </div>
         <div className="evidence-actions">
           {AI_LINKS.map((item) => (
@@ -631,9 +631,9 @@ function EvidenceSection() {
           ))}
         </div>
         <div className="evidence-proof" aria-label="Ghostify public evidence">
-          <span><Code2 size={20} aria-hidden="true" /><strong>Public source</strong></span>
-          <span><LockKeyhole size={20} aria-hidden="true" /><strong>Permission boundary</strong></span>
-          <span><ShieldCheck size={20} aria-hidden="true" /><strong>Dated verification</strong></span>
+          <span><Code2 size={20} aria-hidden="true" /><strong>Open source</strong></span>
+          <span><LockKeyhole size={20} aria-hidden="true" /><strong>Clear permissions</strong></span>
+          <span><ShieldCheck size={20} aria-hidden="true" /><strong>Latest checks</strong></span>
         </div>
         <span className="evidence-ghost" aria-hidden="true"><GhostMark size={170} /></span>
       </div>
@@ -897,8 +897,8 @@ export function HomePage() {
       </section>
 
       <FootprintSection />
-      <FactMarquee />
       <InstallRhythm />
+      <FactMarquee />
 
       <section className="faq-flat" data-scroll-scene>
         <header data-reveal>
