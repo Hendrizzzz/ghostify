@@ -149,6 +149,7 @@ function testStatusInputsRejectImpossibleDatesAndDuplicateFeatures() {
 
 function testGreenEligibilityRequiresMatchingBuildAndProtectsYellowSchedule() {
     const mismatchingYellow = structuredClone(source);
+    mismatchingYellow.summary.publicStatus = 'under_review';
     mismatchingYellow.release.publishedVersion = '2.0.3';
     mismatchingYellow.release.matchesVerificationBuild = false;
     assert.deepStrictEqual(isGreenProposalEligible(mismatchingYellow, { scheduled: true }), {
