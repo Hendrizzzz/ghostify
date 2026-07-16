@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.0.4",
-  "generatedAt": "2026-07-16T06:32:39Z",
+  "generatedAt": "2026-07-16T11:56:46Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
@@ -165,6 +165,13 @@
     }
   ],
   "history": [
+    {
+      "date": "2026-07-16",
+      "publicStatus": "maintainer_verified",
+      "eventType": "verification",
+      "title": "All supported controls operational",
+      "summary": "All supported controls were checked on July 16, 2026 and are working normally."
+    },
     {
       "date": "2026-07-16",
       "publicStatus": "maintainer_verified",
