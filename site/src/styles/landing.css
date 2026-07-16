@@ -3641,8 +3641,11 @@
 
 .site-root.is-status-view .status-page .status-timeline-legend .is-clear::before,
 .site-root.is-status-view .status-page .status-calendar-day.is-clear { background: var(--home-accent); }
-.site-root.is-status-view .status-page .status-timeline-legend .is-update::before,
-.site-root.is-status-view .status-page .status-calendar-day.is-update { background: #278e72; }
+.site-root.is-status-view .status-page .status-timeline-legend .is-update::before {
+  box-sizing: border-box;
+  border: 2px solid #278e72;
+  background: transparent;
+}
 .site-root.is-status-view .status-page .status-timeline-legend .is-review::before,
 .site-root.is-status-view .status-page .status-calendar-day.is-review { background: #b9a8ef; }
 .site-root.is-status-view .status-page .status-timeline-legend .is-issue::before,
@@ -3720,6 +3723,15 @@
   position: relative;
 }
 
+.site-root.is-status-view .status-page .status-calendar-day.has-update::after {
+  position: absolute;
+  inset: -2px;
+  border: 1px solid #278e72;
+  border-radius: 5px;
+  content: '';
+  pointer-events: none;
+}
+
 .site-root.is-status-view .status-page .status-calendar-day:hover {
   z-index: 2;
   filter: brightness(0.88);
@@ -3774,6 +3786,16 @@
   font-weight: 650;
 }
 
+.site-root.is-status-view .status-page .status-calendar-tooltip em {
+  margin-top: 2px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(244, 239, 227, 0.18);
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 550;
+}
+
 .site-root.is-status-view .status-page .status-calendar-day:hover .status-calendar-tooltip,
 .site-root.is-status-view .status-page .status-calendar-day:focus-visible .status-calendar-tooltip {
   opacity: 1;
@@ -3803,14 +3825,23 @@
 }
 
 .site-root.is-status-view .status-page .status-timeline-detail.is-clear { border-left-color: var(--home-accent); }
-.site-root.is-status-view .status-page .status-timeline-detail.is-update { border-left-color: #278e72; }
 .site-root.is-status-view .status-page .status-timeline-detail.is-review { border-left-color: #b9a8ef; }
 .site-root.is-status-view .status-page .status-timeline-detail.is-issue { border-left-color: #d85d4a; }
 .site-root.is-status-view .status-page .status-timeline-detail time {
   color: rgba(15, 15, 13, 0.52);
   font-size: 11px;
 }
-.site-root.is-status-view .status-page .status-timeline-detail strong { font-size: 13px; }
+.site-root.is-status-view .status-page .status-timeline-detail-title {
+  display: grid;
+  gap: 4px;
+}
+.site-root.is-status-view .status-page .status-timeline-detail-title strong { font-size: 13px; }
+.site-root.is-status-view .status-page .status-timeline-detail-title span {
+  color: #27785f;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
 .site-root.is-status-view .status-page .status-timeline-detail p {
   margin: 0;
   color: rgba(15, 15, 13, 0.6);

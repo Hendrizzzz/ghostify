@@ -186,13 +186,15 @@ function CurrentNotice() {
   );
 }
 
-type TimelineTone = 'clear' | 'update' | 'issue' | 'review' | 'quiet' | 'outside' | 'upcoming';
+type TimelineTone = 'clear' | 'issue' | 'review' | 'quiet' | 'outside' | 'upcoming';
 
 type TimelineDay = {
   date: string;
   tone: TimelineTone;
   label: string;
   detail: string;
+  hasUpdate: boolean;
+  updateLabel: string | null;
   column: number;
   row: number;
 };
@@ -208,9 +210,24 @@ function toneForStatus(status: PublicVerificationStatus): TimelineTone {
   return 'quiet';
 }
 
-function toneForEvent(event: (typeof STATUS_DATA.history)[number]): TimelineTone {
-  if (event.eventType === 'release' || event.eventType === 'fix') return 'update';
-  return toneForStatus(event.publicStatus);
+function isProductUpdate(event: (typeof STATUS_DATA.history)[number]) {
+  return event.eventType === 'release' || event.eventType === 'fix';
+}
+
+function statusPriority(event: (typeof STATUS_DATA.history)[number]) {
+  const tone = toneForStatus(event.publicStatus);
+  if (tone === 'issue') return 3;
+  if (tone === 'review') return 2;
+  if (tone === 'clear') return 1;
+  return 0;
+}
+
+function primaryEventForDay(events: (typeof STATUS_DATA.history)[number][]) {
+  const explicitStatusEvents = events.filter((event) => !isProductUpdate(event));
+  const candidates = explicitStatusEvents.length ? explicitStatusEvents : events;
+  return candidates.reduce((selected, event) => (
+    statusPriority(event) > statusPriority(selected) ? event : selected
+  ));
 }
 
 function buildTimelineDays(year: number, today: Date): TimelineDay[] {
@@ -225,7 +242,10 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
       return dateOrder || right.sourceIndex - left.sourceIndex;
     })
     .map(({ event }) => event);
-  const eventByDate = new Map(events.map((event) => [event.date, event]));
+  const eventsByDate = new Map<string, (typeof STATUS_DATA.history)[number][]>();
+  STATUS_DATA.history.forEach((event) => {
+    eventsByDate.set(event.date, [...(eventsByDate.get(event.date) ?? []), event]);
+  });
   const cellCount = 54 * 7;
 
   return Array.from({ length: cellCount }, (_, index) => {
@@ -234,7 +254,9 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
     const date = toDateKey(current);
     const time = current.getTime();
     const inYear = current.getUTCFullYear() === year;
-    const event = eventByDate.get(date);
+    const dayEvents = eventsByDate.get(date) ?? [];
+    const event = dayEvents.length ? primaryEventForDay(dayEvents) : null;
+    const productUpdate = dayEvents.find(isProductUpdate) ?? null;
     const latestEvent = events.filter((item) => Date.parse(item.date) <= time).at(-1);
     let tone: TimelineTone = 'quiet';
     let label = 'No status update recorded';
@@ -259,7 +281,7 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
     }
 
     if (event) {
-      tone = toneForEvent(event);
+      tone = toneForStatus(event.publicStatus);
       label = event.title;
       detail = event.summary;
     }
@@ -269,6 +291,8 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
       tone,
       label,
       detail,
+      hasUpdate: Boolean(productUpdate),
+      updateLabel: productUpdate && productUpdate !== event ? productUpdate.title : null,
       column: Math.floor(index / 7) + 1,
       row: (index % 7) + 1,
     };
@@ -290,11 +314,14 @@ function VerificationTimeline() {
     ? days.find((day) => day.date === selectedDate && day.date.startsWith(`${selectedYear}-`)) ?? null
     : null;
   const latestUpdate = STATUS_DATA.history[0];
-  const detail = selected ?? {
+  const latestDay = days.find((day) => day.date === latestUpdate.date) ?? null;
+  const detail = selected ?? latestDay ?? {
     date: latestUpdate.date,
-    tone: toneForEvent(latestUpdate),
+    tone: toneForStatus(latestUpdate.publicStatus),
     label: latestUpdate.title,
     detail: latestUpdate.summary,
+    hasUpdate: isProductUpdate(latestUpdate),
+    updateLabel: null,
   };
   const months = useMemo(() => Array.from({ length: 12 }, (_, month) => {
     const first = new Date(Date.UTC(selectedYear, month, 1));
@@ -329,7 +356,7 @@ function VerificationTimeline() {
       </div>
       <div className="status-timeline-legend" aria-hidden="true">
         <span className="is-clear">No known issue</span>
-        <span className="is-update">Product update</span>
+        <span className="is-update">Product update marker</span>
         <span className="is-review">Under review</span>
         <span className="is-issue">Known issue</span>
         <span className="is-quiet">No update</span>
@@ -344,15 +371,16 @@ function VerificationTimeline() {
             {days.map((day) => (
               <button
                 type="button"
-                className={`status-calendar-day is-${day.tone}${selectedDate === day.date ? ' is-selected' : ''}${day.column <= 3 ? ' is-tooltip-left' : ''}${day.column >= 52 ? ' is-tooltip-right' : ''}`}
+                className={`status-calendar-day is-${day.tone}${day.hasUpdate ? ' has-update' : ''}${selectedDate === day.date ? ' is-selected' : ''}${day.column <= 3 ? ' is-tooltip-left' : ''}${day.column >= 52 ? ' is-tooltip-right' : ''}`}
                 style={{ gridColumn: day.column, gridRow: day.row }}
-                aria-label={`${formatStatusDate(day.date)}: ${day.label}`}
+                aria-label={`${formatStatusDate(day.date)}: ${day.label}${day.updateLabel ? `. Product update: ${day.updateLabel}` : ''}`}
                 aria-pressed={selectedDate === day.date}
                 onClick={() => setSelectedDate((current) => current === day.date ? null : day.date)}
                 key={day.date}
               >
                 <span className="status-calendar-tooltip" role="tooltip">
                   <b>{formatStatusDate(day.date)}</b>{day.label}
+                  {day.updateLabel && <em>Product update · {day.updateLabel}</em>}
                 </span>
               </button>
             ))}
@@ -361,7 +389,10 @@ function VerificationTimeline() {
       </div>
       <div className={`status-timeline-detail is-${detail.tone}`} aria-live="polite">
         <time>{formatStatusDate(detail.date)}</time>
-        <strong>{detail.label}</strong>
+        <div className="status-timeline-detail-title">
+          <strong>{detail.label}</strong>
+          {detail.updateLabel && <span>Product update · {detail.updateLabel}</span>}
+        </div>
         <p>{detail.detail}</p>
       </div>
     </div>
