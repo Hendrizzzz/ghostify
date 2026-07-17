@@ -8018,7 +8018,9 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     const popupJs = fs.readFileSync('dist/js/popup.js', 'utf8');
     const privacyPolicy = fs.readFileSync('PRIVACY.md', 'utf8');
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
+    const chromeStoreReviewUrl = 'https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm/reviews';
     const directHelpFormUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml';
+    const ratingTooltip = 'Enjoying Ghostify? Leave a quick rating on the Chrome Web Store.';
     const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
     const directHelpPlaceholder = 'Example: On facebook.com, I clicked New message requests and it opened a blank chat page instead of the request list. I expected Ghostify to keep the real UI working while Seen stays blocked.';
     const issueTemplateFiles = [
@@ -8050,16 +8052,26 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         'Popup should open one guided Help & feedback draft directly instead of the issue chooser'
     );
     assert(
+        popupHtml.includes(`href="${chromeStoreReviewUrl}"`) &&
+        popupHtml.includes('class="footer-link rate-link"') &&
+        popupHtml.includes('aria-label="Rate Ghostify on the Chrome Web Store"') &&
+        popupHtml.includes(`data-tooltip="${ratingTooltip}"`),
+        'Popup footer should link directly to Ghostify reviews on the Chrome Web Store'
+    );
+    assert(
         popupHtml.includes('class="footer-link support-link"') &&
         popupHtml.includes('id="version-number"') &&
         !popupHtml.includes('footer-separator') &&
         !popupHtml.includes('Feature survey'),
-        'Popup footer should keep only the version and Help & feedback link'
+        'Popup footer should keep the version, rating, and Help & feedback links without a separator'
     );
     assert(
         popupCss.includes('.footer-link:hover::after') &&
-        popupCss.includes('.support-link:hover::after'),
-        'Popup footer should reveal helpful text on hover and keyboard focus'
+        popupCss.includes('.support-link:hover::after') &&
+        popupCss.includes('box-sizing: border-box;') &&
+        popupCss.includes('max-width: min(208px, calc(100vw - 24px));') &&
+        popupCss.includes('text-align: center;'),
+        'Popup footer should reveal compact, balanced tooltips on hover and keyboard focus'
     );
     assert(
         !popupHtml.includes('Labs') &&
@@ -8098,6 +8110,7 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         popupCss.includes('box-shadow: none;') &&
         popupCss.includes('.header-verification[data-status="verified"]') &&
         popupCss.includes('.header-verification:hover .status-tooltip') &&
+        popupCss.includes('z-index: 40;') &&
         popupCss.includes('width: max-content;') &&
         popupCss.includes('max-width: min(272px, calc(100vw - 24px));') &&
         popupCss.includes('text-wrap: balance;') &&

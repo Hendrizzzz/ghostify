@@ -1,7 +1,7 @@
 import { GHOSTIFY_SETTINGS_STORAGE_KEY, sanitizePrivacySettingsForPage } from './settings/storage.js';
 
 const FALLBACK_CONFIG = {
-    version: "2.0.4",
+    version: "2.0.5",
     killSwitch: [],
     patterns: {
         igTyping: ['indicate_activity', 'typing_indicator', 'activity_indicator', 'is_typing', 'direct_v2/threads/broadcast/typing', 'direct_v2/threads/typing', 'sendtypingindicator', 'send_typing_indicator', 'typing_on', 'is_composing'],

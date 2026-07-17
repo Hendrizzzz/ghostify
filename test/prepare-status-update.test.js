@@ -53,7 +53,7 @@ function testProposalFixtureFollowsStatusPreparedByWorkflow() {
     const preparedDate = new Date(Date.parse(`${source.history[0].date}T00:00:00Z`) + 24 * 60 * 60 * 1000)
         .toISOString()
         .slice(0, 10);
-    const workflowStatus = structuredClone(source);
+    const workflowStatus = matchingReleaseStatus();
     workflowStatus.generatedAt = `${preparedDate}T01:00:00Z`;
     workflowStatus.history.unshift({
         ...workflowStatus.history[0],
