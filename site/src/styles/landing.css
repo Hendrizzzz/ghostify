@@ -1657,7 +1657,7 @@
 .footprint-section {
   width: 100%;
   margin: 0;
-  padding: clamp(82px, 9vw, 126px) max(32px, calc((100vw - 1280px) / 2));
+  padding: clamp(82px, 9vw, 126px) max(32px, calc((100vw - 1280px) / 2)) clamp(54px, 5vw, 72px);
   position: relative;
   overflow: hidden;
   background: var(--home-grey);
@@ -1754,8 +1754,8 @@
 }
 
 .install-rhythm {
-  min-height: 720px;
-  padding: clamp(88px, 9vw, 130px) max(32px, calc((100vw - 1280px) / 2));
+  min-height: 680px;
+  padding: clamp(52px, 4.5vw, 68px) max(32px, calc((100vw - 1280px) / 2)) clamp(72px, 6vw, 92px);
   position: relative;
   overflow: hidden;
   display: grid;
@@ -1766,7 +1766,7 @@
 }
 
 .install-rhythm::before {
-  content: '01 — 02 — 03';
+  content: '01 — 02 — 03 — 04';
   position: absolute;
   left: 50%;
   bottom: 18px;
@@ -1806,8 +1806,8 @@
 .privacy-flat-points article:focus-visible p { color: rgba(243, 238, 226, 0.72); }
 
 .install-rhythm-path {
-  min-height: 520px;
-  padding: 56px 48px;
+  min-height: 560px;
+  padding: 36px 48px;
   position: relative;
   display: grid;
   align-items: center;
@@ -1820,10 +1820,10 @@
 
 .install-path-line {
   width: 2px;
-  height: calc(100% - 112px);
+  height: calc(100% - 72px);
   position: absolute;
   left: 68px;
-  top: 56px;
+  top: 36px;
   overflow: hidden;
   background: rgba(15, 15, 13, 0.12);
 }
@@ -1841,11 +1841,11 @@
   position: absolute;
   z-index: 3;
   left: 40px;
-  top: 42px;
+  top: 22px;
   display: grid;
   place-items: center;
   filter: drop-shadow(5px 6px 0 var(--home-lavender));
-  transform: translateY(calc(var(--scene-progress, 0) * 405px));
+  transform: translateY(calc(var(--scene-progress, 0) * 445px));
 }
 
 .install-rhythm ol {
@@ -1857,8 +1857,8 @@
 }
 
 .install-rhythm li {
-  min-height: 132px;
-  padding: 22px 10px 22px 52px;
+  min-height: 112px;
+  padding: 16px 10px 16px 52px;
   display: grid;
   grid-template-columns: 58px 1fr;
   align-items: center;
@@ -2609,7 +2609,7 @@
 
   .install-rhythm { gap: 48px; }
 
-  .install-rhythm-path { min-height: 490px; }
+  .install-rhythm-path { min-height: 560px; }
 
   .home-hero {
     min-height: 100svh;
@@ -3165,15 +3165,15 @@
 
   .install-rhythm {
     min-height: 0;
-    padding-top: 76px;
-    padding-bottom: 82px;
+    padding-top: 64px;
+    padding-bottom: 72px;
   }
 
   .install-rhythm h2 { font-size: clamp(2.3rem, 9.6vw, 2.75rem); }
-  .install-rhythm-path { min-height: 390px; padding: 24px 18px 24px 28px; border-radius: 26px; }
+  .install-rhythm-path { min-height: 480px; padding: 24px 18px 24px 28px; border-radius: 26px; }
   .install-rhythm li { min-height: 105px; padding-left: 40px; grid-template-columns: 44px 1fr; gap: 10px; }
   .install-path-line { left: 42px; top: 38px; height: calc(100% - 76px); }
-  .install-path-ghost { left: 16px; top: 25px; transform: translateY(calc(var(--scene-progress, 0) * 285px)); }
+  .install-path-ghost { left: 16px; top: 25px; transform: translateY(calc(var(--scene-progress, 0) * 380px)); }
 
   .evidence-section {
     padding-top: 84px;

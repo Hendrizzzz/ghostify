@@ -8098,7 +8098,12 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         popupCss.includes('box-shadow: none;') &&
         popupCss.includes('.header-verification[data-status="verified"]') &&
         popupCss.includes('.header-verification:hover .status-tooltip') &&
-        popupCss.includes('550ms') &&
+        popupCss.includes('width: max-content;') &&
+        popupCss.includes('max-width: min(272px, calc(100vw - 24px));') &&
+        popupCss.includes('text-wrap: balance;') &&
+        popupCss.includes('transition-delay: 0s;') &&
+        !popupCss.includes('550ms') &&
+        popupCss.includes('@media (prefers-reduced-motion: reduce)') &&
         !popupCss.includes('--status-red') &&
         !popupCss.includes('data-status="issue"') &&
         !popupHtml.includes('class="verification-panel"') &&
@@ -8135,6 +8140,36 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         !popupHtml.includes('sender-side') &&
         !popupHtml.includes('sender-side Seen is verified'),
         'Popup should keep compact public status proof in the header and remove the local Ghostify-loaded checker'
+    );
+    assert(
+        popupCss.includes('.brand-link:hover .header-icon') &&
+        popupCss.includes('.brand-link:focus-visible .header-icon') &&
+        !popupCss.includes('.brand-link:hover::before') &&
+        !popupCss.includes('drop-shadow(') &&
+        !popupCss.includes('text-shadow:'),
+        'Popup hover feedback should use motion and color without decorative glow shadows'
+    );
+    assert(
+        popupHtml.indexOf('href="https://facebook.com/"') < popupHtml.indexOf('href="https://messenger.com/"') &&
+        popupHtml.includes('id="facebook-messenger-heading"') &&
+        popupHtml.includes('class="platform-heading-link platform-heading-link--with-icon" href="https://instagram.com/"') &&
+        popupHtml.includes('class="platform-heading-link platform-heading-link--with-icon" href="https://facebook.com/"') &&
+        popupHtml.includes('class="platform-heading-link platform-heading-link--with-icon" href="https://messenger.com/"') &&
+        popupHtml.includes('class="platform-logo-facebook"') &&
+        popupHtml.includes('class="platform-logo-knockout"') &&
+        !popupCss.includes('.platform-heading-link--with-icon:hover svg') &&
+        !popupCss.includes('.platform-heading-link--with-icon:focus-visible svg'),
+        'Popup should present optically balanced linked platform identities without hover motion'
+    );
+    assert(
+        ['feature-seen', 'feature-typing', 'feature-story'].every(iconId =>
+            popupHtml.includes(`id="${iconId}"`) && popupHtml.includes(`href="#${iconId}"`)
+        ) &&
+        popupCss.includes('.row:hover .feature-icon') &&
+        !popupCss.includes('.seen-icon::before') &&
+        !popupCss.includes('.typing-icon::before') &&
+        !popupCss.includes('.story-icon::before'),
+        'Popup controls should use reusable SVG feature icons instead of CSS-drawn placeholders'
     );
 
     for (const file of issueTemplateFiles) {

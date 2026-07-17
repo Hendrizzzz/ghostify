@@ -10,6 +10,25 @@
 
 <body>
     <main class="popup-shell" aria-label="Ghostify privacy controls">
+        <svg class="icon-sprite" aria-hidden="true">
+            <defs>
+                <symbol id="feature-seen" viewBox="0 0 16 16">
+                    <path d="m1.5 8.2 3.15 3.15 5.7-5.7" />
+                    <path d="m7.15 8.45 2.7 2.7 4.65-4.65" />
+                </symbol>
+                <symbol id="feature-typing" viewBox="0 0 16 16">
+                    <path d="M3.25 3.25h9.5c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5H7l-3.75 2.5v-2.5c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5Z" />
+                    <circle class="feature-icon-fill" cx="5.25" cy="7.25" r="0.8" />
+                    <circle class="feature-icon-fill" cx="8" cy="7.25" r="0.8" />
+                    <circle class="feature-icon-fill" cx="10.75" cy="7.25" r="0.8" />
+                </symbol>
+                <symbol id="feature-story" viewBox="0 0 16 16">
+                    <circle cx="8" cy="8" r="6.1" />
+                    <path d="M4.55 8s1.27-2.2 3.45-2.2S11.45 8 11.45 8 10.18 10.2 8 10.2 4.55 8 4.55 8Z" />
+                    <circle class="feature-icon-fill" cx="8" cy="8" r="0.95" />
+                </symbol>
+            </defs>
+        </svg>
         <header class="header">
             <a class="brand-link" href="https://ghostify-extension.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open the Ghostify website">
                 <img src="icons/icon32.png" alt="" class="header-icon">
@@ -24,32 +43,34 @@
 
         <section class="view is-active" id="main-view" aria-label="Core controls">
             <section class="platform" aria-labelledby="instagram-heading">
-                <div class="platform-label" id="instagram-heading">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" />
-                        <circle cx="12" cy="12" r="4" />
-                        <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
-                    </svg>
-                    <a class="platform-heading-link" href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram">Instagram</a>
+                <div class="platform-label platform-label--linked" id="instagram-heading">
+                    <a class="platform-heading-link platform-heading-link--with-icon" href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="2" y="2" width="20" height="20" rx="5" />
+                            <circle cx="12" cy="12" r="4" />
+                            <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+                        </svg>
+                        <span>Instagram</span>
+                    </a>
                 </div>
                 <div class="card">
                     <div class="row">
                         <span class="row-label">
-                            <span class="feature-icon seen-icon" aria-hidden="true"></span>
+                            <svg class="feature-icon seen-icon" aria-hidden="true"><use href="#feature-seen"></use></svg>
                             <span>Hide Seen</span>
                         </span>
                         <label class="switch" aria-label="Hide Instagram seen receipts"><input type="checkbox" id="ig-seen"><span class="track"></span></label>
                     </div>
                     <div class="row">
                         <span class="row-label">
-                            <span class="feature-icon typing-icon" aria-hidden="true"></span>
+                            <svg class="feature-icon typing-icon" aria-hidden="true"><use href="#feature-typing"></use></svg>
                             <span>Hide Typing</span>
                         </span>
                         <label class="switch" aria-label="Hide Instagram typing indicator"><input type="checkbox" id="ig-typing"><span class="track"></span></label>
                     </div>
                     <div class="row">
                         <span class="row-label">
-                            <span class="feature-icon story-icon" aria-hidden="true"></span>
+                            <svg class="feature-icon story-icon" aria-hidden="true"><use href="#feature-story"></use></svg>
                             <span>Hide Story Views</span>
                         </span>
                         <label class="switch" aria-label="Hide Instagram story views"><input type="checkbox" id="ig-story"><span class="track"></span></label>
@@ -57,31 +78,41 @@
                 </div>
             </section>
 
-            <section class="platform" aria-labelledby="messenger-heading">
-                <div class="platform-label" id="messenger-heading">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.915 1.455 5.515 3.73 7.214V22l3.408-1.87c.91.252 1.872.389 2.862.389 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2Zm.995 12.468-2.547-2.716-4.97 2.716 5.468-5.804 2.608 2.716 4.91-2.716-5.469 5.804Z" />
-                    </svg>
-                    <span class="platform-heading-links"><a class="platform-heading-link" href="https://messenger.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Messenger">Messenger</a><span aria-hidden="true">/</span><a class="platform-heading-link" href="https://facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Facebook">Facebook</a></span>
+            <section class="platform" aria-labelledby="facebook-messenger-heading">
+                <div class="platform-label platform-label--linked" id="facebook-messenger-heading">
+                    <span class="platform-heading-links">
+                        <a class="platform-heading-link platform-heading-link--with-icon" href="https://facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Facebook">
+                            <svg class="platform-logo-facebook" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10" fill="currentColor" />
+                                <path class="platform-logo-knockout" d="M13.65 21v-8h2.7l.4-3.1h-3.1V7.92c0-.9.25-1.51 1.55-1.51h1.65V3.63c-.29-.04-1.27-.13-2.42-.13-2.4 0-4.04 1.46-4.04 4.15V9.9H7.67V13h2.72v8h3.26Z" />
+                            </svg>
+                            <span>Facebook</span>
+                        </a>
+                        <span aria-hidden="true">/</span>
+                        <a class="platform-heading-link platform-heading-link--with-icon" href="https://messenger.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Messenger">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.915 1.455 5.515 3.73 7.214V22l3.408-1.87c.91.252 1.872.389 2.862.389 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2Zm.995 12.468-2.547-2.716-4.97 2.716 5.468-5.804 2.608 2.716 4.91-2.716-5.469 5.804Z" /></svg>
+                            <span>Messenger</span>
+                        </a>
+                    </span>
                 </div>
                 <div class="card">
                     <div class="row">
                         <span class="row-label">
-                            <span class="feature-icon seen-icon" aria-hidden="true"></span>
+                            <svg class="feature-icon seen-icon" aria-hidden="true"><use href="#feature-seen"></use></svg>
                             <span>Hide Seen</span>
                         </span>
                         <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
                     </div>
                     <div class="row">
                         <span class="row-label">
-                            <span class="feature-icon typing-icon" aria-hidden="true"></span>
+                            <svg class="feature-icon typing-icon" aria-hidden="true"><use href="#feature-typing"></use></svg>
                             <span>Hide Typing</span>
                         </span>
                         <label class="switch" aria-label="Hide Messenger and Facebook typing indicator"><input type="checkbox" id="msg-typing"><span class="track"></span></label>
                     </div>
                     <div class="row">
                         <span class="row-label">
-                            <span class="feature-icon story-icon" aria-hidden="true"></span>
+                            <svg class="feature-icon story-icon" aria-hidden="true"><use href="#feature-story"></use></svg>
                             <span>Hide Story Views</span>
                         </span>
                         <label class="switch" aria-label="Hide Messenger and Facebook story views"><input type="checkbox" id="msg-story"><span class="track"></span></label>

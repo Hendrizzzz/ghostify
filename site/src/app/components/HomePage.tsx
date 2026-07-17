@@ -599,15 +599,16 @@ function InstallRhythm() {
     <section className="install-rhythm" aria-labelledby="install-rhythm-title" data-scroll-scene>
       <header data-reveal>
         <h2 id="install-rhythm-title">One minute.<br />Then it disappears.</h2>
-        <p>Three small moves, then Ghostify settles into the background.</p>
+        <p>Four small moves, then Ghostify settles into the background.</p>
       </header>
       <div className="install-rhythm-path" data-reveal>
         <span className="install-path-line" aria-hidden="true"><i /></span>
         <span className="install-path-ghost" aria-hidden="true"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
         <ol>
         <li><span>01</span><div><strong>Add Ghostify</strong><small>Install from Chrome or Edge.</small></div></li>
-        <li><span>02</span><div><strong>Reload your Meta tabs</strong><small>Let Ghostify start before the page does.</small></div></li>
-        <li><span>03</span><div><strong>Choose your quiet</strong><small>Switch Seen, Typing, and Story Views independently.</small></div></li>
+        <li><span>02</span><div><strong>Pin Ghostify</strong><small>Open Extensions, then pin Ghostify for quick access.</small></div></li>
+        <li><span>03</span><div><strong>Reload your Meta tabs</strong><small>Let Ghostify start before the page does.</small></div></li>
+        <li><span>04</span><div><strong>Choose your quiet</strong><small>Switch Seen, Typing, and Story Views independently.</small></div></li>
         </ol>
       </div>
     </section>
