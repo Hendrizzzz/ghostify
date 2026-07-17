@@ -11,6 +11,14 @@ grouped by version, with the most recent changes first.
 
 ## [Unreleased]
 
+### Fixed
+
+- Separated the published verification target from the repository version so
+  reviewed status updates can remain accurate without requiring an extension
+  release, and product-update history no longer overrides popup verification.
+- Removed the redundant Chrome Web Store link and version-mismatch warning from
+  the status summary card; the header remains the single installation action.
+
 ## [2.0.5] - 2026-07-17
 
 ### Added

@@ -8317,8 +8317,11 @@ function testPopupPublicStatusSummaryUsesWorkingProofDate() {
         day: 'numeric',
         timeZone: 'UTC'
     }).format(latestHistoryDate);
+    const latestVerificationRecord = currentStatus.history.find(record =>
+        record.eventType !== 'release' && record.eventType !== 'fix'
+    );
     const expectedTone = currentStatus.release.matchesVerificationBuild &&
-        ['maintainer_verified', 'community_verified_reviewed'].includes(currentStatus.history[0].publicStatus)
+        ['maintainer_verified', 'community_verified_reviewed'].includes(latestVerificationRecord.publicStatus)
         ? 'verified'
         : 'review';
     assert.strictEqual(
@@ -8333,7 +8336,7 @@ function testPopupPublicStatusSummaryUsesWorkingProofDate() {
     );
     assert.strictEqual(
         context.getPublicStatusDescription(currentStatus),
-        currentStatus.history[0].title,
+        latestVerificationRecord.title,
         'Popup status tooltip should use the latest public JSON title'
     );
     assert(

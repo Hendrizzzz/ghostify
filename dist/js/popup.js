@@ -159,7 +159,12 @@ function getPublicStatusTone(data) {
 }
 
 function latestPublicStatusRecord(history) {
-    return history.find(record => record?.date && record?.publicStatus) || null;
+    return history.find(record =>
+        record?.date &&
+        record?.publicStatus &&
+        record.eventType !== 'release' &&
+        record.eventType !== 'fix'
+    ) || null;
 }
 
 function buildPublicStatusAriaLabel(tone, summary) {

@@ -444,6 +444,7 @@ function assertStatusJsonContract() {
         'channel',
         'publishedAt',
         'publishedVersion',
+        'verificationVersion',
         'checkedAt',
         'matchesVerificationBuild',
         'storeUrl'
@@ -454,6 +455,9 @@ function assertStatusJsonContract() {
     if (!statusJson.release.publishedVersion || typeof statusJson.release.publishedVersion !== 'string') {
         fail('site/src/app/statusData.json release.publishedVersion must be a non-empty string');
     }
+    if (!statusJson.release.verificationVersion || typeof statusJson.release.verificationVersion !== 'string') {
+        fail('site/src/app/statusData.json release.verificationVersion must be a non-empty string');
+    }
     assertNullableIsoDate(statusJson.release.checkedAt, 'site/src/app/statusData.json release.checkedAt');
     assertHttpsUrl(statusJson.release.storeUrl, 'site/src/app/statusData.json release.storeUrl');
     assertEqual(
@@ -463,7 +467,7 @@ function assertStatusJsonContract() {
     );
     assertEqual(
         statusJson.release.matchesVerificationBuild,
-        statusJson.release.publishedVersion === statusJson.productVersion,
+        statusJson.release.publishedVersion === statusJson.release.verificationVersion,
         'site/src/app/statusData.json release.matchesVerificationBuild'
     );
     if (Date.parse(statusJson.generatedAt) < Date.parse(statusJson.release.checkedAt)) {
@@ -597,9 +601,6 @@ function assertStatusJsonContract() {
             if (entry.publicStatus !== 'maintainer_verified') {
                 fail(`site/src/app/statusData.json entries[${index}].publicStatus must be maintainer_verified when summary is maintainer_verified`);
             }
-            if (String(entry.verifiedAt).slice(0, 10) !== statusJson.history[0]?.date) {
-                fail(`site/src/app/statusData.json entries[${index}].verifiedAt must match the latest history date`);
-            }
         }
     }
 
@@ -622,8 +623,18 @@ function assertStatusJsonContract() {
             fail('site/src/app/statusData.json history must be newest-first; same-day records keep array order');
         }
     }
-    if (statusJson.history[0].publicStatus !== statusJson.summary.publicStatus) {
-        fail('site/src/app/statusData.json summary.publicStatus must match the latest history record');
+    const latestStatusRecord = statusJson.history.find(item =>
+        item.eventType !== 'release' && item.eventType !== 'fix'
+    ) || statusJson.history[0];
+    if (latestStatusRecord.publicStatus !== statusJson.summary.publicStatus) {
+        fail('site/src/app/statusData.json summary.publicStatus must match the latest verification status record');
+    }
+    if (statusJson.summary.publicStatus === 'maintainer_verified') {
+        for (const [index, entry] of statusJson.entries.entries()) {
+            if (String(entry.verifiedAt).slice(0, 10) !== latestStatusRecord.date) {
+                fail(`site/src/app/statusData.json entries[${index}].verifiedAt must match the latest verification status date`);
+            }
+        }
     }
 
     const publicCopy = [

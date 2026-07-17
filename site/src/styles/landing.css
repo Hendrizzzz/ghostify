@@ -3599,16 +3599,6 @@
   background: var(--home-lavender);
 }
 
-.site-root.is-status-view .status-page .status-release-link {
-  color: var(--home-lavender);
-}
-
-.site-root.is-status-view .status-page .status-secondary-warning {
-  border-left-color: var(--home-lavender);
-  color: var(--home-cream) !important;
-  background: rgba(136, 115, 207, 0.14);
-}
-
 .site-root.is-status-view .status-page .status-panel {
   padding: 18px;
 }
@@ -4129,7 +4119,6 @@
 
   .site-root.is-status-view .status-page .status-notice h1,
   .site-root.is-status-view .status-page .status-notice p,
-  .site-root.is-status-view .status-page .status-secondary-warning,
   .site-root.is-status-view .status-page .status-history-row strong,
   .site-root.is-status-view .status-page .status-history-row p {
     max-width: 100%;

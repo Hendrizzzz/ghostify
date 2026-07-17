@@ -136,9 +136,10 @@ function prepareVerifiedStatus(input, { date, generatedAt }) {
     assertGeneratedAt(generatedAt, date, status.release.checkedAt);
     assertNotBackdated(status, date);
 
-    if (!status.release.matchesVerificationBuild || status.release.publishedVersion !== status.productVersion) {
+    if (!status.release.matchesVerificationBuild ||
+        status.release.publishedVersion !== status.release.verificationVersion) {
         throw new Error(
-            `Cannot prepare a green verification PR: Store v${status.release.publishedVersion} does not match build v${status.productVersion}.`
+            `Cannot prepare a green verification PR: Store v${status.release.publishedVersion} does not match verification build v${status.release.verificationVersion}.`
         );
     }
 
@@ -161,7 +162,7 @@ function prepareVerifiedStatus(input, { date, generatedAt }) {
             localEvidenceStatus: 'verified',
             sourceType: 'maintainer',
             reviewer: 'Hendrizzzz maintainer verification',
-            reviewRecord: `${qaId} approved in the ${date} verification PR for v${status.productVersion}`,
+            reviewRecord: `${qaId} approved in the ${date} verification PR for v${status.release.verificationVersion}`,
             verifiedAt,
             relatedIssueUrl: null,
             notes: `Maintainer-confirmed verification for ${entry.platform} ${entry.feature} on ${longDate}.`
@@ -202,7 +203,7 @@ function prepareYellowStatus(input, { mode, date, generatedAt, featureIds, issue
             localEvidenceStatus: 'manual_pending',
             sourceType: 'maintainer',
             reviewer: 'Hendrizzzz maintainer update',
-            reviewRecord: `${modeConfig.recordPrefix} on ${date} for v${status.productVersion}`,
+            reviewRecord: `${modeConfig.recordPrefix} on ${date} for v${status.release.verificationVersion}`,
             relatedIssueUrl: issueUrl,
             notes: note || `${modeConfig.label} for ${entry.platform} ${entry.feature} as of ${longDate}.`
         };
@@ -233,7 +234,7 @@ function prepareStatusUpdate(input, options) {
 function isGreenProposalEligible(status, { scheduled }) {
     const latestStatusIsGreen = ['maintainer_verified', 'community_verified_reviewed'].includes(status.summary?.publicStatus);
     const storeBuildMatches = status.release?.matchesVerificationBuild === true &&
-        status.release?.publishedVersion === status.productVersion;
+        status.release?.publishedVersion === status.release?.verificationVersion;
     return {
         latestStatusIsGreen,
         storeBuildMatches,

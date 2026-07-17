@@ -116,7 +116,7 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusJson } = readStatusJson(fixtureRoot);
-    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.verificationVersion = statusJson.release.publishedVersion;
     statusJson.release.matchesVerificationBuild = true;
     const preparedDate = new Date(Date.parse(`${statusJson.history[0].date}T00:00:00Z`) + 24 * 60 * 60 * 1000)
         .toISOString()
@@ -542,7 +542,7 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusPath, statusJson } = readStatusJson(fixtureRoot);
-    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.verificationVersion = statusJson.release.publishedVersion;
     statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'maintainer_verified';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';
@@ -560,7 +560,7 @@ withFixture(fixtureRoot => {
 
 withFixture(fixtureRoot => {
     const { statusPath, statusJson } = readStatusJson(fixtureRoot);
-    statusJson.release.publishedVersion = statusJson.productVersion;
+    statusJson.release.verificationVersion = statusJson.release.publishedVersion;
     statusJson.release.matchesVerificationBuild = true;
     statusJson.entries[0].publicStatus = 'community_verified_reviewed';
     statusJson.entries[0].verifiedAt = '2026-06-20T00:00:00Z';

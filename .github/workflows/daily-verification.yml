@@ -100,7 +100,7 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `ready=${ready}\nlatestStatusIsGreen=${latestStatusIsGreen}\n`);
           if (!ready) {
             const reason = !eligibility.storeBuildMatches
-              ? `Store v${status.release.publishedVersion} does not match build v${status.productVersion}.`
+              ? `Store v${status.release.publishedVersion} does not match verification build v${status.release.verificationVersion}.`
               : 'The latest merged status is yellow; scheduled automation cannot turn it green.';
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `No green PR prepared: ${reason}\n`);
           }

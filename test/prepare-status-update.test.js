@@ -23,7 +23,7 @@ const { date: proposalDate, generatedAt: proposalGeneratedAt } = proposalContext
 
 function matchingReleaseStatus() {
     const status = structuredClone(source);
-    status.release.publishedVersion = status.productVersion;
+    status.release.verificationVersion = status.release.publishedVersion;
     status.release.matchesVerificationBuild = true;
     return status;
 }
@@ -81,7 +81,7 @@ function testVerifiedProposalRejectsStoreBuildMismatch() {
             generatedAt: proposalGeneratedAt
         }),
         error => error.message.includes(
-            `Store v${mismatchingStatus.release.publishedVersion} does not match build v${mismatchingStatus.productVersion}`
+            `Store v${mismatchingStatus.release.publishedVersion} does not match verification build v${mismatchingStatus.release.verificationVersion}`
         )
     );
 }

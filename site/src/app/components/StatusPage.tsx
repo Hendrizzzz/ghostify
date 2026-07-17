@@ -147,7 +147,6 @@ function StatusPill({ status, label }: { status: PublicVerificationStatus; label
 function CurrentNotice() {
   const overallStatus = getPublicReleaseStatus();
   const meta = STATUS_META[overallStatus];
-  const releaseMismatch = !STATUS_DATA.release.matchesVerificationBuild;
   const label = STATUS_LABELS[overallStatus];
   const heading = STATUS_DATA.summary.label;
   const message = STATUS_DATA.summary.message;
@@ -160,21 +159,11 @@ function CurrentNotice() {
       </div>
       <div className="status-notice-body">
         <div className="status-version-row">
-          <span className="status-version-pill">Verification build v{STATUS_DATA.productVersion}</span>
+          <span className="status-version-pill">Verification build v{STATUS_DATA.release.verificationVersion}</span>
           <span className="status-version-pill">Store v{STATUS_DATA.release.publishedVersion}</span>
         </div>
         <h1>{heading}</h1>
         <p>{message}</p>
-        {releaseMismatch && (
-          <p className="status-secondary-warning">
-            Chrome Web Store v{STATUS_DATA.release.publishedVersion} does not include live popup status yet. You can continue checking this page for updates.
-          </p>
-        )}
-        {releaseMismatch && (
-          <a className="status-release-link" href={STATUS_DATA.release.storeUrl} target="_blank" rel="noopener noreferrer">
-            Open the Chrome Web Store listing <ExternalLink size={13} strokeWidth={1.8} />
-          </a>
-        )}
         <div className="status-notice-meta">
           <span>{STATUS_LABELS[overallStatus]} {formatStatusDate(STATUS_DATA.generatedAt)}</span>
           <span>{STATUS_DATA.policy.verificationCadence}</span>
@@ -417,7 +406,7 @@ function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[numbe
             <strong>{platform.name}</strong>
             <StatusPill
               status={platformStatus}
-              label={verifiedBuildOnly ? `Verified in v${STATUS_DATA.productVersion}` : undefined}
+              label={verifiedBuildOnly ? `Verified in v${STATUS_DATA.release.verificationVersion}` : undefined}
             />
           </div>
           <div className="status-platform-sub">
@@ -662,24 +651,6 @@ export function StatusPage({ view }: StatusPageProps) {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
-        }
-        .status-release-link {
-          min-height: 38px;
-          margin-top: 12px;
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          color: var(--status-red-text);
-          font-family: var(--g-sans);
-          font-size: 0.8rem;
-          font-weight: 700;
-          text-underline-offset: 4px;
-        }
-        .status-secondary-warning {
-          padding: 9px 11px;
-          border-left: 2px solid var(--status-red-text);
-          background: var(--status-red-soft);
-          color: var(--status-text) !important;
         }
         .status-notice h1 {
           margin: 18px 0 0;

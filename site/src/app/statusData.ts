@@ -37,6 +37,7 @@ export type StatusData = {
     channel: 'Chrome Web Store';
     publishedAt: string;
     publishedVersion: string;
+    verificationVersion: string;
     checkedAt: string;
     matchesVerificationBuild: boolean;
     storeUrl: string;
