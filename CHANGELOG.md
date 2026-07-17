@@ -11,11 +11,31 @@ grouped by version, with the most recent changes first.
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-07-17
+
 ### Added
 
+- Added a discreet popup link that takes users directly to Ghostify's Chrome
+  Web Store reviews page.
 - Added a guarded manual GitHub Release workflow that validates the approved
   Store version, reruns CI, rebuilds the release package, extracts matching
   changelog notes, creates the version tag, and publishes the ZIP and checksum.
+
+### Changed
+
+- Refined the popup branding, status presentation, control icons, platform
+  links, and footer spacing for a calmer and more legible layout.
+- Balanced short, medium, and long tooltip text within the compact popup while
+  keeping status details above the controls.
+- Added a Pin Ghostify step to the website installation guide and tightened its
+  desktop spacing.
+
+### Fixed
+
+- Removed unnecessary platform-link hover motion and corrected the Facebook
+  icon's optical size.
+- Prevented long popup tooltips from overflowing or leaving one-sided empty
+  space at the supported popup width.
 
 ## [2.0.4] - 2026-07-14
 

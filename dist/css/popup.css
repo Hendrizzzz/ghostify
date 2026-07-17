@@ -67,6 +67,8 @@ a {
 /* ── Header ───────────────────────────────────── */
 
 .header {
+    position: relative;
+    z-index: 40;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -513,7 +515,7 @@ input:checked:active + .track::before {
     display: inline-flex;
     align-items: center;
     min-width: 0;
-    gap: 6px;
+    gap: 10px;
     white-space: nowrap;
 }
 
@@ -547,11 +549,13 @@ input:checked:active + .track::before {
 .footer-link::after,
 .support-link::after {
     content: attr(data-tooltip);
+    box-sizing: border-box;
     position: absolute;
     right: 0;
     bottom: calc(100% + 8px);
     z-index: 20;
-    width: 248px;
+    width: max-content;
+    max-width: min(208px, calc(100vw - 24px));
     padding: 8px 10px;
     border: 1px solid #4d4942;
     border-radius: 7px;
@@ -562,12 +566,17 @@ input:checked:active + .track::before {
     font-weight: 500;
     line-height: 1.35;
     letter-spacing: 0;
-    text-align: left;
+    text-align: center;
+    text-wrap: balance;
     white-space: normal;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: none;
+}
+
+.rate-link::after {
+    right: -86px;
 }
 
 .footer-link::before,
