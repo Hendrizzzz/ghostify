@@ -8,7 +8,7 @@ import {
   History,
   Info,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   STATUS_DATA,
   STATUS_LABELS,
@@ -303,6 +303,7 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
 }
 
 function VerificationTimeline() {
+  const calendarRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => {
     const now = new Date();
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -342,6 +343,15 @@ function VerificationTimeline() {
     setSelectedDate(null);
   };
 
+  useEffect(() => {
+    const calendar = calendarRef.current;
+    if (!calendar || !window.matchMedia('(max-width: 620px)').matches) return;
+
+    const targetColumn = latestDay?.column ?? 54;
+    const target = (targetColumn / 54) * calendar.scrollWidth - calendar.clientWidth * 0.72;
+    calendar.scrollLeft = Math.max(0, Math.min(calendar.scrollWidth - calendar.clientWidth, target));
+  }, [latestDay?.column, selectedYear]);
+
   return (
     <div className="status-timeline" aria-label="Dated verification timeline">
       <div className="status-timeline-head">
@@ -364,7 +374,8 @@ function VerificationTimeline() {
         <span className="is-issue">Known issue</span>
         <span className="is-quiet">No update</span>
       </div>
-      <div className="status-calendar-wrap">
+      <p className="status-calendar-hint" aria-hidden="true">Current period in view · Swipe to explore the year</p>
+      <div className="status-calendar-wrap" ref={calendarRef}>
         <div className="status-calendar-months" aria-hidden="true">
           {months.map((month) => <span style={{ gridColumn: month.column }} key={month.label}>{month.label}</span>)}
         </div>
@@ -378,6 +389,7 @@ function VerificationTimeline() {
                 style={{ gridColumn: day.column, gridRow: day.row }}
                 aria-label={`${formatStatusDate(day.date)}: ${day.label}${day.updateLabel ? `. Product update: ${day.updateLabel}` : ''}`}
                 aria-pressed={selectedDate === day.date}
+                disabled={day.tone === 'outside'}
                 onClick={() => setSelectedDate((current) => current === day.date ? null : day.date)}
                 key={day.date}
               >

@@ -2464,7 +2464,7 @@
   }
 
   .home-hero-copy h1 {
-    font-size: clamp(3.85rem, 6.7vw, 4.55rem);
+    font-size: clamp(4rem, 6.1vw, 4.15rem);
   }
 
   .hero-signal-flow {
@@ -2533,7 +2533,7 @@
 
   .mobile-feature-list h2 {
     max-width: 780px;
-    font-size: clamp(2.8rem, 4.45vw, 3.05rem);
+    font-size: clamp(2.8rem, 4.45vw, 3rem);
   }
 
   .mobile-feature-list article > p {
@@ -3196,7 +3196,7 @@
     padding-bottom: 72px;
   }
 
-  .install-rhythm h2 { font-size: clamp(2.3rem, 9.6vw, 2.75rem); }
+  .install-rhythm h2 { font-size: clamp(2.3rem, 9.6vw, 2.7rem); }
   .install-rhythm-path { min-height: 480px; padding: 24px 18px 24px 28px; border-radius: 26px; }
   .install-rhythm li { min-height: 105px; padding-left: 40px; grid-template-columns: 44px 1fr; gap: 10px; }
   .install-path-line { left: 42px; top: 38px; height: calc(100% - 76px); }
@@ -3577,7 +3577,7 @@
   color: var(--home-cream);
   font-family: var(--font-display);
   font-stretch: 90%;
-  font-size: clamp(1.9rem, 2.3vw, 2.5rem);
+  font-size: clamp(2.1rem, 2.3vw, 2.5rem);
   font-weight: 550;
   letter-spacing: -0.022em;
   line-height: 0.96;
@@ -3747,6 +3747,10 @@
 
 .site-root.is-status-view .status-page .status-calendar-wrap::-webkit-scrollbar { display: none; }
 
+.site-root.is-status-view .status-page .status-calendar-hint {
+  display: none;
+}
+
 .site-root.is-status-view .status-page .status-calendar-months {
   min-width: 690px;
   margin-left: 34px;
@@ -3814,6 +3818,11 @@
 .site-root.is-status-view .status-page .status-calendar-day:hover {
   z-index: 2;
   filter: brightness(0.88);
+}
+
+.site-root.is-status-view .status-page .status-calendar-day:disabled {
+  cursor: default;
+  filter: none;
 }
 
 .site-root.is-status-view .status-page .status-calendar-days.has-selection .status-calendar-day:not(.is-selected) {
@@ -4207,5 +4216,380 @@
   .site-root.is-status-view .status-page .status-history-row > div,
   .site-root.is-status-view .status-page .status-history-row .status-pill {
     grid-column: 2;
+  }
+}
+
+/* Phone composition pass: intentional density, clean wrapping, and touch-first rhythm. */
+@media (max-width: 620px) {
+  .home-hero-inner {
+    padding-top: 88px;
+    grid-template-rows: auto minmax(310px, 1fr);
+  }
+
+  .home-hero-copy > p:not(.home-hero-fineprint) {
+    margin-top: 18px;
+    line-height: 1.55;
+  }
+
+  .home-hero-actions {
+    margin-top: 24px;
+    gap: 8px;
+  }
+
+  .home-hero-fineprint { margin-top: 10px !important; }
+
+  .hero-trust-row {
+    width: 100%;
+    margin-top: 13px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .hero-trust-row > span,
+  .hero-trust-row > a {
+    min-height: 34px;
+    padding: 0 5px;
+    justify-content: center;
+    gap: 4px;
+    font-size: 9px;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .hero-trust-row svg { width: 13px; height: 13px; flex: 0 0 auto; }
+  .home-hero-art { min-height: 310px; }
+  .hero-signal-flow { height: 310px; }
+
+  .mobile-feature-list article {
+    padding-top: 64px;
+    padding-bottom: 68px;
+  }
+
+  .mobile-feature-list h2 { margin-top: 24px; }
+  .mobile-feature-list img { margin-top: 32px; }
+
+  .platforms-flat,
+  .faq-flat {
+    padding-top: 66px;
+    padding-bottom: 70px;
+  }
+
+  .platform-card-grid { margin-top: 32px; gap: 12px; }
+  .platform-control-map { padding-block: 8px; }
+
+  .platform-card {
+    min-height: 0;
+    padding: 20px;
+  }
+
+  .platform-card-controls { margin-top: 22px; }
+
+  .privacy-flat {
+    margin-block: 22px;
+    padding-top: 66px;
+    padding-bottom: 68px;
+  }
+
+  .privacy-flat-points { margin-top: 28px; }
+  .privacy-flat-points article,
+  .privacy-flat-points article:not(:first-child) { padding-block: 24px; }
+  .privacy-flat-links a { min-height: 72px; }
+  .privacy-illustration { min-height: 210px; }
+
+  .footprint-section { padding: 62px 22px 66px; }
+
+  .footprint-metrics {
+    margin-top: 38px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footprint-metrics article,
+  .footprint-metrics article:first-child {
+    min-height: 126px;
+    padding: 20px 14px;
+    border-right: 1px solid rgba(15, 15, 13, 0.17);
+    border-bottom: 1px solid rgba(15, 15, 13, 0.17);
+  }
+
+  .footprint-metrics article:nth-child(2n) { border-right: 0; }
+  .footprint-metrics article:nth-last-child(-n + 2) { border-bottom: 0; }
+  .footprint-metrics strong { font-size: clamp(2.15rem, 10.5vw, 2.85rem); }
+  .footprint-metrics small { font-size: 9px; line-height: 1.3; }
+
+  .install-rhythm {
+    padding-top: 56px;
+    padding-bottom: 62px;
+  }
+
+  .install-rhythm-path {
+    min-height: 450px;
+    margin-top: 30px;
+  }
+
+  .install-rhythm li { min-height: 96px; }
+
+  .evidence-section {
+    padding-top: 66px;
+    padding-bottom: 30px;
+  }
+
+  .evidence-card { padding: 40px 18px 30px; }
+  .evidence-proof { margin-top: 28px; }
+  .evidence-proof > span { min-height: 54px; }
+  .evidence-ghost { display: none; }
+
+  .home-final {
+    padding-top: 22px;
+    padding-bottom: 54px;
+  }
+
+  .home-final > div { padding: 40px 18px 30px; }
+  .home-final > div::after { display: none; }
+
+  .home-final-badges {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .home-final-badges > span {
+    width: auto;
+    min-width: 0;
+    min-height: 36px;
+    padding: 0 6px;
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .home-final h2 {
+    margin-top: 28px;
+    font-size: clamp(2.55rem, 10.8vw, 3rem);
+  }
+
+  .home-final > div > p { margin-top: 20px; font-size: 14px; }
+  .home-final-actions { margin-top: 26px; gap: 8px; }
+  .home-final-details { margin-top: 28px; }
+  .home-final-details > span { min-height: 54px; padding-inline: 12px; }
+
+  .site-footer { padding: 50px 20px 22px; }
+  .footer-lead { padding-bottom: 30px; }
+  .brand-lockup-footer { font-size: 38px; }
+  .footer-links > div,
+  .footer-links > div:first-child { padding: 22px 0; }
+  .footer-bottom { min-height: 62px; }
+
+  .site-root.is-status-view .status-page { padding: 94px 12px 58px; }
+
+  .site-root.is-status-view .status-page .status-utility-row {
+    gap: 8px;
+  }
+
+  .site-root.is-status-view .status-page .status-history-link,
+  .site-root.is-status-view .status-page .status-actions a {
+    min-height: 44px;
+  }
+
+  .site-root.is-status-view .status-page .status-notice-head {
+    min-height: 58px;
+    padding-inline: 18px;
+  }
+
+  .site-root.is-status-view .status-page .status-notice-body {
+    padding: 24px 18px 26px;
+  }
+
+  .site-root.is-status-view .status-page .status-notice h1 {
+    font-size: clamp(1.75rem, 8vw, 2.1rem);
+    line-height: 1.02;
+  }
+
+  .site-root.is-status-view .status-page .status-panel {
+    padding: 10px;
+    border-radius: 22px;
+  }
+
+  .site-root.is-status-view .status-page .status-timeline { padding: 15px; }
+
+  .site-root.is-status-view .status-page .status-timeline-legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px 14px;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-wrap {
+    margin-top: -8px;
+    padding-top: 8px;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-hint {
+    margin: -2px 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: rgba(15, 15, 13, 0.5);
+    font: 600 9px/1.4 var(--font-mono);
+    letter-spacing: 0.01em;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-months,
+  .site-root.is-status-view .status-page .status-calendar-body {
+    scroll-snap-align: start;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-months {
+    min-width: 1536px;
+    grid-template-columns: repeat(54, minmax(24px, 1fr));
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-body {
+    min-width: 1570px;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-weekdays,
+  .site-root.is-status-view .status-page .status-calendar-days {
+    height: 188px;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-days {
+    grid-template-columns: repeat(54, minmax(24px, 1fr));
+    grid-template-rows: repeat(7, minmax(24px, 1fr));
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-day {
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  .site-root.is-status-view .status-page .status-timeline-detail {
+    margin-top: 14px;
+    padding: 14px;
+  }
+
+  .site-root.is-status-view .status-page .status-platform-row {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .site-root.is-status-view .status-page .status-feature-list {
+    margin-top: 18px;
+    padding-top: 16px;
+  }
+
+  .site-root.is-status-view .status-page .status-history-group h3 {
+    padding: 24px 12px 10px;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row {
+    min-height: 0;
+    padding: 20px 8px;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row time {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row > div {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row .status-pill {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row p {
+    margin-top: 6px;
+    line-height: 1.55;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-trust-row > span,
+  .hero-trust-row > a,
+  .home-final-badges > span {
+    font-size: 8.5px;
+  }
+
+  .home-final-badges > span { padding-inline: 4px; }
+  .site-root.is-status-view .status-page .status-history-row {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+  .site-root.is-status-view .status-page .status-history-row .status-pill {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+  .site-root.is-status-view .status-page .status-history-row > div {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+
+/* Center the hero as a complete composition on touch-sized layouts. */
+@media (min-width: 621px) and (max-width: 860px) {
+  .home-hero-inner {
+    padding: 92px 0 28px;
+    grid-template-rows: auto 420px;
+    align-content: center;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1080px) and (min-height: 900px) {
+  .home-hero-inner {
+    padding: 100px 0 28px;
+    grid-template-rows: auto 460px;
+    align-content: center;
+    gap: 8px;
+  }
+
+  .home-hero-copy {
+    padding-top: 0;
+    transform: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .home-hero-inner {
+    padding-top: clamp(112px, 14svh, 132px);
+    grid-template-rows: auto 310px;
+    align-content: start;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 361px) and (max-width: 640px) {
+  .site-root.is-status-view .status-page .status-history-row {
+    min-height: 0;
+    padding: 20px 8px;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row time {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row > div {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .site-root.is-status-view .status-page .status-history-row .status-pill {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
   }
 }
