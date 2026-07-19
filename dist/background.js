@@ -36,6 +36,7 @@
   }
 
   // src/background.js
+  var LEGACY_RUNTIME_CONFIG_STORAGE_KEY = "ghostifyConfig";
   var DYNAMIC_RULE_IDS = {
     instagramStorySeen: 1001,
     instagramBanzai: 1002,
@@ -80,7 +81,10 @@
     createBlockRule(DYNAMIC_RULE_IDS.messengerTypingMercury, "||messenger.com/ajax/mercury/typ.php")
   ];
   syncDynamicPrivacyRulesFromStorage();
-  chrome.runtime.onInstalled.addListener(syncDynamicPrivacyRulesFromStorage);
+  chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.local.remove(LEGACY_RUNTIME_CONFIG_STORAGE_KEY);
+    syncDynamicPrivacyRulesFromStorage();
+  });
   chrome.runtime.onStartup.addListener(syncDynamicPrivacyRulesFromStorage);
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes[GHOSTIFY_SETTINGS_STORAGE_KEY]) return;

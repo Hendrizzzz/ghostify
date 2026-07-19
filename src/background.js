@@ -1,5 +1,7 @@
 import { GHOSTIFY_SETTINGS_STORAGE_KEY, normalizePrivacySettings } from './settings/storage.js';
 
+const LEGACY_RUNTIME_CONFIG_STORAGE_KEY = 'ghostifyConfig';
+
 const DYNAMIC_RULE_IDS = {
     instagramStorySeen: 1001,
     instagramBanzai: 1002,
@@ -49,7 +51,10 @@ const MESSENGER_TYPING_RULES = [
 
 syncDynamicPrivacyRulesFromStorage();
 
-chrome.runtime.onInstalled.addListener(syncDynamicPrivacyRulesFromStorage);
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.local.remove(LEGACY_RUNTIME_CONFIG_STORAGE_KEY);
+    syncDynamicPrivacyRulesFromStorage();
+});
 chrome.runtime.onStartup.addListener(syncDynamicPrivacyRulesFromStorage);
 
 chrome.storage.onChanged.addListener((changes, areaName) => {

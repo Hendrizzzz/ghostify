@@ -174,4 +174,50 @@ for (const message of pageSettingsMessages) {
     assert.strictEqual(Object.prototype.hasOwnProperty.call(message.settings, 'hiddenObject'), false);
 }
 
+const installedListeners = [];
+const removedStorageKeys = [];
+const backgroundContext = {
+    console,
+    Promise,
+    chrome: {
+        runtime: {
+            onInstalled: {
+                addListener(listener) {
+                    installedListeners.push(listener);
+                }
+            },
+            onStartup: { addListener() { } },
+            onMessage: { addListener() { } }
+        },
+        storage: {
+            local: {
+                get(keys, callback) {
+                    callback({});
+                },
+                remove(key) {
+                    removedStorageKeys.push(key);
+                }
+            },
+            onChanged: { addListener() { } }
+        },
+        declarativeNetRequest: {
+            updateDynamicRules() {
+                return Promise.resolve();
+            }
+        }
+    }
+};
+
+vm.runInNewContext(fs.readFileSync('dist/background.js', 'utf8'), backgroundContext, {
+    filename: 'dist/background.js'
+});
+
+assert.strictEqual(installedListeners.length, 1, 'background should register its install migration');
+installedListeners[0]();
+assert.deepStrictEqual(
+    removedStorageKeys,
+    ['ghostifyConfig'],
+    'extension updates should remove the obsolete runtime configuration cache'
+);
+
 console.log('settings defaults and page bridge tests passed');
