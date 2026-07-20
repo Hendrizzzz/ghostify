@@ -16,11 +16,23 @@ grouped by version, with the most recent changes first.
 - Added an explicit Chrome Web Store artifact confirmation to the maintainer's
   live-verification checklist so an unpacked development build cannot be
   mistaken for the published package.
+- Added Firefox desktop package preparation, validation, linting, deterministic
+  extension and reviewer-source archives, and AMO submission documentation.
+- Added maintainer ownership, private vulnerability reporting, and threat-model
+  documentation for the project's security and release boundaries.
 
 ### Changed
 
 - Advanced the repository package identity to `2.0.6` so changes made after
   the published `2.0.5` tag cannot produce a second, different `2.0.5` ZIP.
+- Replaced the legacy persisted configuration path with packaged,
+  version-checked configuration and restricted page-bridge inputs to known
+  settings and runtime pattern keys.
+- Strengthened release checks with deterministic cross-platform ZIP output,
+  exact approved-artifact hash matching, pinned Firefox tooling, dependency
+  audits, and deploy-time website security headers.
+- Reworked the website's privacy and verification evidence to link directly to
+  public project records.
 
 ### Fixed
 
@@ -31,6 +43,7 @@ grouped by version, with the most recent changes first.
   release, and product-update history no longer overrides popup verification.
 - Removed the redundant Chrome Web Store link and version-mismatch warning from
   the status summary card; the header remains the single installation action.
+- Prevented duplicate public-status history entries during repeated proposals.
 
 ## [2.0.5] - 2026-07-17
 

@@ -1,7 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 
-const { extractReleaseNotes } = require('../scripts/extract-release-notes');
+const { assertDatedReleaseHeading, extractReleaseNotes } = require('../scripts/extract-release-notes');
 
 const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
 const pkg = require('../package.json');
@@ -19,6 +19,18 @@ assert.throws(
     /has no notes/
 );
 assert.throws(() => extractReleaseNotes(changelog, 'release-2.0.4'), /must use X.Y.Z format/);
+assert.strictEqual(
+    assertDatedReleaseHeading('## [1.2.3] - 2026-07-20\n\n- Release notes.', '1.2.3'),
+    '2026-07-20'
+);
+assert.throws(
+    () => assertDatedReleaseHeading('## [1.2.3] - Unreleased\n\n- Release notes.', '1.2.3'),
+    /must have a dated YYYY-MM-DD heading/
+);
+assert.throws(
+    () => assertDatedReleaseHeading('## [1.2.3] - 2026-02-30\n\n- Release notes.', '1.2.3'),
+    /invalid publication date/
+);
 
 assert(
     publishWorkflow.includes('chrome_web_store_sha256') &&
