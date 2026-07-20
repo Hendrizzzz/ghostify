@@ -9,10 +9,35 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
-## [Unreleased]
+## [2.0.6] - Unreleased
+
+### Added
+
+- Added an explicit Chrome Web Store artifact confirmation to the maintainer's
+  live-verification checklist so an unpacked development build cannot be
+  mistaken for the published package.
+- Added Firefox desktop package preparation, validation, linting, deterministic
+  extension and reviewer-source archives, and AMO submission documentation.
+- Added maintainer ownership, private vulnerability reporting, and threat-model
+  documentation for the project's security and release boundaries.
+
+### Changed
+
+- Advanced the repository package identity to `2.0.6` so changes made after
+  the published `2.0.5` tag cannot produce a second, different `2.0.5` ZIP.
+- Replaced the legacy persisted configuration path with packaged,
+  version-checked configuration and restricted page-bridge inputs to known
+  settings and runtime pattern keys.
+- Strengthened release checks with deterministic cross-platform ZIP output,
+  exact approved-artifact hash matching, pinned Firefox tooling, dependency
+  audits, and deploy-time website security headers.
+- Reworked the website's privacy and verification evidence to link directly to
+  public project records.
 
 ### Fixed
 
+- Replaced production-shaped conversation labels and identifiers in Messenger
+  regression fixtures with clearly synthetic values.
 - Separated the published verification target from the repository version so
   reviewed status updates can remain accurate without requiring an extension
   release, and product-update history no longer overrides popup verification.
@@ -40,6 +65,7 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
+- Prevented duplicate public-status history entries during repeated proposals.
 - Removed unnecessary platform-link hover motion and corrected the Facebook
   icon's optical size.
 - Prevented long popup tooltips from overflowing or leaving one-sided empty

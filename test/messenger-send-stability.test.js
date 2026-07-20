@@ -324,11 +324,11 @@ const messengerReadReceipt = JSON.stringify({
     }]
 });
 
-const facebookWorkerEdgeChatReadWatermarkFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466158453245587268,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"21\\",\\"payload\\":\\"{\\\\\\"thread_id\\\\\\":9554524854659116,\\\\\\"last_read_watermark_ts\\\\\\":1780070888819,\\\\\\"sync_group\\\\\\":104}\\",\\"queue_name\\":\\"9554524854659116\\",\\"task_id\\":409}],\\"version_id\\":\\"27029912679952307\\"}","request_id":167,"type":3}`, 'utf8'));
+const facebookWorkerEdgeChatReadWatermarkFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466158453245587268,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"21\\",\\"payload\\":\\"{\\\\\\"thread_id\\\\\\":9000000000000001,\\\\\\"last_read_watermark_ts\\\\\\":1780070888819,\\\\\\"sync_group\\\\\\":104}\\",\\"queue_name\\":\\"9000000000000001\\",\\"task_id\\":409}],\\"version_id\\":\\"27029912679952307\\"}","request_id":167,"type":3}`, 'utf8'));
 
-const facebookWorkerEdgeChatLastSeenFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"label\\":\\"6\\",\\"payload\\":\\"{\\\\\\"parent_thread_key\\\\\\":1369182074351833,\\\\\\"last_seen_time_ms\\\\\\":1780070890716}\\",\\"version\\":\\"27029912679952307\\"}","request_id":179,"type":4}`, 'utf8'));
+const facebookWorkerEdgeChatLastSeenFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"label\\":\\"6\\",\\"payload\\":\\"{\\\\\\"parent_thread_key\\\\\\":1000000000000002,\\\\\\"last_seen_time_ms\\\\\\":1780070890716}\\",\\"version\\":\\"27029912679952307\\"}","request_id":179,"type":4}`, 'utf8'));
 
-const facebookWorkerEdgeChatDeliveryFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"label\\":\\"delivery\\",\\"payload\\":\\"{\\\\\\"thread_id\\\\\\":9554524854659116,\\\\\\"delivery_receipt\\\\\\":true}\\",\\"version\\":\\"27029912679952307\\"}","request_id":180,"type":4}`, 'utf8'));
+const facebookWorkerEdgeChatDeliveryFrame = new Uint8Array(Buffer.from(`{}\r\u0000{"app_id":"2220391788200892","payload":"{\\"label\\":\\"delivery\\",\\"payload\\":\\"{\\\\\\"thread_id\\\\\\":9000000000000001,\\\\\\"delivery_receipt\\\\\\":true}\\",\\"version\\":\\"27029912679952307\\"}","request_id":180,"type":4}`, 'utf8'));
 
 const facebookEdgeChatMixedOpaqueSendTypingFrame = new Uint8Array(Buffer.from(`{}\r\u0000${JSON.stringify({
     app_id: '2220391788200892',
@@ -338,23 +338,23 @@ const facebookEdgeChatMixedOpaqueSendTypingFrame = new Uint8Array(Buffer.from(`{
             failure_count: null,
             label: '46',
             payload: JSON.stringify({
-                thread_id: 9554524854659116,
+                thread_id: 9000000000000001,
                 offline_threading_id: 'redacted-offline-id',
                 send_type: 1,
                 message: { text: 'markThreadAsRead readReceipt' },
                 sync_group: 104
             }),
-            queue_name: '9554524854659116',
+            queue_name: '9000000000000001',
             task_id: 410
         }, {
             failure_count: null,
             label: 'sendChatStateFromComposer',
             payload: JSON.stringify({
-                thread_id: 9554524854659116,
+                thread_id: 9000000000000001,
                 chatstate: 'typing_indicator',
                 send_type: 'typing'
             }),
-            queue_name: '9554524854659116',
+            queue_name: '9000000000000001',
             task_id: 411
         }],
         version_id: '27029912679952307'
@@ -398,11 +398,11 @@ const facebookEdgeChatQuickReactionSendTypingFrame = new Uint8Array(Buffer.from(
     type: 3
 })}`, 'utf8'));
 
-const facebookFeedThreadOpenFullFetchFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466175527281646890,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"209\\",\\"payload\\":\\"{\\\\\\"thread_fbid\\\\\\":1594581527264656,\\\\\\"force_upsert\\\\\\":0,\\\\\\"use_open_messenger_transport\\\\\\":0,\\\\\\"sync_group\\\\\\":95,\\\\\\"metadata_only\\\\\\":0,\\\\\\"preview_only\\\\\\":0}\\",\\"queue_name\\":\\"1594581527264656\\",\\"task_id\\":238}],\\"version_id\\":\\"27029912679952307\\"}","request_id":107,"type":3}`, 'utf8'));
+const facebookFeedThreadOpenFullFetchFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466175527281646890,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"209\\",\\"payload\\":\\"{\\\\\\"thread_fbid\\\\\\":1000000000000003,\\\\\\"force_upsert\\\\\\":0,\\\\\\"use_open_messenger_transport\\\\\\":0,\\\\\\"sync_group\\\\\\":95,\\\\\\"metadata_only\\\\\\":0,\\\\\\"preview_only\\\\\\":0}\\",\\"queue_name\\":\\"1000000000000003\\",\\"task_id\\":238}],\\"version_id\\":\\"27029912679952307\\"}","request_id":107,"type":3}`, 'utf8'));
 
-const facebookFeedArmadilloOpenThreadFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466178972558867308,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"436\\",\\"payload\\":\\"{\\\\\\"open_message_thread_key\\\\\\":61557782315684,\\\\\\"armadillo_thread_key\\\\\\":61557782315684,\\\\\\"trace_id\\\\\\":\\\\\\"41AA1952E6DBA5E1\\\\\\",\\\\\\"should_copy_messages\\\\\\":0}\\",\\"queue_name\\":\\"61557782315684_61557782315684\\",\\"task_id\\":391}],\\"version_id\\":\\"27029912679952307\\"}","request_id":145,"type":3}`, 'utf8'));
+const facebookFeedArmadilloOpenThreadFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466178972558867308,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"436\\",\\"payload\\":\\"{\\\\\\"open_message_thread_key\\\\\\":10000000000004,\\\\\\"armadillo_thread_key\\\\\\":10000000000004,\\\\\\"trace_id\\\\\\":\\\\\\"0000000000000001\\\\\\",\\\\\\"should_copy_messages\\\\\\":0}\\",\\"queue_name\\":\\"10000000000004_10000000000004\\",\\"task_id\\":391}],\\"version_id\\":\\"27029912679952307\\"}","request_id":145,"type":3}`, 'utf8'));
 
-const facebookFeedThreadOpenWithReadMetadataFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466175527281646891,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"209\\",\\"payload\\":\\"{\\\\\\"thread_fbid\\\\\\":1594581527264656,\\\\\\"last_read_watermark\\\\\\":1780070888819,\\\\\\"force_upsert\\\\\\":0,\\\\\\"metadata_only\\\\\\":0,\\\\\\"preview_only\\\\\\":0}\\",\\"queue_name\\":\\"1594581527264656\\",\\"task_id\\":239}],\\"version_id\\":\\"27029912679952307\\"}","request_id":108,"type":3}`, 'utf8'));
+const facebookFeedThreadOpenWithReadMetadataFrame = new Uint8Array(Buffer.from(`\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000{"app_id":"2220391788200892","payload":"{\\"epoch_id\\":7466175527281646891,\\"tasks\\":[{\\"failure_count\\":null,\\"label\\":\\"209\\",\\"payload\\":\\"{\\\\\\"thread_fbid\\\\\\":1000000000000003,\\\\\\"last_read_watermark\\\\\\":1780070888819,\\\\\\"force_upsert\\\\\\":0,\\\\\\"metadata_only\\\\\\":0,\\\\\\"preview_only\\\\\\":0}\\",\\"queue_name\\":\\"1000000000000003\\",\\"task_id\\":239}],\\"version_id\\":\\"27029912679952307\\"}","request_id":108,"type":3}`, 'utf8'));
 
 const facebookFramePrefix = '\u000fg\u0000\u0002\u0000\u0000{}\rg\u0000\u0000';
 const facebookFramedRestoredGroupInnerPayload = JSON.stringify({
@@ -7430,7 +7430,7 @@ function testFacebookUnreadFeedMessageClicksKeepDocumentVisibleForThreadLoading(
     window.document.dispatchEvent({
         type: 'pointerdown',
         target: createRequestClickTarget({
-            label: 'Jayy Zz Unread message: testing 17 · 1m'
+            label: 'Synthetic Contact Unread message: fixture 17 · 1m'
         })
     });
 
@@ -7468,8 +7468,8 @@ function testFacebookUnreadFeedMessageChildClicksKeepDocumentVisibleForThreadLoa
     window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ = Date.now() - 1;
     const row = {
         parentElement: null,
-        innerText: 'Jayy Zz Unread message: testing 18 · 1m',
-        textContent: 'Jayy Zz Unread message: testing 18 · 1m',
+        innerText: 'Synthetic Contact Unread message: fixture 18 · 1m',
+        textContent: 'Synthetic Contact Unread message: fixture 18 · 1m',
         getAttribute() { return ''; },
         closest() { return this; }
     };
@@ -7962,7 +7962,7 @@ function testFacebookNestedMessageRequestClicksTemporarilyRestoreNativeFocus() {
     facebookWindow.document.dispatchEvent({
         type: 'click',
         target: createNestedRequestClickTarget({
-            parentLabel: 'New message requests From Princess Hannah Bermudez and others',
+            parentLabel: 'New message requests From Synthetic Contact and others',
             childLabel: ''
         })
     });
@@ -7997,8 +7997,8 @@ function testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestTe
     facebookWindow.document.dispatchEvent({
         type: 'click',
         target: createNestedConversationClickTargetWithRequestSibling({
-            rowLabel: 'Jayy Zz You: thumbs up 2d',
-            containerLabel: 'New message requests From Princess Hannah Bermudez Jayy Zz You: thumbs up 2d'
+            rowLabel: 'Synthetic Contact You: thumbs up 2d',
+            containerLabel: 'New message requests From Synthetic Contact Synthetic Contact You: thumbs up 2d'
         })
     });
 

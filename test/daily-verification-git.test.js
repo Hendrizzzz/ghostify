@@ -4,6 +4,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+const workflow = fs.readFileSync('.github/workflows/daily-verification.yml', 'utf8');
+assert(
+    workflow.includes('I tested the extension installed from the Chrome Web Store, not an unpacked development build.'),
+    'daily verification PRs must identify the tested Store-installed artifact'
+);
+
 function git(cwd, args, options = {}) {
     return childProcess.spawnSync('git', args, {
         cwd,

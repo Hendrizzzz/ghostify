@@ -1,11 +1,11 @@
 {
   "name": "ghostify",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "private": true,
   "description": "Privacy controls for Instagram, Facebook, and Messenger.",
   "scripts": {
     "build": "node build.js",
-    "test": "npm run build && npm run test:modules && node test/messenger-send-stability.test.js && npm run test:status && npm run test:release-notes && npm run test:validator && npm run test:package",
+    "test": "npm run build && npm run test:modules && node test/messenger-send-stability.test.js && npm run test:status && npm run test:release-notes && npm run test:tag-integrity && npm run test:validator && npm run test:package",
     "test:modules": "npm run test:modules:shared && node test/firefox-popup.test.js",
     "test:modules:shared": "node test/settings-defaults.test.js && node test/runtime-config.test.js && node test/module-registry.test.js && node test/module-flags.test.js",
     "test:popup:chromium": "node test/firefox-popup.test.js chromium",
@@ -13,6 +13,7 @@
     "test:validator": "node test/validate-extension-package.test.js",
     "test:status": "node test/prepare-status-update.test.js && node test/daily-verification-git.test.js",
     "test:release-notes": "node test/extract-release-notes.test.js",
+    "test:tag-integrity": "node test/version-tag-integrity.test.js",
     "test:package": "npm run test:package:chromium && npm run test:package:firefox",
     "test:package:chromium": "node test/package-extension.test.js",
     "test:package:firefox": "node test/package-firefox.test.js",
@@ -22,12 +23,13 @@
     "package:firefox": "node scripts/package-firefox.js",
     "validate:extension": "node scripts/validate-extension-package.js",
     "validate:firefox": "node scripts/validate-firefox-extension.js",
+    "validate:tag-integrity": "node scripts/validate-version-tag-integrity.js",
     "lint:firefox": "npm run prepare:firefox && web-ext lint --source-dir tmp/firefox-extension --warnings-as-errors",
     "verify:dist": "git diff --exit-code -- dist/background.js dist/js/content.js dist/js/ghost.js dist/js/messenger_patch.js",
     "audit:high": "npm audit --audit-level=high",
-    "ci:chromium": "npm run build && npm run test:modules:shared && npm run test:popup:chromium && node test/messenger-send-stability.test.js && npm run test:status && npm run test:release-notes && npm run test:validator && npm run test:package:chromium && npm run validate:extension && npm run verify:dist && npm run audit:high",
+    "ci:chromium": "npm run build && npm run test:modules:shared && npm run test:popup:chromium && node test/messenger-send-stability.test.js && npm run test:status && npm run test:release-notes && npm run test:tag-integrity && npm run test:validator && npm run test:package:chromium && npm run validate:extension && npm run validate:tag-integrity && npm run verify:dist && npm run audit:high",
     "ci:firefox": "npm run build && npm run test:modules:shared && npm run test:popup:firefox && node test/messenger-send-stability.test.js && npm run test:package:firefox && npm run validate:firefox && npm run lint:firefox && npm run verify:dist && npm run audit:high",
-    "ci": "npm test && npm run validate:extension && npm run validate:firefox && npm run lint:firefox && npm run verify:dist && npm run audit:high"
+    "ci": "npm test && npm run validate:extension && npm run validate:firefox && npm run validate:tag-integrity && npm run lint:firefox && npm run verify:dist && npm run audit:high"
   },
   "repository": {
     "type": "git",

@@ -192,6 +192,8 @@ jobs:
 
           Merge only after manually verifying the supported controls. Until this PR is merged, the website and popup keep showing the latest previously merged status.
 
+          - [ ] I tested the extension installed from the Chrome Web Store, not an unpacked development build.
+
           - [ ] GH-IG-SEEN-001
           - [ ] GH-IG-TYPING-001
           - [ ] GH-IG-STORY-001
