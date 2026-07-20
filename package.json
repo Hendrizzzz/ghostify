@@ -1,6 +1,6 @@
 {
   "name": "ghostify",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "private": true,
   "description": "Privacy controls for Instagram, Facebook, and Messenger.",
   "scripts": {

@@ -98,7 +98,9 @@ publicly available store install.
 
 Use the Chrome Web Store badge above for the current published version. GitHub
 [Releases](https://github.com/Hendrizzzz/Ghostify/releases) contain source
-release notes when a matching GitHub release has been published.
+release notes when a matching GitHub release has been published. The repository
+may be prepared at the next version while Store review or release work is still
+pending; `site/src/app/statusData.json` records those identities separately.
 
 ## How It Works
 

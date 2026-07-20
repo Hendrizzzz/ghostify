@@ -4,7 +4,7 @@ const { loadSrcModule } = require('./helpers/load-src-module');
 const { normalizePackagedConfig } = loadSrcModule('src/runtime-config.js');
 
 const fallbackConfig = {
-    version: '2.0.5',
+    version: '9.9.9',
     patterns: {
         igSeen: ['mark_seen'],
         msgSeen: ['mark_read']
@@ -13,16 +13,16 @@ const fallbackConfig = {
 
 assert.strictEqual(normalizePackagedConfig(null, fallbackConfig), null);
 assert.strictEqual(normalizePackagedConfig([], fallbackConfig), null);
-assert.strictEqual(normalizePackagedConfig({ version: '2.0.4', patterns: {} }, fallbackConfig), null);
-assert.strictEqual(normalizePackagedConfig({ version: '2.0.5' }, fallbackConfig), null);
+assert.strictEqual(normalizePackagedConfig({ version: '9.9.8', patterns: {} }, fallbackConfig), null);
+assert.strictEqual(normalizePackagedConfig({ version: '9.9.9' }, fallbackConfig), null);
 assert.strictEqual(
-    normalizePackagedConfig({ version: '2.0.5', patterns: { igSeen: [] } }, fallbackConfig),
+    normalizePackagedConfig({ version: '9.9.9', patterns: { igSeen: [] } }, fallbackConfig),
     null,
     'every known pattern key must be present as an array'
 );
 
 const normalized = normalizePackagedConfig({
-    version: '2.0.5',
+    version: '9.9.9',
     killSwitch: ['msgSeen', 'unknown', 'msgSeen', 42],
     patterns: {
         igSeen: [' mark_seen ', '', 42, 'a'.repeat(97), 'unsafe(pattern)'],

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version from package.json (for example, 2.0.5)
+        description: Release version from package.json (for example, 2.0.6)
         required: true
         type: string
       chrome_web_store_approved:
