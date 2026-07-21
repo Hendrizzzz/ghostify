@@ -4,6 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "audit:high": "npm audit --audit-level=high",
+    "audit:runtime": "npm audit --omit=dev --audit-level=high",
     "build": "vite build",
     "dev": "vite"
   },

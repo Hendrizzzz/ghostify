@@ -23,6 +23,9 @@ grouped by version, with the most recent changes first.
 
 ### Changed
 
+- Split daily status validation from proposal publishing so third-party build
+  dependencies run with read-only repository access, and bot-created proposals
+  explicitly receive required CI for their exact commit.
 - Advanced the repository package identity to `2.0.6` so changes made after
   the published `2.0.5` tag cannot produce a second, different `2.0.5` ZIP.
 - Replaced the legacy persisted configuration path with packaged,
@@ -37,9 +40,9 @@ grouped by version, with the most recent changes first.
 ### Fixed
 
 - Updated the Firefox development toolchain to the patched `shell-quote`
-  release and kept future development-only advisories visible without blocking
-  daily live-verification proposals; complete dependency audits remain required
-  by normal pull-request CI.
+  release. Complete dependency reviews remain visible on daily proposals,
+  website runtime advisories block proposal creation, and required pull-request
+  CI keeps all high-severity dependency findings merge-blocking.
 - Replaced production-shaped conversation labels and identifiers in Messenger
   regression fixtures with clearly synthetic values.
 - Separated the published verification target from the repository version so

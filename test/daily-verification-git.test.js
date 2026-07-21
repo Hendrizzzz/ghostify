@@ -4,30 +4,65 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const workflow = fs.readFileSync('.github/workflows/daily-verification.yml', 'utf8');
+const workflow = fs.readFileSync('.github/workflows/daily-verification.yml', 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const sitePackageJson = JSON.parse(fs.readFileSync('site/package.json', 'utf8'));
+const validateJobStart = workflow.indexOf('  validate-proposal:');
+const publishJobStart = workflow.indexOf('  publish-proposal:');
+assert(validateJobStart >= 0 && publishJobStart > validateJobStart, 'daily workflow must separate validation and publishing jobs');
+const validateJob = workflow.slice(validateJobStart, publishJobStart);
+const publishJob = workflow.slice(publishJobStart);
+
 assert(
     workflow.includes('I tested the extension installed from the Chrome Web Store, not an unpacked development build.'),
     'daily verification PRs must identify the tested Store-installed artifact'
 );
 assert(
-    workflow.includes('run: npm run ci:verification'),
-    'daily verification must use the release-runtime audit boundary'
+    validateJob.includes('permissions:\n      contents: read') &&
+        validateJob.includes('run: npm run ci:verification') &&
+        !validateJob.includes('contents: write') &&
+        !validateJob.includes('pull-requests: write'),
+    'dependency execution and validation must use read-only repository permissions'
 );
 assert(
-    workflow.includes('id: tooling-audit') &&
-        workflow.includes('continue-on-error: true') &&
-        workflow.includes("steps.tooling-audit.outcome == 'failure'"),
-    'daily verification must report development-tool advisories without blocking live-status proposals'
+    validateJob.includes('id: extension-dependency-review') &&
+        validateJob.includes('id: site-dependency-review') &&
+        validateJob.includes('continue-on-error: true') &&
+        validateJob.includes('A complete dependency audit did not pass.'),
+    'complete dependency audit failures must stay visible while required CI remains the merge gate'
 );
 assert(
     packageJson.scripts['audit:runtime'].includes('--omit=dev') &&
         packageJson.scripts['ci:verification'].includes('audit:runtime'),
-    'daily verification CI must keep runtime advisories blocking'
+    'daily verification CI must keep extension runtime advisories blocking'
+);
+assert(
+    sitePackageJson.scripts['audit:runtime'].includes('--omit=dev') &&
+        validateJob.includes('working-directory: site') &&
+        validateJob.includes('run: npm run audit:runtime'),
+    'daily verification must keep website runtime advisories blocking'
 );
 assert(
     packageJson.scripts.ci.includes('audit:high'),
     'normal CI must keep the complete dependency audit blocking'
+);
+assert(
+    publishJob.includes('actions: write') &&
+        publishJob.includes('contents: write') &&
+        publishJob.includes('pull-requests: write') &&
+        !publishJob.includes('run: npm ci'),
+    'the write-enabled publishing job must not install package dependencies'
+);
+assert(
+        publishJob.includes('echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"') &&
+        publishJob.includes('gh workflow run ci.yml --ref "$BRANCH"') &&
+        publishJob.includes('select(.headSha == \\"$HEAD_SHA\\")'),
+    'bot-created proposals must dispatch required CI and verify the exact proposal commit'
+);
+assert.deepStrictEqual(
+    packageJson.overrides['fx-runner@1.5.0'],
+    { 'shell-quote': '1.9.0' },
+    'the shell-quote remediation must stay scoped to the affected fx-runner path'
 );
 
 function git(cwd, args, options = {}) {

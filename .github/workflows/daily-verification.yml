@@ -29,17 +29,25 @@ on:
         type: string
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: public-status-pr
   cancel-in-progress: false
 
 jobs:
-  propose-status:
-    name: Propose public status update
+  validate-proposal:
+    name: Validate public status proposal
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      ready: ${{ steps.eligible.outputs.ready }}
+      today: ${{ steps.proposal.outputs.today }}
+      generated_at: ${{ steps.proposal.outputs.generated_at }}
+      base_sha: ${{ steps.proposal.outputs.base_sha }}
+      branch: ${{ steps.proposal.outputs.branch }}
+      title: ${{ steps.proposal.outputs.title }}
     env:
       MODE: ${{ github.event.inputs.mode || 'verified' }}
       FEATURES: ${{ github.event.inputs.features || '' }}
@@ -106,17 +114,6 @@ jobs:
           }
           NODE
 
-      - name: Close stale daily PR while live status is yellow
-        if: github.event_name == 'schedule' && steps.eligible.outputs.ready != 'true'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          pr_number="$(gh pr list --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
-          if [[ -n "$pr_number" ]]; then
-            gh pr close "$pr_number" --comment "Closed automatically because a green daily proposal is no longer eligible. Scheduled automation cannot overwrite yellow status or verify a build that differs from the published Store version."
-          fi
-
       - name: Prepare canonical status JSON
         if: steps.eligible.outputs.ready == 'true'
         shell: bash
@@ -140,18 +137,11 @@ jobs:
         if: steps.eligible.outputs.ready == 'true'
         run: npm run ci:verification
 
-      - name: Report development-tool advisories
-        id: tooling-audit
+      - name: Review complete extension dependency graph
+        id: extension-dependency-review
         if: steps.eligible.outputs.ready == 'true'
         continue-on-error: true
         run: npm run audit:high
-
-      - name: Record development-tool advisory warning
-        if: steps.tooling-audit.outcome == 'failure'
-        shell: bash
-        run: |
-          echo "::warning::A development-tool advisory needs maintainer review, but it does not block the daily live-verification proposal."
-          echo "Development-tool audit reported an advisory. Normal pull-request CI remains blocking until it is resolved." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install site dependencies
         if: steps.eligible.outputs.ready == 'true'
@@ -163,13 +153,92 @@ jobs:
         run: npm run build
         working-directory: site
 
-      - name: Push or refresh proposal branch
+      - name: Audit website runtime dependencies
         if: steps.eligible.outputs.ready == 'true'
+        run: npm run audit:runtime
+        working-directory: site
+
+      - name: Review complete website dependency graph
+        id: site-dependency-review
+        if: steps.eligible.outputs.ready == 'true'
+        continue-on-error: true
+        run: npm run audit:high
+        working-directory: site
+
+      - name: Record complete dependency review warning
+        if: >-
+          steps.extension-dependency-review.outcome == 'failure' ||
+          steps.site-dependency-review.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning::The complete dependency review needs maintainer attention."
+          echo "A complete dependency audit did not pass. The proposal may still be opened, but required CI will keep it blocked until every high-severity finding or operational audit failure is resolved." >> "$GITHUB_STEP_SUMMARY"
+
+  publish-proposal:
+    name: Publish maintainer approval proposal
+    needs: validate-proposal
+    if: needs.validate-proposal.result == 'success'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    env:
+      MODE: ${{ github.event.inputs.mode || 'verified' }}
+      FEATURES: ${{ github.event.inputs.features || '' }}
+      ISSUE_URL: ${{ github.event.inputs.issue_url || '' }}
+      NOTE: ${{ github.event.inputs.note || '' }}
+      DAILY_BRANCH: chore/status-daily-verification
+
+    steps:
+      - name: Close stale daily PR while live status is yellow
+        if: github.event_name == 'schedule' && needs.validate-proposal.outputs.ready != 'true'
         shell: bash
         env:
-          BRANCH: ${{ steps.proposal.outputs.branch }}
-          TITLE: ${{ steps.proposal.outputs.title }}
-          BASE_SHA: ${{ steps.proposal.outputs.base_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr_number="$(gh pr list --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr_number" ]]; then
+            gh pr close "$pr_number" --comment "Closed automatically because a green daily proposal is no longer eligible. Scheduled automation cannot overwrite yellow status or verify a build that differs from the published Store version."
+          fi
+
+      - name: Check out main for publishing
+        if: needs.validate-proposal.outputs.ready == 'true'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js for canonical status generation
+        if: needs.validate-proposal.outputs.ready == 'true'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.x
+
+      - name: Prepare validated canonical status JSON
+        if: needs.validate-proposal.outputs.ready == 'true'
+        shell: bash
+        env:
+          TODAY: ${{ needs.validate-proposal.outputs.today }}
+          GENERATED_AT: ${{ needs.validate-proposal.outputs.generated_at }}
+        run: |
+          args=(--mode "$MODE" --date "$TODAY" --generated-at "$GENERATED_AT")
+          if [[ "$MODE" != "verified" ]]; then
+            args+=(--features "$FEATURES")
+            [[ -n "$ISSUE_URL" ]] && args+=(--issue-url "$ISSUE_URL")
+            [[ -n "$NOTE" ]] && args+=(--note "$NOTE")
+          fi
+          node scripts/prepare-status-update.js "${args[@]}"
+
+      - name: Push or refresh proposal branch
+        id: publish-branch
+        if: needs.validate-proposal.outputs.ready == 'true'
+        shell: bash
+        env:
+          BRANCH: ${{ needs.validate-proposal.outputs.branch }}
+          TITLE: ${{ needs.validate-proposal.outputs.title }}
+          BASE_SHA: ${{ needs.validate-proposal.outputs.base_sha }}
           GH_TOKEN: ${{ github.token }}
         run: |
           gh auth setup-git
@@ -189,14 +258,15 @@ jobs:
           else
             git push --set-upstream origin "$BRANCH"
           fi
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Open or refresh maintainer approval PR
-        if: steps.eligible.outputs.ready == 'true'
+        if: needs.validate-proposal.outputs.ready == 'true'
         shell: bash
         env:
-          BRANCH: ${{ steps.proposal.outputs.branch }}
-          TITLE: ${{ steps.proposal.outputs.title }}
-          TODAY: ${{ steps.proposal.outputs.today }}
+          BRANCH: ${{ needs.validate-proposal.outputs.branch }}
+          TITLE: ${{ needs.validate-proposal.outputs.title }}
+          TODAY: ${{ needs.validate-proposal.outputs.today }}
           GH_TOKEN: ${{ github.token }}
         run: |
           if [[ "$MODE" == "verified" ]]; then
@@ -241,3 +311,23 @@ jobs:
           else
             gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
           fi
+
+      - name: Dispatch required CI for the proposal commit
+        if: needs.validate-proposal.outputs.ready == 'true'
+        shell: bash
+        env:
+          BRANCH: ${{ needs.validate-proposal.outputs.branch }}
+          HEAD_SHA: ${{ steps.publish-branch.outputs.head_sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run ci.yml --ref "$BRANCH"
+          for _ in {1..10}; do
+            run_url="$(gh run list --workflow ci.yml --branch "$BRANCH" --event workflow_dispatch --limit 20 --json headSha,url --jq ".[] | select(.headSha == \"$HEAD_SHA\") | .url" | head -n 1)"
+            if [[ -n "$run_url" ]]; then
+              echo "Required CI dispatched for $HEAD_SHA: $run_url" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Required CI was not found for proposal commit $HEAD_SHA." >&2
+          exit 1
