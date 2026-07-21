@@ -25,7 +25,7 @@ grouped by version, with the most recent changes first.
 
 - Split daily status validation from proposal publishing so third-party build
   dependencies run with read-only repository access, and bot-created proposals
-  explicitly receive required CI for their exact commit.
+  explicitly approve required pull-request CI for their exact commit.
 - Advanced the repository package identity to `2.0.6` so changes made after
   the published `2.0.5` tag cannot produce a second, different `2.0.5` ZIP.
 - Replaced the legacy persisted configuration path with packaged,

@@ -312,7 +312,7 @@ jobs:
             gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
           fi
 
-      - name: Dispatch required CI for the proposal commit
+      - name: Approve required pull-request CI for the proposal commit
         if: needs.validate-proposal.outputs.ready == 'true'
         shell: bash
         env:
@@ -320,14 +320,14 @@ jobs:
           HEAD_SHA: ${{ steps.publish-branch.outputs.head_sha }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh workflow run ci.yml --ref "$BRANCH"
           for _ in {1..10}; do
-            run_url="$(gh run list --workflow ci.yml --branch "$BRANCH" --event workflow_dispatch --limit 20 --json headSha,url --jq ".[] | select(.headSha == \"$HEAD_SHA\") | .url" | head -n 1)"
-            if [[ -n "$run_url" ]]; then
-              echo "Required CI dispatched for $HEAD_SHA: $run_url" >> "$GITHUB_STEP_SUMMARY"
+            run_id="$(gh run list --workflow ci.yml --branch "$BRANCH" --event pull_request --limit 20 --json databaseId,headSha,conclusion --jq ".[] | select(.headSha == \"$HEAD_SHA\" and .conclusion == \"action_required\") | .databaseId" | head -n 1)"
+            if [[ -n "$run_id" ]]; then
+              gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/approve"
+              echo "Required pull-request CI approved for $HEAD_SHA: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${run_id}" >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             sleep 3
           done
-          echo "Required CI was not found for proposal commit $HEAD_SHA." >&2
+          echo "Approval-required pull-request CI was not found for proposal commit $HEAD_SHA." >&2
           exit 1
