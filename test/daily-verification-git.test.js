@@ -5,9 +5,29 @@ const os = require('os');
 const path = require('path');
 
 const workflow = fs.readFileSync('.github/workflows/daily-verification.yml', 'utf8');
+const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 assert(
     workflow.includes('I tested the extension installed from the Chrome Web Store, not an unpacked development build.'),
     'daily verification PRs must identify the tested Store-installed artifact'
+);
+assert(
+    workflow.includes('run: npm run ci:verification'),
+    'daily verification must use the release-runtime audit boundary'
+);
+assert(
+    workflow.includes('id: tooling-audit') &&
+        workflow.includes('continue-on-error: true') &&
+        workflow.includes("steps.tooling-audit.outcome == 'failure'"),
+    'daily verification must report development-tool advisories without blocking live-status proposals'
+);
+assert(
+    packageJson.scripts['audit:runtime'].includes('--omit=dev') &&
+        packageJson.scripts['ci:verification'].includes('audit:runtime'),
+    'daily verification CI must keep runtime advisories blocking'
+);
+assert(
+    packageJson.scripts.ci.includes('audit:high'),
+    'normal CI must keep the complete dependency audit blocking'
 );
 
 function git(cwd, args, options = {}) {

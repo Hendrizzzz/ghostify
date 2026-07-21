@@ -138,7 +138,20 @@ jobs:
 
       - name: Validate extension and status contract
         if: steps.eligible.outputs.ready == 'true'
-        run: npm run ci
+        run: npm run ci:verification
+
+      - name: Report development-tool advisories
+        id: tooling-audit
+        if: steps.eligible.outputs.ready == 'true'
+        continue-on-error: true
+        run: npm run audit:high
+
+      - name: Record development-tool advisory warning
+        if: steps.tooling-audit.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning::A development-tool advisory needs maintainer review, but it does not block the daily live-verification proposal."
+          echo "Development-tool audit reported an advisory. Normal pull-request CI remains blocking until it is resolved." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install site dependencies
         if: steps.eligible.outputs.ready == 'true'

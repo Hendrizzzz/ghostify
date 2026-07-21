@@ -26,10 +26,13 @@
     "validate:tag-integrity": "node scripts/validate-version-tag-integrity.js",
     "lint:firefox": "npm run prepare:firefox && web-ext lint --source-dir tmp/firefox-extension --warnings-as-errors",
     "verify:dist": "git diff --exit-code -- dist/background.js dist/js/content.js dist/js/ghost.js dist/js/messenger_patch.js",
+    "audit:runtime": "npm audit --omit=dev --audit-level=high",
     "audit:high": "npm audit --audit-level=high",
     "ci:chromium": "npm run build && npm run test:modules:shared && npm run test:popup:chromium && node test/messenger-send-stability.test.js && npm run test:status && npm run test:release-notes && npm run test:tag-integrity && npm run test:validator && npm run test:package:chromium && npm run validate:extension && npm run validate:tag-integrity && npm run verify:dist && npm run audit:high",
     "ci:firefox": "npm run build && npm run test:modules:shared && npm run test:popup:firefox && node test/messenger-send-stability.test.js && npm run test:package:firefox && npm run validate:firefox && npm run lint:firefox && npm run verify:dist && npm run audit:high",
-    "ci": "npm test && npm run validate:extension && npm run validate:firefox && npm run validate:tag-integrity && npm run lint:firefox && npm run verify:dist && npm run audit:high"
+    "ci:all-browsers": "npm test && npm run validate:extension && npm run validate:firefox && npm run validate:tag-integrity && npm run lint:firefox && npm run verify:dist",
+    "ci:verification": "npm run ci:all-browsers && npm run audit:runtime",
+    "ci": "npm run ci:all-browsers && npm run audit:high"
   },
   "repository": {
     "type": "git",
@@ -50,6 +53,7 @@
     "node": ">=22.13"
   },
   "overrides": {
+    "shell-quote": "1.9.0",
     "firefox-profile@4.7.0": {
       "adm-zip": "0.6.0"
     }

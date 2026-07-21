@@ -36,6 +36,10 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
+- Updated the Firefox development toolchain to the patched `shell-quote`
+  release and kept future development-only advisories visible without blocking
+  daily live-verification proposals; complete dependency audits remain required
+  by normal pull-request CI.
 - Replaced production-shaped conversation labels and identifiers in Messenger
   regression fixtures with clearly synthetic values.
 - Separated the published verification target from the repository version so
