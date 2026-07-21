@@ -9,7 +9,7 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
-## [2.0.6] - Unreleased
+## [2.0.6] - 2026-07-22
 
 ### Added
 
@@ -39,6 +39,9 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
+- Preserved queue-routed Facebook group-message sends while removing bundled
+  typing and Seen metadata, preventing affected messages from remaining stuck
+  in the Sending state.
 - Updated the Firefox development toolchain to the patched `shell-quote`
   release. Complete dependency reviews remain visible on daily proposals,
   website runtime advisories block proposal creation, and required pull-request
