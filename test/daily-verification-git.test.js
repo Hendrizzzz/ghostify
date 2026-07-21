@@ -54,10 +54,11 @@ assert(
     'the write-enabled publishing job must not install package dependencies'
 );
 assert(
-        publishJob.includes('echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"') &&
-        publishJob.includes('gh workflow run ci.yml --ref "$BRANCH"') &&
-        publishJob.includes('select(.headSha == \\"$HEAD_SHA\\")'),
-    'bot-created proposals must dispatch required CI and verify the exact proposal commit'
+    publishJob.includes('echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"') &&
+        publishJob.includes('--event pull_request') &&
+        publishJob.includes('select(.headSha == \\"$HEAD_SHA\\" and .conclusion == \\"action_required\\")') &&
+        publishJob.includes('actions/runs/${run_id}/approve'),
+    'bot-created proposals must approve required pull-request CI for the exact proposal commit'
 );
 assert.deepStrictEqual(
     packageJson.overrides['fx-runner@1.5.0'],
