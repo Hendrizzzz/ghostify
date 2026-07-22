@@ -3,7 +3,7 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const { QA_IDS, isGreenProposalEligible, parseArgs, prepareStatusUpdate } = require('../scripts/prepare-status-update');
+const { QA_IDS, getVerificationProposalState, parseArgs, prepareStatusUpdate } = require('../scripts/prepare-status-update');
 
 const repoRoot = path.resolve(__dirname, '..');
 const source = JSON.parse(fs.readFileSync(path.join(repoRoot, 'site', 'src', 'app', 'statusData.json'), 'utf8'));
@@ -70,20 +70,30 @@ function testProposalFixtureFollowsStatusPreparedByWorkflow() {
     }));
 }
 
-function testVerifiedProposalRejectsStoreBuildMismatch() {
+function testVerifiedProposalTargetsRecordedStoreBuildAcrossVersionMismatch() {
     const mismatchingStatus = structuredClone(source);
-    mismatchingStatus.release.publishedVersion = '2.0.3';
+    mismatchingStatus.productVersion = '2.0.7';
+    mismatchingStatus.release.publishedVersion = '2.0.6';
+    mismatchingStatus.release.verificationVersion = '2.0.5';
     mismatchingStatus.release.matchesVerificationBuild = false;
-    assert.throws(
-        () => prepareStatusUpdate(mismatchingStatus, {
-            mode: 'verified',
-            date: proposalDate,
-            generatedAt: proposalGeneratedAt
-        }),
-        error => error.message.includes(
-            `Store v${mismatchingStatus.release.publishedVersion} does not match verification build v${mismatchingStatus.release.verificationVersion}`
-        )
-    );
+    mismatchingStatus.summary.publicStatus = 'under_review';
+    mismatchingStatus.entries[0].publicStatus = 'known_issue';
+    mismatchingStatus.entries[0].localEvidenceStatus = 'manual_pending';
+    mismatchingStatus.entries[0].relatedIssueUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/123';
+
+    const status = prepareStatusUpdate(mismatchingStatus, {
+        mode: 'verified',
+        date: proposalDate,
+        generatedAt: proposalGeneratedAt
+    });
+
+    assert.strictEqual(status.release.publishedVersion, '2.0.6');
+    assert.strictEqual(status.release.verificationVersion, '2.0.6');
+    assert.strictEqual(status.release.matchesVerificationBuild, true);
+    assert.strictEqual(status.summary.publicStatus, 'maintainer_verified');
+    assert(status.entries.every(entry => entry.reviewRecord.includes('for v2.0.6')));
+    assert(status.entries.every(entry => entry.relatedIssueUrl === null));
+    assert.strictEqual(status.history[1].publicStatus, mismatchingStatus.history[0].publicStatus);
 }
 
 function testReportedProposalTurnsSelectedControlAndOverallStatusYellow() {
@@ -236,22 +246,40 @@ function testStatusInputsRejectImpossibleDatesAndDuplicateFeatures() {
     }), /must not contain duplicates/);
 }
 
-function testGreenEligibilityRequiresMatchingBuildAndProtectsYellowSchedule() {
+function testVerificationProposalStateAllowsUpdatesAndYellowRecovery() {
     const mismatchingYellow = structuredClone(source);
     mismatchingYellow.summary.publicStatus = 'under_review';
-    mismatchingYellow.release.publishedVersion = '2.0.3';
+    mismatchingYellow.release.publishedVersion = '2.0.6';
+    mismatchingYellow.release.verificationVersion = '2.0.5';
     mismatchingYellow.release.matchesVerificationBuild = false;
-    assert.deepStrictEqual(isGreenProposalEligible(mismatchingYellow, { scheduled: true }), {
-        latestStatusIsGreen: false,
-        storeBuildMatches: false,
+    assert.deepStrictEqual(getVerificationProposalState(mismatchingYellow, { date: proposalDate }), {
+        targetVersion: '2.0.6',
+        alreadyVerifiedToday: false,
+        ready: true
+    });
+
+    const verifiedToday = prepareStatusUpdate(mismatchingYellow, {
+        mode: 'verified',
+        date: proposalDate,
+        generatedAt: proposalGeneratedAt
+    });
+    assert.deepStrictEqual(getVerificationProposalState(verifiedToday, { date: proposalDate }), {
+        targetVersion: '2.0.6',
+        alreadyVerifiedToday: true,
         ready: false
     });
-    const matchingGreen = matchingReleaseStatus();
-    matchingGreen.summary.publicStatus = 'maintainer_verified';
-    assert.strictEqual(isGreenProposalEligible(matchingGreen, { scheduled: true }).ready, true);
-    matchingGreen.summary.publicStatus = 'under_review';
-    assert.strictEqual(isGreenProposalEligible(matchingGreen, { scheduled: true }).ready, false);
-    assert.strictEqual(isGreenProposalEligible(matchingGreen, { scheduled: false }).ready, true);
+
+    const nextDate = new Date(Date.parse(`${proposalDate}T00:00:00Z`) + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+    assert.strictEqual(getVerificationProposalState(verifiedToday, { date: nextDate }).ready, true);
+
+    const missingPublishedVersion = structuredClone(source);
+    delete missingPublishedVersion.release.publishedVersion;
+    assert.throws(
+        () => getVerificationProposalState(missingPublishedVersion, { date: proposalDate }),
+        /published version is required/
+    );
 }
 
 function testDailyWorkflowIsSingleRefreshableMaintainerApprovalPr() {
@@ -260,12 +288,14 @@ function testDailyWorkflowIsSingleRefreshableMaintainerApprovalPr() {
     assert(workflow.includes('workflow_dispatch:'));
     assert(workflow.includes('pull-requests: write'));
     assert(workflow.includes('chore/status-daily-verification'));
-    assert(workflow.includes('latestStatusIsGreen'));
-    assert(workflow.includes('storeBuildMatches'));
+    assert(workflow.includes('Verify Store v${proposal.targetVersion}'));
+    assert(workflow.includes('getVerificationProposalState'));
+    assert(!workflow.includes('latestStatusIsGreen'));
+    assert(!workflow.includes('storeBuildMatches'));
     assert(workflow.includes('base_sha'));
     assert(workflow.includes('main changed while this proposal was being validated'));
     assert(workflow.includes('git push --force-with-lease'));
-    assert(workflow.includes('Merge only after manually verifying the supported controls.'));
+    assert(workflow.includes('Merging is the maintainer attestation'));
     assert(!workflow.includes('gh pr merge'));
     assert(!workflow.includes('enable-auto-merge'));
     assert(!workflow.includes('site/public/status.json'));
@@ -273,7 +303,7 @@ function testDailyWorkflowIsSingleRefreshableMaintainerApprovalPr() {
 
 testVerifiedProposalUpdatesEverySupportedControlWithoutExpiry();
 testProposalFixtureFollowsStatusPreparedByWorkflow();
-testVerifiedProposalRejectsStoreBuildMismatch();
+testVerifiedProposalTargetsRecordedStoreBuildAcrossVersionMismatch();
 testReportedProposalTurnsSelectedControlAndOverallStatusYellow();
 testInProgressProposalStaysYellowAndPreservesHistory();
 testMultipleSameDayStatusUpdatesPreserveNewestFirstOrder();
@@ -281,7 +311,7 @@ testIdenticalVerificationUpdateDoesNotDuplicateHistory();
 testKnownIssueProposalUpdatesOnlySelectedControls();
 testYellowProposalRejectsUnknownControl();
 testStatusInputsRejectImpossibleDatesAndDuplicateFeatures();
-testGreenEligibilityRequiresMatchingBuildAndProtectsYellowSchedule();
+testVerificationProposalStateAllowsUpdatesAndYellowRecovery();
 testDailyWorkflowIsSingleRefreshableMaintainerApprovalPr();
 
 console.log('Status proposal tests passed.');

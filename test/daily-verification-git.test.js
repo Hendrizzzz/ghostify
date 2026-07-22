@@ -9,13 +9,31 @@ const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const sitePackageJson = JSON.parse(fs.readFileSync('site/package.json', 'utf8'));
 const validateJobStart = workflow.indexOf('  validate-proposal:');
 const publishJobStart = workflow.indexOf('  publish-proposal:');
-assert(validateJobStart >= 0 && publishJobStart > validateJobStart, 'daily workflow must separate validation and publishing jobs');
+const blockStaleJobStart = workflow.indexOf('  block-stale-proposal:');
+assert(
+    validateJobStart >= 0 && publishJobStart > validateJobStart && blockStaleJobStart > publishJobStart,
+    'daily workflow must separate validation, publishing, and stale-proposal blocking jobs'
+);
 const validateJob = workflow.slice(validateJobStart, publishJobStart);
-const publishJob = workflow.slice(publishJobStart);
+const publishJob = workflow.slice(publishJobStart, blockStaleJobStart);
+const blockStaleJob = workflow.slice(blockStaleJobStart);
 
 assert(
     workflow.includes('I tested the extension installed from the Chrome Web Store, not an unpacked development build.'),
     'daily verification PRs must identify the tested Store-installed artifact'
+);
+assert(
+    workflow.includes('push:\n    branches: [main]') &&
+        workflow.includes('- "site/src/app/statusData.json"') &&
+        workflow.includes('getVerificationProposalState') &&
+        workflow.includes('Verify Store v${proposal.targetVersion}'),
+    'status changes on main must refresh a Store-version-specific daily proposal'
+);
+assert(
+    workflow.includes('GH-POPUP-001') &&
+        workflow.includes('GH-FB-LOCAL-READ-001') &&
+        workflow.includes('GH-FB-GROUP-SEND-001'),
+    'the maintainer checklist must cover popup identity and high-risk Facebook regressions'
 );
 assert(
     validateJob.includes('permissions:\n      contents: read') &&
@@ -56,9 +74,37 @@ assert(
 assert(
     publishJob.includes('echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"') &&
         publishJob.includes('--event pull_request') &&
-        publishJob.includes('select(.headSha == \\"$HEAD_SHA\\" and .conclusion == \\"action_required\\")') &&
+        publishJob.includes('select(.headSha == \\"$HEAD_SHA\\")') &&
+        publishJob.includes('if [[ "$conclusion" == "action_required" ]]') &&
+        publishJob.includes('Required pull-request CI already started for $HEAD_SHA') &&
         publishJob.includes('actions/runs/${run_id}/approve'),
-    'bot-created proposals must approve required pull-request CI for the exact proposal commit'
+    'bot-created proposals must find exact-head CI and approve it only when GitHub requires approval'
+);
+assert(
+    validateJob.includes('Verify proposal changes only canonical status data') &&
+        publishJob.includes('Refusing to publish unexpected files') &&
+        validateJob.includes('git diff --check') &&
+        publishJob.includes('git diff --check'),
+    'validated and published proposals must be limited to canonical status data'
+);
+assert(
+    blockStaleJob.includes("needs.validate-proposal.result == 'failure'") &&
+        blockStaleJob.includes('pull-requests: write') &&
+        blockStaleJob.includes('gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY" --undo') &&
+        blockStaleJob.includes('gh pr comment') &&
+        !blockStaleJob.includes('actions/checkout') &&
+        !blockStaleJob.includes('npm ci'),
+    'a validation failure must visibly block any stale daily proposal without running repository code with write access'
+);
+for (const line of workflow.split('\n').filter(line => /\bgh (?:pr|run)\b/.test(line))) {
+    assert(
+        line.includes('--repo "$GITHUB_REPOSITORY"'),
+        `GitHub CLI command must declare its repository even without checkout: ${line.trim()}`
+    );
+}
+assert(
+    !workflow.includes('gh pr merge') && !workflow.includes('enable-auto-merge'),
+    'daily verification must remain a manual maintainer attestation'
 );
 assert.deepStrictEqual(
     packageJson.overrides['fx-runner@1.5.0'],

@@ -44,6 +44,7 @@ const YELLOW_MODES = {
 };
 
 const ALLOWED_ARGS = new Set(['mode', 'date', 'generated-at', 'features', 'issue-url', 'note']);
+const VERIFIED_PUBLIC_STATUS_VALUES = new Set(['maintainer_verified', 'community_verified_reviewed']);
 
 function parseArgs(argv) {
     const options = {};
@@ -139,18 +140,22 @@ function assertIssueUrl(issueUrl) {
     }
 }
 
+function getPublishedVersion(status) {
+    const publishedVersion = status.release?.publishedVersion;
+    if (typeof publishedVersion !== 'string' || !publishedVersion.trim()) {
+        throw new Error('A recorded Chrome Web Store published version is required for verification.');
+    }
+    return publishedVersion.trim();
+}
+
 function prepareVerifiedStatus(input, { date, generatedAt }) {
     const status = structuredClone(input);
     assertDate(date);
     assertGeneratedAt(generatedAt, date, status.release.checkedAt);
     assertNotBackdated(status, date);
-
-    if (!status.release.matchesVerificationBuild ||
-        status.release.publishedVersion !== status.release.verificationVersion) {
-        throw new Error(
-            `Cannot prepare a green verification PR: Store v${status.release.publishedVersion} does not match verification build v${status.release.verificationVersion}.`
-        );
-    }
+    const targetVersion = getPublishedVersion(status);
+    status.release.verificationVersion = targetVersion;
+    status.release.matchesVerificationBuild = true;
 
     const verifiedAt = isoAtUtcStart(date);
     const longDate = formatLongUtcDate(date);
@@ -171,7 +176,7 @@ function prepareVerifiedStatus(input, { date, generatedAt }) {
             localEvidenceStatus: 'verified',
             sourceType: 'maintainer',
             reviewer: 'Hendrizzzz maintainer verification',
-            reviewRecord: `${qaId} approved in the ${date} verification PR for v${status.release.verificationVersion}`,
+            reviewRecord: `${qaId} approved in the ${date} verification PR for v${targetVersion}`,
             verifiedAt,
             relatedIssueUrl: null,
             notes: `Maintainer-confirmed verification for ${entry.platform} ${entry.feature} on ${longDate}.`
@@ -240,14 +245,27 @@ function prepareStatusUpdate(input, options) {
     throw new Error(`Unsupported status mode: ${options.mode}`);
 }
 
-function isGreenProposalEligible(status, { scheduled }) {
-    const latestStatusIsGreen = ['maintainer_verified', 'community_verified_reviewed'].includes(status.summary?.publicStatus);
-    const storeBuildMatches = status.release?.matchesVerificationBuild === true &&
-        status.release?.publishedVersion === status.release?.verificationVersion;
+function getVerificationProposalState(status, { date }) {
+    assertDate(date);
+    const targetVersion = getPublishedVersion(status);
+    const verifiedAt = isoAtUtcStart(date);
+    const alreadyVerifiedToday =
+        status.release?.matchesVerificationBuild === true &&
+        status.release?.verificationVersion === targetVersion &&
+        VERIFIED_PUBLIC_STATUS_VALUES.has(status.summary?.publicStatus) &&
+        Array.isArray(status.entries) &&
+        status.entries.length > 0 &&
+        status.entries.every(entry =>
+            VERIFIED_PUBLIC_STATUS_VALUES.has(entry.publicStatus) &&
+            entry.localEvidenceStatus === 'verified' &&
+            entry.verifiedAt === verifiedAt &&
+            typeof entry.reviewRecord === 'string' &&
+            entry.reviewRecord.includes(`for v${targetVersion}`)
+        );
     return {
-        latestStatusIsGreen,
-        storeBuildMatches,
-        ready: storeBuildMatches && (!scheduled || latestStatusIsGreen)
+        targetVersion,
+        alreadyVerifiedToday,
+        ready: !alreadyVerifiedToday
     };
 }
 
@@ -289,5 +307,5 @@ module.exports = {
     prepareStatusUpdate,
     prepareVerifiedStatus,
     prepareYellowStatus,
-    isGreenProposalEligible
+    getVerificationProposalState
 };

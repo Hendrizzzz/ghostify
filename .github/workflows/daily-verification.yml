@@ -3,6 +3,10 @@ name: Daily verification PR
 on:
   schedule:
     - cron: "15 0 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "site/src/app/statusData.json"
   workflow_dispatch:
     inputs:
       mode:
@@ -42,18 +46,20 @@ jobs:
     permissions:
       contents: read
     outputs:
-      ready: ${{ steps.eligible.outputs.ready }}
+      ready: ${{ steps.proposal.outputs.ready }}
       today: ${{ steps.proposal.outputs.today }}
       generated_at: ${{ steps.proposal.outputs.generated_at }}
       base_sha: ${{ steps.proposal.outputs.base_sha }}
       branch: ${{ steps.proposal.outputs.branch }}
       title: ${{ steps.proposal.outputs.title }}
+      target_version: ${{ steps.proposal.outputs.target_version }}
+      verification_version: ${{ steps.proposal.outputs.verification_version }}
+      base_status: ${{ steps.proposal.outputs.base_status }}
     env:
       MODE: ${{ github.event.inputs.mode || 'verified' }}
       FEATURES: ${{ github.event.inputs.features || '' }}
       ISSUE_URL: ${{ github.event.inputs.issue_url || '' }}
       NOTE: ${{ github.event.inputs.note || '' }}
-      EVENT_NAME: ${{ github.event_name }}
       DAILY_BRANCH: chore/status-daily-verification
 
     steps:
@@ -79,43 +85,44 @@ jobs:
         run: |
           today="$(date -u +%F)"
           generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          if [[ "$MODE" == "verified" ]]; then
-            branch="$DAILY_BRANCH"
-            title="chore(status): Verify supported controls on ${today}"
-          else
-            branch="fix/status-${MODE}-${today}-${GITHUB_RUN_NUMBER}"
-            title="fix(status): Record ${MODE} update on ${today}"
-          fi
-          {
-            echo "today=$today"
-            echo "generated_at=$generated_at"
-            echo "base_sha=$(git rev-parse HEAD)"
-            echo "branch=$branch"
-            echo "title=$title"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Check proposal eligibility
-        id: eligible
-        shell: bash
-        run: |
-          node - <<'NODE'
+          base_sha="$(git rev-parse HEAD)"
+          TODAY="$today" GENERATED_AT="$generated_at" BASE_SHA="$base_sha" node - <<'NODE'
           const fs = require('fs');
-          const { isGreenProposalEligible } = require('./scripts/prepare-status-update');
+          const { getVerificationProposalState } = require('./scripts/prepare-status-update');
           const status = JSON.parse(fs.readFileSync('site/src/app/statusData.json', 'utf8'));
-          const eligibility = isGreenProposalEligible(status, { scheduled: process.env.EVENT_NAME === 'schedule' });
-          const latestStatusIsGreen = eligibility.latestStatusIsGreen;
-          const ready = process.env.MODE !== 'verified' || eligibility.ready;
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `ready=${ready}\nlatestStatusIsGreen=${latestStatusIsGreen}\n`);
+          const proposal = getVerificationProposalState(status, { date: process.env.TODAY });
+          const ready = process.env.MODE !== 'verified' || proposal.ready;
+          const branch = process.env.MODE === 'verified'
+              ? process.env.DAILY_BRANCH
+              : `fix/status-${process.env.MODE}-${process.env.TODAY}-${process.env.GITHUB_RUN_NUMBER}`;
+          const title = process.env.MODE === 'verified'
+              ? `chore(status): Verify Store v${proposal.targetVersion} on ${process.env.TODAY}`
+              : `fix(status): Record ${process.env.MODE} update on ${process.env.TODAY}`;
+          const outputs = {
+              ready,
+              today: process.env.TODAY,
+              generated_at: process.env.GENERATED_AT,
+              base_sha: process.env.BASE_SHA,
+              branch,
+              title,
+              target_version: proposal.targetVersion,
+              verification_version: status.release.verificationVersion,
+              base_status: status.summary?.publicStatus || 'unknown'
+          };
+          fs.appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              `${Object.entries(outputs).map(([key, value]) => `${key}=${value}`).join('\n')}\n`
+          );
           if (!ready) {
-            const reason = !eligibility.storeBuildMatches
-              ? `Store v${status.release.publishedVersion} does not match verification build v${status.release.verificationVersion}.`
-              : 'The latest merged status is yellow; scheduled automation cannot turn it green.';
-            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `No green PR prepared: ${reason}\n`);
+              fs.appendFileSync(
+                  process.env.GITHUB_STEP_SUMMARY,
+                  `Store v${proposal.targetVersion} is already fully verified for ${process.env.TODAY}; no duplicate proposal was prepared.\n`
+              );
           }
           NODE
 
       - name: Prepare canonical status JSON
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         shell: bash
         env:
           TODAY: ${{ steps.proposal.outputs.today }}
@@ -130,40 +137,51 @@ jobs:
           node scripts/prepare-status-update.js "${args[@]}"
 
       - name: Install extension dependencies
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         run: npm ci
 
       - name: Validate extension and status contract
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         run: npm run ci:verification
 
       - name: Review complete extension dependency graph
         id: extension-dependency-review
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         continue-on-error: true
         run: npm run audit:high
 
       - name: Install site dependencies
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         run: npm ci
         working-directory: site
 
       - name: Build status site
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         run: npm run build
         working-directory: site
 
       - name: Audit website runtime dependencies
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         run: npm run audit:runtime
         working-directory: site
 
       - name: Review complete website dependency graph
         id: site-dependency-review
-        if: steps.eligible.outputs.ready == 'true'
+        if: steps.proposal.outputs.ready == 'true'
         continue-on-error: true
         run: npm run audit:high
         working-directory: site
+
+      - name: Verify proposal changes only canonical status data
+        if: steps.proposal.outputs.ready == 'true'
+        shell: bash
+        run: |
+          mapfile -t changed_files < <(git diff --name-only)
+          if [[ "${#changed_files[@]}" -ne 1 || "${changed_files[0]}" != "site/src/app/statusData.json" ]]; then
+            printf 'Unexpected proposal files:\n%s\n' "${changed_files[*]}" >&2
+            exit 1
+          fi
+          git diff --check
 
       - name: Record complete dependency review warning
         if: >-
@@ -191,15 +209,15 @@ jobs:
       DAILY_BRANCH: chore/status-daily-verification
 
     steps:
-      - name: Close stale daily PR while live status is yellow
-        if: github.event_name == 'schedule' && needs.validate-proposal.outputs.ready != 'true'
+      - name: Close superseded daily PR after today's verification
+        if: needs.validate-proposal.outputs.ready != 'true' && env.MODE == 'verified'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          pr_number="$(gh pr list --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
+          pr_number="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
           if [[ -n "$pr_number" ]]; then
-            gh pr close "$pr_number" --comment "Closed automatically because a green daily proposal is no longer eligible. Scheduled automation cannot overwrite yellow status or verify a build that differs from the published Store version."
+            gh pr close "$pr_number" --repo "$GITHUB_REPOSITORY" --comment "Closed automatically because the recorded Store build is already fully verified for today."
           fi
 
       - name: Check out main for publishing
@@ -251,6 +269,12 @@ jobs:
           fi
           git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" || true
           git switch -C "$BRANCH" origin/main
+          mapfile -t changed_files < <(git diff --name-only)
+          if [[ "${#changed_files[@]}" -ne 1 || "${changed_files[0]}" != "site/src/app/statusData.json" ]]; then
+            printf 'Refusing to publish unexpected files:\n%s\n' "${changed_files[*]}" >&2
+            exit 1
+          fi
+          git diff --check
           git add site/src/app/statusData.json
           git commit -m "$TITLE"
           if [[ "$MODE" == "verified" ]]; then
@@ -267,15 +291,29 @@ jobs:
           BRANCH: ${{ needs.validate-proposal.outputs.branch }}
           TITLE: ${{ needs.validate-proposal.outputs.title }}
           TODAY: ${{ needs.validate-proposal.outputs.today }}
+          TARGET_VERSION: ${{ needs.validate-proposal.outputs.target_version }}
+          VERIFICATION_VERSION: ${{ needs.validate-proposal.outputs.verification_version }}
+          BASE_STATUS: ${{ needs.validate-proposal.outputs.base_status }}
           GH_TOKEN: ${{ github.token }}
         run: |
           if [[ "$MODE" == "verified" ]]; then
+            if [[ "$BASE_STATUS" != "maintainer_verified" || "$VERIFICATION_VERSION" != "$TARGET_VERSION" ]]; then
+              recovery_note="The current public status is **${BASE_STATUS}** and its recorded verification build is v${VERIFICATION_VERSION}. Merging this PR declares the current Store build fully verified and resolves any superseded yellow status only after every check below passes."
+            else
+              recovery_note="The current public status is already verified for v${TARGET_VERSION}; this proposal records a fresh daily verification only after every check below passes."
+            fi
             cat > "$RUNNER_TEMP/pr-body.md" <<EOF
           ## Daily verification — ${TODAY}
 
-          Merge only after manually verifying the supported controls. Until this PR is merged, the website and popup keep showing the latest previously merged status.
+          **Target Chrome Web Store build: v${TARGET_VERSION}**
+
+          ${recovery_note}
+
+          Until this PR is merged, the website and popup keep showing the latest previously merged status.
 
           - [ ] I tested the extension installed from the Chrome Web Store, not an unpacked development build.
+          - [ ] GH-POPUP-001 — the popup opens, reports v${TARGET_VERSION}, and persists toggle changes.
+          - [ ] Sender-side and story-owner confirmation used only authorized test accounts.
 
           - [ ] GH-IG-SEEN-001
           - [ ] GH-IG-TYPING-001
@@ -287,9 +325,11 @@ jobs:
           - [ ] GH-FB-SEEN-001
           - [ ] GH-FB-TYPING-001
           - [ ] GH-FB-STORY-001
+          - [ ] GH-FB-LOCAL-READ-001 preserves unread state without breaking normal chat behavior
+          - [ ] GH-FB-GROUP-SEND-001 sends a group-chat message normally
           - [ ] GH-FB-MEDIA-001 still plays normally
 
-          Merging is the maintainer confirmation that everything is working. Automated checks do not independently prove live Meta behavior, and this workflow never auto-merges.
+          Merging is the maintainer attestation that Store build v${TARGET_VERSION} passed this full checklist. Automated checks do not independently prove live Meta behavior, and this workflow never auto-checks or auto-merges.
           EOF
           else
             cat > "$RUNNER_TEMP/pr-body.md" <<EOF
@@ -305,11 +345,14 @@ jobs:
           EOF
           fi
 
-          pr_number="$(gh pr list --state open --head "$BRANCH" --json number --jq '.[0].number // empty')"
+          pr_number="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$BRANCH" --json number --jq '.[0].number // empty')"
           if [[ -n "$pr_number" ]]; then
-            gh pr edit "$pr_number" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
+            gh pr edit "$pr_number" --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
+            if [[ "$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" == "true" ]]; then
+              gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY"
+            fi
           else
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
           fi
 
       - name: Approve required pull-request CI for the proposal commit
@@ -320,14 +363,46 @@ jobs:
           HEAD_SHA: ${{ steps.publish-branch.outputs.head_sha }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          for _ in {1..10}; do
-            run_id="$(gh run list --workflow ci.yml --branch "$BRANCH" --event pull_request --limit 20 --json databaseId,headSha,conclusion --jq ".[] | select(.headSha == \"$HEAD_SHA\" and .conclusion == \"action_required\") | .databaseId" | head -n 1)"
+          for _ in {1..20}; do
+            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch "$BRANCH" --event pull_request --limit 20 --json databaseId,headSha --jq ".[] | select(.headSha == \"$HEAD_SHA\") | .databaseId" | head -n 1)"
             if [[ -n "$run_id" ]]; then
-              gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/approve"
-              echo "Required pull-request CI approved for $HEAD_SHA: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${run_id}" >> "$GITHUB_STEP_SUMMARY"
+              conclusion="$(gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json conclusion --jq '.conclusion // ""')"
+              if [[ "$conclusion" == "action_required" ]]; then
+                gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/approve"
+                echo "Required pull-request CI approved for $HEAD_SHA: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${run_id}" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "Required pull-request CI already started for $HEAD_SHA: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${run_id}" >> "$GITHUB_STEP_SUMMARY"
+              fi
               exit 0
             fi
             sleep 3
           done
           echo "Approval-required pull-request CI was not found for proposal commit $HEAD_SHA." >&2
           exit 1
+
+  block-stale-proposal:
+    name: Block stale proposal after validation failure
+    needs: validate-proposal
+    if: >-
+      always() &&
+      needs.validate-proposal.result == 'failure' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'verified')
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+    env:
+      DAILY_BRANCH: chore/status-daily-verification
+
+    steps:
+      - name: Mark any stale daily proposal as draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr_number="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr_number" ]]; then
+            if [[ "$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" != "true" ]]; then
+              gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY" --undo
+            fi
+            gh pr comment "$pr_number" --repo "$GITHUB_REPOSITORY" --body "Today's proposal refresh failed validation and this PR may be stale, so it was returned to draft. Review the failed workflow run before using it: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          fi

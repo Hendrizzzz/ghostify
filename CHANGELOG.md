@@ -23,6 +23,9 @@ grouped by version, with the most recent changes first.
 
 ### Changed
 
+- Changed daily verification into one Store-version-specific, refreshable pull
+  request: merging remains an explicit maintainer attestation, while Store
+  publication or public-status changes immediately refresh the proposal.
 - Split daily status validation from proposal publishing so third-party build
   dependencies run with read-only repository access, and bot-created proposals
   explicitly approve required pull-request CI for their exact commit.
@@ -39,6 +42,11 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
+- Kept daily verification proposals available across app-version changes and
+  yellow public states, targeting the recorded Store build without changing the
+  public status until the maintainer merges the completed checklist.
+- Made GitHub CLI operations repository-explicit so proposal maintenance still
+  works in write-only jobs that intentionally do not check out repository code.
 - Preserved queue-routed Facebook group-message sends while removing bundled
   typing and Seen metadata, preventing affected messages from remaining stuck
   in the Sending state.
@@ -89,9 +97,8 @@ grouped by version, with the most recent changes first.
   updates in a pull request for explicit maintainer approval.
 - Added a manual known-issue mode that can propose a yellow popup status for
   selected supported controls without exposing raw reports in the extension.
-- Added report and work-in-progress status modes, a single refreshable daily
-  verification PR, and automatic protection against scheduled green updates
-  overwriting a yellow live status.
+- Added report and work-in-progress status modes and a single refreshable daily
+  verification PR for explicit maintainer approval.
 - Added GitHub Actions CI for the root extension package. The workflow installs
   dependencies with `npm ci`, runs `npm test`, validates extension package
   metadata, and verifies generated `dist/` bundles are committed.
