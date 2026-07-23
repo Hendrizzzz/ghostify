@@ -311,6 +311,16 @@ jobs:
 
           Until this PR is merged, the website and popup keep showing the latest previously merged status.
 
+          ### Option 1 — everything passed
+
+          - [ ] I tested Store-installed Ghostify v${TARGET_VERSION} using authorized accounts, and every check in the detailed matrix below passed.
+
+          If this is true, check only this box and merge. You do not need to check the detailed boxes.
+
+          ### Option 2 — something failed or remains unverified
+
+          Do not check the all-passed box. Check each passing item below and leave failed or unverified items unchecked. **Do not merge this green verification PR.** Publish a yellow status update for the affected controls, then close this PR.
+
           - [ ] I tested the extension installed from the Chrome Web Store, not an unpacked development build.
           - [ ] GH-POPUP-001 — the popup opens, reports v${TARGET_VERSION}, and persists toggle changes.
           - [ ] Sender-side and story-owner confirmation used only authorized test accounts.
@@ -329,7 +339,7 @@ jobs:
           - [ ] GH-FB-GROUP-SEND-001 sends a group-chat message normally
           - [ ] GH-FB-MEDIA-001 still plays normally
 
-          Merging is the maintainer attestation that Store build v${TARGET_VERSION} passed this full checklist. Automated checks do not independently prove live Meta behavior, and this workflow never auto-checks or auto-merges.
+          Merging is the maintainer attestation that Store build v${TARGET_VERSION} passed either the all-passed check or every applicable detailed check. Automated checks do not independently prove live Meta behavior, and this workflow never auto-checks or auto-merges.
           EOF
           else
             cat > "$RUNNER_TEMP/pr-body.md" <<EOF

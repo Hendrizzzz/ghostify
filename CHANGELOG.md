@@ -26,6 +26,9 @@ grouped by version, with the most recent changes first.
 - Changed daily verification into one Store-version-specific, refreshable pull
   request: merging remains an explicit maintainer attestation, while Store
   publication or public-status changes immediately refresh the proposal.
+- Added a one-checkbox path when every live check passes, while retaining the
+  detailed matrix for recording individual failures without publishing a
+  misleading green status.
 - Split daily status validation from proposal publishing so third-party build
   dependencies run with read-only repository access, and bot-created proposals
   explicitly approve required pull-request CI for their exact commit.

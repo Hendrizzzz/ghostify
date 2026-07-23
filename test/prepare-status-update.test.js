@@ -302,6 +302,8 @@ function testDailyWorkflowIsSingleRefreshableMaintainerApprovalPr() {
     assert(workflow.includes('base_sha'));
     assert(workflow.includes('main changed while this proposal was being validated'));
     assert(workflow.includes('git push --force-with-lease'));
+    assert(workflow.includes('check only this box and merge'));
+    assert(workflow.includes('Do not merge this green verification PR'));
     assert(workflow.includes('Merging is the maintainer attestation'));
     assert(!workflow.includes('gh pr merge'));
     assert(!workflow.includes('enable-auto-merge'));

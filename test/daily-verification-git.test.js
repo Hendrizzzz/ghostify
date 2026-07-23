@@ -36,6 +36,13 @@ assert(
     'the maintainer checklist must cover popup identity and high-risk Facebook regressions'
 );
 assert(
+    workflow.includes('### Option 1 — everything passed') &&
+        workflow.includes('check only this box and merge') &&
+        workflow.includes('### Option 2 — something failed or remains unverified') &&
+        workflow.includes('Do not merge this green verification PR'),
+    'daily verification must offer a one-check success path and a non-green diagnostic path'
+);
+assert(
     validateJob.includes('permissions:\n      contents: read') &&
         validateJob.includes('run: npm run ci:verification') &&
         !validateJob.includes('contents: write') &&
