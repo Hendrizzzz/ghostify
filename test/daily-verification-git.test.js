@@ -5,6 +5,10 @@ const os = require('os');
 const path = require('path');
 
 const workflow = fs.readFileSync('.github/workflows/daily-verification.yml', 'utf8').replace(/\r\n/g, '\n');
+const ciWorkflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8').replace(/\r\n/g, '\n');
+const dependencyAuditWorkflow = fs
+    .readFileSync('.github/workflows/dependency-audit.yml', 'utf8')
+    .replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const sitePackageJson = JSON.parse(fs.readFileSync('site/package.json', 'utf8'));
 const validateJobStart = workflow.indexOf('  validate-proposal:');
@@ -70,6 +74,29 @@ assert(
 assert(
     packageJson.scripts.ci.includes('audit:high'),
     'normal CI must keep the complete dependency audit blocking'
+);
+assert(
+    ciWorkflow.includes('Detect canonical status-only change') &&
+        ciWorkflow.includes('PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}') &&
+        ciWorkflow.includes('MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}') &&
+        ciWorkflow.includes('elif [[ "$EVENT_NAME" == "merge_group" ]]') &&
+        ciWorkflow.includes('changed_files="$(git diff --name-only "$base_sha"...HEAD)"') &&
+        ciWorkflow.includes('if [[ "$changed_files" == "site/src/app/statusData.json" ]]') &&
+        ciWorkflow.includes("if: needs.change-scope.outputs.status-only == 'true'") &&
+        ciWorkflow.includes("if: needs.change-scope.outputs.status-only != 'true'"),
+    'required CI must grant the runtime-only audit path solely from an exact PR or merge-group diff'
+);
+assert(
+    ciWorkflow.match(/run: npm run audit:runtime/g)?.length === 3 &&
+        ciWorkflow.match(/run: npm run audit:high/g)?.length === 2 &&
+        ciWorkflow.includes('run: npm audit --audit-level=high'),
+    'status-only CI must block on runtime audits while other changes retain complete audits'
+);
+assert(
+    dependencyAuditWorkflow.includes('schedule:') &&
+        dependencyAuditWorkflow.includes('run: npm run audit:high:raw') &&
+        dependencyAuditWorkflow.includes('run: npm audit --audit-level=high'),
+    'a scheduled read-only workflow must keep complete extension and site audits visible'
 );
 assert(
     publishJob.includes('actions: write') &&
