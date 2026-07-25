@@ -32,6 +32,10 @@ grouped by version, with the most recent changes first.
 - Split daily status validation from proposal publishing so third-party build
   dependencies run with read-only repository access, and bot-created proposals
   explicitly approve required pull-request CI for their exact commit.
+- Kept status-only verification pull requests mergeable when an unrelated
+  development-tool advisory appears: runtime audits and all functional package
+  checks remain blocking, while complete dependency audits remain blocking for
+  other changes and run on a separate schedule.
 - Advanced the repository package identity to `2.0.6` so changes made after
   the published `2.0.5` tag cannot produce a second, different `2.0.5` ZIP.
 - Replaced the legacy persisted configuration path with packaged,
@@ -56,7 +60,12 @@ grouped by version, with the most recent changes first.
 - Updated the Firefox development toolchain to the patched `shell-quote`
   release. Complete dependency reviews remain visible on daily proposals,
   website runtime advisories block proposal creation, and required pull-request
-  CI keeps all high-severity dependency findings merge-blocking.
+  CI keeps runtime advisories blocking while performing complete reviews on
+  non-status changes.
+- Added a development-only, expiring allowance for the upstream
+  `brace-expansion` advisory inherited through `web-ext`; unrelated high or
+  critical advisories still block changes, and the scheduled raw audit keeps
+  the upstream finding visible until the toolchain publishes a compatible fix.
 - Replaced production-shaped conversation labels and identifiers in Messenger
   regression fixtures with clearly synthetic values.
 - Separated the published verification target from the repository version so
