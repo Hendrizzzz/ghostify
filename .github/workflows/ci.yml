@@ -20,6 +20,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  change-scope:
+    name: Classify change scope
+    runs-on: ubuntu-24.04
+    outputs:
+      status-only: ${{ steps.scope.outputs.status-only }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Detect canonical status-only change
+        id: scope
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+        run: |
+          status_only=false
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_sha="$PR_BASE_SHA"
+          elif [[ "$EVENT_NAME" == "merge_group" ]]; then
+            base_sha="$MERGE_GROUP_BASE_SHA"
+          fi
+          if [[ -n "${base_sha:-}" ]]; then
+            changed_files="$(git diff --name-only "$base_sha"...HEAD)"
+            if [[ "$changed_files" == "site/src/app/statusData.json" ]]; then
+              status_only=true
+            fi
+          fi
+          echo "status-only=$status_only" >> "$GITHUB_OUTPUT"
+
   workflow-lint:
     name: Workflow lint
     runs-on: ubuntu-24.04
@@ -36,6 +71,7 @@ jobs:
   chromium-extension:
     name: Chromium extension checks
     runs-on: ubuntu-24.04
+    needs: change-scope
 
     steps:
       - name: Check out repository
@@ -54,18 +90,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Chromium extension CI
-        run: npm run ci:chromium
+      - name: Run Chromium functional and package checks
+        run: npm run ci:chromium:checks
+
+      - name: Audit extension runtime dependencies
+        if: needs.change-scope.outputs.status-only == 'true'
+        run: npm run audit:runtime
+
+      - name: Audit complete extension dependency graph
+        if: needs.change-scope.outputs.status-only != 'true'
+        run: npm run audit:high
 
   firefox-extension:
     name: Firefox extension checks
     runs-on: ubuntu-24.04
+    needs: change-scope
 
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -77,8 +123,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Firefox extension CI
-        run: npm run ci:firefox
+      - name: Run Firefox functional and package checks
+        run: npm run ci:firefox:checks
+
+      - name: Audit extension runtime dependencies
+        if: needs.change-scope.outputs.status-only == 'true'
+        run: npm run audit:runtime
+
+      - name: Audit complete extension dependency graph
+        if: needs.change-scope.outputs.status-only != 'true'
+        run: npm run audit:high
 
   extension:
     name: Extension checks
@@ -111,6 +165,7 @@ jobs:
   site:
     name: Site build
     runs-on: ubuntu-24.04
+    needs: change-scope
 
     steps:
       - name: Check out repository
@@ -133,7 +188,13 @@ jobs:
         run: npm run build
         working-directory: site
 
-      - name: Audit site dependencies
+      - name: Audit site runtime dependencies
+        if: needs.change-scope.outputs.status-only == 'true'
+        run: npm run audit:runtime
+        working-directory: site
+
+      - name: Audit complete site dependency graph
+        if: needs.change-scope.outputs.status-only != 'true'
         run: npm audit --audit-level=high
         working-directory: site
 
