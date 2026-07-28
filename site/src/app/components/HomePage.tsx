@@ -640,19 +640,44 @@ function AskAiSection() {
   return (
     <section className="ask-ai-section" data-scroll-scene>
       <div className="ask-ai-card" data-reveal>
-        <div className="ask-ai-lead">
-          <h2>Don&apos;t take<br />our word for it.</h2>
-          <p>Open a prepared question in the model you already use. It asks for a plain-English answer grounded in Ghostify&apos;s public documentation.</p>
+        <div className="ask-ai-composition">
+          <div className="ask-ai-copy">
+            <div className="ask-ai-lead">
+              <h2>Don&apos;t take<br />our word for it.</h2>
+              <p>Open a prepared question in the model you already use. It asks for a plain-English answer grounded in Ghostify&apos;s public documentation.</p>
+            </div>
+            <nav className="ask-ai-actions" aria-label="Ask an AI assistant about Ghostify">
+              {AI_LINKS.map((item) => (
+                <a href={item.href} target="_blank" rel="noopener noreferrer" key={item.name}>
+                  <strong>Ask {item.name}</strong>
+                  <ArrowUpRight size={18} aria-hidden="true" />
+                </a>
+              ))}
+            </nav>
+          </div>
+          <div className="ask-ai-visual" aria-hidden="true">
+            <div className="ask-ai-source-stack">
+              <span className="ask-ai-tape" />
+              <div className="ask-ai-question-sheet">
+                <div className="ask-ai-sheet-meta">
+                  <span>Prepared question</span>
+                  <span>Public documentation</span>
+                </div>
+                <strong>Explain Ghostify<br />in plain English.</strong>
+                <div className="ask-ai-source-list">
+                  <span>Store listings</span>
+                  <span>Public source</span>
+                  <span>Known limits</span>
+                </div>
+              </div>
+              <div className="ask-ai-source-tab">
+                <small>Sources</small>
+                <strong>attached</strong>
+              </div>
+            </div>
+            <span className="ask-ai-ghost"><GhostMark size={112} /></span>
+          </div>
         </div>
-        <nav className="ask-ai-actions" aria-label="Ask an AI assistant about Ghostify">
-          {AI_LINKS.map((item) => (
-            <a href={item.href} target="_blank" rel="noopener noreferrer" key={item.name}>
-              <strong>Ask {item.name}</strong>
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </a>
-          ))}
-        </nav>
-        <span className="ask-ai-ghost" aria-hidden="true"><GhostMark size={170} /></span>
       </div>
     </section>
   );
