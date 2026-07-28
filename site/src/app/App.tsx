@@ -37,7 +37,7 @@ export default function App() {
   }, [statusView]);
 
   return (
-    <SmoothScroll>
+    <SmoothScroll enabled={!statusView}>
       <div className={`site-root${statusView ? ' is-status-view' : ''}`}>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <SiteHeader />

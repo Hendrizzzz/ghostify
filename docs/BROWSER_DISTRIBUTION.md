@@ -9,7 +9,7 @@ browser packages, store listings, and release responsibilities.
 | --- | --- | --- | --- | --- |
 | Chrome Web Store | Chromium MV3 service worker | `dist/manifest.json` | `npm run package:extension` | Published |
 | Microsoft Edge Add-ons | Chromium MV3 service worker | `dist/manifest.json` | `npm run package:extension` | Published |
-| Firefox Browser Add-ons (AMO) | Firefox MV3 background script | `dist/manifest.json` plus `browser-targets/firefox/manifest.overlay.json` | `npm run package:firefox` | Do not claim published until AMO approval |
+| [Firefox Browser Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/ghostify-privacy-controls/) | Firefox MV3 background script | `dist/manifest.json` plus `browser-targets/firefox/manifest.overlay.json` | `npm run package:firefox` | Published |
 
 Chrome Web Store and Microsoft Edge Add-ons use the same built package format,
 but they are independent listings. Their published versions, review states,
@@ -49,8 +49,8 @@ The Firefox package deliberately differs in these fields and behaviors:
   uses the same dynamic `status.json` date, color, and update title as Chromium.
   The display-only privileged request uses no credentials, custom headers,
   query parameters, or body.
-- The Chrome Web Store rating link is omitted until an approved AMO listing URL
-  exists. The Chromium popup remains unchanged.
+- The Firefox popup omits Chromium-specific store rating links. The Chromium
+  popup remains unchanged.
 
 Changing the Gecko ID after the first AMO submission would create a different
 extension identity and is prohibited. Changes to the minimum version, data
