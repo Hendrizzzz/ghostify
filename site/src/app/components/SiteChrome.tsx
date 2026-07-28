@@ -7,10 +7,20 @@ export const CHROME_STORE_URL =
   'https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm';
 export const EDGE_STORE_URL =
   'https://microsoftedge.microsoft.com/addons/detail/ghostify-hide-seen-typ/mgbppdkolkeelimnemlbpmfdddhoeeal';
+export const FIREFOX_STORE_URL =
+  'https://addons.mozilla.org/en-US/firefox/addon/ghostify-privacy-controls/';
 export const GITHUB_URL = 'https://github.com/Hendrizzzz/Ghostify';
 
 function ChromeLogo() {
   return <img className="browser-logo" src="/chrome-current.svg" alt="" />;
+}
+
+function GitHubMark({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.3c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.4c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z" />
+    </svg>
+  );
 }
 
 export function StoreCta({
@@ -68,7 +78,7 @@ export function SiteHeader() {
           <span className={`nav-status-dot nav-status-${statusTone}`} aria-hidden="true" />
           Status
         </a>
-        <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"><Code2 size={14} aria-hidden="true" /> GitHub</a>
+        <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"><GitHubMark /> GitHub</a>
       </nav>
 
       <details
@@ -132,6 +142,7 @@ export function SiteFooter() {
           <span className="footer-label">Install</span>
           <a href={CHROME_STORE_URL} target="_blank" rel="noopener noreferrer">Chrome Web Store</a>
           <a href={EDGE_STORE_URL} target="_blank" rel="noopener noreferrer">Microsoft Edge</a>
+          <a href={FIREFOX_STORE_URL} target="_blank" rel="noopener noreferrer">Firefox Add-ons</a>
         </div>
       </div>
 

@@ -20,7 +20,12 @@ import {
 } from '../statusData';
 import { GhostMark } from './GhostSVG';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
-import { EDGE_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
+import {
+  EDGE_STORE_URL,
+  FIREFOX_STORE_URL,
+  GITHUB_URL,
+  StoreCta,
+} from './SiteChrome';
 
 const FEATURES: Array<{
   platform: MetaPlatform;
@@ -231,7 +236,7 @@ function HeroDetails() {
       <span className="hero-detail hero-detail-dia"><i className="hero-detail-stage"><img src="/dia-current.svg" alt="" /></i></span>
       <span className="hero-detail hero-detail-opera-air"><i className="hero-detail-stage"><img src="/opera-air-current.svg" alt="" /></i></span>
       <span className="hero-detail hero-detail-yandex"><i className="hero-detail-stage"><img src="/yandex-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-whale"><i className="hero-detail-stage"><img src="/whale-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-firefox"><i className="hero-detail-stage"><img src="/firefox-current.svg" alt="" /></i></span>
     </div>
   );
 }
@@ -807,19 +812,28 @@ export function HomePage() {
           <div className="home-final-badges">
             <span><img className="browser-logo" src="/chrome-current.svg" alt="" />Chrome</span>
             <span><img className="browser-logo" src="/edge-current.svg" alt="" />Edge</span>
-            <span><ShieldCheck size={15} aria-hidden="true" />Free</span>
+            <span><img className="browser-logo" src="/firefox-current.svg" alt="" />Firefox</span>
           </div>
           <h2>
             <span className="home-final-brand">Ghostify,</span>
             <span className="home-final-promise">wherever you browse.</span>
           </h2>
-          <p>Quiet privacy controls for supported Meta web apps, ready in the browser you already use.</p>
+          <p>Quiet privacy controls for supported Meta web apps, available for Chrome, Edge, and Firefox.</p>
           <div className="home-final-actions">
             <StoreCta />
-            <a href={EDGE_STORE_URL} target="_blank" rel="noopener noreferrer">Also available for Edge <ArrowUpRight size={15} aria-hidden="true" /></a>
+            <a className="browser-store-link" href={EDGE_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <img className="browser-logo" src="/edge-current.svg" alt="" />
+              Get for Edge
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
+            <a className="browser-store-link" href={FIREFOX_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <img className="browser-logo" src="/firefox-current.svg" alt="" />
+              Get for Firefox
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
           </div>
           <div className="home-final-details">
-            <span><Globe2 size={19} aria-hidden="true" /><b>Web only</b><small>Chrome &amp; Edge</small></span>
+            <span><Globe2 size={19} aria-hidden="true" /><b>Meta web apps</b><small>Chrome · Edge · Firefox</small></span>
             <span><ShieldCheck size={19} aria-hidden="true" /><b>Core controls</b><small>No Ghostify account</small></span>
             <span><Code2 size={19} aria-hidden="true" /><b>Open source</b><small>MIT-licensed Core</small></span>
           </div>

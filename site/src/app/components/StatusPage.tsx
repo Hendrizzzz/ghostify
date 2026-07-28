@@ -149,32 +149,31 @@ function CurrentNotice() {
   const overallStatus = getPublicReleaseStatus();
   const meta = STATUS_META[overallStatus];
   const heading = STATUS_DATA.summary.label;
-  const message = STATUS_DATA.summary.message;
+  const message = meta.tone === 'ok'
+    ? `Checked ${formatStatusDate(STATUS_DATA.generatedAt)} across Instagram, Messenger, and Facebook.`
+    : STATUS_DATA.summary.message;
   const buildsMatch = STATUS_DATA.release.verificationVersion === STATUS_DATA.release.publishedVersion;
 
   return (
     <section className={`status-notice status-notice-${meta.tone}`} aria-label="Current status summary">
       <div className="status-notice-head">
-        <StatusIcon status={overallStatus} size={18} />
-        <strong>Current status</strong>
+        <span className="status-notice-label">
+          <StatusIcon status={overallStatus} size={18} />
+          <strong>Current status</strong>
+        </span>
+        {buildsMatch && (
+          <span className="status-version-pill">Store v{STATUS_DATA.release.publishedVersion}</span>
+        )}
       </div>
       <div className="status-notice-body">
-        <div className="status-version-row">
-          {buildsMatch ? (
-            <span className="status-version-pill">Verified build v{STATUS_DATA.release.verificationVersion}</span>
-          ) : (
-            <>
-              <span className="status-version-pill">Verification build v{STATUS_DATA.release.verificationVersion}</span>
-              <span className="status-version-pill">Store v{STATUS_DATA.release.publishedVersion}</span>
-            </>
-          )}
-        </div>
+        {!buildsMatch && (
+          <div className="status-version-row">
+            <span className="status-version-pill">Verification build v{STATUS_DATA.release.verificationVersion}</span>
+            <span className="status-version-pill">Store v{STATUS_DATA.release.publishedVersion}</span>
+          </div>
+        )}
         <h1>{heading}</h1>
         <p>{message}</p>
-        <div className="status-notice-meta">
-          <span>Last checked {formatStatusDate(STATUS_DATA.generatedAt)}</span>
-          <span>{STATUS_DATA.policy.verificationCadence}</span>
-        </div>
       </div>
     </section>
   );
@@ -351,10 +350,7 @@ function VerificationTimeline() {
   return (
     <div className="status-timeline" aria-label="Dated verification timeline">
       <div className="status-timeline-head">
-        <div>
-          <strong>Status calendar</strong>
-          <span>From the Chrome Web Store launch to today</span>
-        </div>
+        <strong>Status calendar</strong>
         <div className="status-timeline-years" aria-label="Choose a status year">
           {years.map((year) => (
             <button type="button" className={year === selectedYear ? 'is-active' : undefined} onClick={() => changeYear(year)} key={year}>
@@ -457,8 +453,7 @@ function SystemStatus() {
   return (
     <section className="status-panel" aria-labelledby="system-status-heading">
       <div className="status-panel-head">
-        <h2 id="system-status-heading">Verification build checks</h2>
-        <span>Repository v{STATUS_DATA.productVersion}</span>
+        <h2 id="system-status-heading">Verification record</h2>
       </div>
       <VerificationTimeline />
       <div className="status-platform-list">
@@ -485,25 +480,15 @@ function StatusActions() {
   );
 }
 
-function StatusFootnote() {
-  return (
-    <p className="status-footnote">
-      Dated checks are shown here so you can see what was known, and when it was known.
-    </p>
-  );
-}
-
 type HistoryItem = (typeof STATUS_DATA.history)[number];
 type HistoryEventTone = 'operational' | 'update' | 'review' | 'issue';
 
-const HISTORY_EVENT_META: Record<HistoryEventTone, { label: string; description: string }> = {
-  operational: { label: 'All working', description: 'A completed verification found no known issue.' },
-  update: { label: 'Product update', description: 'A version or fix was published.' },
-  review: { label: 'Under review', description: 'Checks or investigation are still in progress.' },
-  issue: { label: 'Known issue', description: 'A user-facing problem was confirmed.' },
+const HISTORY_EVENT_META: Record<HistoryEventTone, { label: string }> = {
+  operational: { label: 'All working' },
+  update: { label: 'Product update' },
+  review: { label: 'Under review' },
+  issue: { label: 'Known issue' },
 };
-
-const HISTORY_EVENT_TONES = Object.keys(HISTORY_EVENT_META) as HistoryEventTone[];
 
 function getHistoryEventTone(item: HistoryItem): HistoryEventTone {
   if (isProductUpdate(item)) return 'update';
@@ -558,7 +543,6 @@ function CurrentStatus() {
       <CurrentNotice />
       <SystemStatus />
       <StatusActions />
-      <StatusFootnote />
     </>
   );
 }
@@ -571,17 +555,6 @@ function HistoryStatus() {
         <div className="status-panel-head">
           <h1 id="history-heading">Status history</h1>
           <span>Public record</span>
-        </div>
-        <div className="status-history-intro">
-          <p>Every update uses the same meaning and color as the status calendar.</p>
-          <div className="status-history-legend" aria-label="Status history color legend">
-            {HISTORY_EVENT_TONES.map((tone) => (
-              <span className={`is-${tone}`} title={HISTORY_EVENT_META[tone].description} key={tone}>
-                <i aria-hidden="true" />
-                {HISTORY_EVENT_META[tone].label}
-              </span>
-            ))}
-          </div>
         </div>
         <div className="status-history-list">
           {buildHistoryGroups().map((group) => (
@@ -607,7 +580,6 @@ function HistoryStatus() {
           ))}
         </div>
       </section>
-      <StatusFootnote />
     </>
   );
 }
@@ -693,7 +665,8 @@ export function StatusPage({ view }: StatusPageProps) {
         .status-notice-head {
           display: flex;
           align-items: center;
-          gap: 10px;
+          justify-content: space-between;
+          gap: 16px;
           min-height: 54px;
           padding: 0 18px;
           border-bottom: 1px solid var(--status-line);
@@ -701,6 +674,11 @@ export function StatusPage({ view }: StatusPageProps) {
           color: var(--status-red-text);
           font-family: var(--g-sans);
           font-size: 0.98rem;
+        }
+        .status-notice-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
         }
         .status-notice-body {
           padding: 18px;
@@ -723,7 +701,7 @@ export function StatusPage({ view }: StatusPageProps) {
           gap: 8px;
         }
         .status-notice h1 {
-          margin: 18px 0 0;
+          margin: 0;
           color: var(--g-white);
           font-family: var(--g-sans);
           font-size: 1rem;
@@ -731,36 +709,17 @@ export function StatusPage({ view }: StatusPageProps) {
           line-height: 1.35;
           letter-spacing: 0;
         }
+        .status-version-row + h1 {
+          margin-top: 18px;
+        }
         .status-notice p,
-        .status-history-row p,
-        .status-footnote {
+        .status-history-row p {
           margin: 8px 0 0;
           color: rgba(239,226,208,0.7);
           font-family: var(--g-sans);
           font-size: 0.91rem;
           line-height: 1.55;
           letter-spacing: 0;
-        }
-        .status-notice-meta {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 7px 10px;
-          margin-top: 12px;
-          color: var(--status-muted);
-          font-family: var(--g-sans);
-          font-size: 0.84rem;
-          line-height: 1.45;
-        }
-        .status-notice-meta span:not(:last-child)::after {
-          content: "";
-          display: inline-block;
-          width: 3px;
-          height: 3px;
-          margin-left: 10px;
-          vertical-align: middle;
-          border-radius: 999px;
-          background: rgba(239,226,208,0.24);
         }
         .status-panel {
           margin-top: 0;
@@ -904,13 +863,6 @@ export function StatusPage({ view }: StatusPageProps) {
           gap: 10px;
           margin: 28px 0 0;
           flex-wrap: wrap;
-        }
-        .status-footnote {
-          max-width: 640px;
-          margin: 36px auto 0;
-          color: var(--status-faint);
-          text-align: center;
-          font-size: 0.78rem;
         }
         .status-history-list {
           display: grid;

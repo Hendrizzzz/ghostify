@@ -4,14 +4,17 @@ import 'lenis/dist/lenis.css';
 
 interface SmoothScrollProps {
   children: ReactNode;
+  enabled?: boolean;
 }
 
 const SCROLL_EASING = (progress: number) => (
   Math.min(1, 1.001 - Math.pow(2, -10 * progress))
 );
 
-export function SmoothScroll({ children }: SmoothScrollProps) {
+export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
   useEffect(() => {
+    if (!enabled) return;
+
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const coarsePointer = window.matchMedia('(pointer: coarse)');
     let lenis: Lenis | null = null;
@@ -60,7 +63,7 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
       coarsePointer.removeEventListener('change', syncPreference);
       lenis?.destroy();
     };
-  }, []);
+  }, [enabled]);
 
   return children;
 }
