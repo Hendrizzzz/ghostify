@@ -4,20 +4,13 @@ import {
   ArrowUpRight,
   Check,
   CircleCheck,
-  Code2,
   EyeOff,
-  Globe2,
   CirclePlay,
   LockKeyhole,
   MessageCircle,
   ShieldCheck,
 } from 'lucide-react';
-import {
-  STATUS_LABELS,
-  formatStatusDate,
-  getLastVerifiedAt,
-  getPublicReleaseStatus,
-} from '../statusData';
+import { formatStatusDate, getLastVerifiedAt } from '../statusData';
 import { GhostMark } from './GhostSVG';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
 import {
@@ -85,10 +78,12 @@ const PLATFORMS: Array<{
   { platform: 'facebook', name: 'Facebook', url: 'facebook.com', qualifier: 'Shared settings with Messenger' },
 ];
 
-const EVIDENCE_LINKS = [
-  { name: 'Privacy policy', href: `${GITHUB_URL}/blob/main/PRIVACY.md` },
-  { name: 'Threat model', href: `${GITHUB_URL}/blob/main/docs/THREAT_MODEL.md` },
-  { name: 'Release checksums', href: `${GITHUB_URL}/releases/latest` },
+const AI_PROMPT = 'Is the Ghostify browser extension by Hendrizzzz right for me? Use only its official Chrome Web Store listing, Firefox Add-ons listing, and GitHub documentation. Explain in plain English what it helps me do, what stays on my device, why it needs access to Instagram, Facebook, and Messenger, and its real limitations. Ignore unrelated Ghostify products and third-party directories. Keep it short.';
+
+const AI_LINKS = [
+  { name: 'ChatGPT', href: `https://chatgpt.com/?q=${encodeURIComponent(AI_PROMPT)}` },
+  { name: 'Claude', href: `https://claude.ai/new?q=${encodeURIComponent(AI_PROMPT)}` },
+  { name: 'Perplexity', href: `https://www.perplexity.ai/search/new?q=${encodeURIComponent(AI_PROMPT)}` },
 ];
 
 const FAQS = [
@@ -165,7 +160,6 @@ function HeroSignalFlow() {
       <div className="signal-processor">
         <span className="signal-catch-ring" />
         <GhostMark size={148} bodyColor="#0f0f0d" eyeColor="#ffffff" />
-        <span className="signal-catch-stamp"><b>held</b><small>in this browser</small></span>
       </div>
     </div>
   );
@@ -245,19 +239,18 @@ function PlatformControlMap() {
   return (
     <div className="platform-control-map" aria-label="Instagram has its own controls. Messenger and Facebook share a control group.">
       <article className="control-map-note control-map-note-own">
+        <span className="control-map-word" aria-hidden="true">own</span>
         <PlatformLogo platform="instagram" size={36} />
-        <span><small>Instagram</small><strong>Keeps its own switches.</strong></span>
-        <em>separate, on purpose</em>
+        <span><small>Instagram</small><strong>Its own switches.</strong></span>
       </article>
       <article className="control-map-note control-map-note-shared">
+        <span className="control-map-word" aria-hidden="true">together</span>
         <span className="control-map-pair">
           <i><PlatformLogo platform="messenger" size={32} /></i>
           <i><PlatformLogo platform="facebook" size={32} /></i>
         </span>
-        <span><small>Messenger + Facebook</small><strong>Move together.</strong></span>
-        <em>one shared set</em>
+        <span><small>Messenger + Facebook</small><strong>One shared set.</strong></span>
       </article>
-      <span className="control-map-pencil" aria-hidden="true">two rhythms, three places</span>
     </div>
   );
 }
@@ -276,12 +269,155 @@ function PrivacyIllustration() {
             <span><MessageCircle size={15} /><b>Typing signal</b><CircleCheck size={15} /></span>
             <span><CirclePlay size={15} /><b>Story view</b><CircleCheck size={15} /></span>
           </div>
-          <span className="privacy-browser-ghost"><GhostMark size={76} bodyColor="#0f0f0d" eyeColor="#ffffff" /></span>
+          <span className="privacy-browser-ghost"><GhostMark size={82} bodyColor="#f3eee2" eyeColor="#0f0f0d" /></span>
         </div>
       </div>
-      <span className="privacy-visual-chip privacy-visual-chip-local">stays local</span>
-      <span className="privacy-visual-chip privacy-visual-chip-account">no account</span>
     </div>
+  );
+}
+
+const PRIVACY_TOPICS = [
+  {
+    label: 'Your controls',
+    title: 'Each signal stays in your hands.',
+    body: 'Seen, typing, and story-view controls remain separate, so you decide exactly what changes.',
+    href: `${GITHUB_URL}/blob/main/PRIVACY.md`,
+    cta: 'Review every permission',
+    external: true,
+  },
+  {
+    label: 'Normal browsing',
+    title: 'Privacy without breaking the conversation.',
+    body: 'Regression checks cover messages, navigation, and media while supported signals are held back.',
+    href: '/status',
+    cta: 'See the latest checks',
+    external: false,
+  },
+  {
+    label: 'Public evidence',
+    title: 'Nothing important is hidden.',
+    body: 'The Core source and release history stay public when Meta changes its web apps.',
+    href: GITHUB_URL,
+    cta: 'Read the source',
+    external: true,
+  },
+];
+
+function PrivacyNoteVisual({ index }: { index: number }) {
+  if (index === 0) {
+    return (
+      <div className="privacy-note-art privacy-note-art-controls" aria-hidden="true">
+        <svg viewBox="0 0 340 166" role="presentation">
+          <path className="privacy-art-wash" d="M21 113C54 34 204 10 318 61c-32 70-185 105-297 52Z" />
+          <path className="privacy-art-paper" d="m42 35 240-13 18 112-246 14Z" />
+          <path className="privacy-art-tape" d="m131 22 63-4 3 16-64 4Z" />
+          <g className="privacy-art-slider privacy-art-slider-seen" transform="translate(60 61) rotate(-2)">
+            <text x="0" y="5">SEEN</text>
+            <path d="M57 0h139" />
+            <circle cx="91" cy="0" r="13" />
+            <text className="privacy-art-state" x="211" y="5">YOURS</text>
+          </g>
+          <g className="privacy-art-slider privacy-art-slider-typing" transform="translate(57 94) rotate(1)">
+            <text x="0" y="5">TYPING</text>
+            <path d="M57 0h139" />
+            <circle cx="153" cy="0" r="13" />
+            <text className="privacy-art-state" x="211" y="5">YOURS</text>
+          </g>
+          <g className="privacy-art-slider privacy-art-slider-story" transform="translate(63 126) rotate(-1)">
+            <text x="0" y="5">STORY VIEW</text>
+            <path d="M57 0h139" />
+            <circle cx="125" cy="0" r="13" />
+            <text className="privacy-art-state" x="211" y="5">YOURS</text>
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
+  if (index === 1) {
+    return (
+      <div className="privacy-note-art privacy-note-art-conversation" aria-hidden="true">
+        <svg viewBox="0 0 340 166" role="presentation">
+          <path className="privacy-art-wash" d="M17 101c47-68 193-89 308-20-46 66-204 96-308 20Z" />
+          <path className="privacy-chat-route" d="M31 111c60 48 214 49 280-18" />
+          <path className="privacy-chat-shape privacy-chat-shape-one" d="M34 27h135a18 18 0 0 1 18 18v35a18 18 0 0 1-18 18H91l-33 24 8-24H34A18 18 0 0 1 16 80V45a18 18 0 0 1 18-18Z" />
+          <text className="privacy-chat-label" x="42" y="54">CONVERSATION</text>
+          <text className="privacy-chat-copy" x="42" y="77">keeps moving</text>
+          <path className="privacy-chat-shape privacy-chat-shape-two" d="M192 45h116a18 18 0 0 1 18 18v28a18 18 0 0 1-18 18h-24l8 24-35-24h-65a18 18 0 0 1-18-18V63a18 18 0 0 1 18-18Z" />
+          <text className="privacy-chat-label privacy-chat-label-dark" x="201" y="72">PRIVACY</text>
+          <text className="privacy-chat-copy privacy-chat-copy-dark" x="201" y="94">stays local</text>
+          <circle className="privacy-chat-route-dot" cx="51" cy="122" r="4" />
+          <circle className="privacy-chat-route-dot" cx="290" cy="111" r="4" />
+        </svg>
+        <span className="privacy-conversation-ghost">
+          <GhostMark size={54} bodyColor="#f3eee2" eyeColor="#0f0f0d" />
+        </span>
+      </div>
+    );
+  }
+
+  const verifiedDate = formatStatusDate(getLastVerifiedAt()).toUpperCase();
+
+  return (
+    <div className="privacy-note-art privacy-note-art-proof" aria-hidden="true">
+      <svg viewBox="0 0 340 166" role="presentation">
+        <path className="privacy-art-wash" d="M18 113c29-76 183-110 306-54-23 76-188 116-306 54Z" />
+        <path className="privacy-art-tape privacy-proof-tape" transform="rotate(2 170 22)" d="m136 14 68-2 1 17-67 2Z" />
+        <g className="privacy-proof-sheet privacy-proof-sheet-source" transform="rotate(-7 101 83)">
+          <rect x="37" y="35" width="128" height="96" rx="9" />
+          <text x="53" y="61">SOURCE</text>
+          <text className="privacy-proof-kind" x="53" y="82">CORE</text>
+          <path d="M53 96h83M53 108h67M53 120h76" />
+        </g>
+        <g className="privacy-proof-sheet privacy-proof-sheet-check" transform="rotate(5 191 73)">
+          <rect x="127" y="22" width="128" height="102" rx="9" />
+          <text x="144" y="50">CHECKS</text>
+          <text className="privacy-proof-date" x="144" y="73">{verifiedDate}</text>
+          <path className="privacy-proof-tick" d="m188 91 10 10 23-28" />
+        </g>
+        <g className="privacy-proof-release">
+          <path d="m231 49 78 13-12 75-79-14Z" />
+          <text x="247" y="83">RELEASES</text>
+          <text x="248" y="102">PUBLIC</text>
+        </g>
+        <circle className="privacy-proof-stamp" cx="282" cy="126" r="24" />
+      </svg>
+    </div>
+  );
+}
+
+function PrivacySection() {
+  return (
+    <section className="privacy-flat" id="privacy" data-scroll-scene>
+      <div className="privacy-flat-panel">
+        <div className="privacy-showcase-lead" data-reveal>
+          <div className="privacy-showcase-copy">
+            <h2>Made for privacy<br />that stays <em>yours.</em></h2>
+            <p>Three ways Ghostify keeps control close to you.</p>
+          </div>
+          <div className="privacy-showcase-visual">
+            <PrivacyIllustration />
+          </div>
+        </div>
+
+        <div className="privacy-principles-static" data-reveal aria-label="Ghostify privacy principles">
+          {PRIVACY_TOPICS.map((topic, index) => (
+            <article className={`privacy-static-note privacy-static-note-${index + 1}`} key={topic.label}>
+              <PrivacyNoteVisual index={index} />
+              <h3>{topic.title}</h3>
+              <p>{topic.body}</p>
+              <a
+                href={topic.href}
+                target={topic.external ? '_blank' : undefined}
+                rel={topic.external ? 'noopener noreferrer' : undefined}
+              >
+                {topic.cta} <ArrowUpRight size={15} aria-hidden="true" />
+              </a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -500,28 +636,23 @@ function InstallRhythm() {
   );
 }
 
-function EvidenceSection() {
+function AskAiSection() {
   return (
-    <section className="evidence-section" data-scroll-scene>
-      <div className="evidence-card" data-reveal>
-        <div className="evidence-lead">
-          <h2>Inspect the<br />public evidence.</h2>
-          <p>Review what Ghostify can access, where its trust boundaries sit, and how release artifacts are published.</p>
+    <section className="ask-ai-section" data-scroll-scene>
+      <div className="ask-ai-card" data-reveal>
+        <div className="ask-ai-lead">
+          <h2>Don&apos;t take<br />our word for it.</h2>
+          <p>Open a prepared question in the model you already use. It asks for a plain-English answer grounded in Ghostify&apos;s public documentation.</p>
         </div>
-        <div className="evidence-actions">
-          {EVIDENCE_LINKS.map((item) => (
+        <nav className="ask-ai-actions" aria-label="Ask an AI assistant about Ghostify">
+          {AI_LINKS.map((item) => (
             <a href={item.href} target="_blank" rel="noopener noreferrer" key={item.name}>
-              {item.name}
+              <strong>Ask {item.name}</strong>
               <ArrowUpRight size={18} aria-hidden="true" />
             </a>
           ))}
-        </div>
-        <div className="evidence-proof" aria-label="Ghostify public evidence">
-          <span><Code2 size={20} aria-hidden="true" /><strong>Open source</strong></span>
-          <span><LockKeyhole size={20} aria-hidden="true" /><strong>Clear permissions</strong></span>
-          <span><ShieldCheck size={20} aria-hidden="true" /><strong>Latest checks</strong></span>
-        </div>
-        <span className="evidence-ghost" aria-hidden="true"><GhostMark size={170} /></span>
+        </nav>
+        <span className="ask-ai-ghost" aria-hidden="true"><GhostMark size={170} /></span>
       </div>
     </section>
   );
@@ -632,17 +763,8 @@ function FeatureScroll() {
         <figure className="feature-scroll-media" key={`media-${activeFeature.platform}`}>
           <div className="feature-media-frame">
             <div className={`feature-signal-note feature-signal-note-${activeFeature.platform}`} aria-hidden="true">
-              <span className="feature-note-tape" />
               <span className="feature-note-source"><PlatformLogo platform={activeFeature.platform} size={25} /><small>{activeFeature.name} on the web</small></span>
               <strong>{signalNote}</strong>
-              <em>Ghostify holds it in this browser.</em>
-              <span className="feature-note-stamp"><GhostMark size={25} bodyColor="#f3eee2" eyeColor="#0f0f0d" /><b>local</b></span>
-              <svg className="feature-note-arrow" viewBox="0 0 120 64" preserveAspectRatio="none">
-                <path className="feature-note-arrow-halo" d="M8 8C34 10 50 22 63 43C73 56 91 57 108 48" />
-                <path className="feature-note-arrow-halo" d="M97 42L109 48L101 58" />
-                <path className="feature-note-arrow-ink" d="M8 8C34 10 50 22 63 43C73 56 91 57 108 48" />
-                <path className="feature-note-arrow-ink" d="M97 42L109 48L101 58" />
-              </svg>
             </div>
             <div className={`feature-media-crop feature-media-crop-${activeFeature.platform}`}>
               <img
@@ -698,7 +820,6 @@ function FeatureScroll() {
 }
 
 export function HomePage() {
-  const releaseStatus = getPublicReleaseStatus();
   const lastVerified = formatStatusDate(getLastVerifiedAt());
 
   return (
@@ -714,12 +835,11 @@ export function HomePage() {
               <StoreCta />
               <a href="#features">See it in action <ArrowDown size={16} aria-hidden="true" /></a>
             </div>
-            <p className="home-hero-fineprint">No Ghostify account or social password required.</p>
-            <div className="hero-trust-row" aria-label="Ghostify trust summary">
-              <span><Code2 size={14} aria-hidden="true" />Open source</span>
-              <span><LockKeyhole size={14} aria-hidden="true" />Browser-local controls</span>
-              <a href="/status"><ShieldCheck size={14} aria-hidden="true" />Checked {lastVerified}</a>
-            </div>
+            <p className="home-hero-provenance">
+              No account or social password. Controls stay in your browser.{' '}
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">Source</a> and{' '}
+              <a href="/status">verification dated {lastVerified}</a> are public.
+            </p>
           </div>
 
           <div className="home-hero-art">
@@ -754,33 +874,7 @@ export function HomePage() {
         <a className="platforms-status" href="/status">Coverage changes with the platforms. See verification dated {lastVerified}. <ArrowUpRight size={16} aria-hidden="true" /></a>
       </section>
 
-      <section className="privacy-flat" id="privacy" data-scroll-scene>
-        <div className="privacy-flat-lead" data-reveal>
-          <h2>Local by default.<br />Open to inspection.</h2>
-          <div className="privacy-flat-aside">
-            <PrivacyIllustration />
-          </div>
-        </div>
-        <div className="privacy-flat-points" data-reveal>
-          <article tabIndex={0}>
-            <ShieldCheck size={26} aria-hidden="true" />
-            <div><h3>You choose each signal.</h3><p>Seen, typing, and story-view controls stay separate.</p></div>
-          </article>
-          <article tabIndex={0}>
-            <LockKeyhole size={26} aria-hidden="true" />
-            <div><h3>Designed to preserve normal browsing.</h3><p>Regression tests and live checks cover messages, navigation, and media while supported privacy signals are targeted.</p></div>
-          </article>
-          <article tabIndex={0}>
-            <Code2 size={26} aria-hidden="true" />
-            <div><h3>The evidence is public.</h3><p>Read the source and check dated verification whenever Meta changes its web apps.</p></div>
-          </article>
-        </div>
-        <div className="privacy-flat-links" data-reveal>
-          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer"><Code2 size={22} aria-hidden="true" /><span><strong>Read the source</strong>Ghostify Core is MIT licensed.</span><ArrowUpRight size={17} aria-hidden="true" /></a>
-          <a href={`${GITHUB_URL}/blob/main/PRIVACY.md`} target="_blank" rel="noopener noreferrer"><LockKeyhole size={22} aria-hidden="true" /><span><strong>Review every permission</strong>See what runs locally and why.</span><ArrowUpRight size={17} aria-hidden="true" /></a>
-          <a href="/status"><ShieldCheck size={22} aria-hidden="true" /><span><strong>Check public status</strong>{STATUS_LABELS[releaseStatus]}.</span><ArrowUpRight size={17} aria-hidden="true" /></a>
-        </div>
-      </section>
+      <PrivacySection />
 
       <FootprintSection />
       <InstallRhythm />
@@ -805,15 +899,10 @@ export function HomePage() {
         </div>
       </section>
 
-      <EvidenceSection />
+      <AskAiSection />
 
       <section className="home-final" data-scroll-scene>
         <div data-reveal>
-          <div className="home-final-badges">
-            <span><img className="browser-logo" src="/chrome-current.svg" alt="" />Chrome</span>
-            <span><img className="browser-logo" src="/edge-current.svg" alt="" />Edge</span>
-            <span><img className="browser-logo" src="/firefox-current.svg" alt="" />Firefox</span>
-          </div>
           <h2>
             <span className="home-final-brand">Ghostify,</span>
             <span className="home-final-promise">wherever you browse.</span>
@@ -831,11 +920,6 @@ export function HomePage() {
               Get for Firefox
               <ArrowUpRight size={15} aria-hidden="true" />
             </a>
-          </div>
-          <div className="home-final-details">
-            <span><Globe2 size={19} aria-hidden="true" /><b>Meta web apps</b><small>Chrome · Edge · Firefox</small></span>
-            <span><ShieldCheck size={19} aria-hidden="true" /><b>Core controls</b><small>No Ghostify account</small></span>
-            <span><Code2 size={19} aria-hidden="true" /><b>Open source</b><small>MIT-licensed Core</small></span>
           </div>
         </div>
       </section>
