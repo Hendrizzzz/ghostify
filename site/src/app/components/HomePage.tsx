@@ -86,6 +86,8 @@ const AI_LINKS = [
   { name: 'Perplexity', href: `https://www.perplexity.ai/search/new?q=${encodeURIComponent(AI_PROMPT)}` },
 ];
 
+const EXTENSION_FOOTPRINT_KIB = 64.57;
+
 const FAQS = [
   {
     q: 'Why does Chrome say Ghostify can read and change data on these sites?',
@@ -101,7 +103,7 @@ const FAQS = [
   },
   {
     q: 'Which browsers are officially supported?',
-    a: 'Chrome and Microsoft Edge are Ghostify\'s official store builds. Opera, Opera GX, Opera Air, Brave, Vivaldi, Arc, Dia, Yandex Browser, and NAVER Whale can use the Chrome build where the browser permits Chrome Web Store extensions; browser-specific policies can change.',
+    a: 'Ghostify officially supports Google Chrome, Microsoft Edge, and Mozilla Firefox. Opera, Opera GX, Opera Air, Brave, Vivaldi, Arc, Dia, Yandex Browser, and NAVER Whale may also run the Chrome build when they permit Chrome Web Store extensions, but browser-specific policies can change.',
   },
   {
     q: 'Can I choose different controls for each platform?',
@@ -431,7 +433,7 @@ function AnimatedFootprintMetric() {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) {
-      setValue(63.09);
+      setValue(EXTENSION_FOOTPRINT_KIB);
       return;
     }
 
@@ -444,7 +446,7 @@ function AnimatedFootprintMetric() {
       const update = (now: number) => {
         const progress = Math.min(1, (now - startedAt) / 900);
         const eased = 1 - Math.pow(1 - progress, 3);
-        setValue(63.09 * eased);
+        setValue(EXTENSION_FOOTPRINT_KIB * eased);
         if (progress < 1) frame = window.requestAnimationFrame(update);
       };
 
@@ -461,7 +463,7 @@ function AnimatedFootprintMetric() {
   const displayValue = value === 0 ? '0' : value.toFixed(2);
 
   return (
-    <article ref={metricRef} aria-label="63.09 KiB extension footprint">
+    <article ref={metricRef} aria-label={`${EXTENSION_FOOTPRINT_KIB.toFixed(2)} KiB extension footprint`}>
       <strong aria-hidden="true">{displayValue}<span>KiB</span></strong>
       <small aria-hidden="true">extension footprint</small>
     </article>
@@ -626,7 +628,7 @@ function InstallRhythm() {
         <span className="install-path-line" aria-hidden="true"><i /></span>
         <span className="install-path-ghost" aria-hidden="true"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
         <ol>
-        <li><span>01</span><div><strong>Add Ghostify</strong><small>Install from Chrome or Edge.</small></div></li>
+        <li><span>01</span><div><strong>Add Ghostify</strong><small>Install from Chrome, Edge, or Firefox.</small></div></li>
         <li><span>02</span><div><strong>Pin Ghostify</strong><small>Open Extensions, then pin Ghostify for quick access.</small></div></li>
         <li><span>03</span><div><strong>Reload your Meta tabs</strong><small>Let Ghostify start before the page does.</small></div></li>
         <li><span>04</span><div><strong>Choose your quiet</strong><small>Switch Seen, Typing, and Story Views independently.</small></div></li>
@@ -860,11 +862,6 @@ export function HomePage() {
               <StoreCta />
               <a href="#features">See it in action <ArrowDown size={16} aria-hidden="true" /></a>
             </div>
-            <p className="home-hero-provenance">
-              No account or social password. Controls stay in your browser.{' '}
-              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">Source</a> and{' '}
-              <a href="/status">verification dated {lastVerified}</a> are public.
-            </p>
           </div>
 
           <div className="home-hero-art">

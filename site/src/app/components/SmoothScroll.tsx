@@ -24,7 +24,7 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
 
       if (shouldSmooth && !lenis) {
         lenis = new Lenis({
-          anchors: { offset: -86 },
+          anchors: true,
           autoRaf: true,
           duration: 1.2,
           easing: SCROLL_EASING,
