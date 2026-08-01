@@ -145,7 +145,7 @@
 }
 
 .home-hero {
-  min-height: max(100svh, 760px);
+  min-height: clamp(760px, 70vw, 900px);
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -158,7 +158,7 @@
 
 .home-hero-inner {
   width: min(calc(100% - clamp(32px, 4vw, 64px)), 1280px);
-  min-height: max(100svh, 760px);
+  min-height: clamp(760px, 70vw, 900px);
   margin: 0 auto;
   padding: 0;
   position: relative;
@@ -260,12 +260,12 @@
 
 .home-hero-art {
   width: 100%;
-  height: clamp(300px, 42svh, 440px);
+  height: clamp(300px, 30vw, 440px);
   min-height: 0;
   position: absolute;
   left: 0;
   right: 0;
-  bottom: clamp(-92px, -8svh, -54px);
+  bottom: clamp(-92px, -5vw, -54px);
   z-index: 1;
 }
 
@@ -480,12 +480,8 @@
 .hero-detail-messenger { right: 7%; top: 23%; --detail-rotate: 8deg; }
 .hero-detail-instagram,
 .hero-detail-messenger {
-  /* Preserve the headline on narrow or short screens without a hard visibility jump. */
-  opacity: clamp(
-    0,
-    min(calc((100vw - 340px) / 50px), calc((100svh - 720px) / 120px)),
-    1
-  );
+  /* Preserve the headline at narrow widths without reacting to window height. */
+  opacity: clamp(0, calc((100vw - 340px) / 50px), 1);
 }
 .hero-detail-facebook { left: 8%; bottom: 17%; --detail-rotate: 7deg; }
 .hero-detail-seen { left: 2.5%; top: 47%; --detail-rotate: -5deg; }
@@ -703,19 +699,21 @@
 
 .feature-scroll {
   --feature-progress: 0;
-  height: 400vh;
+  /* Keep the feature journey consistent across short and tall windows. */
+  height: calc(100svh + 2400px);
   position: relative;
   background: linear-gradient(180deg, var(--home-cream) 0, var(--home-grey) 190px, var(--home-grey) 100%);
 }
 
 .feature-scroll-sticky {
-  min-height: 100svh;
-  padding: 108px max(32px, calc((100vw - 1280px) / 2));
+  height: 100svh;
+  min-height: 720px;
+  padding: clamp(76px, 6vw, 108px) max(32px, calc((100vw - 1280px) / 2));
   position: sticky;
   top: 0;
   display: grid;
   grid-template-columns: minmax(340px, 0.84fr) minmax(520px, 1.16fr);
-  align-items: center;
+  align-items: start;
   gap: clamp(60px, 8vw, 130px);
   overflow: hidden;
   isolation: isolate;
@@ -743,7 +741,7 @@
 }
 
 .feature-scroll-copy {
-  min-height: min(720px, calc(100svh - 216px));
+  min-height: clamp(520px, 40vw, 640px);
   position: relative;
   z-index: 3;
   display: flex;
@@ -801,7 +799,7 @@
 
 .feature-scroll-tools {
   min-height: 0;
-  margin-top: clamp(40px, 5svh, 58px);
+  margin-top: clamp(34px, 3vw, 48px);
   padding-bottom: 0;
   align-self: flex-start;
   display: flex;
@@ -985,7 +983,7 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 760px;
+  max-height: clamp(520px, 45vw, 700px);
   display: block;
   object-fit: contain;
 }
@@ -1005,7 +1003,7 @@
   position: absolute;
   left: max(32px, calc((100vw - 1280px) / 2));
   right: max(32px, calc((100vw - 1280px) / 2));
-  bottom: clamp(64px, 8svh, 88px);
+  bottom: clamp(48px, 4vw, 72px);
   z-index: 5;
   display: flex;
   align-items: stretch;
@@ -1389,7 +1387,6 @@
   height: auto;
   margin: 150px 0 70px;
   padding: 0;
-  scroll-margin-top: 96px;
   overflow: visible;
   color: var(--home-cream);
   background: transparent;
@@ -3016,41 +3013,6 @@
 .platform-card-grid [data-reveal]:nth-child(2) { transition-delay: 90ms; }
 .platform-card-grid [data-reveal]:nth-child(3) { transition-delay: 180ms; }
 
-@media (min-width: 1081px) and (max-height: 1000px) {
-  .feature-scroll-sticky {
-    height: 100svh;
-    min-height: 0;
-    padding-top: 88px;
-    padding-bottom: 56px;
-  }
-
-  .feature-scroll-copy {
-    min-height: calc(100svh - 176px);
-  }
-
-  .feature-copy-changing h2 {
-    max-width: 620px;
-    font-size: var(--type-section-size);
-  }
-
-  .feature-scroll-tools {
-    margin-top: clamp(32px, 4svh, 46px);
-    padding-bottom: 0;
-  }
-
-  .feature-media-frame {
-    padding-top: 86px;
-  }
-
-  .feature-scroll-media img {
-    max-height: min(760px, calc(100svh - 238px));
-  }
-
-  .feature-scroll-nav {
-    display: none;
-  }
-}
-
 @media (max-width: 1080px) {
   .install-rhythm {
     grid-template-columns: minmax(280px, 0.8fr) minmax(460px, 1.2fr);
@@ -3068,7 +3030,6 @@
 
   .feature-scroll {
     height: auto;
-    scroll-margin-top: 84px;
   }
 
   .feature-scroll-sticky {
