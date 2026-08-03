@@ -62,10 +62,10 @@ grouped by version, with the most recent changes first.
   website runtime advisories block proposal creation, and required pull-request
   CI keeps runtime advisories blocking while performing complete reviews on
   non-status changes.
-- Added a development-only, expiring allowance for the upstream
-  `brace-expansion` advisory inherited through `web-ext`; unrelated high or
-  critical advisories still block changes, and the scheduled raw audit keeps
-  the upstream finding visible until the toolchain publishes a compatible fix.
+- Updated the development toolchain to patched `brace-expansion` `1.1.18` and
+  removed its temporary audit allowance now that a compatible remediation is
+  available; complete high-severity audits again use npm's native blocking
+  result.
 - Replaced production-shaped conversation labels and identifiers in Messenger
   regression fixtures with clearly synthetic values.
 - Separated the published verification target from the repository version so

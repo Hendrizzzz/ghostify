@@ -57,8 +57,9 @@ assert(
     validateJob.includes('id: extension-dependency-review') &&
         validateJob.includes('id: site-dependency-review') &&
         validateJob.includes('continue-on-error: true') &&
-        validateJob.includes('A complete dependency audit did not pass.'),
-    'complete dependency audit failures must stay visible while required CI remains the merge gate'
+        validateJob.includes('Runtime dependency findings and validation failures block required CI') &&
+        validateJob.includes('development-tool findings remain visible for separate maintainer review'),
+    'complete dependency audit warnings must distinguish blocking runtime findings from development-tool review'
 );
 assert(
     packageJson.scripts['audit:runtime'].includes('--omit=dev') &&
@@ -72,8 +73,10 @@ assert(
     'daily verification must keep website runtime advisories blocking'
 );
 assert(
-    packageJson.scripts.ci.includes('audit:high'),
-    'normal CI must keep the complete dependency audit blocking'
+    packageJson.scripts.ci.includes('audit:high') &&
+        packageJson.scripts['audit:high'] === 'npm audit --audit-level=high' &&
+        !Object.hasOwn(packageJson.scripts, 'audit:high:raw'),
+    'normal CI must use the native complete dependency audit as a blocking check'
 );
 assert(
     ciWorkflow.includes('Detect canonical status-only change') &&
@@ -94,7 +97,7 @@ assert(
 );
 assert(
     dependencyAuditWorkflow.includes('schedule:') &&
-        dependencyAuditWorkflow.includes('run: npm run audit:high:raw') &&
+        dependencyAuditWorkflow.includes('run: npm run audit:high') &&
         dependencyAuditWorkflow.includes('run: npm audit --audit-level=high'),
     'a scheduled read-only workflow must keep complete extension and site audits visible'
 );

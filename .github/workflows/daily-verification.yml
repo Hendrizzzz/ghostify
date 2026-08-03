@@ -190,7 +190,7 @@ jobs:
         shell: bash
         run: |
           echo "::warning::The complete dependency review needs maintainer attention."
-          echo "A complete dependency audit did not pass. The proposal may still be opened, but required CI will keep it blocked until every high-severity finding or operational audit failure is resolved." >> "$GITHUB_STEP_SUMMARY"
+          echo "A complete dependency audit did not pass. The proposal may still be opened. Runtime dependency findings and validation failures block required CI; development-tool findings remain visible for separate maintainer review." >> "$GITHUB_STEP_SUMMARY"
 
   publish-proposal:
     name: Publish maintainer approval proposal

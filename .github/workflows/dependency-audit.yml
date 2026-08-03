@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Audit complete extension dependency graph
-        run: npm run audit:high:raw
+        run: npm run audit:high
 
   site:
     name: Site dependency graph
