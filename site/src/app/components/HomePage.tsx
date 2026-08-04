@@ -392,7 +392,7 @@ function PrivacySection() {
   return (
     <section className="privacy-flat" id="privacy" data-scroll-scene>
       <div className="privacy-flat-panel">
-        <div className="privacy-showcase-lead" data-reveal>
+        <div className="privacy-showcase-lead">
           <div className="privacy-showcase-copy">
             <h2>Made for privacy<br />that stays <em>yours.</em></h2>
             <p>Three ways Ghostify keeps control close to you.</p>
@@ -402,7 +402,7 @@ function PrivacySection() {
           </div>
         </div>
 
-        <div className="privacy-principles-static" data-reveal aria-label="Ghostify privacy principles">
+        <div className="privacy-principles-static" aria-label="Ghostify privacy principles">
           {PRIVACY_TOPICS.map((topic, index) => (
             <article className={`privacy-static-note privacy-static-note-${index + 1}`} key={topic.label}>
               <PrivacyNoteVisual index={index} />
@@ -491,20 +491,11 @@ function ScrollChoreography() {
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scenes = Array.from(document.querySelectorAll<HTMLElement>('[data-scroll-scene]'));
-    const reveals = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
 
     if (reducedMotion) {
-      reveals.forEach((item) => item.classList.add('is-visible'));
       scenes.forEach((scene) => scene.style.setProperty('--scene-progress', '0.5'));
       return;
     }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add('is-visible');
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
-    reveals.forEach((item) => observer.observe(item));
 
     const sceneStates = scenes.map((scene) => ({ scene, current: 0, target: 0 }));
     const measure = () => {
@@ -559,7 +550,6 @@ function ScrollChoreography() {
     window.addEventListener('scroll', requestUpdate, { passive: true });
     window.addEventListener('resize', requestUpdate);
     return () => {
-      observer.disconnect();
       window.removeEventListener('scroll', requestUpdate);
       window.removeEventListener('resize', requestUpdate);
       if (frame) window.cancelAnimationFrame(frame);
@@ -620,11 +610,11 @@ function FactMarquee() {
 function InstallRhythm() {
   return (
     <section className="install-rhythm" aria-labelledby="install-rhythm-title" data-scroll-scene>
-      <header data-reveal>
+      <header>
         <h2 id="install-rhythm-title">One minute.<br />Then it disappears.</h2>
         <p>Four small moves, then Ghostify settles into the background.</p>
       </header>
-      <div className="install-rhythm-path" data-reveal>
+      <div className="install-rhythm-path">
         <span className="install-path-line" aria-hidden="true"><i /></span>
         <span className="install-path-ghost" aria-hidden="true"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
         <ol>
@@ -641,7 +631,7 @@ function InstallRhythm() {
 function AskAiSection() {
   return (
     <section className="ask-ai-section" data-scroll-scene>
-      <div className="ask-ai-card" data-reveal>
+      <div className="ask-ai-card">
         <div className="ask-ai-composition">
           <div className="ask-ai-copy">
             <div className="ask-ai-lead">
@@ -873,13 +863,13 @@ export function HomePage() {
       <FeatureScroll />
 
       <section className="platforms-flat" id="platforms" data-scroll-scene>
-        <header data-reveal>
+        <header>
           <h2>Three controls.<br /><span>Two groups. Three places.</span></h2>
           <PlatformControlMap />
         </header>
         <div className="platform-card-grid">
           {PLATFORMS.map((item) => (
-            <article className={`platform-card platform-card-${item.platform}`} key={item.platform} data-reveal>
+            <article className={`platform-card platform-card-${item.platform}`} key={item.platform}>
               <header>
                 <PlatformLogo platform={item.platform} size={54} />
                 <span><strong>{item.name}</strong><small>{item.url}</small></span>
@@ -903,11 +893,11 @@ export function HomePage() {
       <FactMarquee />
 
       <section className="faq-flat" data-scroll-scene>
-        <header data-reveal>
+        <header>
           <h2>Before you install.</h2>
           <p>Plain answers, without the disappearing fine print.</p>
         </header>
-        <div className="faq-flat-list" data-reveal>
+        <div className="faq-flat-list">
           {FAQS.map((item, index) => (
             <details key={item.q}>
               <summary>
@@ -924,7 +914,7 @@ export function HomePage() {
       <AskAiSection />
 
       <section className="home-final" data-scroll-scene>
-        <div data-reveal>
+        <div>
           <h2>
             <span className="home-final-brand">Ghostify,</span>
             <span className="home-final-promise">wherever you browse.</span>
