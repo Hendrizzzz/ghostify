@@ -57,9 +57,10 @@ assert(
     validateJob.includes('id: extension-dependency-review') &&
         validateJob.includes('id: site-dependency-review') &&
         validateJob.includes('continue-on-error: true') &&
-        validateJob.includes('Runtime dependency findings and validation failures block required CI') &&
-        validateJob.includes('development-tool findings remain visible for separate maintainer review'),
-    'complete dependency audit warnings must distinguish blocking runtime findings from development-tool review'
+        validateJob.includes('id: dependency-review-status') &&
+        validateJob.includes('dependency_review_failed: ${{ steps.dependency-review-status.outputs.failed }}') &&
+        validateJob.includes('The green verification proposal will be opened as a draft and must not be merged'),
+    'complete dependency audit findings must be exposed to the publishing job and block a ready proposal'
 );
 assert(
     packageJson.scripts['audit:runtime'].includes('--omit=dev') &&
@@ -90,10 +91,28 @@ assert(
     'required CI must grant the runtime-only audit path solely from an exact PR or merge-group diff'
 );
 assert(
-    ciWorkflow.match(/run: npm run audit:runtime/g)?.length === 3 &&
-        ciWorkflow.match(/run: npm run audit:high/g)?.length === 2 &&
+    ciWorkflow.match(/run: npm run audit:runtime/g)?.length === 2 &&
+        ciWorkflow.match(/run: npm run audit:high/g)?.length === 1 &&
         ciWorkflow.includes('run: npm audit --audit-level=high'),
-    'status-only CI must block on runtime audits while other changes retain complete audits'
+    'status-only CI must run one extension runtime audit while other changes retain one complete extension audit'
+);
+assert(
+    ciWorkflow.includes('name: Extension dependency audit') &&
+        ciWorkflow.includes('if: always()') &&
+        ciWorkflow.includes('- extension-audit') &&
+        ciWorkflow.includes('- release-package') &&
+        ciWorkflow.includes('- firefox-release-package') &&
+        ciWorkflow.includes('A required extension gate did not pass.'),
+    'the required Extension checks context must aggregate browser, audit, and package gates without skip-based bypasses'
+);
+const releasePackageJob = ciWorkflow.slice(
+    ciWorkflow.indexOf('  release-package:'),
+    ciWorkflow.indexOf('  firefox-release-package:')
+);
+const firefoxReleasePackageJob = ciWorkflow.slice(ciWorkflow.indexOf('  firefox-release-package:'));
+assert(
+    releasePackageJob.includes('- extension-audit') && firefoxReleasePackageJob.includes('- extension-audit'),
+    'release-package jobs must not create or upload artifacts before the extension dependency audit passes'
 );
 assert(
     dependencyAuditWorkflow.includes('schedule:') &&
@@ -107,6 +126,22 @@ assert(
         publishJob.includes('pull-requests: write') &&
         !publishJob.includes('run: npm ci'),
     'the write-enabled publishing job must not install package dependencies'
+);
+assert(
+    publishJob.includes('DEPENDENCY_REVIEW_FAILED: ${{ needs.validate-proposal.outputs.dependency_review_failed }}') &&
+        publishJob.includes('The complete development dependency audit did not pass.') &&
+        publishJob.includes('This yellow status update may still be reviewed and merged') &&
+        publishJob.includes('"$MODE" == "verified" && "$DEPENDENCY_REVIEW_FAILED" == "true"') &&
+        publishJob.includes('gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY" --undo') &&
+        publishJob.includes('create_args+=(--draft)'),
+    'green verification proposals must remain drafts on audit failure without delaying yellow issue disclosure'
+);
+assert(
+    publishJob.indexOf('Protect existing green proposal during dependency review failure') >= 0 &&
+        publishJob.indexOf('Protect existing green proposal during dependency review failure') <
+            publishJob.indexOf('Push or refresh proposal branch') &&
+        publishJob.includes('Refusing to refresh an audit-failing green proposal that could not be protected as a draft.'),
+    'an existing green proposal must become draft before its branch is refreshed with audit-failing status data'
 );
 assert(
     publishJob.includes('echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"') &&
