@@ -55,6 +55,7 @@ jobs:
       target_version: ${{ steps.proposal.outputs.target_version }}
       verification_version: ${{ steps.proposal.outputs.verification_version }}
       base_status: ${{ steps.proposal.outputs.base_status }}
+      dependency_review_failed: ${{ steps.dependency-review-status.outputs.failed }}
     env:
       MODE: ${{ github.event.inputs.mode || 'verified' }}
       FEATURES: ${{ github.event.inputs.features || '' }}
@@ -71,7 +72,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
           cache: npm
@@ -183,14 +184,25 @@ jobs:
           fi
           git diff --check
 
-      - name: Record complete dependency review warning
-        if: >-
-          steps.extension-dependency-review.outcome == 'failure' ||
-          steps.site-dependency-review.outcome == 'failure'
+      - name: Record complete dependency review status
+        id: dependency-review-status
+        if: steps.proposal.outputs.ready == 'true'
         shell: bash
+        env:
+          EXTENSION_REVIEW_OUTCOME: ${{ steps.extension-dependency-review.outcome }}
+          SITE_REVIEW_OUTCOME: ${{ steps.site-dependency-review.outcome }}
         run: |
-          echo "::warning::The complete dependency review needs maintainer attention."
-          echo "A complete dependency audit did not pass. The proposal may still be opened, but required CI will keep it blocked until every high-severity finding or operational audit failure is resolved." >> "$GITHUB_STEP_SUMMARY"
+          failed=false
+          if [[ "$EXTENSION_REVIEW_OUTCOME" == "failure" || "$SITE_REVIEW_OUTCOME" == "failure" ]]; then
+            failed=true
+            echo "::warning::The complete dependency review needs maintainer attention."
+            if [[ "$MODE" == "verified" ]]; then
+              echo "A complete dependency audit did not pass. The green verification proposal will be opened as a draft and must not be merged until the finding is resolved. Runtime dependency findings and validation failures remain blocking." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "A complete dependency audit did not pass. The yellow status proposal may still be reviewed and merged so a user-facing issue is not hidden. Runtime dependency findings and validation failures remain blocking." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
 
   publish-proposal:
     name: Publish maintainer approval proposal
@@ -230,7 +242,7 @@ jobs:
 
       - name: Set up Node.js for canonical status generation
         if: needs.validate-proposal.outputs.ready == 'true'
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
 
@@ -248,6 +260,26 @@ jobs:
             [[ -n "$NOTE" ]] && args+=(--note "$NOTE")
           fi
           node scripts/prepare-status-update.js "${args[@]}"
+
+      - name: Protect existing green proposal during dependency review failure
+        if: >-
+          needs.validate-proposal.outputs.ready == 'true' &&
+          env.MODE == 'verified' &&
+          needs.validate-proposal.outputs.dependency_review_failed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr_number="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$DAILY_BRANCH" --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr_number" ]]; then
+            if [[ "$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" != "true" ]]; then
+              gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY" --undo
+            fi
+            if [[ "$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" != "true" ]]; then
+              echo "Refusing to refresh an audit-failing green proposal that could not be protected as a draft." >&2
+              exit 1
+            fi
+          fi
 
       - name: Push or refresh proposal branch
         id: publish-branch
@@ -294,8 +326,19 @@ jobs:
           TARGET_VERSION: ${{ needs.validate-proposal.outputs.target_version }}
           VERIFICATION_VERSION: ${{ needs.validate-proposal.outputs.verification_version }}
           BASE_STATUS: ${{ needs.validate-proposal.outputs.base_status }}
+          DEPENDENCY_REVIEW_FAILED: ${{ needs.validate-proposal.outputs.dependency_review_failed }}
+          VALIDATION_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          dependency_warning=""
+          if [[ "$DEPENDENCY_REVIEW_FAILED" == "true" ]]; then
+            if [[ "$MODE" == "verified" ]]; then
+              dependency_warning="$(printf '> [!WARNING]\n> The complete development dependency audit did not pass. This green verification proposal is a draft and must not be merged until the finding is resolved. Review the [validation workflow](%s).\n' "$VALIDATION_RUN_URL")"
+            else
+              dependency_warning="$(printf '> [!WARNING]\n> The complete development dependency audit did not pass. This yellow status update may still be reviewed and merged so the user-facing issue is not hidden. Review the [validation workflow](%s).\n' "$VALIDATION_RUN_URL")"
+            fi
+          fi
+
           if [[ "$MODE" == "verified" ]]; then
             if [[ "$BASE_STATUS" != "maintainer_verified" || "$VERIFICATION_VERSION" != "$TARGET_VERSION" ]]; then
               recovery_note="The current public status is **${BASE_STATUS}** and its recorded verification build is v${VERIFICATION_VERSION}. Merging this PR declares the current Store build fully verified and resolves any superseded yellow status only after every check below passes."
@@ -306,6 +349,8 @@ jobs:
           ## Daily verification — ${TODAY}
 
           **Target Chrome Web Store build: v${TARGET_VERSION}**
+
+          ${dependency_warning}
 
           ${recovery_note}
 
@@ -345,6 +390,8 @@ jobs:
             cat > "$RUNNER_TEMP/pr-body.md" <<EOF
           ## Public status update — ${TODAY}
 
+          ${dependency_warning}
+
           This PR proposes a yellow **${MODE}** update for: ${FEATURES}.
 
           - [ ] The affected feature ids are correct.
@@ -358,11 +405,18 @@ jobs:
           pr_number="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$BRANCH" --json number --jq '.[0].number // empty')"
           if [[ -n "$pr_number" ]]; then
             gh pr edit "$pr_number" --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
-            if [[ "$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" == "true" ]]; then
+            is_draft="$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)"
+            if [[ "$MODE" == "verified" && "$DEPENDENCY_REVIEW_FAILED" == "true" && "$is_draft" != "true" ]]; then
+              gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY" --undo
+            elif [[ "$MODE" != "verified" || "$DEPENDENCY_REVIEW_FAILED" != "true" ]] && [[ "$is_draft" == "true" ]]; then
               gh pr ready "$pr_number" --repo "$GITHUB_REPOSITORY"
             fi
           else
-            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
+            create_args=(--base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md")
+            if [[ "$MODE" == "verified" && "$DEPENDENCY_REVIEW_FAILED" == "true" ]]; then
+              create_args+=(--draft)
+            fi
+            gh pr create --repo "$GITHUB_REPOSITORY" "${create_args[@]}"
           fi
 
       - name: Approve required pull-request CI for the proposal commit
