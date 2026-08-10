@@ -69,6 +69,6 @@
   "homepage": "https://github.com/Hendrizzzz/Ghostify#readme",
   "devDependencies": {
     "esbuild": "^0.28.1",
-    "web-ext": "10.5.0"
+    "web-ext": "10.6.0"
   }
 }
