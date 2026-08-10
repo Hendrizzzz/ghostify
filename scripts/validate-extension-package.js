@@ -12,6 +12,18 @@ function readJson(file) {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
+function readPngDimensions(file) {
+    const data = fs.readFileSync(file);
+    const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    if (data.length < 24 || !data.subarray(0, 8).equals(pngSignature) || data.toString('ascii', 12, 16) !== 'IHDR') {
+        fail(`${file} must be a valid PNG with an IHDR header`);
+    }
+    return {
+        width: data.readUInt32BE(16),
+        height: data.readUInt32BE(20)
+    };
+}
+
 function fail(message) {
     throw new Error(message);
 }
@@ -809,6 +821,16 @@ for (const [index, group] of (manifest.web_accessible_resources || []).entries()
 for (const file of requiredFiles) {
     const fullPath = repoPath('dist', file);
     if (!fs.existsSync(fullPath)) fail(`Missing manifest asset: ${fullPath}`);
+}
+
+for (const [declaredSize, file] of Object.entries(manifest.icons || {})) {
+    const size = Number(declaredSize);
+    if (!Number.isInteger(size) || size <= 0) fail(`Invalid manifest icon size: ${declaredSize}`);
+    const fullPath = repoPath('dist', file);
+    const dimensions = readPngDimensions(fullPath);
+    if (dimensions.width !== size || dimensions.height !== size) {
+        fail(`Manifest icon ${file} is declared as ${size}x${size} but is ${dimensions.width}x${dimensions.height}`);
+    }
 }
 
 console.log(`extension package metadata and fallback config are valid for ${pkg.version}`);

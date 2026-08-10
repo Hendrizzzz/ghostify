@@ -5,6 +5,9 @@ It contains the original source, checked-in static package assets, generated
 bundle references, package scripts, tests, and npm lockfile. No private
 repository or commercial build tool is required.
 
+The generated manifest targets Firefox desktop 140 or later and Firefox for
+Android 142 or later from the same shared runtime.
+
 ## Environment
 
 - Ubuntu 24.04 or another current Linux distribution

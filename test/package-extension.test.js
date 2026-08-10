@@ -77,6 +77,13 @@ function readStoredZipEntry(zip, name) {
     return zip.buffer.subarray(dataStart, dataStart + entry.compressedSize);
 }
 
+function readPngDimensions(data, label) {
+    const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    assert(data.length >= 24 && data.subarray(0, 8).equals(pngSignature), `${label} must be a PNG`);
+    assert.strictEqual(data.toString('ascii', 12, 16), 'IHDR', `${label} must have an IHDR header`);
+    return { width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
+}
+
 function requiredManifestAssets(manifest) {
     const files = new Set(staticPopupAssets);
     files.add('manifest.json');
@@ -113,6 +120,14 @@ try {
     assert.strictEqual(manifest.version, pkg.version, 'ZIP manifest version must match package.json');
     for (const file of requiredManifestAssets(manifest)) {
         assert(zip.entries.has(file), `ZIP is missing required asset: ${file}`);
+    }
+    for (const [declaredSize, file] of Object.entries(manifest.icons)) {
+        const size = Number(declaredSize);
+        assert.deepStrictEqual(
+            readPngDimensions(readStoredZipEntry(zip, file), file),
+            { width: size, height: size },
+            `${file} dimensions must match its manifest declaration`
+        );
     }
 
     const expectedSha = crypto.createHash('sha256').update(fs.readFileSync(zipPath)).digest('hex');
