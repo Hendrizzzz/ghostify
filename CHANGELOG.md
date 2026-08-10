@@ -9,6 +9,20 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
+## [2.0.7] - Unreleased
+
+### Added
+
+- Added captured WebLite regression coverage for Facebook mobile story views,
+  including explicit fail-open cases for unrelated story traffic.
+
+### Fixed
+
+- Added a narrowly scoped Firefox Android block for the captured Facebook
+  mobile-site WebLite story-view receipt while preserving story navigation,
+  media playback, and visibility telemetry. Story-owner viewer-list proof
+  remains required before Android publication.
+
 ## [2.0.6] - 2026-07-22
 
 ### Added

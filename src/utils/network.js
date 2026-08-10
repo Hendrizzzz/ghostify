@@ -283,6 +283,67 @@ function hasExplicitStorySeenSignal(str) {
     ]);
 }
 
+function isFacebookMobileStorySeenWebLiteFrame(data, urlString) {
+    if (!isFacebookMobileStoryViewer()) return false;
+    if (!isFacebookWebLiteSocket(urlString)) return false;
+
+    const bytes = getBinaryFrameBytes(data);
+    if (!bytes || bytes.byteLength !== 54) return false;
+
+    // Firefox Android's m.facebook.com story viewer sends WebLite messages as:
+    // uint16 frame length, varint message code, 12-byte session/message header,
+    // then the action body. The captured seen action is code 83 with the exact
+    // zero-field/flag/QPL shape below. Navigation, visibility, and media frames
+    // use different lengths, codes, or action flags and must stay native.
+    const declaredLength = (bytes[0] << 8) | bytes[1];
+    if (declaredLength !== bytes.byteLength - 2 || bytes[2] !== 83) return false;
+    if (!bytesAreZero(bytes, 23, 31)) return false;
+    if (bytes[31] !== 66) return false;
+    if (!bytesAre(bytes, 36, 40, 0xff)) return false;
+    return bytes[48] === 12;
+}
+
+function isFacebookMobileStoryViewer() {
+    try {
+        return window.location.hostname.toLowerCase() === 'm.facebook.com' &&
+            String(window.location.pathname || '').toLowerCase().startsWith('/stories/');
+    } catch (e) {
+        return false;
+    }
+}
+
+function isFacebookWebLiteSocket(urlString) {
+    try {
+        const url = new URL(String(urlString || ''), window.location.href);
+        return url.protocol === 'wss:' &&
+            url.hostname === 'kaios-d.facebook.com' &&
+            url.pathname.startsWith('/ws/');
+    } catch (e) {
+        return false;
+    }
+}
+
+function getBinaryFrameBytes(data) {
+    try {
+        if (data instanceof ArrayBuffer) return new Uint8Array(data);
+        if (ArrayBuffer.isView(data)) {
+            return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+        }
+    } catch (e) { }
+    return null;
+}
+
+function bytesAreZero(bytes, start, end) {
+    return bytesAre(bytes, start, end, 0);
+}
+
+function bytesAre(bytes, start, end, expected) {
+    for (let index = start; index < end; index += 1) {
+        if (bytes[index] !== expected) return false;
+    }
+    return true;
+}
+
 function isInstagramStoryViewerLookup(str) {
     if (hasExplicitStorySeenSignal(str)) return false;
 
@@ -2123,6 +2184,14 @@ export function shouldBlock(data, url = '', options = {}) {
 
         if (SETTINGS.msgTyping && !isKilled('msgTyping') && isFacebookExplicitMessengerTypingWrite(str, urlString)) {
             return 'MSG_TYPING';
+        }
+
+        if (
+            SETTINGS.msgStory &&
+            !isKilled('msgStory') &&
+            isFacebookMobileStorySeenWebLiteFrame(data, urlString)
+        ) {
+            return 'MSG_STORY';
         }
 
         if (
