@@ -18,6 +18,10 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
+- Fixed Facebook group messages that could remain stuck in Sending when Meta
+  bundled queue-routed sends with typing or Seen metadata. Ghostify now
+  preserves the message and exact routing identifiers while removing only the
+  blocked privacy metadata.
 - Added a narrowly scoped Firefox Android block for the captured Facebook
   mobile-site WebLite story-view receipt while preserving story navigation,
   media playback, and visibility telemetry. Story-owner viewer-list proof

@@ -218,10 +218,27 @@ export function sanitizeFramedJsonTaskBatchBinary(value, sanitizer) {
                 retainedTasks.push(rawTask);
                 continue;
             }
-            if (!sanitized.blockedAll || !Array.isArray(sanitized.value) || sanitized.value.length !== 0) {
+
+            changed = true;
+            if (sanitized.blockedAll) {
+                if (!Array.isArray(sanitized.value) || sanitized.value.length !== 0) {
+                    return unchanged(value);
+                }
+                continue;
+            }
+
+            if (!Array.isArray(sanitized.value) || sanitized.value.length !== 1) {
                 return unchanged(value);
             }
-            changed = true;
+
+            const rewrittenTask = rewriteJsonValueSource(
+                rawTask,
+                task,
+                sanitized.value[0],
+                0
+            );
+            if (typeof rewrittenTask !== 'string') return unchanged(value);
+            retainedTasks.push(rewrittenTask);
         }
         if (!changed || retainedTasks.length === 0) return unchanged(value, changed);
 
@@ -259,7 +276,7 @@ function findFramedTaskEnvelopeSource(text) {
         const tasksSpan = findTopLevelPropertyValueSpan(innerSource, 'tasks');
         if (!tasksSpan || innerSource[tasksSpan.start] !== '[') continue;
         const rawTasks = splitJsonArrayElements(innerSource.slice(tasksSpan.start, tasksSpan.end));
-        if (!rawTasks || rawTasks.length < 2) continue;
+        if (!rawTasks || rawTasks.length === 0) continue;
 
         return {
             prefix,
