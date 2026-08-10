@@ -759,4 +759,18 @@ withFixture(fixtureRoot => {
     );
 });
 
+withFixture(fixtureRoot => {
+    const { manifestPath, manifest } = readManifest(fixtureRoot);
+    manifest.icons['48'] = 'icons/icon32.png';
+    writeManifest(manifestPath, manifest);
+
+    const result = runValidator(fixtureRoot);
+    assert.notStrictEqual(result.status, 0, 'validator should reject manifest icon dimension mismatches');
+    assert.match(
+        result.stderr,
+        /Manifest icon icons[\\/]icon32\.png is declared as 48x48 but is 32x32/,
+        result.stderr || result.stdout
+    );
+});
+
 console.log('validate-extension-package permission drift tests passed');

@@ -1,14 +1,15 @@
 # Firefox AMO Submission Packet
 
-This document contains the repository-owned text for Ghostify's first public
-Firefox Browser Add-ons submission. It is not evidence that the listing is live.
+This document contains the repository-owned text for Ghostify Firefox Browser
+Add-ons submissions. It supports new listings and version updates, but is not
+evidence that a submitted version has been approved or is live.
 Replace every **OWNER ACTION** placeholder in the private AMO form before
 submitting. Never commit account credentials or private reviewer messages.
 
 ## Submission Choices
 
 - Distribution: **On this site**
-- Platform: **Firefox desktop only**
+- Platform: **Firefox desktop and Firefox for Android**
 - Experimental: **No**
 - Requires payment, non-free service, software, or hardware: **No**
 - Source code required: **Yes**
@@ -104,7 +105,7 @@ static assets, and build scripts. Ghostify uses esbuild 0.28.1:
 Paste this into AMO's private reviewer-notes field and replace the owner action:
 
 ```text
-Ghostify is a Manifest V3 Firefox desktop extension. The submitted package uses background.scripts because Firefox does not run Chromium's MV3 extension service-worker declaration. The authored runtime is under src/. build.js uses esbuild 0.28.1 without minification to generate four bundles under dist/. Exact reproduction steps are in FIREFOX_REVIEW_BUILD.md in the required source archive.
+Ghostify is a Manifest V3 extension for Firefox desktop 140 or later and Firefox for Android 142 or later. The submitted package uses background.scripts because Firefox does not run Chromium's MV3 extension service-worker declaration. The authored runtime is under src/. build.js uses esbuild 0.28.1 without minification to generate four bundles under dist/. Exact reproduction steps are in FIREFOX_REVIEW_BUILD.md in the required source archive.
 
 Third-party build library:
 Source: https://github.com/evanw/esbuild
@@ -113,7 +114,7 @@ npm package: https://www.npmjs.com/package/esbuild
 The extension requests storage, declarativeNetRequest, host access for supported Instagram, Facebook, Messenger, and Facebook Messenger proxy surfaces, and ghostify-extension.vercel.app access for the display-only public status JSON. Privacy matching and settings remain local. The privileged status request uses no credentials, custom headers, query parameters, or body and sends no extension settings, tab URLs, messages, or social-media activity. It does not load remote code or remote privacy configuration. External status, homepage, and GitHub links open only after a user activates them.
 
 Functional test outline:
-1. Install on Firefox desktop 140 or later.
+1. Install on Firefox desktop 140 or later, or Firefox for Android 142 or later.
 2. Open the toolbar popup and toggle the Instagram and Messenger/Facebook controls. Close and reopen the popup to confirm persistence.
 3. Confirm the popup status date, color, and tooltip title match https://ghostify-extension.vercel.app/status and that clicking the pill opens that page.
 4. Open an authorized Instagram, Facebook, or Messenger test account and confirm normal navigation and message loading.
@@ -129,7 +130,7 @@ OWNER ACTION — Provide dedicated non-personal Meta test credentials privately 
 - Confirm the monitored support email.
 - Confirm the upload version is greater than any prior AMO version.
 - Upload both the extension ZIP and mandatory source ZIP.
-- Select desktop only; do not claim Android support.
+- Select both Firefox desktop and Firefox for Android compatibility.
 - Re-read the generated manifest and every AMO privacy answer.
-- Do not publish a Firefox badge or listing URL in public docs until AMO shows
-  the submitted version as approved and live.
+- Do not describe the submitted version as approved or live until AMO shows
+  that version as approved and live.

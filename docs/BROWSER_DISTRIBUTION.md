@@ -39,18 +39,21 @@ The Firefox package deliberately differs in these fields and behaviors:
 - `strict_min_version` is Firefox 140. This covers Ghostify's required
   `MAIN`-world and origin-fallback support and Mozilla's built-in data
   declaration system.
-- The Android compatibility floor is 142 because Mozilla introduced the same
-  data-declaration manifest field there later. AMO must still target Firefox
-  desktop only until Android behavior is separately implemented and verified.
+- The Android compatibility floor is Firefox 142 because Mozilla introduced the
+  same data-declaration manifest field there later. The AMO package supports
+  Firefox desktop and Firefox for Android from their respective minimum
+  versions.
 - `data_collection_permissions.required` is `none`.
-- The Firefox icon map omits the Chromium `48` entry because that historical
-  file is 64x64; AMO lint requires declared and actual icon dimensions to match.
+- The Firefox icon map intentionally keeps the compact `16` and `128` entries.
+  Chromium also declares a `48` entry, whose PNG dimensions are validated before
+  packaging.
 - The Firefox package retains the Ghostify website host permission so its popup
   uses the same dynamic `status.json` date, color, and update title as Chromium.
   The display-only privileged request uses no credentials, custom headers,
   query parameters, or body.
-- The Firefox popup omits Chromium-specific store rating links. The Chromium
-  popup remains unchanged.
+- The Firefox popup omits Chromium-specific store rating links. The shared
+  Chromium popup routes ratings to the Chrome Web Store in Chrome and the
+  Microsoft Edge Add-ons listing in Edge.
 
 Changing the Gecko ID after the first AMO submission would create a different
 extension identity and is prohibited. Changes to the minimum version, data

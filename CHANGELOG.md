@@ -9,7 +9,7 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
-## [2.0.7] - Unreleased
+## [2.0.7] - 2026-08-11
 
 ### Added
 
@@ -24,8 +24,12 @@ grouped by version, with the most recent changes first.
   blocked privacy metadata.
 - Added a narrowly scoped Firefox Android block for the captured Facebook
   mobile-site WebLite story-view receipt while preserving story navigation,
-  media playback, and visibility telemetry. Story-owner viewer-list proof
-  remains required before Android publication.
+  media playback, and visibility telemetry. Packaged-emulator checks covered
+  the captured Facebook and Instagram mobile privacy paths on Firefox Android.
+- Corrected the Chromium 48px icon asset and routed the popup rating link to
+  Microsoft Edge Add-ons when Ghostify runs in Edge.
+- Aligned the Firefox release and reviewer documents with the package's Firefox
+  desktop and Firefox for Android compatibility declarations.
 
 ## [2.0.6] - 2026-07-22
 

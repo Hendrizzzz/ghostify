@@ -8924,6 +8924,7 @@ function testPopupSupportLinksUseGuidedIssueForms() {
     const privacyPolicy = fs.readFileSync('PRIVACY.md', 'utf8');
     const websiteUrl = 'https://ghostify-extension.vercel.app/';
     const chromeStoreReviewUrl = 'https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm/reviews';
+    const edgeAddonsListingUrl = 'https://microsoftedge.microsoft.com/addons/detail/mgbppdkolkeelimnemlbpmfdddhoeeal';
     const directHelpFormUrl = 'https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml';
     const ratingTooltip = 'Enjoying Ghostify? Leave a quick rating on the Chrome Web Store.';
     const thanksTooltip = 'Helpful bug reports or ideas will be credited in release notes and on the website, with permission.';
@@ -8962,6 +8963,12 @@ function testPopupSupportLinksUseGuidedIssueForms() {
         popupHtml.includes('aria-label="Rate Ghostify on the Chrome Web Store"') &&
         popupHtml.includes(`data-tooltip="${ratingTooltip}"`),
         'Popup footer should link directly to Ghostify reviews on the Chrome Web Store'
+    );
+    assert(
+        popupJs.includes(edgeAddonsListingUrl) &&
+        popupJs.includes('configureStoreRatingLink') &&
+        popupJs.includes('Rate Ghostify on Microsoft Edge Add-ons'),
+        'Shared Chromium popup should switch the rating destination to Microsoft Edge Add-ons in Edge'
     );
     assert(
         popupHtml.includes('class="footer-link support-link"') &&
