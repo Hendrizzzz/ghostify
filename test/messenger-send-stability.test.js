@@ -779,6 +779,65 @@ const instagramStorySeenMediaGraphQLWithDocId = JSON.stringify({
     }
 });
 
+function makeFacebookWebLiteFrame({ byteLength, opcode, actionFlags = 0 }) {
+    const bytes = new Uint8Array(byteLength);
+    const view = new DataView(bytes.buffer);
+    view.setUint16(0, byteLength - 2);
+    bytes[2] = opcode;
+
+    // Redacted WebLite session/message header captured from Firefox Android.
+    bytes.set([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08], 3);
+    view.setUint32(11, 1);
+
+    if (opcode === 83 && byteLength >= 32) {
+        view.setUint32(15, 66000);
+        view.setUint32(19, 66001);
+        view.setUint32(23, 0);
+        view.setUint16(27, 0);
+        view.setUint16(29, 0);
+
+        let offset = 31;
+        let value = actionFlags;
+        do {
+            let digit = value & 0x7f;
+            value >>>= 7;
+            if (value) digit |= 0x80;
+            bytes[offset++] = digit;
+        } while (value && offset < byteLength);
+
+        if (byteLength === 54 && actionFlags === 66) {
+            bytes.fill(0xff, 36, 40);
+            bytes[48] = 12;
+        }
+    }
+
+    return bytes;
+}
+
+const facebookMobileStorySeenWebLiteFrame = makeFacebookWebLiteFrame({
+    byteLength: 54,
+    opcode: 83,
+    actionFlags: 66
+});
+const facebookMobileStoryNavigationWebLiteFrame = makeFacebookWebLiteFrame({
+    byteLength: 58,
+    opcode: 83,
+    actionFlags: 64
+});
+const facebookMobileStoryNavigationWithPayloadWebLiteFrame = makeFacebookWebLiteFrame({
+    byteLength: 74,
+    opcode: 83,
+    actionFlags: 194
+});
+const facebookMobileStoryMediaTelemetryWebLiteFrame = makeFacebookWebLiteFrame({
+    byteLength: 669,
+    opcode: 4
+});
+const facebookMobileStoryVisibilityWebLiteFrame = makeFacebookWebLiteFrame({
+    byteLength: 36,
+    opcode: 111
+});
+
 function makeGhostPage(page = {}, settings = {}) {
     const fetchCalls = [];
     const beaconCalls = [];
@@ -846,6 +905,7 @@ function makeGhostPage(page = {}, settings = {}) {
         TextDecoder,
         TextEncoder,
         ArrayBuffer,
+        URL,
         URLSearchParams,
         FormData: class { }
     });
@@ -865,6 +925,7 @@ function makeGhostPage(page = {}, settings = {}) {
         TextDecoder,
         TextEncoder,
         ArrayBuffer,
+        URL,
         URLSearchParams,
         FormData: window.FormData,
         localStorage: window.localStorage,
@@ -7195,6 +7256,177 @@ function testMessengerPatchRequestRouteExplicitModulesStayProtected() {
     assert(requestContext.window.__GHOSTIFY_STATUS__?.hooks?.['module_interceptor.hooked']);
 }
 
+async function testFacebookMobileStoryWebLiteSeenFramesAreExactScoped() {
+    const endpoint = 'wss://kaios-d.facebook.com/ws/redacted-channel';
+    const storyPage = {
+        hostname: 'm.facebook.com',
+        pathname: '/stories/redacted-owner/redacted-story/',
+        href: 'https://m.facebook.com/stories/redacted-owner/redacted-story/'
+    };
+    const protectedStoryWindow = makeGhostPage(storyPage);
+    const expectSocketSendCount = (pageWindow, body, url, expected, message) => {
+        const { socket } = websocketSend(pageWindow, body, url);
+        assert.strictEqual(socket.sent.length, expected, message);
+    };
+
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        endpoint,
+        0,
+        'Firefox Android Facebook story-view receipts must be swallowed on the captured WebLite transport'
+    );
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStorySeenWebLiteFrame.slice().buffer,
+        endpoint,
+        0,
+        'Direct ArrayBuffer story-view receipts must use the same protection'
+    );
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        'wss://kaios-z.facebook.com/ws/redacted-channel',
+        1,
+        'Unevidenced WebLite endpoints must fail open'
+    );
+    assert.strictEqual(
+        await fetchOutcomeAt(
+            protectedStoryWindow,
+            'https://kaios-d.facebook.com/ws/redacted-channel',
+            facebookMobileStorySeenWebLiteFrame
+        ),
+        'allowed',
+        'The WebLite signature must not block HTTPS requests'
+    );
+    const httpsXhr = xhrSendAt(
+        protectedStoryWindow,
+        'https://kaios-d.facebook.com/ws/redacted-channel',
+        facebookMobileStorySeenWebLiteFrame,
+        'POST'
+    );
+    assert.strictEqual(
+        httpsXhr.xhr.sent,
+        facebookMobileStorySeenWebLiteFrame,
+        'The WebLite signature must stay native on XHR'
+    );
+
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStoryNavigationWebLiteFrame,
+        endpoint,
+        1,
+        'Facebook mobile story navigation frames must stay native'
+    );
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStoryNavigationWithPayloadWebLiteFrame,
+        endpoint,
+        1,
+        'Facebook mobile story navigation frames with an action payload must stay native'
+    );
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStoryMediaTelemetryWebLiteFrame,
+        endpoint,
+        1,
+        'Facebook mobile story media telemetry must not be mistaken for a view receipt'
+    );
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStoryVisibilityWebLiteFrame,
+        endpoint,
+        1,
+        'Facebook mobile story visibility-duration frames must stay native'
+    );
+
+    const offsetBacking = new Uint8Array(facebookMobileStorySeenWebLiteFrame.byteLength + 8);
+    offsetBacking.set(facebookMobileStorySeenWebLiteFrame, 4);
+    expectSocketSendCount(
+        protectedStoryWindow,
+        new Uint8Array(offsetBacking.buffer, 4, facebookMobileStorySeenWebLiteFrame.byteLength),
+        endpoint,
+        0,
+        'Captured story-view matching must honor typed-array byte offsets'
+    );
+
+    const nearMissMutations = [
+        ['declared length', 1, 51],
+        ['message opcode', 2, 82],
+        ['zero action field', 23, 1],
+        ['action flag', 31, 64],
+        ['sentinel', 36, 254],
+        ['QPL flag', 48, 0]
+    ];
+    for (const [label, index, value] of nearMissMutations) {
+        const nearMiss = facebookMobileStorySeenWebLiteFrame.slice();
+        nearMiss[index] = value;
+        expectSocketSendCount(
+            protectedStoryWindow,
+            nearMiss,
+            endpoint,
+            1,
+            `A 54-byte WebLite frame with a different ${label} must fail open`
+        );
+    }
+    expectSocketSendCount(
+        protectedStoryWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        'wss://edge-chat.facebook.com/chat?region=redacted',
+        1,
+        'The mobile story signature must not affect Messenger realtime transports'
+    );
+
+    const feedWindow = makeGhostPage({
+        hostname: 'm.facebook.com',
+        pathname: '/',
+        href: 'https://m.facebook.com/'
+    });
+    expectSocketSendCount(
+        feedWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        endpoint,
+        1,
+        'The captured action signature must remain native outside the Facebook story viewer'
+    );
+
+    const desktopStoryWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/stories/redacted-owner/redacted-story/',
+        href: 'https://www.facebook.com/stories/redacted-owner/redacted-story/'
+    });
+    expectSocketSendCount(
+        desktopStoryWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        endpoint,
+        1,
+        'The WebLite signature must not alter Facebook desktop story traffic'
+    );
+
+    const disabledStoryWindow = makeGhostPage(storyPage, { msgStory: false });
+    expectSocketSendCount(
+        disabledStoryWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        endpoint,
+        1,
+        'Turning Facebook Story Hider off must restore the native WebLite view receipt'
+    );
+
+    const killedStoryWindow = makeGhostPage(storyPage);
+    killedStoryWindow.postMessage({
+        type: 'GHOSTIFY_CONFIG_UPDATE',
+        source: 'GHOSTIFY_EXTENSION',
+        config: { killSwitch: ['msgStory'], patterns: {} }
+    });
+    expectSocketSendCount(
+        killedStoryWindow,
+        facebookMobileStorySeenWebLiteFrame,
+        endpoint,
+        1,
+        'The msgStory kill switch must restore the native WebLite view receipt'
+    );
+}
+
 async function testVideoAdAndMediaTrafficIsAllowed() {
     const facebookWatchWindow = makeGhostPage({
         hostname: 'www.facebook.com',
@@ -8843,6 +9075,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     await testNonMawFbsbxPagesAreNotTreatedAsMessenger();
     testManifestInjectsIntoFacebookMawProxyFrames();
     testMessengerPatchRequestRouteExplicitModulesStayProtected();
+    await testFacebookMobileStoryWebLiteSeenFramesAreExactScoped();
     await testVideoAdAndMediaTrafficIsAllowed();
     await testPrivacyWritesStillBlockWithRequestOrMediaContext();
     testFacebookWatchDoesNotSpoofFocus();

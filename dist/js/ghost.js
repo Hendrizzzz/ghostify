@@ -678,6 +678,52 @@
       "mark_story_read"
     ]);
   }
+  function isFacebookMobileStorySeenWebLiteFrame(data, urlString) {
+    if (!isFacebookMobileStoryViewer()) return false;
+    if (!isFacebookWebLiteSocket(urlString)) return false;
+    const bytes = getBinaryFrameBytes(data);
+    if (!bytes || bytes.byteLength !== 54) return false;
+    const declaredLength = bytes[0] << 8 | bytes[1];
+    if (declaredLength !== bytes.byteLength - 2 || bytes[2] !== 83) return false;
+    if (!bytesAreZero(bytes, 23, 31)) return false;
+    if (bytes[31] !== 66) return false;
+    if (!bytesAre(bytes, 36, 40, 255)) return false;
+    return bytes[48] === 12;
+  }
+  function isFacebookMobileStoryViewer() {
+    try {
+      return window.location.hostname.toLowerCase() === "m.facebook.com" && String(window.location.pathname || "").toLowerCase().startsWith("/stories/");
+    } catch (e) {
+      return false;
+    }
+  }
+  function isFacebookWebLiteSocket(urlString) {
+    try {
+      const url = new URL(String(urlString || ""), window.location.href);
+      return url.protocol === "wss:" && url.hostname === "kaios-d.facebook.com" && url.pathname.startsWith("/ws/");
+    } catch (e) {
+      return false;
+    }
+  }
+  function getBinaryFrameBytes(data) {
+    try {
+      if (data instanceof ArrayBuffer) return new Uint8Array(data);
+      if (ArrayBuffer.isView(data)) {
+        return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+      }
+    } catch (e) {
+    }
+    return null;
+  }
+  function bytesAreZero(bytes, start, end) {
+    return bytesAre(bytes, start, end, 0);
+  }
+  function bytesAre(bytes, start, end, expected) {
+    for (let index = start; index < end; index += 1) {
+      if (bytes[index] !== expected) return false;
+    }
+    return true;
+  }
   function isInstagramStoryViewerLookup(str) {
     if (hasExplicitStorySeenSignal(str)) return false;
     return includesAny(str, [
@@ -2201,6 +2247,9 @@
       }
       if (SETTINGS.msgTyping && !isKilled("msgTyping") && isFacebookExplicitMessengerTypingWrite(str, urlString)) {
         return "MSG_TYPING";
+      }
+      if (SETTINGS.msgStory && !isKilled("msgStory") && isFacebookMobileStorySeenWebLiteFrame(data, urlString)) {
+        return "MSG_STORY";
       }
       if (SETTINGS.msgStory && !isKilled("msgStory") && hasExplicitStorySeenSignal(str) && matchesPattern(str, PATTERNS.msgStory)) {
         return "MSG_STORY";
