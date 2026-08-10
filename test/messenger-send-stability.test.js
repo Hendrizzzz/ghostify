@@ -1199,10 +1199,10 @@ function decodeBridgeBytes(value) {
     return new TextDecoder().decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
 }
 
-function decodeFacebookFramedTasks(value) {
+function decodeFacebookFramedTasks(value, prefix = facebookFramePrefix) {
     const text = decodeBridgeBytes(value);
-    assert.ok(text.startsWith(facebookFramePrefix), 'Facebook realtime frame prefix must stay byte-for-byte intact');
-    const outer = JSON.parse(text.slice(facebookFramePrefix.length));
+    assert.ok(text.startsWith(prefix), 'Facebook realtime frame prefix must stay byte-for-byte intact');
+    const outer = JSON.parse(text.slice(prefix.length));
     return { outer, inner: JSON.parse(outer.payload) };
 }
 
@@ -1582,7 +1582,7 @@ function testFacebookMiniChatSecureSendWithAlternateTargetsIsForwarded() {
     assert.strictEqual(forwarded.tasks[0].payload.message.text, '1');
 }
 
-function testFacebookMiniChatMixedSendTypingBridgeFrameDoesNotEnterTypingSanitizer() {
+function testFacebookMiniChatQueueDirectSendSanitizesBundledPrivacy() {
     const context = makeMessengerPatchPage({}, {
         hostname: 'www.facebook.com',
         pathname: '/',
@@ -1598,7 +1598,10 @@ function testFacebookMiniChatMixedSendTypingBridgeFrameDoesNotEnterTypingSanitiz
                 other_user_id: 'redacted-user',
                 offline_threading_id: 'redacted-offline-id',
                 send_type: 1,
-                message: { text: 'a' }
+                message: { text: 'a' },
+                sync_group: 104,
+                should_send_read_receipt: true,
+                last_read_watermark_ts: 1779530000000
             })
         }, {
             label: 'sendChatStateFromComposer',
@@ -1615,19 +1618,90 @@ function testFacebookMiniChatMixedSendTypingBridgeFrameDoesNotEnterTypingSanitiz
     assert.strictEqual(
         outcome.result,
         'worker-sent',
-        'Facebook mixed send/typing bridge frames must forward instead of entering the typing sanitizer'
+        'Facebook queue-routed direct sends must survive bundled privacy sanitization'
     );
     assert.strictEqual(outcome.postCount, 1);
     assert.strictEqual(outcome.blocked, 0);
     assert.strictEqual(
-        outcome.sanitized,
-        0,
-        'mixed send/typing frames should not be rewritten when preserving the send requires native frame shape'
+        outcome.sanitizedSeen,
+        1,
+        'direct sends must remove bundled Seen metadata without dropping the message'
     );
     const forwarded = parseForwardedMessage(outcome.post);
-    assert.strictEqual(forwarded.tasks.length, 2);
+    assert.strictEqual(forwarded.tasks.length, 1);
     assert.strictEqual(forwarded.tasks[0].label, '46');
-    assert.strictEqual(forwarded.tasks[1].label, 'sendChatStateFromComposer');
+    const payload = JSON.parse(forwarded.tasks[0].payload);
+    assert.strictEqual(payload.other_user_id, 'redacted-user');
+    assert.strictEqual(payload.message.text, 'a');
+    assert.strictEqual(payload.should_send_read_receipt, false);
+    assert.strictEqual(payload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(JSON.parse(message.tasks[0].payload).should_send_read_receipt, true);
+
+    const portContext = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const port = portOutcome(portContext, message);
+    assert.strictEqual(port.result, 'port-sent');
+    assert.strictEqual(port.postCount, 1);
+    assert.strictEqual(port.blocked, 0);
+    assert.strictEqual(port.sanitizedSeen, 1);
+    assert.strictEqual(port.post.message.tasks.length, 1);
+    const portPayload = JSON.parse(port.post.message.tasks[0].payload);
+    assert.strictEqual(portPayload.other_user_id, 'redacted-user');
+    assert.strictEqual(portPayload.should_send_read_receipt, false);
+    assert.strictEqual(portPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+
+    const seenDisabled = workerOutcome(makeMessengerPatchPage({
+        msgSeen: false,
+        msgTyping: true
+    }, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    }), message);
+    assert.strictEqual(seenDisabled.result, 'worker-sent');
+    assert.strictEqual(seenDisabled.postCount, 1);
+    assert.strictEqual(seenDisabled.sanitized, 1);
+    assert.strictEqual(seenDisabled.sanitizedSeen, 0);
+    assert.strictEqual(seenDisabled.post.message.tasks.length, 1);
+    const seenDisabledPayload = JSON.parse(seenDisabled.post.message.tasks[0].payload);
+    assert.strictEqual(seenDisabledPayload.should_send_read_receipt, true);
+    assert.strictEqual(seenDisabledPayload.last_read_watermark_ts, 1779530000000);
+
+    const typingDisabled = workerOutcome(makeMessengerPatchPage({
+        msgSeen: true,
+        msgTyping: false
+    }, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    }), message);
+    assert.strictEqual(typingDisabled.result, 'worker-sent');
+    assert.strictEqual(typingDisabled.postCount, 1);
+    assert.strictEqual(typingDisabled.sanitizedSeen, 1);
+    assert.strictEqual(typingDisabled.post.message.tasks.length, 2);
+    const typingDisabledPayload = JSON.parse(typingDisabled.post.message.tasks[0].payload);
+    assert.strictEqual(typingDisabledPayload.should_send_read_receipt, false);
+    assert.strictEqual(typingDisabledPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(typingDisabled.post.message.tasks[1].label, 'sendChatStateFromComposer');
+
+    const protectionsDisabled = workerOutcome(makeMessengerPatchPage({
+        msgSeen: false,
+        msgTyping: false
+    }, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    }), message);
+    assert.strictEqual(protectionsDisabled.result, 'worker-sent');
+    assert.strictEqual(protectionsDisabled.postCount, 1);
+    assert.strictEqual(protectionsDisabled.post.message, message);
 }
 
 function testFacebookGroupSendWithQueueOnlyTargetPreservesSendAndRemovesTyping() {
@@ -1679,20 +1753,32 @@ function testFacebookGroupSendWithQueueOnlyTargetPreservesSendAndRemovesTyping()
         href: 'https://www.facebook.com/',
         facebookMiniChatOpen: true
     });
+    const workerThreadId = '7466158453245588004';
+    const workerPayload = JSON.stringify({
+        thread_id: '__GHOSTIFY_WORKER_THREAD_ID__',
+        offline_threading_id: 'redacted-offline-id',
+        send_type: '1',
+        message: {
+            text: 'group message',
+            metadata: {
+                should_send_read_receipt: true,
+                last_read_watermark_ts: 1779530000000
+            }
+        },
+        sync_group: 104,
+        last_read_watermark_ts: 1779530000000,
+        should_send_read_receipt: true
+    }).replace('"__GHOSTIFY_WORKER_THREAD_ID__"', workerThreadId);
     const seenMessage = {
         issue_new_task: true,
         tasks: [{
             label: '46',
             queue_name: 'redacted-group-thread',
             task_id: 416,
-            payload: JSON.stringify({
-                offline_threading_id: 'redacted-offline-id',
-                send_type: 1,
-                message: { text: 'group message' },
-                sync_group: 104,
-                last_read_watermark_ts: 1779530000000,
-                should_send_read_receipt: true
-            })
+            should_send_read_receipt: true,
+            last_read_watermark_ts: 1779530000000,
+            readReceiptMutation: { should_send_read_receipt: true },
+            payload: workerPayload
         }]
     };
     const seenOutcome = workerOutcome(seenContext, seenMessage);
@@ -1710,11 +1796,105 @@ function testFacebookGroupSendWithQueueOnlyTargetPreservesSendAndRemovesTyping()
     assert.strictEqual(seenOutcome.post.message.tasks[0].label, '46');
     assert.strictEqual(seenOutcome.post.message.tasks[0].queue_name, 'redacted-group-thread');
     assert.strictEqual(seenOutcome.post.message.tasks[0].task_id, 416);
-    const sanitizedSendPayload = JSON.parse(seenOutcome.post.message.tasks[0].payload);
+    assert.strictEqual(seenOutcome.post.message.tasks[0].should_send_read_receipt, false);
+    assert.strictEqual(seenOutcome.post.message.tasks[0].last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(seenOutcome.post.message.tasks[0].readReceiptMutation, null);
+    const sanitizedWorkerPayloadSource = seenOutcome.post.message.tasks[0].payload;
+    assert.match(sanitizedWorkerPayloadSource, new RegExp(`"thread_id":${workerThreadId}(?:,|})`));
+    assert.doesNotMatch(sanitizedWorkerPayloadSource, /"thread_id":7466158453245588000(?:,|})/);
+    const sanitizedSendPayload = JSON.parse(sanitizedWorkerPayloadSource);
     assert.strictEqual(sanitizedSendPayload.message.text, 'group message');
+    assert.strictEqual(sanitizedSendPayload.message.metadata.should_send_read_receipt, false);
+    assert.strictEqual(sanitizedSendPayload.message.metadata.last_read_watermark_ts, SAFE_READ_WATERMARK);
     assert.strictEqual(sanitizedSendPayload.offline_threading_id, 'redacted-offline-id');
+    assert.strictEqual(sanitizedSendPayload.send_type, '1');
     assert.strictEqual(sanitizedSendPayload.should_send_read_receipt, false);
     assert.strictEqual(sanitizedSendPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(seenMessage.tasks[0].should_send_read_receipt, true);
+    assert.strictEqual(seenMessage.tasks[0].last_read_watermark_ts, 1779530000000);
+    assert.strictEqual(seenMessage.tasks[0].payload, workerPayload);
+
+    const portContext = makeMessengerPatchPage({}, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const portSeenOutcome = portOutcome(portContext, seenMessage);
+    assert.strictEqual(portSeenOutcome.result, 'port-sent');
+    assert.strictEqual(portSeenOutcome.postCount, 1);
+    assert.strictEqual(portSeenOutcome.blocked, 0);
+    assert.strictEqual(portSeenOutcome.sanitizedSeen, 1);
+    const portTask = portSeenOutcome.post.message.tasks[0];
+    assert.strictEqual(portTask.should_send_read_receipt, false);
+    assert.strictEqual(portTask.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(portTask.readReceiptMutation, null);
+    assert.match(portTask.payload, new RegExp(`"thread_id":${workerThreadId}(?:,|})`));
+    const portPayload = JSON.parse(portTask.payload);
+    assert.strictEqual(portPayload.send_type, '1');
+    assert.strictEqual(portPayload.message.text, 'group message');
+    assert.strictEqual(portPayload.should_send_read_receipt, false);
+
+    const seenDisabledContext = makeMessengerPatchPage({
+        msgSeen: false,
+        msgTyping: true
+    }, {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    });
+    const seenDisabled = workerOutcome(seenDisabledContext, seenMessage);
+    assert.strictEqual(seenDisabled.result, 'worker-sent');
+    assert.strictEqual(seenDisabled.postCount, 1);
+    assert.strictEqual(seenDisabled.blocked, 0);
+    assert.strictEqual(seenDisabled.sanitized, 0);
+    assert.strictEqual(seenDisabled.sanitizedSeen, 0);
+    assert.strictEqual(
+        seenDisabled.post.message,
+        seenMessage,
+        'disabling Hide Seen must preserve the exact queue-routed send while Hide Typing remains enabled'
+    );
+    assert.strictEqual(seenMessage.tasks[0].should_send_read_receipt, true);
+    assert.strictEqual(JSON.parse(seenMessage.tasks[0].payload).should_send_read_receipt, true);
+}
+
+function testFacebookQueueOnlyGroupUserContentDoesNotTriggerPrivacyBlock() {
+    const privacyLikeText = '{"should_send_read_receipt":true,"last_read_watermark_ts":1779530000000}';
+    const message = {
+        issue_new_task: true,
+        tasks: [{
+            label: '46',
+            queue_name: 'redacted-group-thread',
+            task_id: 417,
+            payload: JSON.stringify({
+                offline_threading_id: 'redacted-offline-id',
+                send_type: 1,
+                message: { text: privacyLikeText },
+                sync_group: 104
+            })
+        }]
+    };
+    const page = {
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/',
+        facebookMiniChatOpen: true
+    };
+
+    const worker = workerOutcome(makeMessengerPatchPage({}, page), message);
+    assert.strictEqual(worker.result, 'worker-sent');
+    assert.strictEqual(worker.postCount, 1);
+    assert.strictEqual(worker.blocked, 0);
+    assert.strictEqual(worker.post.message, message);
+    assert.strictEqual(JSON.parse(worker.post.message.tasks[0].payload).message.text, privacyLikeText);
+
+    const port = portOutcome(makeMessengerPatchPage({}, page), message);
+    assert.strictEqual(port.result, 'port-sent');
+    assert.strictEqual(port.postCount, 1);
+    assert.strictEqual(port.blocked, 0);
+    assert.strictEqual(port.post.message, message);
+    assert.strictEqual(JSON.parse(port.post.message.tasks[0].payload).message.text, privacyLikeText);
 }
 
 function testFacebookQueueOnlyPrivacyTasksAreNotClassifiedAsSends() {
@@ -1770,6 +1950,321 @@ function testFacebookQueueOnlyPrivacyTasksAreNotClassifiedAsSends() {
     assert.strictEqual(seenOutcome.result, undefined);
     assert.strictEqual(seenOutcome.postCount, 0);
     assert.strictEqual(seenOutcome.blocked, 1);
+}
+
+function testFacebookQueueOnlyGroupSendWithSeenMetadataIsAllowedOnRealtimeWebSocket() {
+    const epochId = '7466158453245588002';
+    const makeSendTask = (payloadOverrides = {}, taskOverrides = {}) => ({
+        failure_count: null,
+        label: '46',
+        payload: JSON.stringify({
+            offline_threading_id: 'redacted-offline-id',
+            send_type: 1,
+            message: { text: 'group message' },
+            sync_group: 104,
+            last_read_watermark_ts: 1779530000000,
+            should_send_read_receipt: true,
+            ...payloadOverrides
+        }),
+        queue_name: 'redacted-group-thread',
+        task_id: 419,
+        ...taskOverrides
+    });
+    const makeFrame = (prefix, tasks = [makeSendTask()]) => {
+        const inner = JSON.stringify({
+            epoch_id: '__GHOSTIFY_EPOCH_ID__',
+            tasks,
+            version_id: '27029912679952307'
+        }).replace('"__GHOSTIFY_EPOCH_ID__"', epochId);
+        return new Uint8Array(Buffer.from(`${prefix}${JSON.stringify({
+            app_id: '2220391788200892',
+            payload: inner,
+            request_id: 183,
+            type: 3
+        })}`, 'utf8'));
+    };
+    const cases = [{
+        label: 'Facebook top frame edge-chat Uint8Array',
+        page: { hostname: 'www.facebook.com', pathname: '/', href: 'https://www.facebook.com/' },
+        url: 'wss://edge-chat.facebook.com/chat?region=redacted',
+        prefix: '{}\r\u0000',
+        asArrayBuffer: false
+    }, {
+        label: 'Facebook top frame lightspeed ArrayBuffer',
+        page: { hostname: 'www.facebook.com', pathname: '/', href: 'https://www.facebook.com/' },
+        url: 'wss://gateway.facebook.com/ws/lightspeed',
+        prefix: facebookFramePrefix,
+        asArrayBuffer: true
+    }, {
+        label: 'Facebook MAW proxy edge-chat Uint8Array',
+        page: {
+            hostname: 'www.fbsbx.com',
+            pathname: '/maw_proxy_page/',
+            href: 'https://www.fbsbx.com/maw_proxy_page/'
+        },
+        url: 'wss://edge-chat.facebook.com/chat?region=redacted',
+        prefix: facebookFramePrefix,
+        asArrayBuffer: false
+    }, {
+        label: 'Facebook MAW proxy lightspeed ArrayBuffer',
+        page: {
+            hostname: 'www.fbsbx.com',
+            pathname: '/maw_proxy_page/',
+            href: 'https://www.fbsbx.com/maw_proxy_page/'
+        },
+        url: 'wss://gateway.facebook.com/ws/lightspeed',
+        prefix: '{}\r\u0000',
+        asArrayBuffer: true
+    }];
+
+    for (const testCase of cases) {
+        const window = makeGhostPage(testCase.page);
+        const frameBytes = makeFrame(testCase.prefix);
+        const originalBytes = Array.from(frameBytes);
+        const frame = testCase.asArrayBuffer
+            ? frameBytes.buffer.slice(frameBytes.byteOffset, frameBytes.byteOffset + frameBytes.byteLength)
+            : frameBytes;
+        const expectedTag = testCase.asArrayBuffer ? '[object ArrayBuffer]' : '[object Uint8Array]';
+        const outcome = websocketSend(window, frame, testCase.url);
+
+        assert.strictEqual(outcome.result, 'sent', `${testCase.label} must leave Sending`);
+        assert.strictEqual(outcome.socket.sent.length, 1, `${testCase.label} must send exactly once`);
+        assert.deepStrictEqual(
+            Array.from(testCase.asArrayBuffer ? new Uint8Array(frame) : frame),
+            originalBytes,
+            `${testCase.label} must not mutate the original frame`
+        );
+
+        const forwarded = outcome.socket.sent[0];
+        assert.strictEqual(Object.prototype.toString.call(forwarded), expectedTag);
+        const { outer, inner } = decodeFacebookFramedTasks(forwarded, testCase.prefix);
+        assert.strictEqual(outer.app_id, '2220391788200892');
+        assert.strictEqual(outer.request_id, 183);
+        assert.strictEqual(outer.type, 3);
+        assert.match(outer.payload, new RegExp(`"epoch_id":${epochId}(?:,|})`));
+        assert.strictEqual(inner.version_id, '27029912679952307');
+        assert.strictEqual(inner.tasks.length, 1);
+
+        const task = inner.tasks[0];
+        assert.strictEqual(task.label, '46');
+        assert.strictEqual(task.queue_name, 'redacted-group-thread');
+        assert.strictEqual(task.task_id, 419);
+        const payload = JSON.parse(task.payload);
+        assert.strictEqual(payload.offline_threading_id, 'redacted-offline-id');
+        assert.strictEqual(payload.send_type, 1);
+        assert.deepStrictEqual(payload.message, { text: 'group message' });
+        assert.strictEqual(payload.sync_group, 104);
+        assert.strictEqual(payload.should_send_read_receipt, false);
+        assert.strictEqual(payload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    }
+
+    const privacyLikeUserText = '{"should_send_read_receipt":true,"last_read_watermark_ts":1779530000000}';
+    const userTextWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const userText = websocketSend(
+        userTextWindow,
+        makeFrame('{}\r\u0000', [makeSendTask({ message: { text: privacyLikeUserText } })]),
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(userText.result, 'sent');
+    const userTextDecoded = decodeFacebookFramedTasks(userText.socket.sent[0], '{}\r\u0000');
+    const userTextPayload = JSON.parse(userTextDecoded.inner.tasks[0].payload);
+    assert.strictEqual(userTextPayload.message.text, privacyLikeUserText);
+    assert.strictEqual(userTextPayload.should_send_read_receipt, false);
+    assert.strictEqual(userTextPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+
+    const threadId = '7466158453245588003';
+    const payloadWithLargeThreadId = JSON.stringify({
+        thread_id: '__GHOSTIFY_THREAD_ID__',
+        offline_threading_id: 'redacted-offline-id',
+        send_type: 1,
+        message: { text: 'group message' },
+        sync_group: 104,
+        last_read_watermark_ts: 1779530000000,
+        should_send_read_receipt: true
+    }).replace('"__GHOSTIFY_THREAD_ID__"', threadId);
+    const largeIdWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const largeId = websocketSend(
+        largeIdWindow,
+        makeFrame('{}\r\u0000', [makeSendTask({}, { payload: payloadWithLargeThreadId })]),
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(largeId.result, 'sent');
+    const largeIdDecoded = decodeFacebookFramedTasks(largeId.socket.sent[0], '{}\r\u0000');
+    const forwardedPayloadSource = largeIdDecoded.inner.tasks[0].payload;
+    assert.match(forwardedPayloadSource, new RegExp(`"thread_id":${threadId}(?:,|})`));
+    assert.doesNotMatch(forwardedPayloadSource, /"thread_id":7466158453245588000(?:,|})/);
+    const largeIdPayload = JSON.parse(forwardedPayloadSource);
+    assert.strictEqual(largeIdPayload.should_send_read_receipt, false);
+    assert.strictEqual(largeIdPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+
+    const directWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const direct = websocketSend(
+        directWindow,
+        makeFrame('{}\r\u0000', [makeSendTask({
+            other_user_id: 'redacted-user',
+            message: {
+                text: 'direct message',
+                metadata: {
+                    should_send_read_receipt: true,
+                    last_read_watermark_ts: 1779530000000
+                }
+            },
+            sync_group: 104
+        })]),
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(direct.result, 'sent');
+    assert.strictEqual(direct.socket.sent.length, 1);
+    const directDecoded = decodeFacebookFramedTasks(direct.socket.sent[0], '{}\r\u0000');
+    const directPayload = JSON.parse(directDecoded.inner.tasks[0].payload);
+    assert.strictEqual(directPayload.other_user_id, 'redacted-user');
+    assert.strictEqual(directPayload.message.text, 'direct message');
+    assert.strictEqual(directPayload.message.metadata.should_send_read_receipt, false);
+    assert.strictEqual(directPayload.message.metadata.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(directPayload.should_send_read_receipt, false);
+    assert.strictEqual(directPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+
+    const taskMetadataWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const taskMetadata = websocketSend(
+        taskMetadataWindow,
+        makeFrame('{}\r\u0000', [makeSendTask(
+            { send_type: '1' },
+            {
+                should_send_read_receipt: true,
+                last_read_watermark_ts: 1779530000000,
+                readReceiptMutation: { should_send_read_receipt: true }
+            }
+        )]),
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(taskMetadata.result, 'sent');
+    assert.strictEqual(taskMetadata.socket.sent.length, 1);
+    const taskMetadataDecoded = decodeFacebookFramedTasks(taskMetadata.socket.sent[0], '{}\r\u0000');
+    const sanitizedTask = taskMetadataDecoded.inner.tasks[0];
+    assert.strictEqual(sanitizedTask.label, '46');
+    assert.strictEqual(sanitizedTask.queue_name, 'redacted-group-thread');
+    assert.strictEqual(sanitizedTask.task_id, 419);
+    assert.strictEqual(sanitizedTask.should_send_read_receipt, false);
+    assert.strictEqual(sanitizedTask.last_read_watermark_ts, SAFE_READ_WATERMARK);
+    assert.strictEqual(sanitizedTask.readReceiptMutation, null);
+    const taskMetadataPayload = JSON.parse(sanitizedTask.payload);
+    assert.strictEqual(taskMetadataPayload.send_type, '1');
+    assert.strictEqual(taskMetadataPayload.message.text, 'group message');
+
+    const invalidCases = [{
+        label: 'missing queue_name',
+        task: (() => {
+            const task = makeSendTask();
+            delete task.queue_name;
+            return task;
+        })()
+    }, {
+        label: 'missing client message id',
+        task: makeSendTask({ offline_threading_id: undefined })
+    }, {
+        label: 'missing message payload',
+        task: makeSendTask({ message: undefined })
+    }, {
+        label: 'read command with misleading send fields',
+        task: makeSendTask({}, { label: 'markThreadAsRead' })
+    }];
+
+    for (const invalidCase of invalidCases) {
+        const window = makeGhostPage({
+            hostname: 'www.facebook.com',
+            pathname: '/',
+            href: 'https://www.facebook.com/'
+        });
+        const outcome = websocketSend(
+            window,
+            makeFrame('{}\r\u0000', [invalidCase.task]),
+            'wss://edge-chat.facebook.com/chat?region=redacted'
+        );
+        assert.strictEqual(outcome.result, undefined, `${invalidCase.label} must not receive the send exemption`);
+        assert.strictEqual(outcome.socket.sent.length, 0);
+    }
+
+    const mixedWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const mixedFrame = makeFrame(facebookFramePrefix, [
+        makeSendTask(),
+        {
+            label: '21',
+            payload: JSON.stringify({
+                thread_id: 'redacted-group-thread',
+                last_read_watermark_ts: 1779530000000,
+                sync_group: 104
+            }),
+            queue_name: 'redacted-group-thread',
+            task_id: 420
+        }
+    ]);
+    const mixed = websocketSend(
+        mixedWindow,
+        mixedFrame,
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(mixed.result, 'sent');
+    assert.strictEqual(mixed.socket.sent.length, 1);
+    const mixedDecoded = decodeFacebookFramedTasks(mixed.socket.sent[0], facebookFramePrefix);
+    assert.deepStrictEqual(mixedDecoded.inner.tasks.map(task => task.label), ['46']);
+    const mixedPayload = JSON.parse(mixedDecoded.inner.tasks[0].payload);
+    assert.strictEqual(mixedPayload.should_send_read_receipt, false);
+    assert.strictEqual(mixedPayload.last_read_watermark_ts, SAFE_READ_WATERMARK);
+
+    const disabledWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    }, { msgSeen: false, msgTyping: true });
+    const disabledFrame = makeFrame('{}\r\u0000');
+    const disabled = websocketSend(
+        disabledWindow,
+        disabledFrame,
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(disabled.result, 'sent');
+    assert.strictEqual(disabled.socket.sent[0], disabledFrame);
+    const disabledDecoded = decodeFacebookFramedTasks(disabled.socket.sent[0], '{}\r\u0000');
+    const disabledPayload = JSON.parse(disabledDecoded.inner.tasks[0].payload);
+    assert.strictEqual(disabledPayload.should_send_read_receipt, true);
+    assert.strictEqual(disabledPayload.last_read_watermark_ts, 1779530000000);
+
+    const malformedWindow = makeGhostPage({
+        hostname: 'www.facebook.com',
+        pathname: '/',
+        href: 'https://www.facebook.com/'
+    });
+    const completeMalformedSource = makeFrame('{}\r\u0000');
+    const malformedFrame = completeMalformedSource.slice(0, completeMalformedSource.byteLength - 1);
+    const malformedOriginal = Array.from(malformedFrame);
+    const malformed = websocketSend(
+        malformedWindow,
+        malformedFrame,
+        'wss://edge-chat.facebook.com/chat?region=redacted'
+    );
+    assert.strictEqual(malformed.result, undefined, 'truncated queue-send frames with Seen metadata must fail closed');
+    assert.strictEqual(malformed.socket.sent.length, 0);
+    assert.deepStrictEqual(Array.from(malformedFrame), malformedOriginal);
 }
 
 async function testFacebookSecureEncryptedDirectRecipientSendsAreAllowed() {
@@ -1831,11 +2326,11 @@ async function testFacebookSecureEncryptedDirectRecipientSendsAreAllowed() {
     );
     assert.strictEqual(outcome.postCount, 1);
     assert.strictEqual(outcome.blocked, 0);
-    assert.strictEqual(outcome.sanitized, 0);
+    assert.strictEqual(outcome.sanitized, 1);
     const forwarded = parseForwardedMessage(outcome.post);
-    assert.strictEqual(forwarded.tasks.length, 2);
+    assert.strictEqual(forwarded.tasks.length, 1);
     assert.strictEqual(forwarded.tasks[0].label, '46');
-    assert.strictEqual(forwarded.tasks[1].label, 'sendChatStateFromComposer');
+    assert.strictEqual(JSON.parse(forwarded.tasks[0].payload).encrypted_message, 'redacted-ciphertext');
 }
 
 function testMessengerPatchMixedSendReadStringBatchPreservesSend() {
@@ -9016,9 +9511,11 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMessengerPatchMixedSendTypingBatchPreservesSend();
     testFacebookPatchMixedSendTypingBatchPreservesSend();
     testFacebookMiniChatSecureSendWithAlternateTargetsIsForwarded();
-    testFacebookMiniChatMixedSendTypingBridgeFrameDoesNotEnterTypingSanitizer();
+    testFacebookMiniChatQueueDirectSendSanitizesBundledPrivacy();
     testFacebookGroupSendWithQueueOnlyTargetPreservesSendAndRemovesTyping();
+    testFacebookQueueOnlyGroupUserContentDoesNotTriggerPrivacyBlock();
     testFacebookQueueOnlyPrivacyTasksAreNotClassifiedAsSends();
+    testFacebookQueueOnlyGroupSendWithSeenMetadataIsAllowedOnRealtimeWebSocket();
     await testFacebookSecureEncryptedDirectRecipientSendsAreAllowed();
     testMessengerPatchMixedSendReadStringBatchPreservesSend();
     testMessengerPatchObjectMapBatchSanitizesPrivacyTasks();
