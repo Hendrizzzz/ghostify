@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "exceptions": [
+    {
+      "id": "image-size-web-ext-dev-only-2026-08",
+      "package": "image-size",
+      "version": "2.0.2",
+      "node": "node_modules/image-size",
+      "advisories": [
+        "GHSA-w3rx-r6r6-pgpr",
+        "GHSA-5p2g-fcmc-qvqq"
+      ],
+      "dependencyPath": [
+        "web-ext",
+        "addons-linter",
+        "image-size"
+      ],
+      "scope": "development-only",
+      "expiresOn": "2026-10-09",
+      "reason": "Mozilla web-ext reaches image-size only through its development-time add-on linter, which processes Ghostify's repository-controlled extension assets. The reviewed advisories have no patched image-size npm release as of 2026-08-10. Runtime dependency audits remain fully blocking."
+    }
+  ]
+}
