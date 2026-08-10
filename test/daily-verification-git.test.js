@@ -75,9 +75,11 @@ assert(
 );
 assert(
     packageJson.scripts.ci.includes('audit:high') &&
-        packageJson.scripts['audit:high'] === 'npm audit --audit-level=high' &&
+        packageJson.scripts['audit:high'] === 'node scripts/audit-development-dependencies.js' &&
+        packageJson.scripts['test:dependency-audit'] === 'node test/dependency-audit-policy.test.js' &&
+        packageJson.scripts['ci:chromium:checks'].includes('test:dependency-audit') &&
         !Object.hasOwn(packageJson.scripts, 'audit:high:raw'),
-    'normal CI must use the native complete dependency audit as a blocking check'
+    'normal CI must use the reviewed complete dependency audit policy as a blocking check'
 );
 assert(
     ciWorkflow.includes('Detect canonical status-only change') &&
