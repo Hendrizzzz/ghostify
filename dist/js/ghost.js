@@ -232,10 +232,24 @@
           retainedTasks.push(rawTask);
           continue;
         }
-        if (!sanitized.blockedAll || !Array.isArray(sanitized.value) || sanitized.value.length !== 0) {
+        changed = true;
+        if (sanitized.blockedAll) {
+          if (!Array.isArray(sanitized.value) || sanitized.value.length !== 0) {
+            return unchanged(value);
+          }
+          continue;
+        }
+        if (!Array.isArray(sanitized.value) || sanitized.value.length !== 1) {
           return unchanged(value);
         }
-        changed = true;
+        const rewrittenTask = rewriteJsonValueSource(
+          rawTask,
+          task,
+          sanitized.value[0],
+          0
+        );
+        if (typeof rewrittenTask !== "string") return unchanged(value);
+        retainedTasks.push(rewrittenTask);
       }
       if (!changed || retainedTasks.length === 0) return unchanged(value, changed);
       const nextTasksSource = `[${retainedTasks.join(",")}]`;
@@ -268,7 +282,7 @@
       const tasksSpan = findTopLevelPropertyValueSpan(innerSource, "tasks");
       if (!tasksSpan || innerSource[tasksSpan.start] !== "[") continue;
       const rawTasks = splitJsonArrayElements(innerSource.slice(tasksSpan.start, tasksSpan.end));
-      if (!rawTasks || rawTasks.length < 2) continue;
+      if (!rawTasks || rawTasks.length === 0) continue;
       return {
         prefix,
         outerSource,
@@ -677,6 +691,52 @@
       "stories_update_seen",
       "mark_story_read"
     ]);
+  }
+  function isFacebookMobileStorySeenWebLiteFrame(data, urlString) {
+    if (!isFacebookMobileStoryViewer()) return false;
+    if (!isFacebookWebLiteSocket(urlString)) return false;
+    const bytes = getBinaryFrameBytes(data);
+    if (!bytes || bytes.byteLength !== 54) return false;
+    const declaredLength = bytes[0] << 8 | bytes[1];
+    if (declaredLength !== bytes.byteLength - 2 || bytes[2] !== 83) return false;
+    if (!bytesAreZero(bytes, 23, 31)) return false;
+    if (bytes[31] !== 66) return false;
+    if (!bytesAre(bytes, 36, 40, 255)) return false;
+    return bytes[48] === 12;
+  }
+  function isFacebookMobileStoryViewer() {
+    try {
+      return window.location.hostname.toLowerCase() === "m.facebook.com" && String(window.location.pathname || "").toLowerCase().startsWith("/stories/");
+    } catch (e) {
+      return false;
+    }
+  }
+  function isFacebookWebLiteSocket(urlString) {
+    try {
+      const url = new URL(String(urlString || ""), window.location.href);
+      return url.protocol === "wss:" && url.hostname === "kaios-d.facebook.com" && url.pathname.startsWith("/ws/");
+    } catch (e) {
+      return false;
+    }
+  }
+  function getBinaryFrameBytes(data) {
+    try {
+      if (data instanceof ArrayBuffer) return new Uint8Array(data);
+      if (ArrayBuffer.isView(data)) {
+        return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+      }
+    } catch (e) {
+    }
+    return null;
+  }
+  function bytesAreZero(bytes, start, end) {
+    return bytesAre(bytes, start, end, 0);
+  }
+  function bytesAre(bytes, start, end, expected) {
+    for (let index = start; index < end; index += 1) {
+      if (bytes[index] !== expected) return false;
+    }
+    return true;
   }
   function isInstagramStoryViewerLookup(str) {
     if (hasExplicitStorySeenSignal(str)) return false;
@@ -1113,6 +1173,315 @@
       `"${field}": "${value}"`
     ]);
   }
+  function normalizeMessengerPayloadKey(key) {
+    return String(key || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+  function normalizedMessengerPayloadFields(value) {
+    const fields = {};
+    try {
+      for (const key of Object.keys(value || {})) {
+        fields[normalizeMessengerPayloadKey(key)] = value[key];
+      }
+    } catch (e) {
+    }
+    return fields;
+  }
+  function parseMessengerPayloadObject(value) {
+    if (value && typeof value === "object" && !Array.isArray(value)) return value;
+    if (typeof value !== "string") return null;
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function isPositiveMessengerSendType(value) {
+    if (typeof value === "number") return Number.isFinite(value) && value > 0;
+    if (typeof value !== "string") return false;
+    const normalized = value.trim();
+    return /^\d+$/.test(normalized) && Number(normalized) > 0;
+  }
+  function getQueueRoutedMessengerSendTask(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const fields = normalizedMessengerPayloadFields(value);
+    if (String(fields.label || "") !== "46") return null;
+    if (typeof fields.queuename !== "string" || !fields.queuename.trim()) return null;
+    const payloadKey = Object.keys(value).find((key) => normalizeMessengerPayloadKey(key) === "payload");
+    if (!payloadKey) return null;
+    const rawPayload = value[payloadKey];
+    const payload = parseMessengerPayloadObject(rawPayload);
+    if (!payload) return null;
+    const payloadFields = normalizedMessengerPayloadFields(payload);
+    const sendType = payloadFields.sendtype;
+    if (!isPositiveMessengerSendType(sendType)) return null;
+    const hasClientMessageId = [
+      "offlinethreadingid",
+      "clientmessageid",
+      "clientmutationid",
+      "otid"
+    ].some((key) => payloadFields[key] != null && String(payloadFields[key]).length > 0);
+    const hasMessagePayload = [
+      "message",
+      "text",
+      "body",
+      "attachment",
+      "sticker",
+      "media",
+      "encryptedmessage",
+      "encryptedpayload",
+      "encryptedblob",
+      "encryptedcontent",
+      "ciphertext",
+      "reaction",
+      "messagereaction",
+      "emoji",
+      "quicklike"
+    ].some((key) => payloadFields[key] != null);
+    return hasClientMessageId && hasMessagePayload ? { payloadKey, rawPayload, payload } : null;
+  }
+  function isNetworkReadReceiptSendFlagKey(key) {
+    return key === "shouldsendreadreceipt" || key === "sendreadreceipt" || key === "sendreadreceipts" || key === "sendreadreceiptflag" || key === "readreceiptenabled";
+  }
+  function isNetworkReadReceiptMutationKey(key) {
+    return key === "lssendreadreceipt" || key === "readreceiptmutation" || key === "sendreadreceiptmutation";
+  }
+  function isNetworkReadWatermarkKey(key) {
+    return key === "lastreadwatermark" || key === "lastreadwatermarkts" || key === "lastseentimems" || key === "readwatermark" || key === "watermarktimestamp";
+  }
+  var NETWORK_MESSAGE_CONTENT_KEYS = /* @__PURE__ */ new Set([
+    "text",
+    "body",
+    "attachment",
+    "sticker",
+    "media",
+    "encryptedmessage",
+    "encryptedpayload",
+    "encryptedblob",
+    "encryptedcontent",
+    "ciphertext",
+    "reaction",
+    "messagereaction",
+    "emoji",
+    "quicklike"
+  ]);
+  function isNetworkMessageContentKey(key) {
+    return NETWORK_MESSAGE_CONTENT_KEYS.has(key);
+  }
+  function isLikelyNetworkReadWatermarkValue(value) {
+    if (typeof value === "number") return Number.isFinite(value) && value >= 1e9;
+    if (typeof value === "string") return /^\d{10,}$/.test(value.trim());
+    return false;
+  }
+  function safeNetworkReadWatermarkValue(value) {
+    const text = String(value).trim();
+    const safe = `1${"0".repeat(Math.max(0, text.length - 1))}`;
+    return typeof value === "number" ? Number(safe) : safe;
+  }
+  function isTruthyNetworkPrivacyValue(value) {
+    if (value === true || value === 1) return true;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      return normalized === "true" || normalized === "1";
+    }
+    return !!(value && typeof value === "object");
+  }
+  function sanitizeQueueSendPayloadReadMetadata(value, depth = 0) {
+    if (!value || depth > 6 || typeof value !== "object") {
+      return { value, changed: false };
+    }
+    if (Array.isArray(value)) {
+      let changed2 = false;
+      const next = value.map((item) => {
+        const sanitized = sanitizeQueueSendPayloadReadMetadata(item, depth + 1);
+        changed2 = changed2 || sanitized.changed;
+        return sanitized.value;
+      });
+      return { value: changed2 ? next : value, changed: changed2 };
+    }
+    let changed = false;
+    const clone = {};
+    for (const key of Object.keys(value)) {
+      const child = value[key];
+      const normalizedKey = normalizeMessengerPayloadKey(key);
+      if (isNetworkMessageContentKey(normalizedKey)) {
+        clone[key] = child;
+        continue;
+      }
+      if (isNetworkReadReceiptSendFlagKey(normalizedKey)) {
+        const truthy = isTruthyNetworkPrivacyValue(child);
+        clone[key] = truthy ? false : child;
+        changed = changed || truthy;
+        continue;
+      }
+      if (isNetworkReadReceiptMutationKey(normalizedKey)) {
+        const truthy = isTruthyNetworkPrivacyValue(child);
+        clone[key] = truthy ? null : child;
+        changed = changed || truthy;
+        continue;
+      }
+      if (isNetworkReadWatermarkKey(normalizedKey) && isLikelyNetworkReadWatermarkValue(child)) {
+        clone[key] = safeNetworkReadWatermarkValue(child);
+        changed = changed || clone[key] !== child;
+        continue;
+      }
+      const sanitized = sanitizeQueueSendPayloadReadMetadata(child, depth + 1);
+      clone[key] = sanitized.value;
+      changed = changed || sanitized.changed;
+    }
+    return { value: changed ? clone : value, changed };
+  }
+  function sanitizeQueueRoutedMessengerSendTask(value) {
+    const task = getQueueRoutedMessengerSendTask(value);
+    if (!task || !SETTINGS.msgSeen || isKilled("msgSeen")) {
+      return { value, changed: false, blockedAll: false };
+    }
+    let clone = Object.assign({}, value);
+    let changed = false;
+    if (typeof task.rawPayload === "string") {
+      const sanitizedSource = sanitizeJsonTaskBatchStringSource(
+        task.rawPayload,
+        (candidate) => {
+          const sanitized = sanitizeQueueSendPayloadReadMetadata(candidate);
+          return {
+            value: sanitized.value,
+            changed: sanitized.changed,
+            blockedAll: false
+          };
+        }
+      );
+      if (sanitizedSource.changed && !sanitizedSource.blockedAll && typeof sanitizedSource.value === "string") {
+        clone[task.payloadKey] = sanitizedSource.value;
+        changed = true;
+      }
+    } else {
+      const sanitized = sanitizeQueueSendPayloadReadMetadata(task.payload);
+      if (sanitized.changed) {
+        clone[task.payloadKey] = sanitized.value;
+        changed = true;
+      }
+    }
+    const envelope = {};
+    for (const key of Object.keys(clone)) {
+      if (key !== task.payloadKey) envelope[key] = clone[key];
+    }
+    const sanitizedEnvelope = sanitizeQueueSendPayloadReadMetadata(envelope);
+    if (sanitizedEnvelope.changed) {
+      clone = Object.assign({}, sanitizedEnvelope.value, {
+        [task.payloadKey]: clone[task.payloadKey]
+      });
+      changed = true;
+    }
+    return { value: changed ? clone : value, changed, blockedAll: false };
+  }
+  function parseMessengerStructuredText(value) {
+    const source = String(value || "").trim();
+    if (!source) return null;
+    const candidates = [source];
+    const nullIndex = source.lastIndexOf("\0");
+    if (nullIndex >= 0) candidates.unshift(source.slice(nullIndex + 1).trim());
+    for (const candidate of candidates) {
+      if (!candidate || candidate[0] !== "{" && candidate[0] !== "[") continue;
+      try {
+        return JSON.parse(candidate);
+      } catch (e) {
+        const isolated = isolateFirstMessengerJsonValue(candidate);
+        if (!isolated) continue;
+        try {
+          return JSON.parse(isolated);
+        } catch (parseError) {
+        }
+      }
+    }
+    return null;
+  }
+  function isolateFirstMessengerJsonValue(source) {
+    const first = source[0];
+    if (first !== "{" && first !== "[") return null;
+    const stack = [first];
+    let inString = false;
+    let escaped = false;
+    for (let index = 1; index < source.length; index += 1) {
+      const char = source[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === "\\") escaped = true;
+        else if (char === '"') inString = false;
+        continue;
+      }
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+      if (char === "{" || char === "[") stack.push(char);
+      else if (char === "}" || char === "]") {
+        const open = stack.pop();
+        if (open === "{" && char !== "}" || open === "[" && char !== "]") return null;
+        if (stack.length === 0) return source.slice(0, index + 1);
+      }
+    }
+    return null;
+  }
+  function hasUnsafeNetworkPrivacyMetadata(value, depth = 0) {
+    if (!value || depth > 8) return false;
+    if (typeof value === "string") {
+      const parsed = parseMessengerStructuredText(value);
+      return parsed ? hasUnsafeNetworkPrivacyMetadata(parsed, depth + 1) : false;
+    }
+    if (Array.isArray(value)) {
+      return value.some((item) => hasUnsafeNetworkPrivacyMetadata(item, depth + 1));
+    }
+    if (typeof value !== "object") return false;
+    const fields = normalizedMessengerPayloadFields(value);
+    const label = normalizeMessengerPayloadKey(fields.label);
+    if (label === "6" || label === "21") return true;
+    for (const key of Object.keys(value)) {
+      const child = value[key];
+      const normalizedKey = normalizeMessengerPayloadKey(key);
+      if (isNetworkMessageContentKey(normalizedKey)) continue;
+      if ((isNetworkReadReceiptSendFlagKey(normalizedKey) || isNetworkReadReceiptMutationKey(normalizedKey)) && isTruthyNetworkPrivacyValue(child)) {
+        return true;
+      }
+      if (isNetworkReadWatermarkKey(normalizedKey) && isLikelyNetworkReadWatermarkValue(child) && safeNetworkReadWatermarkValue(child) !== child) {
+        return true;
+      }
+      if (hasUnsafeNetworkPrivacyMetadata(child, depth + 1)) return true;
+    }
+    return false;
+  }
+  function inspectQueueRoutedMessengerEnvelope(value, depth = 0, state = { send: false, unsafe: false }) {
+    if (!value || depth > 8 || state.unsafe) return state;
+    if (typeof value === "string") {
+      const parsed = parseMessengerStructuredText(value);
+      if (parsed) inspectQueueRoutedMessengerEnvelope(parsed, depth + 1, state);
+      return state;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) inspectQueueRoutedMessengerEnvelope(item, depth + 1, state);
+      return state;
+    }
+    if (typeof value !== "object") return state;
+    const task = getQueueRoutedMessengerSendTask(value);
+    if (task) {
+      state.send = true;
+      state.unsafe = hasUnsafeNetworkPrivacyMetadata(value, depth + 1);
+      return state;
+    }
+    if (hasUnsafeNetworkPrivacyMetadata(value, depth)) {
+      state.unsafe = true;
+      return state;
+    }
+    for (const child of Object.values(value)) {
+      inspectQueueRoutedMessengerEnvelope(child, depth + 1, state);
+    }
+    return state;
+  }
+  function hasSafeQueueRoutedMessengerSendIntent(str) {
+    const parsed = parseMessengerStructuredText(str);
+    if (!parsed) return false;
+    const state = inspectQueueRoutedMessengerEnvelope(parsed);
+    return state.send && !state.unsafe;
+  }
   function isMessengerSendWithBundledReadWatermark(str) {
     if (!str.includes("send_type")) return false;
     if (!hasReadReceiptWatermarkContext(str)) return false;
@@ -1122,7 +1491,9 @@
   function hasMessengerMessageSendIntent(str) {
     const text = String(str || "");
     const matchText = text.includes("\\") ? `${text} ${text.replace(/\\/g, "")}` : text;
-    if (!hasMessengerThreadContext(matchText)) return false;
+    const hasQueueRoutedSend = hasSafeQueueRoutedMessengerSendIntent(text);
+    if (!hasMessengerThreadContext(matchText) && !hasQueueRoutedSend) return false;
+    if (hasQueueRoutedSend) return true;
     const hasSendOperationName = includesAny(matchText, [
       "send_message",
       "sendmessage",
@@ -1388,11 +1759,6 @@
       let changed = false;
       const next = [];
       for (const item of value) {
-        const itemText = decode(item).toLowerCase();
-        if (privacyOnlyPredicate(itemText, urlString, options)) {
-          changed = true;
-          continue;
-        }
         const sanitizedItem = sanitizeMessengerNetworkValue(
           item,
           urlString,
@@ -1401,6 +1767,11 @@
           privacyOnlyPredicate
         );
         if (sanitizedItem.blockedAll) {
+          changed = true;
+          continue;
+        }
+        const itemText = decode(sanitizedItem.value).toLowerCase();
+        if (privacyOnlyPredicate(itemText, urlString, options)) {
           changed = true;
           continue;
         }
@@ -1414,6 +1785,8 @@
       };
     }
     if (typeof value === "object") {
+      const queueRoutedSend = sanitizeQueueRoutedMessengerSendTask(value);
+      if (queueRoutedSend.changed) return queueRoutedSend;
       const ownText = decode(value).toLowerCase();
       if (isMessengerNormalThreadListPaginationTask(ownText)) {
         return { value, changed: false, blockedAll: false };
@@ -2201,6 +2574,9 @@
       }
       if (SETTINGS.msgTyping && !isKilled("msgTyping") && isFacebookExplicitMessengerTypingWrite(str, urlString)) {
         return "MSG_TYPING";
+      }
+      if (SETTINGS.msgStory && !isKilled("msgStory") && isFacebookMobileStorySeenWebLiteFrame(data, urlString)) {
+        return "MSG_STORY";
       }
       if (SETTINGS.msgStory && !isKilled("msgStory") && hasExplicitStorySeenSignal(str) && matchesPattern(str, PATTERNS.msgStory)) {
         return "MSG_STORY";

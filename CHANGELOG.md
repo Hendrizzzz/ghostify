@@ -9,6 +9,28 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
+## [2.0.7] - 2026-08-11
+
+### Added
+
+- Added captured WebLite regression coverage for Facebook mobile story views,
+  including explicit fail-open cases for unrelated story traffic.
+
+### Fixed
+
+- Fixed Facebook group messages that could remain stuck in Sending when Meta
+  bundled queue-routed sends with typing or Seen metadata. Ghostify now
+  preserves the message and exact routing identifiers while removing only the
+  blocked privacy metadata.
+- Added a narrowly scoped Firefox Android block for the captured Facebook
+  mobile-site WebLite story-view receipt while preserving story navigation,
+  media playback, and visibility telemetry. Packaged-emulator checks covered
+  the captured Facebook and Instagram mobile privacy paths on Firefox Android.
+- Corrected the Chromium 48px icon asset and routed the popup rating link to
+  Microsoft Edge Add-ons when Ghostify runs in Edge.
+- Aligned the Firefox release and reviewer documents with the package's Firefox
+  desktop and Firefox for Android compatibility declarations.
+
 ## [2.0.6] - 2026-07-22
 
 ### Added

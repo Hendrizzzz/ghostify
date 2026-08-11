@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
   "product": "Ghostify",
-  "productVersion": "2.0.6",
-  "generatedAt": "2026-08-10T08:55:21Z",
+  "productVersion": "2.0.7",
+  "generatedAt": "2026-08-11T00:00:00Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
-    "publishedVersion": "2.0.6",
+    "publishedVersion": "2.0.7",
     "verificationVersion": "2.0.6",
-    "checkedAt": "2026-07-22T03:16:00Z",
-    "matchesVerificationBuild": true,
+    "checkedAt": "2026-08-10T23:27:09Z",
+    "matchesVerificationBuild": false,
     "storeUrl": "https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm"
   },
   "statusUrl": "https://ghostify-extension.vercel.app/status",
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
-    "publicStatus": "maintainer_verified",
-    "label": "All supported controls operational",
-    "message": "All supported controls were checked on August 10, 2026 and are working normally."
+    "publicStatus": "under_review",
+    "label": "Version 2.0.7 rollout in progress",
+    "message": "Ghostify 2.0.7 is available on Chrome and Firefox. Microsoft Edge review is still in progress."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -42,130 +42,151 @@
       "id": "instagram-hide-seen",
       "platform": "Instagram",
       "feature": "Hide Seen",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-IG-SEEN-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Instagram Hide Seen on August 10, 2026."
+      "notes": "Live verification for Instagram Hide Seen on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "instagram-hide-typing",
       "platform": "Instagram",
       "feature": "Hide Typing",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-IG-TYPING-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Instagram Hide Typing on August 10, 2026."
+      "notes": "Live verification for Instagram Hide Typing on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "instagram-hide-story-views",
       "platform": "Instagram",
       "feature": "Hide Story Views",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-IG-STORY-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Instagram Hide Story Views on August 10, 2026."
+      "notes": "Live verification for Instagram Hide Story Views on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "messenger-hide-seen",
       "platform": "Messenger",
       "feature": "Hide Seen",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-MSG-SEEN-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Messenger Hide Seen on August 10, 2026."
+      "notes": "Live verification for Messenger Hide Seen on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "messenger-hide-typing",
       "platform": "Messenger",
       "feature": "Hide Typing",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-MSG-TYPING-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Messenger Hide Typing on August 10, 2026."
+      "notes": "Live verification for Messenger Hide Typing on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "messenger-hide-story-views",
       "platform": "Messenger",
       "feature": "Hide Story Views",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-MSG-STORY-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Messenger Hide Story Views on August 10, 2026."
+      "notes": "Live verification for Messenger Hide Story Views on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "facebook-hide-seen",
       "platform": "Facebook",
       "feature": "Hide Seen",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-SEEN-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Facebook Hide Seen on August 10, 2026."
+      "notes": "Live verification for Facebook Hide Seen on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "facebook-hide-typing",
       "platform": "Facebook",
       "feature": "Hide Typing",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-TYPING-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Facebook Hide Typing on August 10, 2026."
+      "notes": "Live verification for Facebook Hide Typing on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     },
     {
       "id": "facebook-hide-story-views",
       "platform": "Facebook",
       "feature": "Hide Story Views",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "under_review",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-STORY-001 approved in the 2026-08-10 verification PR for v2.0.6",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Post-release verification pending for v2.0.7",
       "verifiedAt": "2026-08-10T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Facebook Hide Story Views on August 10, 2026."
+      "notes": "Live verification for Facebook Hide Story Views on v2.0.7 is pending. Last verified on August 10, 2026 in v2.0.6."
     }
   ],
   "history": [
+    {
+      "date": "2026-08-11",
+      "publicStatus": "under_review",
+      "eventType": "investigation",
+      "title": "Microsoft Edge release under review",
+      "summary": "Version 2.0.7 is awaiting review on Microsoft Edge Add-ons."
+    },
+    {
+      "date": "2026-08-11",
+      "publicStatus": "under_review",
+      "eventType": "release",
+      "title": "Ghostify 2.0.7 published on Chrome and Firefox",
+      "summary": "Ghostify 2.0.7 became available on the Chrome Web Store and Firefox Add-ons."
+    },
+    {
+      "date": "2026-08-11",
+      "publicStatus": "under_review",
+      "eventType": "fix",
+      "title": "Facebook group-message sending fix published",
+      "summary": "Version 2.0.7 fixes messages in some Facebook group chats that could remain stuck in Sending."
+    },
     {
       "date": "2026-08-10",
       "publicStatus": "maintainer_verified",
@@ -186,6 +207,13 @@
       "eventType": "verification",
       "title": "All supported controls operational",
       "summary": "All supported controls were checked on August 7, 2026 and are working normally."
+    },
+    {
+      "date": "2026-08-06",
+      "publicStatus": "known_issue",
+      "eventType": "incident",
+      "title": "Facebook group-message sending report acknowledged",
+      "summary": "A report that messages in some Facebook group chats could remain stuck in Sending was acknowledged and investigated."
     },
     {
       "date": "2026-08-06",

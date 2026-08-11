@@ -19,6 +19,8 @@ const ELEMENT_MAP = {
 
 const PUBLIC_STATUS_FEED_URL = 'https://ghostify-extension.vercel.app/status.json';
 const PUBLIC_STATUS_TIMEOUT_MS = 4000;
+const EDGE_ADDONS_LISTING_URL = 'https://microsoftedge.microsoft.com/addons/detail/mgbppdkolkeelimnemlbpmfdddhoeeal';
+const EDGE_USER_AGENT_PATTERN = /\bEdg(?:A|iOS)?\//;
 
 const PUBLIC_STATUS_VERIFIED = new Set([
     'maintainer_verified',
@@ -28,6 +30,7 @@ const PUBLIC_STATUS_VERIFIED = new Set([
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     attachEventListeners();
+    configureStoreRatingLink();
     updatePublicStatusSummary();
 
     const manifestData = chrome.runtime.getManifest();
@@ -36,6 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
         versionSpan.innerText = `v${manifestData.version}`;
     }
 });
+
+function configureStoreRatingLink(userAgent = navigator.userAgent) {
+    const ratingLink = document.querySelector('.rate-link');
+    if (!ratingLink || !EDGE_USER_AGENT_PATTERN.test(userAgent || '')) return;
+
+    ratingLink.href = EDGE_ADDONS_LISTING_URL;
+    ratingLink.setAttribute('aria-label', 'Rate Ghostify on Microsoft Edge Add-ons');
+    ratingLink.dataset.tooltip = 'Enjoying Ghostify? Leave a quick rating on Microsoft Edge Add-ons.';
+}
 
 
 function loadSettings() {

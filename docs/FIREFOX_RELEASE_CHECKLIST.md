@@ -7,10 +7,10 @@ does not change the Chromium release workflow.
 ## 1. Release Identity
 
 - Target version:
-- AMO listing status: first submission / update
+- AMO listing status: new listing / version update
 - Permanent Gecko ID: `ghostify@ghostify-extension.vercel.app`
 - Firefox minimum version: `140.0`
-- Firefox for Android manifest floor: `142.0` (desktop-only AMO submission)
+- Firefox for Android minimum version: `142.0`
 - Linked issue or PR:
 - User-visible changes:
 
@@ -56,6 +56,8 @@ choose **Load Temporary Add-on**, and select
   content scripts at document start.
 - Complete all affected smoke IDs from `docs/QA_FIXTURES.md`, including
   sender-side or story-owner proof when applicable.
+- On Firefox for Android 142 or later, repeat the affected mobile-web smoke
+  checks with the exact packaged build and record the Firefox/Android versions.
 
 Do not claim Firefox support verified from automated tests alone.
 
@@ -82,8 +84,8 @@ The maintainer performs these external steps:
 4. Answer **Yes** when AMO asks whether source code is required, then upload
    `ghostify-vX.Y.Z-firefox-add-ons-source.zip`. Ghostify uses esbuild, so this
    source archive and its build instructions are mandatory for every version.
-5. Select Firefox desktop compatibility only unless Android has been separately
-   implemented and verified.
+5. Select both Firefox desktop and Firefox for Android compatibility. The
+   generated manifest enforces minimum versions 140 and 142 respectively.
 6. Use the paste-ready fields and reviewer notes in
    `docs/FIREFOX_AMO_SUBMISSION.md`; replace every owner-action placeholder in
    the private AMO form before submission.
@@ -97,7 +99,7 @@ reviewer before submission.
 ## 7. Post-Submission
 
 - Record AMO validation warnings and reviewer requests.
-- Do not add a Firefox install badge or call the listing live before approval.
+- Do not describe the submitted version as approved or live before AMO approval.
 - After approval, install the Mozilla-signed version and repeat the popup and
   affected Meta smoke checks.
 - Record approved version, listing URL, approval date, Firefox version, OS,

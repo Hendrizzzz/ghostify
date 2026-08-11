@@ -4,8 +4,10 @@ const vm = require('vm');
 
 const pkg = require('../package.json');
 const popupSource = fs.readFileSync('dist/js/popup.js', 'utf8');
+const chromeStoreReviewUrl = 'https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm/reviews';
+const edgeAddonsListingUrl = 'https://microsoftedge.microsoft.com/addons/detail/mgbppdkolkeelimnemlbpmfdddhoeeal';
 
-function createPopupContext({ firefox }) {
+function createPopupContext({ firefox, userAgent = 'Mozilla/5.0 Chrome/140.0.0.0 Safari/537.36' }) {
     const classNames = new Set();
     const summaryElement = { textContent: '' };
     const tooltipElement = { textContent: '' };
@@ -21,6 +23,17 @@ function createPopupContext({ firefox }) {
         getAttribute(name) { return this.attributes.get(name) || null; }
     };
     const statusRequests = [];
+    const ratingLink = {
+        href: chromeStoreReviewUrl,
+        dataset: {
+            tooltip: 'Enjoying Ghostify? Leave a quick rating on the Chrome Web Store.'
+        },
+        attributes: new Map([
+            ['aria-label', 'Rate Ghostify on the Chrome Web Store']
+        ]),
+        setAttribute(name, value) { this.attributes.set(name, value); },
+        getAttribute(name) { return this.attributes.get(name) || null; }
+    };
     const manifest = firefox
         ? {
             version: pkg.version,
@@ -45,6 +58,7 @@ function createPopupContext({ firefox }) {
         Promise,
         setTimeout,
         clearTimeout,
+        navigator: { userAgent },
         XMLHttpRequest: class {
             constructor() {
                 this.response = statusData;
@@ -72,6 +86,10 @@ function createPopupContext({ firefox }) {
         document: {
             addEventListener() { },
             querySelectorAll() { return []; },
+            querySelector(selector) {
+                if (selector === '.rate-link') return ratingLink;
+                return null;
+            },
             getElementById(id) {
                 if (id === 'public-status-summary') return summaryElement;
                 if (id === 'public-status-link') return linkElement;
@@ -82,7 +100,32 @@ function createPopupContext({ firefox }) {
     };
     context.window = context;
     vm.runInNewContext(popupSource, context, { filename: 'popup.js' });
-    return { context, statusRequests, linkElement, summaryElement, tooltipElement };
+    return { context, statusRequests, linkElement, ratingLink, summaryElement, tooltipElement };
+}
+
+function assertBrowserSpecificRatingLink() {
+    const chromePopup = createPopupContext({ firefox: false });
+    chromePopup.context.configureStoreRatingLink();
+    assert.strictEqual(chromePopup.ratingLink.href, chromeStoreReviewUrl);
+    assert.strictEqual(
+        chromePopup.ratingLink.getAttribute('aria-label'),
+        'Rate Ghostify on the Chrome Web Store'
+    );
+
+    const edgePopup = createPopupContext({
+        firefox: false,
+        userAgent: 'Mozilla/5.0 Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
+    });
+    edgePopup.context.configureStoreRatingLink();
+    assert.strictEqual(edgePopup.ratingLink.href, edgeAddonsListingUrl);
+    assert.strictEqual(
+        edgePopup.ratingLink.getAttribute('aria-label'),
+        'Rate Ghostify on Microsoft Edge Add-ons'
+    );
+    assert.strictEqual(
+        edgePopup.ratingLink.dataset.tooltip,
+        'Enjoying Ghostify? Leave a quick rating on Microsoft Edge Add-ons.'
+    );
 }
 
 async function assertDynamicStatus(target) {
@@ -115,7 +158,10 @@ async function main() {
     );
 
     if (target !== 'chromium') await assertDynamicStatus('firefox');
-    if (target !== 'firefox') await assertDynamicStatus('chromium');
+    if (target !== 'firefox') {
+        await assertDynamicStatus('chromium');
+        assertBrowserSpecificRatingLink();
+    }
 }
 
 main()

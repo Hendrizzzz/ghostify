@@ -114,6 +114,12 @@ try {
     for (const file of requiredSourceFiles) {
         assert(sourceZip.entries.has(file), `Firefox reviewer source ZIP is missing ${file}`);
     }
+    const submissionPacket = readStoredZipEntry(sourceZip, 'docs/FIREFOX_AMO_SUBMISSION.md').toString('utf8');
+    assert(submissionPacket.includes('Firefox desktop and Firefox for Android'));
+    assert(!/Firefox desktop only|Select desktop only|do not claim Android support/i.test(submissionPacket));
+    const releaseChecklist = readStoredZipEntry(sourceZip, 'docs/FIREFOX_RELEASE_CHECKLIST.md').toString('utf8');
+    assert(releaseChecklist.includes('Firefox for Android minimum version: `142.0`'));
+    assert(!/desktop-only AMO submission|Select desktop only/i.test(releaseChecklist));
     assert(!sourceZip.entries.has('node_modules/esbuild/bin/esbuild'));
 
     const mismatchedTag = childProcess.spawnSync(

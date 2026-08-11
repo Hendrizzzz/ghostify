@@ -8,6 +8,10 @@ const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf
 const chromiumManifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'dist', 'manifest.json'), 'utf8'));
 const firefoxManifest = createFirefoxManifest();
 const popupJs = fs.readFileSync(path.join(repoRoot, 'dist', 'js', 'popup.js'), 'utf8');
+const firefoxReleaseChecklist = fs.readFileSync(path.join(repoRoot, 'docs', 'FIREFOX_RELEASE_CHECKLIST.md'), 'utf8');
+const firefoxSubmissionPacket = fs.readFileSync(path.join(repoRoot, 'docs', 'FIREFOX_AMO_SUBMISSION.md'), 'utf8');
+const browserDistribution = fs.readFileSync(path.join(repoRoot, 'docs', 'BROWSER_DISTRIBUTION.md'), 'utf8');
+const changelog = fs.readFileSync(path.join(repoRoot, 'CHANGELOG.md'), 'utf8');
 const statusHost = 'https://ghostify-extension.vercel.app/*';
 const expectedId = 'ghostify@ghostify-extension.vercel.app';
 
@@ -50,6 +54,31 @@ if (!popupJs.includes('new XMLHttpRequest()') || popupJs.includes('fetch(PUBLIC_
 }
 if (!popupJs.includes('request.withCredentials = false')) {
     fail('Popup public-status request must omit credentials');
+}
+
+const androidPublicationDocs = [
+    ['docs/FIREFOX_RELEASE_CHECKLIST.md', firefoxReleaseChecklist],
+    ['docs/FIREFOX_AMO_SUBMISSION.md', firefoxSubmissionPacket],
+    ['docs/BROWSER_DISTRIBUTION.md', browserDistribution],
+    ['CHANGELOG.md', changelog]
+];
+const obsoleteDesktopOnlyPhrases = [
+    /desktop-only AMO submission/i,
+    /Firefox desktop only/i,
+    /Select desktop only/i,
+    /do not claim Android support/i,
+    /before Android publication/i
+];
+for (const [file, contents] of androidPublicationDocs) {
+    for (const phrase of obsoleteDesktopOnlyPhrases) {
+        if (phrase.test(contents)) fail(`${file} contradicts the Firefox Android manifest declaration`);
+    }
+}
+if (!firefoxReleaseChecklist.includes('Firefox for Android minimum version: `142.0`')) {
+    fail('Firefox release checklist must record the Firefox for Android 142.0 minimum');
+}
+if (!firefoxSubmissionPacket.includes('Firefox desktop and Firefox for Android')) {
+    fail('Firefox AMO submission packet must select desktop and Android compatibility');
 }
 
 const comparableKeys = [
