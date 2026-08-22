@@ -5,6 +5,10 @@
   "description": "Privacy controls for Instagram, Facebook, and Messenger.",
   "scripts": {
     "build": "node build.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "npm run build && npm run test:modules && node test/messenger-send-stability.test.js && npm run test:status && npm run test:dependency-audit && npm run test:release-notes && npm run test:tag-integrity && npm run test:validator && npm run test:package",
     "test:modules": "npm run test:modules:shared && node test/firefox-popup.test.js",
     "test:modules:shared": "node test/settings-defaults.test.js && node test/runtime-config.test.js && node test/module-registry.test.js && node test/module-flags.test.js",
@@ -68,7 +72,11 @@
   },
   "homepage": "https://github.com/Hendrizzzz/Ghostify#readme",
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "esbuild": "^0.28.1",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.6",
     "web-ext": "10.5.0"
   }
 }

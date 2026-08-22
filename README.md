@@ -157,6 +157,18 @@ Chromium development folder and the source for Firefox package staging.
 `npm run ci` is the PR-ready check: tests, extension package validation,
 Firefox linting, generated bundle drift check, and high-severity dependency audit.
 
+## Documentation
+
+- [Architecture](ARCHITECTURE.md) — runtime design, manifest model, build flow, debugging flags
+- [Changelog](CHANGELOG.md) — release notes (source of truth for every release)
+- [Contributing](CONTRIBUTING.md) — scope policy, change-risk tiers, PR expectations
+- [QA fixtures](docs/QA_FIXTURES.md) — smoke IDs used across release checklists
+- [Browser distribution](docs/BROWSER_DISTRIBUTION.md) — channels, packages, Firefox differences
+- [Public status guide](docs/PUBLIC_STATUS_GUIDE.md) — how the verification feed is written
+- [Threat model](docs/THREAT_MODEL.md) — trust boundaries and residual risks
+- [Privacy](PRIVACY.md) / [Security](SECURITY.md)
+- [Product](PRODUCT.md) / [Design](DESIGN.md) — product truth and visual system
+
 ## Project Structure
 
 ```text
@@ -169,10 +181,13 @@ Ghostify/
 |-- tmp/                  Ignored generated staging directories
 |-- site/                 Public website
 |-- build.js              ESBuild build script
+|-- AGENTS.md             Guidance for AI coding agents and contributors
+|-- ARCHITECTURE.md       Runtime design and build flow
 |-- CONTRIBUTING.md       Contribution guide
 |-- MAINTAINERS.md        Maintainer roles and decision process
 |-- PRIVACY.md            Privacy policy
 |-- SECURITY.md           Vulnerability reporting policy
+|-- SUPPORT.md            Where to get help
 `-- README.md             Project overview
 ```
 

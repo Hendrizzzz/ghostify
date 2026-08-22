@@ -1,37 +1,43 @@
-import { FREE_PRIVACY_SETTING_KEYS } from './settings/defaults.js';
-import { normalizePrivacySettings } from './settings/storage.js';
+import { FREE_PRIVACY_SETTING_KEYS } from "./settings/defaults.js";
+import { normalizePrivacySettings } from "./settings/storage.js";
 import {
     sanitizeFramedJsonTaskBatchBinary,
     sanitizeJsonTaskBatchStringSource,
-    sanitizeWholeJsonArrayBinary
-} from './utils/binary-json.js';
+    sanitizeWholeJsonArrayBinary,
+} from "./utils/binary-json.js";
+import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
 
 (function () {
-    'use strict';
+    "use strict";
     const hostname = window.location.hostname.toLowerCase();
-    const isInstagram = isHost(hostname, 'instagram.com');
-    const isFacebookDotCom = isHost(hostname, 'facebook.com');
-    const isMessengerDotCom = isHost(hostname, 'messenger.com');
-    const isFacebookMessengerProxy = hostname === 'www.fbsbx.com' &&
-        String(window.location.pathname || '').toLowerCase().startsWith('/maw_proxy_page');
-    const isMessenger = isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy;
-    const settingsKey = 'msgTyping';
+    const isInstagram = isHost(hostname, "instagram.com");
+    const isFacebookDotCom = isHost(hostname, "facebook.com");
+    const isMessengerDotCom = isHost(hostname, "messenger.com");
+    const isFacebookMessengerProxy =
+        hostname === "www.fbsbx.com" &&
+        String(window.location.pathname || "")
+            .toLowerCase()
+            .startsWith("/maw_proxy_page");
+    const isMessenger =
+        isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy;
+    const settingsKey = "msgTyping";
     if (!isMessenger) return;
     if (window.__GHOSTIFY_LS_TYPING_PATCH__) return;
     window.__GHOSTIFY_LS_TYPING_PATCH__ = true;
-    const DIAGNOSTIC_VERSION = '2026-05-23-instagram-direct-27';
-    const SAFE_READ_WATERMARK_DIGIT = '1';
+    const SAFE_READ_WATERMARK_DIGIT = "1";
     const observeSalt = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     const observeStartMs = Date.now();
-    markPatchStatus('messenger_patch.init', {
+    markPatchStatus("messenger_patch.init", {
         isMessenger,
         isMessengerDotCom,
         isFacebookDotCom,
         isFacebookMessengerProxy,
-        readyState: document.readyState
+        readyState: document.readyState,
     });
     if (isFacebookDotCom && !isMessengerDotCom && window.top !== window) {
-        markPatchStatus('facebook.child_frame_reduced', { reason: 'bridge_hooks_only' });
+        markPatchStatus("facebook.child_frame_reduced", {
+            reason: "bridge_hooks_only",
+        });
     }
 
     function isHost(host, domain) {
@@ -40,73 +46,73 @@ import {
 
     const ALLOWED_KILL_SWITCH_FEATURES = new Set(FREE_PRIVACY_SETTING_KEYS);
     const OBSERVE_TERMS = [
-        'sendtypingindicator',
-        'lssendtypingindicator',
-        'lssendtypingindicatorstoredprocedure',
-        'sendchatstate',
-        'send_chat_state',
-        'sendchatstatefromcomposer',
-        'mawsecuretypingstate',
-        'securetypingstate',
-        'typingindicatorstoredprocedure',
-        'is_typing',
-        'istyping',
-        'typing_indicator',
-        'typing_on',
-        'send_typing',
-        'send_typing_indicator',
-        'thread_typing',
-        'orca_typing_notifications',
-        'indicate_activity',
-        'activity_indicator',
-        'composer',
-        'markthreadasread',
-        'mark_thread_read',
-        'markthreadreadmutation',
-        'markthreadread',
-        'markread',
-        'markasread',
-        'mark_read',
-        'markseen',
-        'mark_seen',
-        'thread_seen',
-        'threadseen',
-        'change_read_status',
-        'updatelastseenat',
-        'updatelastreadwatermark',
-        'sendreadreceipt',
-        'lssendreadreceipt',
-        'readreceiptmutation',
-        'readreceipt',
-        'lsupdatethreadreadwatermark',
-        'lsmarkthreadread',
-        'mwmarkthreadread',
-        'lsupdatelastreadwatermark',
-        'last_read_watermark',
-        'last_read_watermark_ts',
-        'last_seen_time_ms',
-        'read_watermark',
-        'watermarktimestamp',
-        'watermark_timestamp',
-        'shouldsendreadreceipt',
-        'seenbyviewer',
-        'seen_by_viewer',
-        'read_receipt',
-        'delivery_receipt',
-        'deliveryreceipt',
-        'delivery_receipts',
-        'message_delivered',
-        'markdelivered',
-        'ls_req',
-        'issue_new_task',
-        'issuenewtask',
-            'thread_key',
-            'thread_fbid',
-            'thread_id',
-            'recipient_id',
-            'act_thread_id',
-        'mqtt',
-        'edge-chat'
+        "sendtypingindicator",
+        "lssendtypingindicator",
+        "lssendtypingindicatorstoredprocedure",
+        "sendchatstate",
+        "send_chat_state",
+        "sendchatstatefromcomposer",
+        "mawsecuretypingstate",
+        "securetypingstate",
+        "typingindicatorstoredprocedure",
+        "is_typing",
+        "istyping",
+        "typing_indicator",
+        "typing_on",
+        "send_typing",
+        "send_typing_indicator",
+        "thread_typing",
+        "orca_typing_notifications",
+        "indicate_activity",
+        "activity_indicator",
+        "composer",
+        "markthreadasread",
+        "mark_thread_read",
+        "markthreadreadmutation",
+        "markthreadread",
+        "markread",
+        "markasread",
+        "mark_read",
+        "markseen",
+        "mark_seen",
+        "thread_seen",
+        "threadseen",
+        "change_read_status",
+        "updatelastseenat",
+        "updatelastreadwatermark",
+        "sendreadreceipt",
+        "lssendreadreceipt",
+        "readreceiptmutation",
+        "readreceipt",
+        "lsupdatethreadreadwatermark",
+        "lsmarkthreadread",
+        "mwmarkthreadread",
+        "lsupdatelastreadwatermark",
+        "last_read_watermark",
+        "last_read_watermark_ts",
+        "last_seen_time_ms",
+        "read_watermark",
+        "watermarktimestamp",
+        "watermark_timestamp",
+        "shouldsendreadreceipt",
+        "seenbyviewer",
+        "seen_by_viewer",
+        "read_receipt",
+        "delivery_receipt",
+        "deliveryreceipt",
+        "delivery_receipts",
+        "message_delivered",
+        "markdelivered",
+        "ls_req",
+        "issue_new_task",
+        "issuenewtask",
+        "thread_key",
+        "thread_fbid",
+        "thread_id",
+        "recipient_id",
+        "act_thread_id",
+        "mqtt",
+        "edge-chat",
     ];
     const killedFeatures = new Set();
     let settingsReady = false;
@@ -117,27 +123,32 @@ import {
     const readReceiptWrapperCache = new WeakMap();
     const optimisticMarkThreadReadLeafWrappers = new WeakMap();
 
-    window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(window.__GHOSTIFY_SETTINGS__);
+    window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(
+        window.__GHOSTIFY_SETTINGS__,
+    );
 
-    window.addEventListener('message', (event) => {
+    window.addEventListener("message", (event) => {
         if (event.source !== window) return;
-        if (!event.data || event.data.source !== 'GHOSTIFY_EXTENSION') return;
+        if (!event.data || event.data.source !== "GHOSTIFY_EXTENSION") return;
 
-        if (event.data.type === 'GHOSTIFY_CONFIG_UPDATE') {
+        if (event.data.type === "GHOSTIFY_CONFIG_UPDATE") {
             killedFeatures.clear();
             if (Array.isArray(event.data.config?.killSwitch)) {
-                event.data.config.killSwitch.forEach(feature => {
-                    if (ALLOWED_KILL_SWITCH_FEATURES.has(feature)) killedFeatures.add(feature);
+                event.data.config.killSwitch.forEach((feature) => {
+                    if (ALLOWED_KILL_SWITCH_FEATURES.has(feature))
+                        killedFeatures.add(feature);
                 });
             }
         }
 
-        if (event.data.type === 'GHOSTIFY_SETTINGS_UPDATE') {
-            window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(event.data.settings);
+        if (event.data.type === "GHOSTIFY_SETTINGS_UPDATE") {
+            window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(
+                event.data.settings,
+            );
             settingsReady = true;
-            markPatchStatus('messenger_patch.settings', {
+            markPatchStatus("messenger_patch.settings", {
                 msgTyping: window.__GHOSTIFY_SETTINGS__.msgTyping,
-                msgSeen: window.__GHOSTIFY_SETTINGS__.msgSeen
+                msgSeen: window.__GHOSTIFY_SETTINGS__.msgSeen,
             });
             scheduleMessengerDotComHooks();
             scheduleFacebookSafeHooks();
@@ -145,27 +156,33 @@ import {
     });
 
     window.__ghostify_shouldBlockTyping = function () {
-        return !!window.__GHOSTIFY_SETTINGS__?.[settingsKey] && !killedFeatures.has(settingsKey);
+        return (
+            !!window.__GHOSTIFY_SETTINGS__?.[settingsKey] &&
+            !killedFeatures.has(settingsKey)
+        );
     };
 
-    window.__ghostify_shouldBlockMessengerTyping = window.__ghostify_shouldBlockTyping;
+    window.__ghostify_shouldBlockMessengerTyping =
+        window.__ghostify_shouldBlockTyping;
 
     window.__ghostify_shouldBlockMessengerSeen = function () {
-        return isMessenger && !!window.__GHOSTIFY_SETTINGS__?.msgSeen && !killedFeatures.has('msgSeen');
+        return (
+            isMessenger &&
+            !!window.__GHOSTIFY_SETTINGS__?.msgSeen &&
+            !killedFeatures.has("msgSeen")
+        );
     };
 
-    window.postMessage({
-        type: 'GHOSTIFY_SETTINGS_REQUEST',
-        source: 'GHOSTIFY_PAGE'
-    }, '*');
+    window.postMessage(
+        {
+            type: "GHOSTIFY_SETTINGS_REQUEST",
+            source: "GHOSTIFY_PAGE",
+        },
+        window.location.origin,
+    );
 
     function noopTypingResult() {
         return undefined;
-    }
-
-    function shouldBlockTypingPayload(payload) {
-        const text = stringifyForMatch(payload).toLowerCase();
-        return shouldBlockTypingText(text);
     }
 
     function shouldBlockTypingText(text) {
@@ -173,74 +190,81 @@ import {
         if (!text) return false;
         text = stripFalseyPrivacyFields(text);
 
-        if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
+        if (
+            (isFacebookDotCom || isFacebookMessengerProxy) &&
+            !isMessengerDotCom
+        ) {
             return shouldBlockFacebookTypingText(text);
         }
 
         if (isMessengerTypingBridgeText(text)) return true;
 
         if (
-            text.includes('sendtypingindicator') ||
-            text.includes('send_typing_indicator') ||
-            text.includes('send_typing') ||
-            text.includes('sendchatstate') ||
-            text.includes('send_chat_state') ||
-            text.includes('sendchatstatefromcomposer') ||
-            text.includes('typingindicatorstoredprocedure') ||
-            text.includes('typing_status') ||
-            text.includes('securetypingstate') ||
-            text.includes('mawsecuretypingstate') ||
-            text.includes('indicate_activity') ||
-            text.includes('activity_indicator')
+            text.includes("sendtypingindicator") ||
+            text.includes("send_typing_indicator") ||
+            text.includes("send_typing") ||
+            text.includes("sendchatstate") ||
+            text.includes("send_chat_state") ||
+            text.includes("sendchatstatefromcomposer") ||
+            text.includes("typingindicatorstoredprocedure") ||
+            text.includes("typing_status") ||
+            text.includes("securetypingstate") ||
+            text.includes("mawsecuretypingstate") ||
+            text.includes("indicate_activity") ||
+            text.includes("activity_indicator")
         ) {
-            return hasOutgoingMessengerEnvelope(text) && hasMessengerThreadTarget(text);
+            return (
+                hasOutgoingMessengerEnvelope(text) &&
+                hasMessengerThreadTarget(text)
+            );
         }
 
-        const hasTypingState = text.includes('is_typing') ||
+        const hasTypingState =
+            text.includes("is_typing") ||
             text.includes('"istyping"') ||
-            text.includes('typing_on') ||
-            text.includes('typing_indicator') ||
-            text.includes('typing_status') ||
-            text.includes('typingstate') ||
-            text.includes('is_composing') ||
-            text.includes('iscomposing') ||
-            text.includes('chatstate');
+            text.includes("typing_on") ||
+            text.includes("typing_indicator") ||
+            text.includes("typing_status") ||
+            text.includes("typingstate") ||
+            text.includes("is_composing") ||
+            text.includes("iscomposing") ||
+            text.includes("chatstate");
 
         if (!hasTypingState) return false;
 
-        return hasOutgoingMessengerEnvelope(text) &&
+        return (
+            hasOutgoingMessengerEnvelope(text) &&
             (hasMessengerThreadTarget(text) ||
-                text.includes('typing_') ||
-                text.includes('msys'));
+                text.includes("typing_") ||
+                text.includes("msys"))
+        );
     }
 
     function isMessengerTypingBridgeText(text) {
         if (!isMessenger) return false;
         if (hasReadReceiptIntent(text)) return false;
 
-        const hasExplicitTypingIntent = text.includes('sendchatstatefromcomposer') ||
-            text.includes('sendchatstate') ||
-            text.includes('send_chat_state') ||
-            text.includes('typingindicatorstoredprocedure') ||
-            text.includes('typing_status') ||
-            text.includes('securetypingstate') ||
-            text.includes('mawsecuretypingstate') ||
-            text.includes('sendtypingindicator') ||
-            text.includes('send_typing_indicator') ||
-            text.includes('send_typing');
+        const hasExplicitTypingIntent =
+            text.includes("sendchatstatefromcomposer") ||
+            text.includes("sendchatstate") ||
+            text.includes("send_chat_state") ||
+            text.includes("typingindicatorstoredprocedure") ||
+            text.includes("typing_status") ||
+            text.includes("securetypingstate") ||
+            text.includes("mawsecuretypingstate") ||
+            text.includes("sendtypingindicator") ||
+            text.includes("send_typing_indicator") ||
+            text.includes("send_typing");
 
         if (!hasExplicitTypingIntent) return false;
 
-        return text.includes('composer') ||
-            text.includes('typing_indicator') ||
-            text.includes('chatstate') ||
-            text.includes('send_type') ||
-            text.includes('msys');
-    }
-
-    function shouldBlockSeenPayload(payload) {
-        const text = stringifyForMatch(payload).toLowerCase();
-        return shouldBlockSeenText(text);
+        return (
+            text.includes("composer") ||
+            text.includes("typing_indicator") ||
+            text.includes("chatstate") ||
+            text.includes("send_type") ||
+            text.includes("msys")
+        );
     }
 
     function shouldBlockSeenText(text) {
@@ -249,145 +273,176 @@ import {
         text = stripFalseyPrivacyFields(text);
         if (isMessageRequestHydrationText(text)) return false;
 
-        if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
+        if (
+            (isFacebookDotCom || isFacebookMessengerProxy) &&
+            !isMessengerDotCom
+        ) {
             return shouldBlockFacebookSeenText(text);
         }
 
         if (isMessengerSendWithBundledReadWatermarkText(text)) return false;
 
         if (isMessengerSeenBridgeText(text)) return true;
-        if (text.includes('delivery_receipt') && !hasReadReceiptIntent(text) && !hasReadWatermarkTarget(text)) return false;
+        if (
+            text.includes("delivery_receipt") &&
+            !hasReadReceiptIntent(text) &&
+            !hasReadWatermarkTarget(text)
+        )
+            return false;
 
         return hasReadReceiptIntent(text) && hasReadReceiptWriteShape(text);
     }
 
     function shouldBlockFacebookTypingText(text) {
-        if (isFacebookFeedMessengerSurface() && hasMessengerMessageSendIntentText(text)) return false;
+        if (
+            isFacebookFeedMessengerSurface() &&
+            hasMessengerMessageSendIntentText(text)
+        )
+            return false;
         if (isFacebookTypingBridgeCommand(text)) return true;
         if (!hasExplicitTypingWriteIntent(text)) return false;
 
-        return hasFacebookMessengerWriteContext(text) &&
+        return (
+            hasFacebookMessengerWriteContext(text) &&
             (hasMessengerThreadTarget(text) ||
-                text.includes('composer') ||
-                text.includes('typing_indicator') ||
-                text.includes('chatstate') ||
-                text.includes('typingstate') ||
-                text.includes('msys'));
+                text.includes("composer") ||
+                text.includes("typing_indicator") ||
+                text.includes("chatstate") ||
+                text.includes("typingstate") ||
+                text.includes("msys"))
+        );
     }
 
     function shouldBlockFacebookSeenText(text) {
         if (isMessageRequestHydrationText(text)) return false;
         if (isFacebookMessengerReadOnlyQueryText(text)) return false;
-        if (text.includes('delivery_receipt') && !hasReadReceiptWriteIntent(text)) return false;
+        if (
+            text.includes("delivery_receipt") &&
+            !hasReadReceiptWriteIntent(text)
+        )
+            return false;
         if (hasMessengerMessageSendIntentText(text)) return false;
         if (isFacebookRealtimeReadReceiptTask(text)) return true;
         if (isFacebookLocalBridgeReadReceiptCommand(text)) return true;
 
-        const hasWatermarkWrite = hasReadWatermarkTarget(text) &&
-            (text.includes('ls_req') ||
-                text.includes('issue_new_task') ||
-                text.includes('issuenewtask') ||
-                text.includes('storedprocedure') ||
-                text.includes('procedure') ||
-                text.includes('sendreadreceipt') ||
-                text.includes('readreceipt') ||
-                text.includes('markthread'));
+        const hasWatermarkWrite =
+            hasReadWatermarkTarget(text) &&
+            (text.includes("ls_req") ||
+                text.includes("issue_new_task") ||
+                text.includes("issuenewtask") ||
+                text.includes("storedprocedure") ||
+                text.includes("procedure") ||
+                text.includes("sendreadreceipt") ||
+                text.includes("readreceipt") ||
+                text.includes("markthread"));
 
-        if (!hasExplicitSeenWriteIntent(text) && !hasWatermarkWrite) return false;
+        if (!hasExplicitSeenWriteIntent(text) && !hasWatermarkWrite)
+            return false;
 
-        return (hasFacebookMessengerWriteContext(text) &&
-            (hasMessengerThreadTarget(text) || hasReadWatermarkTarget(text))) ||
-            (hasStrictReadReceiptWriteCommand(text) && hasReadReceiptCommandTarget(text));
+        return (
+            (hasFacebookMessengerWriteContext(text) &&
+                (hasMessengerThreadTarget(text) ||
+                    hasReadWatermarkTarget(text))) ||
+            (hasStrictReadReceiptWriteCommand(text) &&
+                hasReadReceiptCommandTarget(text))
+        );
     }
 
     function hasExplicitTypingWriteIntent(text) {
         text = stripFalseyPrivacyFields(text);
 
         return includesAnyText(text, [
-            'sendtypingindicator',
-            'lssendtypingindicator',
-            'lssendtypingindicatorstoredprocedure',
-            'send_typing_indicator',
-            'send_typing',
-            'sendchatstatefromcomposer',
-            'sendchatstate',
-            'send_chat_state',
-            'chat_state',
-            'is_composing',
-            'iscomposing',
-            'composing',
-            'typing_status',
-            'typingindicatorstoredprocedure',
-            'mawsecuretypingstate',
-            'securetypingstate',
-            'typingstate'
+            "sendtypingindicator",
+            "lssendtypingindicator",
+            "lssendtypingindicatorstoredprocedure",
+            "send_typing_indicator",
+            "send_typing",
+            "sendchatstatefromcomposer",
+            "sendchatstate",
+            "send_chat_state",
+            "chat_state",
+            "is_composing",
+            "iscomposing",
+            "composing",
+            "typing_status",
+            "typingindicatorstoredprocedure",
+            "mawsecuretypingstate",
+            "securetypingstate",
+            "typingstate",
         ]);
     }
 
     function isFacebookTypingBridgeCommand(text) {
         if (!hasExplicitTypingWriteIntent(text)) return false;
 
-        return includesAnyText(text, [
-            'sendchatstatefromcomposer',
-            'sendchatstate',
-            'send_chat_state',
-            'sendtypingindicator',
-            'send_typing_indicator',
-            'typingindicatorstoredprocedure',
-            'typing_status',
-            'mawsecuretypingstate',
-            'securetypingstate'
-        ]) && includesAnyText(text, [
-            'composer',
-            'chatstate',
-            'typing_indicator',
-            'typingstate',
-            'typing_status',
-            'send_type'
-        ]);
+        return (
+            includesAnyText(text, [
+                "sendchatstatefromcomposer",
+                "sendchatstate",
+                "send_chat_state",
+                "sendtypingindicator",
+                "send_typing_indicator",
+                "typingindicatorstoredprocedure",
+                "typing_status",
+                "mawsecuretypingstate",
+                "securetypingstate",
+            ]) &&
+            includesAnyText(text, [
+                "composer",
+                "chatstate",
+                "typing_indicator",
+                "typingstate",
+                "typing_status",
+                "send_type",
+            ])
+        );
     }
 
     function hasExplicitSeenWriteIntent(text) {
         text = stripFalseyPrivacyFields(text);
 
-        return includesAnyText(text, [
-            'markthreadasread',
-            'mark_thread_as_read',
-            'mark_thread_read',
-            'markthreadreadmutation',
-            'lsmarkthreadread',
-            'mwmarkthreadread',
-            'markread',
-            'mark_read',
-            'markseen',
-            'mark_seen',
-            'threadseen',
-            'thread_seen',
-            'markasread',
-            'mark_as_read',
-            'lssendreadreceipt',
-            'sendreadreceipt',
-            'send_read_receipt',
-            'readreceiptmutation',
-            'lsupdatethreadreadwatermark',
-            'lsupdatelastreadwatermark',
-            'updatelastreadwatermark',
-            'update_last_read_watermark',
-            'updatelastseenat',
-            'shouldsendreadreceipt',
-            'should_send_read_receipt',
-            'change_read_status'
-        ]) || includesStandaloneBridgeTerm(text, [
-            'readreceipt',
-            'read_receipt'
-        ]) || hasTruthyBridgeField(text, [
-            'readreceipt',
-            'read_receipt',
-            'threadseen',
-            'thread_seen',
-            'seenbyviewer',
-            'seen_by_viewer'
-        ]);
+        return (
+            includesAnyText(text, [
+                "markthreadasread",
+                "mark_thread_as_read",
+                "mark_thread_read",
+                "markthreadreadmutation",
+                "lsmarkthreadread",
+                "mwmarkthreadread",
+                "markread",
+                "mark_read",
+                "markseen",
+                "mark_seen",
+                "threadseen",
+                "thread_seen",
+                "markasread",
+                "mark_as_read",
+                "lssendreadreceipt",
+                "sendreadreceipt",
+                "send_read_receipt",
+                "readreceiptmutation",
+                "lsupdatethreadreadwatermark",
+                "lsupdatelastreadwatermark",
+                "updatelastreadwatermark",
+                "update_last_read_watermark",
+                "updatelastseenat",
+                "shouldsendreadreceipt",
+                "should_send_read_receipt",
+                "change_read_status",
+            ]) ||
+            includesStandaloneBridgeTerm(text, [
+                "readreceipt",
+                "read_receipt",
+            ]) ||
+            hasTruthyBridgeField(text, [
+                "readreceipt",
+                "read_receipt",
+                "threadseen",
+                "thread_seen",
+                "seenbyviewer",
+                "seen_by_viewer",
+            ])
+        );
     }
 
     function isFacebookLocalBridgeReadReceiptCommand(text) {
@@ -395,109 +450,123 @@ import {
         if (isFacebookMessengerReadOnlyQueryText(text)) return false;
         if (hasMessengerMessageSendIntentText(text)) return false;
 
-        return includesAnyText(text, [
-            'markthreadasread',
-            'mark_thread_read',
-            'markthreadreadmutation',
-            'markthreadread',
-            'lsmarkthreadread',
-            'mwmarkthreadread',
-            'markasread',
-            'mark_as_read'
-        ]) && includesAnyText(text, [
-            'readreceipt',
-            'read_receipt',
-            'sendreadreceipt',
-            'send_read_receipt',
-            'shouldsendreadreceipt',
-            'should_send_read_receipt'
-        ]);
+        return (
+            includesAnyText(text, [
+                "markthreadasread",
+                "mark_thread_read",
+                "markthreadreadmutation",
+                "markthreadread",
+                "lsmarkthreadread",
+                "mwmarkthreadread",
+                "markasread",
+                "mark_as_read",
+            ]) &&
+            includesAnyText(text, [
+                "readreceipt",
+                "read_receipt",
+                "sendreadreceipt",
+                "send_read_receipt",
+                "shouldsendreadreceipt",
+                "should_send_read_receipt",
+            ])
+        );
     }
 
     function includesAnyText(text, needles) {
-        return needles.some(needle => text.includes(needle));
+        return needles.some((needle) => text.includes(needle));
     }
 
     const FALSEY_PRIVACY_FIELDS = [
-        'shouldsendreadreceipt',
-        'should_send_read_receipt',
-        'sendreadreceipt',
-        'send_read_receipt',
-        'readreceipt',
-        'read_receipt',
-        'markread',
-        'mark_read',
-        'markseen',
-        'mark_seen',
-        'markasread',
-        'mark_as_read',
-        'threadseen',
-        'thread_seen',
-        'seenbyviewer',
-        'seen_by_viewer',
-        'istyping',
-        'is_typing',
-        'iscomposing',
-        'is_composing',
-        'typingindicator',
-        'typing_indicator'
+        "shouldsendreadreceipt",
+        "should_send_read_receipt",
+        "sendreadreceipt",
+        "send_read_receipt",
+        "readreceipt",
+        "read_receipt",
+        "markread",
+        "mark_read",
+        "markseen",
+        "mark_seen",
+        "markasread",
+        "mark_as_read",
+        "threadseen",
+        "thread_seen",
+        "seenbyviewer",
+        "seen_by_viewer",
+        "istyping",
+        "is_typing",
+        "iscomposing",
+        "is_composing",
+        "typingindicator",
+        "typing_indicator",
     ];
 
     function stripFalseyPrivacyFields(text) {
-        const raw = String(text || '');
+        const raw = String(text || "");
         const decoded = decodeMaybe(raw);
-        return `${stripFalseyPrivacyFieldsOnce(raw)} ${decoded ? stripFalseyPrivacyFieldsOnce(decoded) : ''}`;
+        return `${stripFalseyPrivacyFieldsOnce(raw)} ${decoded ? stripFalseyPrivacyFieldsOnce(decoded) : ""}`;
     }
 
     function stripFalseyPrivacyFieldsOnce(text) {
-        let value = String(text || '');
+        let value = String(text || "");
         for (const field of FALSEY_PRIVACY_FIELDS) {
-            const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             value = value.replace(
-                new RegExp(`(^|[\\s"{,&?])${escaped}"?\\s*(?::|=)?\\s*(?:"?(?:false|0|null)"?)(?=$|[\\s,}&])`, 'g'),
-                ' '
+                new RegExp(
+                    `(^|[\\s"{,&?])${escaped}"?\\s*(?::|=)?\\s*(?:"?(?:false|0|null)"?)(?=$|[\\s,}&])`,
+                    "g",
+                ),
+                " ",
             );
             value = value.replace(
-                new RegExp(`(?:%22|")?${escaped}(?:%22|")?\\s*(?:%3a|%3A|%3d|%3D|:|=)\\s*(?:%22|")?(?:false|0|null)(?:%22|")?`, 'gi'),
-                ' '
+                new RegExp(
+                    `(?:%22|")?${escaped}(?:%22|")?\\s*(?:%3a|%3A|%3d|%3D|:|=)\\s*(?:%22|")?(?:false|0|null)(?:%22|")?`,
+                    "gi",
+                ),
+                " ",
             );
         }
         return value;
     }
 
     function isCurrentMessageRequestSurface() {
-        let pathname = '';
-        let search = '';
-        let hash = '';
+        let pathname = "";
+        let search = "";
+        let hash = "";
 
         try {
-            pathname = String(window.location?.pathname || '').toLowerCase();
-            search = String(window.location?.search || '').toLowerCase();
-            hash = String(window.location?.hash || '').toLowerCase();
+            pathname = String(window.location?.pathname || "").toLowerCase();
+            search = String(window.location?.search || "").toLowerCase();
+            hash = String(window.location?.hash || "").toLowerCase();
         } catch (e) {
             return false;
         }
 
         const route = `${pathname} ${search} ${hash}`;
-        const hasRequestAlias = route.includes('folder=message_requests') ||
-            route.includes('message_requests') ||
-            route.includes('message-requests') ||
-            route.includes('pending_threads') ||
-            route.includes('filtered_threads') ||
-            route.includes('spam_threads');
+        const hasRequestAlias =
+            route.includes("folder=message_requests") ||
+            route.includes("message_requests") ||
+            route.includes("message-requests") ||
+            route.includes("pending_threads") ||
+            route.includes("filtered_threads") ||
+            route.includes("spam_threads");
 
         if (isMessengerDotCom) {
-            return pathname.startsWith('/requests') ||
-                pathname.startsWith('/message-requests') ||
-                pathname.startsWith('/message_requests') ||
-                hasRequestAlias;
+            return (
+                pathname.startsWith("/requests") ||
+                pathname.startsWith("/message-requests") ||
+                pathname.startsWith("/message_requests") ||
+                hasRequestAlias
+            );
         }
 
         if (isFacebookDotCom) {
-            return pathname.startsWith('/messages/requests') ||
-                pathname.startsWith('/messages/message-requests') ||
-                pathname.startsWith('/messages/message_requests') ||
-                hasRequestAlias;
+            return (
+                pathname.startsWith("/messages/requests") ||
+                pathname.startsWith("/messages/message-requests") ||
+                pathname.startsWith("/messages/message_requests") ||
+                hasRequestAlias
+            );
         }
 
         return false;
@@ -505,160 +574,196 @@ import {
 
     function hasNativeMessageRequestBypass() {
         try {
-            return Number(window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0) > Date.now();
+            return (
+                Number(window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0) >
+                Date.now()
+            );
         } catch (e) {
             return false;
         }
     }
 
     function hasFacebookMessengerWriteContext(text) {
-        return text.includes('/ls_req') ||
-            text.includes('ls_req') ||
-            text.includes('issue_new_task') ||
-            text.includes('issuenewtask') ||
-            text.includes('storedprocedure') ||
-            text.includes('procedure') ||
-            text.includes('mutation') ||
-            text.includes('payload') ||
-            text.includes('queue_name') ||
-            text.includes('messenger') ||
-            text.includes('mwchat') ||
-            text.includes('maw');
+        return (
+            text.includes("/ls_req") ||
+            text.includes("ls_req") ||
+            text.includes("issue_new_task") ||
+            text.includes("issuenewtask") ||
+            text.includes("storedprocedure") ||
+            text.includes("procedure") ||
+            text.includes("mutation") ||
+            text.includes("payload") ||
+            text.includes("queue_name") ||
+            text.includes("messenger") ||
+            text.includes("mwchat") ||
+            text.includes("maw")
+        );
     }
 
     function isFacebookMessengerReadOnlyQueryText(text) {
         if (hasExplicitBridgeReadWriteCommand(text)) return false;
         const friendlyName = getFacebookGraphQLFriendlyName(text);
-        if (friendlyName && friendlyName.includes('query') && !friendlyName.includes('mutation')) return true;
+        if (
+            friendlyName &&
+            friendlyName.includes("query") &&
+            !friendlyName.includes("mutation")
+        )
+            return true;
 
-        return text.includes('messagehistoryquery') ||
-            text.includes('threadlistpaginationquery') ||
-            text.includes('threadlistquery') ||
-            text.includes('messagelistquery') ||
-            text.includes('searchmessengerquery') ||
-            text.includes('messagemetadataquery') ||
-            text.includes('messengerthreadquery') ||
-            text.includes('messengerthreadlistquery') ||
-            text.includes('messengerinboxquery');
+        return (
+            text.includes("messagehistoryquery") ||
+            text.includes("threadlistpaginationquery") ||
+            text.includes("threadlistquery") ||
+            text.includes("messagelistquery") ||
+            text.includes("searchmessengerquery") ||
+            text.includes("messagemetadataquery") ||
+            text.includes("messengerthreadquery") ||
+            text.includes("messengerthreadlistquery") ||
+            text.includes("messengerinboxquery")
+        );
     }
 
     function getFacebookGraphQLFriendlyName(text) {
-        const match = String(text || '').match(/fb_api_req_friendly_name=([^&\s]+)/) ||
-            String(text || '').match(/"fb_api_req_friendly_name"\s*:\s*"([^"]+)/);
-        return match ? String(match[1] || '').toLowerCase() : '';
+        const match =
+            String(text || "").match(/fb_api_req_friendly_name=([^&\s]+)/) ||
+            String(text || "").match(
+                /"fb_api_req_friendly_name"\s*:\s*"([^"]+)/,
+            );
+        return match ? String(match[1] || "").toLowerCase() : "";
     }
 
     function isMessengerSeenBridgeText(text) {
         if (!isMessenger) return false;
-        if (text.includes('delivery_receipt') && !hasReadReceiptIntent(text) && !hasReadWatermarkTarget(text)) return false;
+        if (
+            text.includes("delivery_receipt") &&
+            !hasReadReceiptIntent(text) &&
+            !hasReadWatermarkTarget(text)
+        )
+            return false;
 
         const hasExplicitSeenIntent = hasReadReceiptWriteIntent(text);
         if (!hasExplicitSeenIntent) return false;
 
-        return text.includes('markthread') ||
-            text.includes('markread') ||
-            text.includes('mark_read') ||
-            text.includes('markseen') ||
-            text.includes('mark_seen') ||
-            text.includes('markasread') ||
-            text.includes('readreceipt') ||
-            text.includes('read_receipt') ||
-            text.includes('readwatermark') ||
-            text.includes('read_watermark') ||
-            text.includes('lastreadwatermark') ||
-            text.includes('last_read_watermark') ||
-            text.includes('watermark') ||
-            text.includes('sendreadreceipt') ||
-            text.includes('lsmarkthreadread') ||
-            text.includes('lsupdatethreadreadwatermark') ||
-            text.includes('mwmarkthreadread') ||
-            text.includes('change_read_status');
+        return (
+            text.includes("markthread") ||
+            text.includes("markread") ||
+            text.includes("mark_read") ||
+            text.includes("markseen") ||
+            text.includes("mark_seen") ||
+            text.includes("markasread") ||
+            text.includes("readreceipt") ||
+            text.includes("read_receipt") ||
+            text.includes("readwatermark") ||
+            text.includes("read_watermark") ||
+            text.includes("lastreadwatermark") ||
+            text.includes("last_read_watermark") ||
+            text.includes("watermark") ||
+            text.includes("sendreadreceipt") ||
+            text.includes("lsmarkthreadread") ||
+            text.includes("lsupdatethreadreadwatermark") ||
+            text.includes("mwmarkthreadread") ||
+            text.includes("change_read_status")
+        );
     }
 
     function hasOutgoingMessengerEnvelope(text) {
-        return text.includes('/ls_req') ||
-            text.includes('ls_req') ||
-            text.includes('issue_new_task') ||
-            text.includes('issuenewtask') ||
-            text.includes('storedprocedure') ||
-            text.includes('queue_name') ||
-            text.includes('payload');
+        return (
+            text.includes("/ls_req") ||
+            text.includes("ls_req") ||
+            text.includes("issue_new_task") ||
+            text.includes("issuenewtask") ||
+            text.includes("storedprocedure") ||
+            text.includes("queue_name") ||
+            text.includes("payload")
+        );
     }
 
     function hasMessengerThreadTarget(text) {
-        return text.includes('thread_key') ||
-            text.includes('threadkey') ||
-            text.includes('thread_fbid') ||
-            text.includes('threadfbid') ||
-            text.includes('thread_id') ||
-            text.includes('threadid') ||
-            text.includes('recipient_id') ||
-            text.includes('message_thread') ||
-            text.includes('act_thread_id') ||
-            text.includes('parent_thread_key') ||
-            text.includes('parentthreadkey') ||
-            text.includes('open_message_thread_key') ||
-            text.includes('openmessagethreadkey') ||
-            text.includes('armadillo_thread_key') ||
-            text.includes('armadillothreadkey') ||
-            text.includes('other_user_fbid') ||
-            text.includes('otheruserfbid') ||
-            text.includes('other_user_id') ||
-            text.includes('otheruserid') ||
-            text.includes('target_id') ||
-            text.includes('targetid');
+        return (
+            text.includes("thread_key") ||
+            text.includes("threadkey") ||
+            text.includes("thread_fbid") ||
+            text.includes("threadfbid") ||
+            text.includes("thread_id") ||
+            text.includes("threadid") ||
+            text.includes("recipient_id") ||
+            text.includes("message_thread") ||
+            text.includes("act_thread_id") ||
+            text.includes("parent_thread_key") ||
+            text.includes("parentthreadkey") ||
+            text.includes("open_message_thread_key") ||
+            text.includes("openmessagethreadkey") ||
+            text.includes("armadillo_thread_key") ||
+            text.includes("armadillothreadkey") ||
+            text.includes("other_user_fbid") ||
+            text.includes("otheruserfbid") ||
+            text.includes("other_user_id") ||
+            text.includes("otheruserid") ||
+            text.includes("target_id") ||
+            text.includes("targetid")
+        );
     }
 
     function hasReadWatermarkTarget(text) {
-        return text.includes('last_read_watermark') ||
-            text.includes('lastreadwatermark') ||
-            text.includes('last_read_watermark_ts') ||
-            text.includes('lastreadwatermarkts') ||
-            text.includes('read_watermark') ||
-            text.includes('readwatermark') ||
-            text.includes('last_seen_time_ms') ||
-            text.includes('lastseentimems') ||
-            text.includes('watermarktimestamp') ||
-            text.includes('watermark_timestamp') ||
-            text.includes('shouldsendreadreceipt') ||
-            text.includes('should_send_read_receipt');
+        return (
+            text.includes("last_read_watermark") ||
+            text.includes("lastreadwatermark") ||
+            text.includes("last_read_watermark_ts") ||
+            text.includes("lastreadwatermarkts") ||
+            text.includes("read_watermark") ||
+            text.includes("readwatermark") ||
+            text.includes("last_seen_time_ms") ||
+            text.includes("lastseentimems") ||
+            text.includes("watermarktimestamp") ||
+            text.includes("watermark_timestamp") ||
+            text.includes("shouldsendreadreceipt") ||
+            text.includes("should_send_read_receipt")
+        );
     }
 
     function hasReadReceiptIntent(text) {
-        return hasReadReceiptWriteIntent(text) ||
-            text.includes('last_read_watermark') ||
-            text.includes('lastreadwatermark') ||
-            text.includes('last_read_watermark_ts') ||
-            text.includes('lastreadwatermarkts') ||
-            text.includes('read_watermark') ||
-            text.includes('readwatermark') ||
-            text.includes('last_seen_time_ms') ||
-            text.includes('lastseentimems') ||
-            text.includes('watermarktimestamp') ||
-            text.includes('watermark_timestamp') ||
-            text.includes('seenbyviewer') ||
-            text.includes('seen_by_viewer');
+        return (
+            hasReadReceiptWriteIntent(text) ||
+            text.includes("last_read_watermark") ||
+            text.includes("lastreadwatermark") ||
+            text.includes("last_read_watermark_ts") ||
+            text.includes("lastreadwatermarkts") ||
+            text.includes("read_watermark") ||
+            text.includes("readwatermark") ||
+            text.includes("last_seen_time_ms") ||
+            text.includes("lastseentimems") ||
+            text.includes("watermarktimestamp") ||
+            text.includes("watermark_timestamp") ||
+            text.includes("seenbyviewer") ||
+            text.includes("seen_by_viewer")
+        );
     }
 
     function hasReadReceiptWriteIntent(text) {
         text = stripFalseyPrivacyFields(text);
 
-        return hasStrictReadReceiptWriteCommand(text) ||
-            text.includes('readreceipt') ||
-            text.includes('read_receipt');
+        return (
+            hasStrictReadReceiptWriteCommand(text) ||
+            text.includes("readreceipt") ||
+            text.includes("read_receipt")
+        );
     }
 
     function hasTruthyBridgeField(text, fields) {
-        return fields.some(field => {
-            const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return new RegExp(`(?:^|[&\\s"{,])${escaped}"?\\s*(?:(?:[:=]\\s*)|(?:\\s+))(?:"?(?:true|1)"?)`).test(text);
+        return fields.some((field) => {
+            const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            return new RegExp(
+                `(?:^|[&\\s"{,])${escaped}"?\\s*(?:(?:[:=]\\s*)|(?:\\s+))(?:"?(?:true|1)"?)`,
+            ).test(text);
         });
     }
 
     function includesStandaloneBridgeTerm(text, terms) {
-        return terms.some(term => {
-            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return new RegExp(`(?:^|[^a-z0-9_])${escaped}(?:$|[^a-z0-9_])`).test(text);
+        return terms.some((term) => {
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            return new RegExp(
+                `(?:^|[^a-z0-9_])${escaped}(?:$|[^a-z0-9_])`,
+            ).test(text);
         });
     }
 
@@ -666,62 +771,68 @@ import {
         text = stripFalseyPrivacyFields(text);
 
         const operationFields = [
-            'operation',
-            'procedure',
-            'command',
-            'task_name'
+            "operation",
+            "procedure",
+            "command",
+            "task_name",
         ];
         const operationValues = [
-            'mark_read',
-            'mark_seen',
-            'mark_as_read',
-            'thread_seen',
-            'read_receipt',
-            'updatelastseenat',
-            'updatelastreadwatermark',
-            'update_last_read_watermark'
+            "mark_read",
+            "mark_seen",
+            "mark_as_read",
+            "thread_seen",
+            "read_receipt",
+            "updatelastseenat",
+            "updatelastreadwatermark",
+            "update_last_read_watermark",
         ];
-        const hasOperationValuedReadWrite = operationFields.some(field =>
-            operationValues.some(value => hasSerializedFieldValue(text, field, value))
-        ) || (operationFields.some(field => text.includes(field)) &&
-            includesStandaloneBridgeTerm(text, operationValues));
+        const hasOperationValuedReadWrite =
+            operationFields.some((field) =>
+                operationValues.some((value) =>
+                    hasSerializedFieldValue(text, field, value),
+                ),
+            ) ||
+            (operationFields.some((field) => text.includes(field)) &&
+                includesStandaloneBridgeTerm(text, operationValues));
 
-        return hasOperationValuedReadWrite ||
-            text.includes('markthreadasread') ||
-            text.includes('mark_thread_read') ||
-            text.includes('markthreadreadmutation') ||
-            text.includes('markthreadread') ||
-            text.includes('lsmarkthreadread') ||
-            text.includes('mwmarkthreadread') ||
-            text.includes('lssendreadreceipt') ||
-            text.includes('readreceiptmutation') ||
-            text.includes('lsupdatethreadreadwatermark') ||
-            text.includes('lsupdatelastreadwatermark') ||
-            text.includes('updatelastreadwatermark') ||
-            text.includes('update_last_read_watermark') ||
-            text.includes('change_read_status') ||
+        return (
+            hasOperationValuedReadWrite ||
+            text.includes("markthreadasread") ||
+            text.includes("mark_thread_read") ||
+            text.includes("markthreadreadmutation") ||
+            text.includes("markthreadread") ||
+            text.includes("lsmarkthreadread") ||
+            text.includes("mwmarkthreadread") ||
+            text.includes("lssendreadreceipt") ||
+            text.includes("readreceiptmutation") ||
+            text.includes("lsupdatethreadreadwatermark") ||
+            text.includes("lsupdatelastreadwatermark") ||
+            text.includes("updatelastreadwatermark") ||
+            text.includes("update_last_read_watermark") ||
+            text.includes("change_read_status") ||
             includesStandaloneBridgeTerm(text, [
-                'sendreadreceipt',
-                'send_read_receipt'
+                "sendreadreceipt",
+                "send_read_receipt",
             ]) ||
             hasTruthyBridgeField(text, [
-                'shouldsendreadreceipt',
-                'should_send_read_receipt',
-                'sendreadreceipt',
-                'send_read_receipt',
-                'readreceipt',
-                'read_receipt',
-                'markread',
-                'mark_read',
-                'markseen',
-                'mark_seen',
-                'markasread',
-                'mark_as_read',
-                'threadseen',
-                'thread_seen',
-                'seenbyviewer',
-                'seen_by_viewer'
-            ]);
+                "shouldsendreadreceipt",
+                "should_send_read_receipt",
+                "sendreadreceipt",
+                "send_read_receipt",
+                "readreceipt",
+                "read_receipt",
+                "markread",
+                "mark_read",
+                "markseen",
+                "mark_seen",
+                "markasread",
+                "mark_as_read",
+                "threadseen",
+                "thread_seen",
+                "seenbyviewer",
+                "seen_by_viewer",
+            ])
+        );
     }
 
     function isMessageRequestHydrationText(text) {
@@ -733,95 +844,110 @@ import {
     }
 
     function isLocalReadMessageRequestHydrationText(text) {
-        return hasMessageRequestContextText(text) && hasMessageRequestHydrationShapeText(text);
+        return (
+            hasMessageRequestContextText(text) &&
+            hasMessageRequestHydrationShapeText(text)
+        );
     }
 
     function hasMessageRequestContextText(text) {
-        return text.includes('message_requests') ||
-            text.includes('message request') ||
-            text.includes('message_request') ||
-            text.includes('messagerequests') ||
-            text.includes('message-requests') ||
-            text.includes('/requests') ||
-            text.includes('pending_threads') ||
-            text.includes('pendingthreads') ||
-            text.includes('filtered_threads') ||
-            text.includes('filteredthreads') ||
-            text.includes('spam_threads') ||
-            text.includes('spamthreads');
+        return (
+            text.includes("message_requests") ||
+            text.includes("message request") ||
+            text.includes("message_request") ||
+            text.includes("messagerequests") ||
+            text.includes("message-requests") ||
+            text.includes("/requests") ||
+            text.includes("pending_threads") ||
+            text.includes("pendingthreads") ||
+            text.includes("filtered_threads") ||
+            text.includes("filteredthreads") ||
+            text.includes("spam_threads") ||
+            text.includes("spamthreads")
+        );
     }
 
     function hasMessageRequestHydrationShapeText(text) {
-        return text.includes('fb_api_req_friendly_name') ||
-            text.includes('doc_id') ||
-            text.includes('ls_req') ||
-            text.includes('/ls_req') ||
-            text.includes('issue_new_task') ||
-            text.includes('issuenewtask') ||
-            text.includes('threadlist') ||
-            text.includes('thread_list') ||
-            text.includes('messagerequestsquery') ||
-            text.includes('routepreload') ||
-            text.includes('route_preload') ||
-            text.includes('fetch_thread_list') ||
-            text.includes('mwchat_fetch_thread_list') ||
-            text.includes('folder') ||
-            text.includes('pagination') ||
-            text.includes('cursor');
+        return (
+            text.includes("fb_api_req_friendly_name") ||
+            text.includes("doc_id") ||
+            text.includes("ls_req") ||
+            text.includes("/ls_req") ||
+            text.includes("issue_new_task") ||
+            text.includes("issuenewtask") ||
+            text.includes("threadlist") ||
+            text.includes("thread_list") ||
+            text.includes("messagerequestsquery") ||
+            text.includes("routepreload") ||
+            text.includes("route_preload") ||
+            text.includes("fetch_thread_list") ||
+            text.includes("mwchat_fetch_thread_list") ||
+            text.includes("folder") ||
+            text.includes("pagination") ||
+            text.includes("cursor")
+        );
     }
 
     function hasStrictReadReceiptWriteCommand(text) {
         text = stripFalseyPrivacyFields(text);
 
-        return hasServerReadReceiptCommand(text) ||
-            text.includes('markthreadasread') ||
-            text.includes('mark_thread_read') ||
-            text.includes('markthreadreadmutation') ||
-            text.includes('markthreadread') ||
-            text.includes('markread') ||
-            text.includes('mark_read') ||
-            text.includes('markseen') ||
-            text.includes('mark_seen') ||
-            text.includes('threadseen') ||
-            text.includes('thread_seen') ||
-            text.includes('markasread') ||
-            text.includes('mark_as_read') ||
-            text.includes('change_read_status') ||
-            text.includes('updatelastseenat') ||
-            text.includes('updatelastreadwatermark') ||
-            text.includes('update_last_read_watermark') ||
-            text.includes('lsupdatethreadreadwatermark') ||
-            text.includes('lsmarkthreadread') ||
-            text.includes('mwmarkthreadread') ||
-            text.includes('lsupdatelastreadwatermark') ||
-            text.includes('shouldsendreadreceipt') ||
-            text.includes('should_send_read_receipt') ||
-            includesStandaloneBridgeTerm(text, ['readreceipt', 'read_receipt']);
+        return (
+            hasServerReadReceiptCommand(text) ||
+            text.includes("markthreadasread") ||
+            text.includes("mark_thread_read") ||
+            text.includes("markthreadreadmutation") ||
+            text.includes("markthreadread") ||
+            text.includes("markread") ||
+            text.includes("mark_read") ||
+            text.includes("markseen") ||
+            text.includes("mark_seen") ||
+            text.includes("threadseen") ||
+            text.includes("thread_seen") ||
+            text.includes("markasread") ||
+            text.includes("mark_as_read") ||
+            text.includes("change_read_status") ||
+            text.includes("updatelastseenat") ||
+            text.includes("updatelastreadwatermark") ||
+            text.includes("update_last_read_watermark") ||
+            text.includes("lsupdatethreadreadwatermark") ||
+            text.includes("lsmarkthreadread") ||
+            text.includes("mwmarkthreadread") ||
+            text.includes("lsupdatelastreadwatermark") ||
+            text.includes("shouldsendreadreceipt") ||
+            text.includes("should_send_read_receipt") ||
+            includesStandaloneBridgeTerm(text, ["readreceipt", "read_receipt"])
+        );
     }
 
     function hasServerReadReceiptCommand(text) {
         text = stripFalseyPrivacyFields(text);
 
-        return text.includes('sendreadreceipt') ||
-            text.includes('lssendreadreceipt') ||
-            text.includes('readreceiptmutation') ||
-            text.includes('send_read_receipt') ||
-            text.includes('change_read_status') ||
-            text.includes('shouldsendreadreceipt') ||
-            text.includes('should_send_read_receipt');
+        return (
+            text.includes("sendreadreceipt") ||
+            text.includes("lssendreadreceipt") ||
+            text.includes("readreceiptmutation") ||
+            text.includes("send_read_receipt") ||
+            text.includes("change_read_status") ||
+            text.includes("shouldsendreadreceipt") ||
+            text.includes("should_send_read_receipt")
+        );
     }
 
     function hasReadReceiptWriteShape(text) {
-        return hasOutgoingMessengerEnvelope(text) &&
-            (hasMessengerThreadTarget(text) || hasReadWatermarkTarget(text));
+        return (
+            hasOutgoingMessengerEnvelope(text) &&
+            (hasMessengerThreadTarget(text) || hasReadWatermarkTarget(text))
+        );
     }
 
     function isMessengerSendWithBundledReadWatermarkText(text) {
-        if (!text.includes('send_type')) return false;
+        if (!text.includes("send_type")) return false;
         if (!hasReadWatermarkTarget(text)) return false;
         if (hasReadReceiptWriteIntent(text)) return false;
 
-        return hasOutgoingMessengerEnvelope(text) && hasMessengerThreadTarget(text);
+        return (
+            hasOutgoingMessengerEnvelope(text) && hasMessengerThreadTarget(text)
+        );
     }
 
     function hasReadReceiptCommandTarget(text) {
@@ -829,83 +955,104 @@ import {
     }
 
     function isFacebookRealtimeReadReceiptTask(text) {
-        return isFacebookReadWatermarkTask(text) ||
-            isFacebookLastSeenTask(text);
+        return (
+            isFacebookReadWatermarkTask(text) || isFacebookLastSeenTask(text)
+        );
     }
 
     function isFacebookReadWatermarkTask(text) {
-        return hasSerializedFieldValue(text, 'label', '21') &&
-            (text.includes('last_read_watermark_ts') || text.includes('lastreadwatermarkts')) &&
-            hasMessengerThreadTarget(text);
+        return (
+            hasSerializedFieldValue(text, "label", "21") &&
+            (text.includes("last_read_watermark_ts") ||
+                text.includes("lastreadwatermarkts")) &&
+            hasMessengerThreadTarget(text)
+        );
     }
 
     function isFacebookLastSeenTask(text) {
-        return hasSerializedFieldValue(text, 'label', '6') &&
-            (text.includes('last_seen_time_ms') || text.includes('lastseentimems')) &&
-            (text.includes('parent_thread_key') || text.includes('parentthreadkey'));
+        return (
+            hasSerializedFieldValue(text, "label", "6") &&
+            (text.includes("last_seen_time_ms") ||
+                text.includes("lastseentimems")) &&
+            (text.includes("parent_thread_key") ||
+                text.includes("parentthreadkey"))
+        );
     }
 
     function hasSerializedFieldValue(text, field, value) {
-        const unescaped = String(text || '').replace(/\\/g, '');
-        return includesAnyText(text, [
-            `"${field}":"${value}"`,
-            `"${field}": "${value}"`,
-            `\\"${field}\\":\\"${value}\\"`,
-            `\\"${field}\\": \\"${value}\\"`,
-            `%22${field}%22%3a%22${value}%22`,
-            `%22${field}%22%3A%22${value}%22`
-        ]) || includesAnyText(unescaped, [
-            `"${field}":"${value}"`,
-            `"${field}": "${value}"`
-        ]);
+        const unescaped = String(text || "").replace(/\\/g, "");
+        return (
+            includesAnyText(text, [
+                `"${field}":"${value}"`,
+                `"${field}": "${value}"`,
+                `\\"${field}\\":\\"${value}\\"`,
+                `\\"${field}\\": \\"${value}\\"`,
+                `%22${field}%22%3a%22${value}%22`,
+                `%22${field}%22%3A%22${value}%22`,
+            ]) ||
+            includesAnyText(unescaped, [
+                `"${field}":"${value}"`,
+                `"${field}": "${value}"`,
+            ])
+        );
     }
 
     function stringifyForMatch(value, depth = 0) {
-        if (depth > 4) return '';
-        if (value === false || value === true || value === 0 || value === null) return String(value);
-        if (!value) return '';
+        if (depth > 4) return "";
+        if (value === false || value === true || value === 0 || value === null)
+            return String(value);
+        if (!value) return "";
 
         try {
-            if (typeof value === 'string') {
+            if (typeof value === "string") {
                 return `${value} ${decodeMaybe(value)}`;
             }
 
             if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
-                const bytes = value instanceof ArrayBuffer
-                    ? value.slice(0, 12000)
-                    : value.buffer.slice(value.byteOffset, value.byteOffset + Math.min(value.byteLength, 12000));
+                const bytes =
+                    value instanceof ArrayBuffer
+                        ? value.slice(0, 12000)
+                        : value.buffer.slice(
+                              value.byteOffset,
+                              value.byteOffset +
+                                  Math.min(value.byteLength, 12000),
+                          );
                 return new TextDecoder().decode(bytes);
             }
 
             if (Array.isArray(value)) {
-                return value.map(item => stringifyForMatch(item, depth + 1)).join(' ');
+                return value
+                    .map((item) => stringifyForMatch(item, depth + 1))
+                    .join(" ");
             }
 
-            if (typeof value === 'object') {
-                let text = '';
+            if (typeof value === "object") {
+                let text = "";
                 for (const key of Object.keys(value)) {
                     text += ` ${key} ${stringifyForMatch(value[key], depth + 1)}`;
                     if (text.length > 12000) break;
                 }
                 return text;
             }
-        } catch (e) { }
+        } catch (e) {}
 
-        return '';
+        return "";
     }
 
     function decodeMaybe(value) {
         try {
-            return decodeURIComponent(String(value).replace(/\+/g, ' '));
+            return decodeURIComponent(String(value).replace(/\+/g, " "));
         } catch (e) {
-            return '';
+            return "";
         }
     }
 
     function isPostMessageObservationEnabled() {
         try {
-            return window.localStorage?.ghostifyDebug === '1' &&
-                window.localStorage?.ghostifyMessengerObserve === '1';
+            return (
+                window.localStorage?.ghostifyDebug === "1" &&
+                window.localStorage?.ghostifyMessengerObserve === "1"
+            );
         } catch (e) {
             return false;
         }
@@ -917,31 +1064,38 @@ import {
             const status = window.__GHOSTIFY_STATUS__ || {
                 version: DIAGNOSTIC_VERSION,
                 host: window.location.hostname,
-                hrefPath: '<redacted>',
-                hooks: {}
+                hrefPath: "<redacted>",
+                hooks: {},
             };
 
             status.version = DIAGNOSTIC_VERSION;
             status.host = window.location.hostname;
             status.debug = {
-                ghostifyDebug: window.localStorage?.ghostifyDebug === '1',
-                ghostifyMessengerObserve: window.localStorage?.ghostifyMessengerObserve === '1'
+                ghostifyDebug: window.localStorage?.ghostifyDebug === "1",
+                ghostifyMessengerObserve:
+                    window.localStorage?.ghostifyMessengerObserve === "1",
             };
-            status.hooks[name] = Object.assign({ t: Math.round((Date.now() - observeStartMs) / 1000) }, sanitizeStatusDetails(details));
+            status.hooks[name] = Object.assign(
+                { t: Math.round((Date.now() - observeStartMs) / 1000) },
+                sanitizeStatusDetails(details),
+            );
             window.__GHOSTIFY_STATUS__ = status;
 
             tracePatchHealth(name, details);
-        } catch (e) { }
+        } catch (e) {}
     }
 
     function installPatchDebugHelpers() {
         try {
             if (window.__GHOSTIFY_CAPTURE_HELPERS__) return;
             window.__GHOSTIFY_CAPTURE_HELPERS__ = DIAGNOSTIC_VERSION;
-            window.__GHOSTIFY_OBSERVATION_COUNTS__ = window.__GHOSTIFY_OBSERVATION_COUNTS__ || {};
+            window.__GHOSTIFY_OBSERVATION_COUNTS__ =
+                window.__GHOSTIFY_OBSERVATION_COUNTS__ || {};
 
-            window.__GHOSTIFY_RESET_CAPTURE__ = function (phase = 'baseline') {
-                window.__GHOSTIFY_CAPTURE_PHASE__ = String(phase || 'baseline').slice(0, 40);
+            window.__GHOSTIFY_RESET_CAPTURE__ = function (phase = "baseline") {
+                window.__GHOSTIFY_CAPTURE_PHASE__ = String(
+                    phase || "baseline",
+                ).slice(0, 40);
                 window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ = [];
                 window.__GHOSTIFY_DEBUG_EVENTS__ = [];
                 window.__GHOSTIFY_OBSERVATION_COUNTS__ = {};
@@ -957,39 +1111,73 @@ import {
                 window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
                 window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ = 0;
                 window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = 0;
-                pushPatchObservation(createPatchMarkerEvent(`reset:${window.__GHOSTIFY_CAPTURE_PHASE__}`));
+                pushPatchObservation(
+                    createPatchMarkerEvent(
+                        `reset:${window.__GHOSTIFY_CAPTURE_PHASE__}`,
+                    ),
+                );
                 return `Ghostify capture reset: ${window.__GHOSTIFY_CAPTURE_PHASE__}`;
             };
 
             window.__GHOSTIFY_MARK__ = function (phase) {
-                window.__GHOSTIFY_CAPTURE_PHASE__ = String(phase || 'mark').slice(0, 40);
-                pushPatchObservation(createPatchMarkerEvent(window.__GHOSTIFY_CAPTURE_PHASE__));
+                window.__GHOSTIFY_CAPTURE_PHASE__ = String(
+                    phase || "mark",
+                ).slice(0, 40);
+                pushPatchObservation(
+                    createPatchMarkerEvent(window.__GHOSTIFY_CAPTURE_PHASE__),
+                );
                 return `Ghostify phase: ${window.__GHOSTIFY_CAPTURE_PHASE__}`;
             };
 
             window.__GHOSTIFY_REPORT__ = function () {
-                return JSON.stringify({
-                    status: window.__GHOSTIFY_STATUS__,
-                    phase: getPatchCapturePhase(),
-                    observations: window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ || [],
-                    observationCounts: window.__GHOSTIFY_OBSERVATION_COUNTS__ || {},
-                    debugEvents: window.__GHOSTIFY_DEBUG_EVENTS__ || [],
-                    blockedWorkerMessages: window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0,
-                    sanitizedWorkerMessages: window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0,
-                    sanitizedSeenBridgeMessages: window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0,
-                    sanitizedNetworkMessages: window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0,
-                    facebookUnsafeBlocksSkipped: window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0,
-                    messengerUnsafeBlocksSkipped: window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ || 0,
-                    unsafeTransferBlocksSkipped: window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ || 0,
-                    blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
-                    blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
-                    sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
-                    wrappedMarkThreadAsReadCallbacks: window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ || 0,
-                    blockedMarkThreadAsReadCalls: window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0,
-                    settings: window.__GHOSTIFY_SETTINGS__
-                }, null, 2);
+                return JSON.stringify(
+                    {
+                        status: window.__GHOSTIFY_STATUS__,
+                        phase: getPatchCapturePhase(),
+                        observations:
+                            window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ || [],
+                        observationCounts:
+                            window.__GHOSTIFY_OBSERVATION_COUNTS__ || {},
+                        debugEvents: window.__GHOSTIFY_DEBUG_EVENTS__ || [],
+                        blockedWorkerMessages:
+                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0,
+                        sanitizedWorkerMessages:
+                            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0,
+                        sanitizedSeenBridgeMessages:
+                            window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ ||
+                            0,
+                        sanitizedNetworkMessages:
+                            window.__GHOSTIFY_SANITIZED_NETWORK_MESSAGES__ || 0,
+                        facebookUnsafeBlocksSkipped:
+                            window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ ||
+                            0,
+                        messengerUnsafeBlocksSkipped:
+                            window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ ||
+                            0,
+                        unsafeTransferBlocksSkipped:
+                            window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ ||
+                            0,
+                        blockedTypingExportCalls:
+                            window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ ||
+                            0,
+                        blockedReadExportCalls:
+                            window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
+                        sanitizedReadExportCalls:
+                            window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ ||
+                            0,
+                        wrappedMarkThreadAsReadCallbacks:
+                            window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ ||
+                            0,
+                        blockedMarkThreadAsReadCalls:
+                            window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
+                            0,
+                        settings: window.__GHOSTIFY_SETTINGS__,
+                    },
+                    null,
+                    2,
+                );
             };
-        } catch (e) { }
+        } catch (e) {}
     }
 
     function createPatchMarkerEvent(label) {
@@ -997,24 +1185,26 @@ import {
             v: 1,
             t: Math.round((Date.now() - observeStartMs) / 1000),
             phase: getPatchCapturePhase(),
-            transport: 'marker',
-            action: 'mark',
+            transport: "marker",
+            action: "mark",
             blockType: null,
-            featureGuess: 'marker',
-            label: String(label || '').slice(0, 80),
+            featureGuess: "marker",
+            label: String(label || "").slice(0, 80),
             redaction: {
                 rawStored: false,
                 idsHashed: true,
-                pageSalted: true
-            }
+                pageSalted: true,
+            },
         };
     }
 
     function getPatchCapturePhase() {
         try {
-            return String(window.__GHOSTIFY_CAPTURE_PHASE__ || 'unmarked').slice(0, 40);
+            return String(
+                window.__GHOSTIFY_CAPTURE_PHASE__ || "unmarked",
+            ).slice(0, 40);
         } catch (e) {
-            return 'unmarked';
+            return "unmarked";
         }
     }
 
@@ -1023,7 +1213,7 @@ import {
             const events = window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ || [];
             events.push(event);
             window.__GHOSTIFY_MESSENGER_OBSERVATIONS__ = events.slice(-200);
-        } catch (e) { }
+        } catch (e) {}
     }
 
     function tracePatchHealth(source, details = {}) {
@@ -1033,32 +1223,36 @@ import {
             v: 1,
             t: Math.round((Date.now() - observeStartMs) / 1000),
             phase: getPatchCapturePhase(),
-            transport: 'health',
-            action: 'hook',
+            transport: "health",
+            action: "hook",
             blockType: null,
-            featureGuess: 'health',
+            featureGuess: "health",
             source,
             details: sanitizeStatusDetails(details),
             redaction: {
                 rawStored: false,
                 idsHashed: true,
-                pageSalted: true
-            }
+                pageSalted: true,
+            },
         };
 
         pushPatchObservation(event);
 
         try {
-            console.debug('[Ghostify Messenger Observe]', event);
-        } catch (e) { }
+            console.debug("[Ghostify Messenger Observe]", event);
+        } catch (e) {}
     }
 
     function sanitizeStatusDetails(details) {
         const output = {};
-        if (!details || typeof details !== 'object') return output;
+        if (!details || typeof details !== "object") return output;
 
         for (const [key, value] of Object.entries(details)) {
-            if (value == null || typeof value === 'boolean' || typeof value === 'number') {
+            if (
+                value == null ||
+                typeof value === "boolean" ||
+                typeof value === "number"
+            ) {
                 output[key] = value;
             } else {
                 output[key] = String(value).slice(0, 80);
@@ -1071,19 +1265,28 @@ import {
     function tracePostMessageObservation(kind, message, blockType, text) {
         if (!isPostMessageObservationEnabled()) return;
 
-        const haystack = String(text || '').toLowerCase();
-        const terms = OBSERVE_TERMS.filter(term => haystack.includes(term));
+        const haystack = String(text || "").toLowerCase();
+        const terms = OBSERVE_TERMS.filter((term) => haystack.includes(term));
         if (!blockType && !terms.length && !haystack) return;
         const dataShape = describePostMessageShape(message, haystack);
         const phase = getPatchCapturePhase();
-        if (shouldThrottlePostMessageNearMiss(kind, blockType, terms, dataShape, phase)) return;
+        if (
+            shouldThrottlePostMessageNearMiss(
+                kind,
+                blockType,
+                terms,
+                dataShape,
+                phase,
+            )
+        )
+            return;
 
         const event = {
             v: 1,
             t: Math.round((Date.now() - observeStartMs) / 1000),
             phase,
             transport: kind,
-            action: blockType ? 'drop' : (terms.length ? 'allow' : 'near_miss'),
+            action: blockType ? "drop" : terms.length ? "allow" : "near_miss",
             blockType,
             featureGuess: guessObservedFeature(haystack, blockType),
             terms,
@@ -1093,73 +1296,105 @@ import {
             redaction: {
                 rawStored: false,
                 idsHashed: true,
-                pageSalted: true
-            }
+                pageSalted: true,
+            },
         };
 
         pushPatchObservation(event);
 
         try {
-            console.debug('[Ghostify Messenger Observe]', event);
-        } catch (e) { }
+            console.debug("[Ghostify Messenger Observe]", event);
+        } catch (e) {}
     }
 
     function guessObservedFeature(haystack, blockType) {
         if (blockType) return blockType;
-        if (haystack.includes('delivery_receipt')) return 'delivery';
+        if (haystack.includes("delivery_receipt")) return "delivery";
         if (
-            haystack.includes('typing') ||
-            haystack.includes('sendchatstate') ||
-            haystack.includes('indicate_activity')
+            haystack.includes("typing") ||
+            haystack.includes("sendchatstate") ||
+            haystack.includes("indicate_activity")
         ) {
-            return 'typing';
+            return "typing";
         }
         if (
-            haystack.includes('readreceipt') ||
-            haystack.includes('read_receipt') ||
-            haystack.includes('read_watermark') ||
-            haystack.includes('markthreadasread') ||
-            haystack.includes('markasread') ||
-            haystack.includes('mark_read') ||
-            haystack.includes('mark_seen') ||
-            haystack.includes('thread_seen')
+            haystack.includes("readreceipt") ||
+            haystack.includes("read_receipt") ||
+            haystack.includes("read_watermark") ||
+            haystack.includes("markthreadasread") ||
+            haystack.includes("markasread") ||
+            haystack.includes("mark_read") ||
+            haystack.includes("mark_seen") ||
+            haystack.includes("thread_seen")
         ) {
-            return 'seen';
+            return "seen";
         }
-        return 'unknown';
+        return "unknown";
     }
 
     function observedFlags(haystack) {
         return {
-            hasLSRequest: haystack.includes('ls_req') || haystack.includes('issue_new_task') || haystack.includes('issuenewtask'),
-            hasThreadTarget: haystack.includes('thread_key') || haystack.includes('threadkey') || haystack.includes('thread_fbid') || haystack.includes('threadfbid') || haystack.includes('thread_id') || haystack.includes('threadid') || haystack.includes('recipient_id') || haystack.includes('message_thread') || haystack.includes('act_thread_id'),
-            hasWatermark: haystack.includes('read_watermark') || haystack.includes('readwatermark') || haystack.includes('last_read_watermark') || haystack.includes('lastreadwatermark') || haystack.includes('watermarktimestamp'),
-            hasTypingState: haystack.includes('is_typing') || haystack.includes('istyping') || haystack.includes('typing_indicator') || haystack.includes('typing_status') || haystack.includes('typing_on') || haystack.includes('sendchatstate') || haystack.includes('chatstate'),
-            hasDeliveryReceipt: haystack.includes('delivery_receipt'),
-            hasReadReceipt: haystack.includes('readreceipt') || haystack.includes('read_receipt') || haystack.includes('sendreadreceipt') || haystack.includes('markthreadasread')
+            hasLSRequest:
+                haystack.includes("ls_req") ||
+                haystack.includes("issue_new_task") ||
+                haystack.includes("issuenewtask"),
+            hasThreadTarget:
+                haystack.includes("thread_key") ||
+                haystack.includes("threadkey") ||
+                haystack.includes("thread_fbid") ||
+                haystack.includes("threadfbid") ||
+                haystack.includes("thread_id") ||
+                haystack.includes("threadid") ||
+                haystack.includes("recipient_id") ||
+                haystack.includes("message_thread") ||
+                haystack.includes("act_thread_id"),
+            hasWatermark:
+                haystack.includes("read_watermark") ||
+                haystack.includes("readwatermark") ||
+                haystack.includes("last_read_watermark") ||
+                haystack.includes("lastreadwatermark") ||
+                haystack.includes("watermarktimestamp"),
+            hasTypingState:
+                haystack.includes("is_typing") ||
+                haystack.includes("istyping") ||
+                haystack.includes("typing_indicator") ||
+                haystack.includes("typing_status") ||
+                haystack.includes("typing_on") ||
+                haystack.includes("sendchatstate") ||
+                haystack.includes("chatstate"),
+            hasDeliveryReceipt: haystack.includes("delivery_receipt"),
+            hasReadReceipt:
+                haystack.includes("readreceipt") ||
+                haystack.includes("read_receipt") ||
+                haystack.includes("sendreadreceipt") ||
+                haystack.includes("markthreadasread"),
         };
     }
 
     function describePostMessageValue(value) {
         try {
             if (value == null) return String(value);
-            if (typeof value !== 'object') return typeof value;
-            if (value instanceof ArrayBuffer) return 'arraybuffer';
-            if (ArrayBuffer.isView(value)) return value.constructor?.name || 'typedarray';
-            if (Array.isArray(value)) return 'array';
-            return Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
+            if (typeof value !== "object") return typeof value;
+            if (value instanceof ArrayBuffer) return "arraybuffer";
+            if (ArrayBuffer.isView(value))
+                return value.constructor?.name || "typedarray";
+            if (Array.isArray(value)) return "array";
+            return Object.prototype.toString
+                .call(value)
+                .slice(8, -1)
+                .toLowerCase();
         } catch (e) {
-            return 'uninspectable';
+            return "uninspectable";
         }
     }
 
     function estimatePostMessageLength(value, text) {
         try {
             if (value == null) return 0;
-            if (typeof value === 'string') return value.length;
+            if (typeof value === "string") return value.length;
             if (value instanceof ArrayBuffer) return value.byteLength;
             if (ArrayBuffer.isView(value)) return value.byteLength;
-            return String(text || '').length;
+            return String(text || "").length;
         } catch (e) {
             return 0;
         }
@@ -1169,28 +1404,38 @@ import {
         const shape = {
             kind: describePostMessageValue(value),
             approxBytes: estimatePostMessageLength(value, hashSource),
-            hash: hashObservedText(hashSource)
+            hash: hashObservedText(hashSource),
         };
 
         try {
             if (value instanceof ArrayBuffer) {
                 addPostMessageBinaryShape(shape, new Uint8Array(value));
             } else if (ArrayBuffer.isView(value)) {
-                addPostMessageBinaryShape(shape, new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+                addPostMessageBinaryShape(
+                    shape,
+                    new Uint8Array(
+                        value.buffer,
+                        value.byteOffset,
+                        value.byteLength,
+                    ),
+                );
             } else if (Array.isArray(value)) {
                 shape.arrayLength = value.length;
-                shape.itemKinds = value.slice(0, 8).map(describePostMessageValue);
-            } else if (value && typeof value === 'object') {
+                shape.itemKinds = value
+                    .slice(0, 8)
+                    .map(describePostMessageValue);
+            } else if (value && typeof value === "object") {
                 let keyCount = 0;
                 const keyHashes = [];
                 for (const key of Object.keys(value)) {
                     keyCount += 1;
-                    if (keyHashes.length < 8) keyHashes.push(hashObservedText(key));
+                    if (keyHashes.length < 8)
+                        keyHashes.push(hashObservedText(key));
                 }
                 shape.keyCount = keyCount;
                 shape.keyHashes = keyHashes;
             }
-        } catch (e) { }
+        } catch (e) {}
 
         return shape;
     }
@@ -1202,7 +1447,7 @@ import {
     }
 
     function hashObservedBytes(bytes, limit) {
-        let text = '';
+        let text = "";
         const length = Math.min(bytes.byteLength, limit);
         for (let i = 0; i < length; i++) {
             text += String.fromCharCode(bytes[i]);
@@ -1210,14 +1455,20 @@ import {
         return hashObservedText(text);
     }
 
-    function shouldThrottlePostMessageNearMiss(kind, blockType, terms, dataShape, phase) {
+    function shouldThrottlePostMessageNearMiss(
+        kind,
+        blockType,
+        terms,
+        dataShape,
+        phase,
+    ) {
         if (blockType || terms.length) return false;
         const key = [
-            phase || 'unmarked',
+            phase || "unmarked",
             kind,
             dataShape.kind,
-            dataShape.approxBytes
-        ].join('|');
+            dataShape.approxBytes,
+        ].join("|");
 
         const counts = window.__GHOSTIFY_OBSERVATION_COUNTS__ || {};
         counts[key] = (counts[key] || 0) + 1;
@@ -1231,7 +1482,7 @@ import {
             const stack = new Error().stack;
             if (!stack) return [];
             return stack
-                .split('\n')
+                .split("\n")
                 .slice(3, 8)
                 .map(sanitizePatchStackLine)
                 .filter(Boolean);
@@ -1241,206 +1492,446 @@ import {
     }
 
     function sanitizePatchStackLine(line) {
-        const value = String(line || '').trim();
-        if (!value) return '';
-        return value.replace(/https?:\/\/[^\s)]+/g, (match) => {
-            try {
-                const url = new URL(match);
-                const file = url.pathname.split('/').filter(Boolean).pop() || url.hostname;
-                return `${url.hostname}/${file}`;
-            } catch (e) {
-                return `url:${hashObservedText(match)}`;
-            }
-        }).slice(0, 180);
+        const value = String(line || "").trim();
+        if (!value) return "";
+        return value
+            .replace(/https?:\/\/[^\s)]+/g, (match) => {
+                try {
+                    const url = new URL(match);
+                    const file =
+                        url.pathname.split("/").filter(Boolean).pop() ||
+                        url.hostname;
+                    return `${url.hostname}/${file}`;
+                } catch (e) {
+                    return `url:${hashObservedText(match)}`;
+                }
+            })
+            .slice(0, 180);
     }
 
     function hashObservedText(text) {
-        const input = `${observeSalt}:${String(text || '')}`;
+        const input = `${observeSalt}:${String(text || "")}`;
         let hash = 2166136261;
         for (let i = 0; i < input.length; i++) {
             hash ^= input.charCodeAt(i);
             hash = Math.imul(hash, 16777619);
         }
-        return (hash >>> 0).toString(16).padStart(8, '0');
+        return (hash >>> 0).toString(16).padStart(8, "0");
     }
 
     function installPostMessageTypingBlockers() {
-        markPatchStatus('postmessage.install', {
-            hasWorker: typeof Worker !== 'undefined',
-            hasMessagePort: typeof MessagePort !== 'undefined'
+        markPatchStatus("postmessage.install", {
+            hasWorker: typeof Worker !== "undefined",
+            hasMessagePort: typeof MessagePort !== "undefined",
         });
-        if (typeof Worker !== 'undefined') wrapPostMessage(Worker.prototype, 'worker.postMessage');
-        if (typeof MessagePort !== 'undefined') wrapPostMessage(MessagePort.prototype, 'messageport.postMessage');
+        if (typeof Worker !== "undefined")
+            wrapPostMessage(Worker.prototype, "worker.postMessage");
+        if (typeof MessagePort !== "undefined")
+            wrapPostMessage(MessagePort.prototype, "messageport.postMessage");
     }
 
     function scheduleMessengerDotComHooks() {
-        if (!isMessengerDotCom || messengerDotComHooksScheduled || !settingsReady) return;
+        if (
+            !isMessengerDotCom ||
+            messengerDotComHooksScheduled ||
+            !settingsReady
+        )
+            return;
         messengerDotComHooksScheduled = true;
         installPostMessageTypingBlockers();
         window.__GHOSTIFY_MESSENGER_SAFE_HOOKS__ = true;
-        markPatchStatus('messenger_dot_com.safe_hooks', {
+        markPatchStatus("messenger_dot_com.safe_hooks", {
             installed: true,
             bridgeOnly: true,
-            moduleInterceptor: false
+            moduleInterceptor: false,
         });
     }
 
     function scheduleFacebookSafeHooks() {
-        if (!isFacebookDotCom || isMessengerDotCom || facebookSafeHooksScheduled || !settingsReady) return;
+        if (
+            !isFacebookDotCom ||
+            isMessengerDotCom ||
+            facebookSafeHooksScheduled ||
+            !settingsReady
+        )
+            return;
         facebookSafeHooksScheduled = true;
         installPostMessageTypingBlockers();
         window.__GHOSTIFY_FACEBOOK_SAFE_HOOKS__ = true;
-        markPatchStatus('facebook.safe_hooks', {
+        markPatchStatus("facebook.safe_hooks", {
             installed: true,
             bridgeOnly: true,
-            moduleInterceptor: false
+            moduleInterceptor: false,
         });
     }
 
     function wrapPostMessage(proto, kind) {
-        if (!proto || typeof proto.postMessage !== 'function' || proto.postMessage.__ghostifyTypingWrapped) return;
+        if (
+            !proto ||
+            typeof proto.postMessage !== "function" ||
+            proto.postMessage.__ghostifyTypingWrapped
+        )
+            return;
 
         const originalPostMessage = proto.postMessage;
         const wrapped = function (message, transfer) {
-            const needsInspection = isPostMessageObservationEnabled() ||
+            const needsInspection =
+                isPostMessageObservationEnabled() ||
                 window.__ghostify_shouldBlockTyping() ||
                 window.__ghostify_shouldBlockMessengerSeen();
-            const text = needsInspection ? stringifyForMatch(message).toLowerCase() : '';
-            const hasQueueRoutedSendTask = needsInspection && containsQueueRoutedMessengerSendTask(message);
-            const hasQueueRoutedGroupSendTask = needsInspection && containsQueueRoutedMessengerGroupSendTask(message);
-            if (hasNativeMessageRequestBypass() && isMessageRequestHydrationText(text)) {
+            const text = needsInspection
+                ? stringifyForMatch(message).toLowerCase()
+                : "";
+            const hasQueueRoutedSendTask =
+                needsInspection &&
+                containsQueueRoutedMessengerSendTask(message);
+            const hasQueueRoutedGroupSendTask =
+                needsInspection &&
+                containsQueueRoutedMessengerGroupSendTask(message);
+            if (
+                hasNativeMessageRequestBypass() &&
+                isMessageRequestHydrationText(text)
+            ) {
                 return originalPostMessage.apply(this, arguments);
             }
 
-            const blockType = shouldBlockTypingText(text) ? 'MSG_TYPING' :
-                (shouldBlockSeenText(text) ? 'MSG_SEEN' : null);
+            const blockType = shouldBlockTypingText(text)
+                ? "MSG_TYPING"
+                : shouldBlockSeenText(text)
+                  ? "MSG_SEEN"
+                  : null;
 
             tracePostMessageObservation(kind, message, blockType, text);
 
             if (hasQueueRoutedSendTask) {
                 const sanitizedQueueSend = sanitizeBridgeMessage(message);
-                if (sanitizedQueueSend.changed && !sanitizedQueueSend.blockedAll) {
-                    const transferSafe = filterPostMessageTransfer(transfer, sanitizedQueueSend.value);
-                    const hasSeenMetadata = window.__ghostify_shouldBlockMessengerSeen() && includesAnyText(text, [
-                        'should_send_read_receipt',
-                        'shouldsendreadreceipt',
-                        'last_read_watermark',
-                        'lastreadwatermark',
-                        'readreceiptmutation',
-                        'read_receipt_mutation'
-                    ]);
+                if (
+                    sanitizedQueueSend.changed &&
+                    !sanitizedQueueSend.blockedAll
+                ) {
+                    const transferSafe = filterPostMessageTransfer(
+                        transfer,
+                        sanitizedQueueSend.value,
+                    );
+                    const hasSeenMetadata =
+                        window.__ghostify_shouldBlockMessengerSeen() &&
+                        includesAnyText(text, [
+                            "should_send_read_receipt",
+                            "shouldsendreadreceipt",
+                            "last_read_watermark",
+                            "lastreadwatermark",
+                            "readreceiptmutation",
+                            "read_receipt_mutation",
+                        ]);
                     if (hasSeenMetadata) {
-                        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
+                        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ =
+                            (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ ||
+                                0) + 1;
                     } else {
-                        window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
+                        window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ =
+                            (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ ||
+                                0) + 1;
                     }
-                    tracePostMessageOutcome(kind, blockType, 'sanitize_queue_send', message, text);
-                    return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedQueueSend.value, transferSafe);
+                    tracePostMessageOutcome(
+                        kind,
+                        blockType,
+                        "sanitize_queue_send",
+                        message,
+                        text,
+                    );
+                    return forwardSanitizedPostMessage(
+                        originalPostMessage,
+                        this,
+                        sanitizedQueueSend.value,
+                        transferSafe,
+                    );
                 }
             }
 
             if (blockType) {
-                if (blockType === 'MSG_SEEN' && (isMessengerDotCom || isFacebookDotCom || isFacebookMessengerProxy)) {
-                    const sanitizedRealtimeSeen = sanitizeFacebookRealtimeReadReceiptBridgeMessage(message, text);
+                if (
+                    blockType === "MSG_SEEN" &&
+                    (isMessengerDotCom ||
+                        isFacebookDotCom ||
+                        isFacebookMessengerProxy)
+                ) {
+                    const sanitizedRealtimeSeen =
+                        sanitizeFacebookRealtimeReadReceiptBridgeMessage(
+                            message,
+                            text,
+                        );
                     if (sanitizedRealtimeSeen.changed) {
                         if (sanitizedRealtimeSeen.blockedAll) {
-                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                            tracePostMessageOutcome(kind, blockType, 'drop_realtime_seen', message, text);
+                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ =
+                                (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ ||
+                                    0) + 1;
+                            tracePostMessageOutcome(
+                                kind,
+                                blockType,
+                                "drop_realtime_seen",
+                                message,
+                                text,
+                            );
                             return undefined;
                         }
-                        const transferSafe = filterPostMessageTransfer(transfer, sanitizedRealtimeSeen.value);
-                        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
-                        tracePostMessageOutcome(kind, blockType, 'sanitize_realtime_seen', message, text);
-                        return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedRealtimeSeen.value, transferSafe);
+                        const transferSafe = filterPostMessageTransfer(
+                            transfer,
+                            sanitizedRealtimeSeen.value,
+                        );
+                        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ =
+                            (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ ||
+                                0) + 1;
+                        tracePostMessageOutcome(
+                            kind,
+                            blockType,
+                            "sanitize_realtime_seen",
+                            message,
+                            text,
+                        );
+                        return forwardSanitizedPostMessage(
+                            originalPostMessage,
+                            this,
+                            sanitizedRealtimeSeen.value,
+                            transferSafe,
+                        );
                     }
 
                     const sanitizedSeen = sanitizeSeenBridgeMessage(message);
                     if (sanitizedSeen.changed) {
                         if (sanitizedSeen.blockedAll) {
-                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                            tracePostMessageOutcome(kind, blockType, 'drop_seen_command', message, text);
+                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ =
+                                (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ ||
+                                    0) + 1;
+                            tracePostMessageOutcome(
+                                kind,
+                                blockType,
+                                "drop_seen_command",
+                                message,
+                                text,
+                            );
                             return undefined;
                         }
 
                         if (!hasPostMessageTransfer(transfer)) {
-                            window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
-                            tracePostMessageOutcome(kind, blockType, 'sanitize_seen', message, text);
-                            return originalPostMessage.call(this, sanitizedSeen.value);
+                            window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ =
+                                (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ ||
+                                    0) + 1;
+                            tracePostMessageOutcome(
+                                kind,
+                                blockType,
+                                "sanitize_seen",
+                                message,
+                                text,
+                            );
+                            return originalPostMessage.call(
+                                this,
+                                sanitizedSeen.value,
+                            );
                         }
 
-                        const transferSafe = filterPostMessageTransfer(transfer, sanitizedSeen.value);
-                        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ || 0) + 1;
-                        tracePostMessageOutcome(kind, blockType, 'sanitize_seen_transfer', message, text);
-                        return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedSeen.value, transferSafe);
+                        const transferSafe = filterPostMessageTransfer(
+                            transfer,
+                            sanitizedSeen.value,
+                        );
+                        window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ =
+                            (window.__GHOSTIFY_SANITIZED_SEEN_BRIDGE_MESSAGES__ ||
+                                0) + 1;
+                        tracePostMessageOutcome(
+                            kind,
+                            blockType,
+                            "sanitize_seen_transfer",
+                            message,
+                            text,
+                        );
+                        return forwardSanitizedPostMessage(
+                            originalPostMessage,
+                            this,
+                            sanitizedSeen.value,
+                            transferSafe,
+                        );
                     }
                 }
 
-                if ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom) {
-                    if (blockType === 'MSG_TYPING') {
+                if (
+                    (isFacebookDotCom || isFacebookMessengerProxy) &&
+                    !isMessengerDotCom
+                ) {
+                    if (blockType === "MSG_TYPING") {
                         const sanitizedTyping = sanitizeBridgeMessage(message);
-                        if (sanitizedTyping.changed && !sanitizedTyping.blockedAll) {
-                            const transferSafe = filterPostMessageTransfer(transfer, sanitizedTyping.value);
-                            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
-                            tracePostMessageOutcome(kind, blockType, 'sanitize_typing', message, text);
-                            return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedTyping.value, transferSafe);
+                        if (
+                            sanitizedTyping.changed &&
+                            !sanitizedTyping.blockedAll
+                        ) {
+                            const transferSafe = filterPostMessageTransfer(
+                                transfer,
+                                sanitizedTyping.value,
+                            );
+                            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ =
+                                (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ ||
+                                    0) + 1;
+                            tracePostMessageOutcome(
+                                kind,
+                                blockType,
+                                "sanitize_typing",
+                                message,
+                                text,
+                            );
+                            return forwardSanitizedPostMessage(
+                                originalPostMessage,
+                                this,
+                                sanitizedTyping.value,
+                                transferSafe,
+                            );
                         }
                     }
 
                     if (hasQueueRoutedSendTask) {
                         if (hasQueueRoutedGroupSendTask) {
-                            if (isQueueSendPrivacyBlockCausedOnlyByMessageContent(message, blockType)) {
-                                window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0) + 1;
-                                tracePostMessageOutcome(kind, blockType, 'queue_send_content_forward', message, text);
-                                return originalPostMessage.apply(this, arguments);
+                            if (
+                                isQueueSendPrivacyBlockCausedOnlyByMessageContent(
+                                    message,
+                                    blockType,
+                                )
+                            ) {
+                                window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ =
+                                    (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ ||
+                                        0) + 1;
+                                tracePostMessageOutcome(
+                                    kind,
+                                    blockType,
+                                    "queue_send_content_forward",
+                                    message,
+                                    text,
+                                );
+                                return originalPostMessage.apply(
+                                    this,
+                                    arguments,
+                                );
                             }
-                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                            tracePostMessageOutcome(kind, blockType, 'drop_unsanitized_queue_group_send', message, text);
+                            window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ =
+                                (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ ||
+                                    0) + 1;
+                            tracePostMessageOutcome(
+                                kind,
+                                blockType,
+                                "drop_unsanitized_queue_group_send",
+                                message,
+                                text,
+                            );
                             return undefined;
                         }
-                        window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0) + 1;
-                        tracePostMessageOutcome(kind, blockType, 'queue_send_forward', message, text);
+                        window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ =
+                            (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ ||
+                                0) + 1;
+                        tracePostMessageOutcome(
+                            kind,
+                            blockType,
+                            "queue_send_forward",
+                            message,
+                            text,
+                        );
                         return originalPostMessage.apply(this, arguments);
                     }
 
                     if (isSafeFacebookBridgeBlock(blockType, text)) {
-                        window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                        tracePostMessageOutcome(kind, blockType, 'drop', message, text);
+                        window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ =
+                            (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) +
+                            1;
+                        tracePostMessageOutcome(
+                            kind,
+                            blockType,
+                            "drop",
+                            message,
+                            text,
+                        );
                         return undefined;
                     }
-                    window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ = (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ || 0) + 1;
-                    tracePostMessageOutcome(kind, blockType, 'unsafe_forward', message, text);
+                    window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ =
+                        (window.__GHOSTIFY_FACEBOOK_UNSAFE_BLOCKS_SKIPPED__ ||
+                            0) + 1;
+                    tracePostMessageOutcome(
+                        kind,
+                        blockType,
+                        "unsafe_forward",
+                        message,
+                        text,
+                    );
                     return originalPostMessage.apply(this, arguments);
                 }
 
                 if (isMessengerDotCom) {
-                    if (blockType === 'MSG_TYPING') {
+                    if (blockType === "MSG_TYPING") {
                         const sanitizedTyping = sanitizeBridgeMessage(message);
-                        if (sanitizedTyping.changed && !sanitizedTyping.blockedAll) {
-                            const transferSafe = filterPostMessageTransfer(transfer, sanitizedTyping.value);
-                            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
-                            tracePostMessageOutcome(kind, blockType, 'sanitize_typing', message, text);
-                            return forwardSanitizedPostMessage(originalPostMessage, this, sanitizedTyping.value, transferSafe);
+                        if (
+                            sanitizedTyping.changed &&
+                            !sanitizedTyping.blockedAll
+                        ) {
+                            const transferSafe = filterPostMessageTransfer(
+                                transfer,
+                                sanitizedTyping.value,
+                            );
+                            window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ =
+                                (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ ||
+                                    0) + 1;
+                            tracePostMessageOutcome(
+                                kind,
+                                blockType,
+                                "sanitize_typing",
+                                message,
+                                text,
+                            );
+                            return forwardSanitizedPostMessage(
+                                originalPostMessage,
+                                this,
+                                sanitizedTyping.value,
+                                transferSafe,
+                            );
                         }
                     }
 
                     if (isSafeMessengerBridgeBlock(blockType, text)) {
-                        window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                        tracePostMessageOutcome(kind, blockType, 'drop', message, text);
+                        window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ =
+                            (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) +
+                            1;
+                        tracePostMessageOutcome(
+                            kind,
+                            blockType,
+                            "drop",
+                            message,
+                            text,
+                        );
                         return undefined;
                     }
-                    window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ = (window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ || 0) + 1;
-                    tracePostMessageOutcome(kind, blockType, 'unsafe_forward', message, text);
+                    window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ =
+                        (window.__GHOSTIFY_MESSENGER_UNSAFE_BLOCKS_SKIPPED__ ||
+                            0) + 1;
+                    tracePostMessageOutcome(
+                        kind,
+                        blockType,
+                        "unsafe_forward",
+                        message,
+                        text,
+                    );
                     return originalPostMessage.apply(this, arguments);
                 }
 
                 const sanitized = sanitizeBridgeMessage(message);
                 if (sanitized.changed && !hasPostMessageTransfer(transfer)) {
-                    window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ = (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) + 1;
-                    tracePostMessageOutcome(kind, blockType, 'sanitize', message, text);
+                    window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ =
+                        (window.__GHOSTIFY_SANITIZED_WORKER_MESSAGES__ || 0) +
+                        1;
+                    tracePostMessageOutcome(
+                        kind,
+                        blockType,
+                        "sanitize",
+                        message,
+                        text,
+                    );
                     return originalPostMessage.call(this, sanitized.value);
                 }
-                window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ = (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
-                tracePostMessageOutcome(kind, blockType, 'drop', message, text);
+                window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ =
+                    (window.__GHOSTIFY_BLOCKED_WORKER_MESSAGES__ || 0) + 1;
+                tracePostMessageOutcome(kind, blockType, "drop", message, text);
                 return undefined;
             }
 
@@ -1448,76 +1939,102 @@ import {
         };
 
         try {
-            Object.defineProperty(wrapped, '__ghostifyTypingWrapped', {
+            Object.defineProperty(wrapped, "__ghostifyTypingWrapped", {
                 value: true,
-                configurable: true
+                configurable: true,
             });
-        } catch (e) { }
+        } catch (e) {}
 
         try {
             proto.postMessage = wrapped;
             markPatchStatus(`${kind}.hooked`, { ok: true });
-        } catch (e) { }
+        } catch (e) {}
     }
 
     function isSafeMessengerBridgeBlock(blockType, text) {
-        if (blockType === 'MSG_TYPING') {
+        if (blockType === "MSG_TYPING") {
             if (hasMessengerMessageSendIntentText(text)) return false;
 
-            return isMessengerTypingBridgeText(text) ||
+            return (
+                isMessengerTypingBridgeText(text) ||
                 (hasOutgoingMessengerEnvelope(text) &&
-                    includesAnyText(text, ['sendchatstate', 'send_chat_state', 'sendtypingindicator', 'typingindicatorstoredprocedure']));
+                    includesAnyText(text, [
+                        "sendchatstate",
+                        "send_chat_state",
+                        "sendtypingindicator",
+                        "typingindicatorstoredprocedure",
+                    ]))
+            );
         }
 
-        if (blockType === 'MSG_SEEN') {
+        if (blockType === "MSG_SEEN") {
             if (hasMessengerMessageSendIntentText(text)) return false;
 
-            return hasServerReadReceiptCommand(text) &&
-                (hasReadReceiptCommandTarget(text) || hasOutgoingMessengerEnvelope(text));
+            return (
+                hasServerReadReceiptCommand(text) &&
+                (hasReadReceiptCommandTarget(text) ||
+                    hasOutgoingMessengerEnvelope(text))
+            );
         }
 
         return false;
     }
 
     function isSafeFacebookBridgeBlock(blockType, text) {
-        if (blockType === 'MSG_TYPING') {
+        if (blockType === "MSG_TYPING") {
             if (hasMessengerMessageSendIntentText(text)) return false;
 
-            return isFacebookTypingBridgeCommand(text) ||
+            return (
+                isFacebookTypingBridgeCommand(text) ||
                 (hasExplicitTypingWriteIntent(text) &&
                     hasFacebookMessengerWriteContext(text) &&
                     (hasMessengerThreadTarget(text) ||
-                        text.includes('composer') ||
-                        text.includes('typing_indicator') ||
-                        text.includes('chatstate') ||
-                        text.includes('typingstate')));
+                        text.includes("composer") ||
+                        text.includes("typing_indicator") ||
+                        text.includes("chatstate") ||
+                        text.includes("typingstate")))
+            );
         }
 
-        if (blockType === 'MSG_SEEN') {
+        if (blockType === "MSG_SEEN") {
             if (hasMessengerMessageSendIntentText(text)) return false;
             if (isFacebookRealtimeReadReceiptTask(text)) return true;
 
-            return hasStrictReadReceiptWriteCommand(text) &&
+            return (
+                hasStrictReadReceiptWriteCommand(text) &&
                 !isFacebookMessengerReadOnlyQueryText(text) &&
                 (hasFacebookMessengerWriteContext(text) ||
                     hasReadReceiptCommandTarget(text) ||
-                    hasOutgoingMessengerEnvelope(text));
+                    hasOutgoingMessengerEnvelope(text))
+            );
         }
 
         return false;
     }
 
     function sanitizeFacebookRealtimeReadReceiptBridgeMessage(value, text) {
-        if ((!isFacebookDotCom && !isFacebookMessengerProxy) || isMessengerDotCom || !isBinaryPayload(value)) {
+        if (
+            (!isFacebookDotCom && !isFacebookMessengerProxy) ||
+            isMessengerDotCom ||
+            !isBinaryPayload(value)
+        ) {
             return { value, changed: false };
         }
 
-        const structured = sanitizeWholeJsonArrayBinary(value, sanitizeSeenBridgeMessage);
-        if (structured.blockedAll) return { value: undefined, changed: true, blockedAll: true };
+        const structured = sanitizeWholeJsonArrayBinary(
+            value,
+            sanitizeSeenBridgeMessage,
+        );
+        if (structured.blockedAll)
+            return { value: undefined, changed: true, blockedAll: true };
         if (structured.changed) return structured;
 
-        const framed = sanitizeFramedJsonTaskBatchBinary(value, sanitizeSeenBridgeMessage);
-        if (framed.blockedAll) return { value: undefined, changed: true, blockedAll: true };
+        const framed = sanitizeFramedJsonTaskBatchBinary(
+            value,
+            sanitizeSeenBridgeMessage,
+        );
+        if (framed.blockedAll)
+            return { value: undefined, changed: true, blockedAll: true };
         if (framed.changed) return framed;
 
         if (!isFacebookDotCom) return { value, changed: false };
@@ -1530,13 +2047,19 @@ import {
     }
 
     function sanitizeRealtimeReadReceiptBytes(value) {
-        const bytes = value instanceof ArrayBuffer
-            ? new Uint8Array(value)
-            : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+        const bytes =
+            value instanceof ArrayBuffer
+                ? new Uint8Array(value)
+                : new Uint8Array(
+                      value.buffer,
+                      value.byteOffset,
+                      value.byteLength,
+                  );
         const text = bytesToSingleByteString(bytes);
         const sanitizedText = text.replace(
             /(last_(?:read_watermark_ts|seen_time_ms)(?:\\*"?\s*[:=]\s*\\*"?))(\d{10,})/gi,
-            (_match, prefix, digits) => `${prefix}${safeReadWatermarkDigits(digits.length)}`
+            (_match, prefix, digits) =>
+                `${prefix}${safeReadWatermarkDigits(digits.length)}`,
         );
 
         if (sanitizedText === text) {
@@ -1551,11 +2074,14 @@ import {
     }
 
     function safeReadWatermarkDigits(length) {
-        return SAFE_READ_WATERMARK_DIGIT + '0'.repeat(Math.max(0, Number(length || 1) - 1));
+        return (
+            SAFE_READ_WATERMARK_DIGIT +
+            "0".repeat(Math.max(0, Number(length || 1) - 1))
+        );
     }
 
     function bytesToSingleByteString(bytes) {
-        let text = '';
+        let text = "";
         const chunkSize = 8192;
         for (let i = 0; i < bytes.length; i += chunkSize) {
             text += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
@@ -1576,9 +2102,12 @@ import {
             return { value, changed: false, blockedAll: false };
         }
 
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
             const text = `${value} ${decodeMaybe(value)}`.toLowerCase();
-            const parsed = sanitizeStringifiedBridgeMessage(value, sanitizeSeenBridgeMessage);
+            const parsed = sanitizeStringifiedBridgeMessage(
+                value,
+                sanitizeSeenBridgeMessage,
+            );
             if (parsed.changed) return parsed;
 
             if (isDedicatedServerReadReceiptCommand(text)) {
@@ -1594,12 +2123,19 @@ import {
             for (const item of value) {
                 const itemText = stringifyForMatch(item).toLowerCase();
                 const isSendItem = isBridgeSendItemObject(item, itemText);
-                if (!isSendItem && depth > 0 && isDedicatedServerReadReceiptCommand(itemText)) {
+                if (
+                    !isSendItem &&
+                    depth > 0 &&
+                    isDedicatedServerReadReceiptCommand(itemText)
+                ) {
                     changed = true;
                     continue;
                 }
 
-                const sanitizedItem = sanitizeSeenBridgeMessage(item, depth + 1);
+                const sanitizedItem = sanitizeSeenBridgeMessage(
+                    item,
+                    depth + 1,
+                );
                 if (sanitizedItem.blockedAll) {
                     changed = true;
                     continue;
@@ -1611,7 +2147,10 @@ import {
                     continue;
                 }
 
-                if (!isSendItem && isDedicatedServerReadReceiptCommand(itemText)) {
+                if (
+                    !isSendItem &&
+                    isDedicatedServerReadReceiptCommand(itemText)
+                ) {
                     changed = true;
                     continue;
                 }
@@ -1622,11 +2161,11 @@ import {
             return {
                 value: changed ? next : value,
                 changed,
-                blockedAll: changed && next.length === 0
+                blockedAll: changed && next.length === 0,
             };
         }
 
-        if (typeof value === 'object') {
+        if (typeof value === "object") {
             const ownText = stringifyForMatch(value).toLowerCase();
             if (isQueueRoutedMessengerSendTask(value)) {
                 return sanitizeQueueRoutedSendReadMetadata(value);
@@ -1656,14 +2195,24 @@ import {
                     continue;
                 }
 
-                if (isReadWatermarkKey(normalizedKey) && isLikelyReadWatermarkValue(child)) {
+                if (
+                    isReadWatermarkKey(normalizedKey) &&
+                    isLikelyReadWatermarkValue(child)
+                ) {
                     clone[key] = safeReadWatermarkValue(child);
                     changed = changed || clone[key] !== child;
                     continue;
                 }
 
-                if (child && typeof child === 'object' && !isBinaryPayload(child)) {
-                    const sanitizedChild = sanitizeSeenBridgeMessage(child, depth + 1);
+                if (
+                    child &&
+                    typeof child === "object" &&
+                    !isBinaryPayload(child)
+                ) {
+                    const sanitizedChild = sanitizeSeenBridgeMessage(
+                        child,
+                        depth + 1,
+                    );
                     if (sanitizedChild.blockedAll) {
                         changed = true;
                         continue;
@@ -1679,11 +2228,14 @@ import {
                 return {
                     value: clone,
                     changed: true,
-                    blockedAll: isBridgeEnvelopeMetadataOnly(clone)
+                    blockedAll: isBridgeEnvelopeMetadataOnly(clone),
                 };
             }
 
-            if (!containsQueueRoutedMessengerSendTask(value) && isDedicatedServerReadReceiptCommand(ownText)) {
+            if (
+                !containsQueueRoutedMessengerSendTask(value) &&
+                isDedicatedServerReadReceiptCommand(ownText)
+            ) {
                 return { value: undefined, changed: true, blockedAll: true };
             }
         }
@@ -1692,158 +2244,193 @@ import {
     }
 
     function normalizeBridgeKey(key) {
-        return String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return String(key || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
     }
 
     function isReadReceiptSendFlagKey(key) {
-        return key === 'shouldsendreadreceipt' ||
-            key === 'sendreadreceipt' ||
-            key === 'sendreadreceipts' ||
-            key === 'sendreadreceiptflag' ||
-            key === 'readreceiptenabled';
+        return (
+            key === "shouldsendreadreceipt" ||
+            key === "sendreadreceipt" ||
+            key === "sendreadreceipts" ||
+            key === "sendreadreceiptflag" ||
+            key === "readreceiptenabled"
+        );
     }
 
     function isReadReceiptMutationKey(key) {
-        return key === 'lssendreadreceipt' ||
-            key === 'readreceiptmutation' ||
-            key === 'sendreadreceiptmutation';
+        return (
+            key === "lssendreadreceipt" ||
+            key === "readreceiptmutation" ||
+            key === "sendreadreceiptmutation"
+        );
     }
 
     function isReadWatermarkKey(key) {
-        return key === 'lastreadwatermark' ||
-            key === 'lastreadwatermarkts' ||
-            key === 'lastseentimems' ||
-            key === 'readwatermark' ||
-            key === 'watermarktimestamp';
+        return (
+            key === "lastreadwatermark" ||
+            key === "lastreadwatermarkts" ||
+            key === "lastseentimems" ||
+            key === "readwatermark" ||
+            key === "watermarktimestamp"
+        );
     }
 
     function isLikelyReadWatermarkValue(value) {
-        if (typeof value === 'number') return Number.isFinite(value) && value >= 1000000000;
-        if (typeof value === 'string') return /^\d{10,}$/.test(value.trim());
+        if (typeof value === "number")
+            return Number.isFinite(value) && value >= 1000000000;
+        if (typeof value === "string") return /^\d{10,}$/.test(value.trim());
         return false;
     }
 
     function safeReadWatermarkValue(value) {
         const text = String(value).trim();
         const safe = safeReadWatermarkDigits(text.length);
-        return typeof value === 'number' ? Number(safe) : safe;
+        return typeof value === "number" ? Number(safe) : safe;
     }
 
     function isTruthyPrivacyValue(value) {
         if (value === true || value === 1) return true;
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
             const normalized = value.trim().toLowerCase();
-            return normalized === 'true' || normalized === '1';
+            return normalized === "true" || normalized === "1";
         }
-        return !!(value && typeof value === 'object');
+        return !!(value && typeof value === "object");
     }
 
     function isDedicatedServerReadReceiptCommand(text) {
         if (!text || isFacebookMessengerReadOnlyQueryText(text)) return false;
-        if (text.includes('delivery_receipt') && !hasDedicatedServerReadReceiptIntent(text)) return false;
+        if (
+            text.includes("delivery_receipt") &&
+            !hasDedicatedServerReadReceiptIntent(text)
+        )
+            return false;
         if (hasMessengerMessageSendIntentText(text)) return false;
         if (!hasDedicatedServerReadReceiptIntent(text)) return false;
 
-        return hasReadReceiptCommandTarget(text) ||
+        return (
+            hasReadReceiptCommandTarget(text) ||
             hasOutgoingMessengerEnvelope(text) ||
             hasFacebookMessengerWriteContext(text) ||
-            text.includes('thread') ||
-            text.includes('ls_req') ||
-            text.includes('issue_new_task') ||
-            text.includes('issuenewtask');
+            text.includes("thread") ||
+            text.includes("ls_req") ||
+            text.includes("issue_new_task") ||
+            text.includes("issuenewtask")
+        );
     }
 
     function hasDedicatedServerReadReceiptIntent(text) {
         text = stripFalseyPrivacyFields(text);
 
-        return hasStrictReadReceiptWriteCommand(text) ||
+        return (
+            hasStrictReadReceiptWriteCommand(text) ||
             hasExplicitBridgeReadWriteCommand(text) ||
-            text.includes('sendreadreceipt') ||
-            text.includes('lssendreadreceipt') ||
-            text.includes('readreceiptmutation') ||
-            text.includes('send_read_receipt') ||
-            text.includes('change_read_status');
+            text.includes("sendreadreceipt") ||
+            text.includes("lssendreadreceipt") ||
+            text.includes("readreceiptmutation") ||
+            text.includes("send_read_receipt") ||
+            text.includes("change_read_status")
+        );
     }
 
     function hasMessengerMessageSendIntentText(text) {
-        const value = String(text || '');
-        const matchText = value.includes('\\') ? `${value} ${value.replace(/\\/g, '')}` : value;
+        const value = String(text || "");
+        const matchText = value.includes("\\")
+            ? `${value} ${value.replace(/\\/g, "")}`
+            : value;
         if (!hasMessengerThreadTarget(matchText)) return false;
 
         const hasSendOperationName = includesAnyText(matchText, [
-            'send_message',
-            'sendmessage',
-            'message_send',
-            'messagesend',
-            'messenger_send_message',
-            'messengersendmessage',
-            'sendmessagemutation',
-            'messengersendmessagemutation'
+            "send_message",
+            "sendmessage",
+            "message_send",
+            "messagesend",
+            "messenger_send_message",
+            "messengersendmessage",
+            "sendmessagemutation",
+            "messengersendmessagemutation",
         ]);
         const hasClientMessageId = includesAnyText(matchText, [
-            'offline_threading_id',
-            'offlinethreadingid',
-            'client_message_id',
-            'clientmessageid',
-            'client_mutation_id',
-            'clientmutationid',
-            'otid'
+            "offline_threading_id",
+            "offlinethreadingid",
+            "client_message_id",
+            "clientmessageid",
+            "client_mutation_id",
+            "clientmutationid",
+            "otid",
         ]);
         const hasMessagePayload = includesAnyText(matchText, [
             '"message"',
-            '%22message%22',
-            'message:',
-            'message=',
+            "%22message%22",
+            "message:",
+            "message=",
             '"text"',
-            '%22text%22',
-            'text:',
-            'text=',
-            'body',
-            'attachment',
-            'sticker',
-            'media',
-            'encrypted_message',
-            'encryptedmessage',
-            'encrypted_payload',
-            'encryptedpayload',
-            'encrypted_blob',
-            'encryptedblob',
-            'encrypted_content',
-            'encryptedcontent',
-            'ciphertext',
-            'reaction',
-            'message_reaction',
-            'messagereaction',
-            'emoji',
-            'quick_like',
-            'quicklike',
-            'like'
+            "%22text%22",
+            "text:",
+            "text=",
+            "body",
+            "attachment",
+            "sticker",
+            "media",
+            "encrypted_message",
+            "encryptedmessage",
+            "encrypted_payload",
+            "encryptedpayload",
+            "encrypted_blob",
+            "encryptedblob",
+            "encrypted_content",
+            "encryptedcontent",
+            "ciphertext",
+            "reaction",
+            "message_reaction",
+            "messagereaction",
+            "emoji",
+            "quick_like",
+            "quicklike",
+            "like",
         ]);
 
-        if (hasSendOperationName && (hasMessagePayload || hasClientMessageId || matchText.includes('send_type'))) return true;
-        return matchText.includes('send_type') && hasClientMessageId && hasMessagePayload;
+        if (
+            hasSendOperationName &&
+            (hasMessagePayload ||
+                hasClientMessageId ||
+                matchText.includes("send_type"))
+        )
+            return true;
+        return (
+            matchText.includes("send_type") &&
+            hasClientMessageId &&
+            hasMessagePayload
+        );
     }
 
     function containsQueueRoutedMessengerSendTask(value, depth = 0) {
         if (!value || depth > 6 || isBinaryPayload(value)) return false;
         if (Array.isArray(value)) {
-            return value.some(item => containsQueueRoutedMessengerSendTask(item, depth + 1));
+            return value.some((item) =>
+                containsQueueRoutedMessengerSendTask(item, depth + 1),
+            );
         }
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
             const trimmed = value.trim();
-            if (!trimmed || (trimmed[0] !== '{' && trimmed[0] !== '[')) return false;
+            if (!trimmed || (trimmed[0] !== "{" && trimmed[0] !== "["))
+                return false;
             try {
-                return containsQueueRoutedMessengerSendTask(JSON.parse(trimmed), depth + 1);
+                return containsQueueRoutedMessengerSendTask(
+                    JSON.parse(trimmed),
+                    depth + 1,
+                );
             } catch (e) {
                 return false;
             }
         }
-        if (typeof value !== 'object') return false;
+        if (typeof value !== "object") return false;
         if (isQueueRoutedMessengerSendTask(value)) return true;
 
         try {
-            return Object.keys(value).some(key =>
-                containsQueueRoutedMessengerSendTask(value[key], depth + 1)
+            return Object.keys(value).some((key) =>
+                containsQueueRoutedMessengerSendTask(value[key], depth + 1),
             );
         } catch (e) {
             return false;
@@ -1853,23 +2440,32 @@ import {
     function containsQueueRoutedMessengerGroupSendTask(value, depth = 0) {
         if (!value || depth > 6 || isBinaryPayload(value)) return false;
         if (Array.isArray(value)) {
-            return value.some(item => containsQueueRoutedMessengerGroupSendTask(item, depth + 1));
+            return value.some((item) =>
+                containsQueueRoutedMessengerGroupSendTask(item, depth + 1),
+            );
         }
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
             const trimmed = value.trim();
-            if (!trimmed || (trimmed[0] !== '{' && trimmed[0] !== '[')) return false;
+            if (!trimmed || (trimmed[0] !== "{" && trimmed[0] !== "["))
+                return false;
             try {
-                return containsQueueRoutedMessengerGroupSendTask(JSON.parse(trimmed), depth + 1);
+                return containsQueueRoutedMessengerGroupSendTask(
+                    JSON.parse(trimmed),
+                    depth + 1,
+                );
             } catch (e) {
                 return false;
             }
         }
-        if (typeof value !== 'object') return false;
+        if (typeof value !== "object") return false;
         if (isQueueRoutedMessengerGroupSendTask(value)) return true;
 
         try {
-            return Object.keys(value).some(key =>
-                containsQueueRoutedMessengerGroupSendTask(value[key], depth + 1)
+            return Object.keys(value).some((key) =>
+                containsQueueRoutedMessengerGroupSendTask(
+                    value[key],
+                    depth + 1,
+                ),
             );
         } catch (e) {
             return false;
@@ -1877,10 +2473,12 @@ import {
     }
 
     function isQueueRoutedMessengerSendTask(value) {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+        if (!value || typeof value !== "object" || Array.isArray(value))
+            return false;
         const fields = normalizedBridgeFields(value);
-        if (String(fields.label || '') !== '46') return false;
-        if (typeof fields.queuename !== 'string' || !fields.queuename.trim()) return false;
+        if (String(fields.label || "") !== "46") return false;
+        if (typeof fields.queuename !== "string" || !fields.queuename.trim())
+            return false;
 
         const payload = parseBridgeObject(fields.payload);
         if (!payload) return false;
@@ -1889,28 +2487,32 @@ import {
         if (!isPositiveMessengerSendType(sendType)) return false;
 
         const hasClientMessageId = [
-            'offlinethreadingid',
-            'clientmessageid',
-            'clientmutationid',
-            'otid'
-        ].some(key => payloadFields[key] != null && String(payloadFields[key]).length > 0);
+            "offlinethreadingid",
+            "clientmessageid",
+            "clientmutationid",
+            "otid",
+        ].some(
+            (key) =>
+                payloadFields[key] != null &&
+                String(payloadFields[key]).length > 0,
+        );
         const hasMessagePayload = [
-            'message',
-            'text',
-            'body',
-            'attachment',
-            'sticker',
-            'media',
-            'encryptedmessage',
-            'encryptedpayload',
-            'encryptedblob',
-            'encryptedcontent',
-            'ciphertext',
-            'reaction',
-            'messagereaction',
-            'emoji',
-            'quicklike'
-        ].some(key => payloadFields[key] != null);
+            "message",
+            "text",
+            "body",
+            "attachment",
+            "sticker",
+            "media",
+            "encryptedmessage",
+            "encryptedpayload",
+            "encryptedblob",
+            "encryptedcontent",
+            "ciphertext",
+            "reaction",
+            "messagereaction",
+            "emoji",
+            "quicklike",
+        ].some((key) => payloadFields[key] != null);
 
         return hasClientMessageId && hasMessagePayload;
     }
@@ -1923,17 +2525,22 @@ import {
         const payloadFields = normalizedBridgeFields(payload);
         const syncGroup = payloadFields.syncgroup;
         const hasDirectRecipient = [
-            'otheruserid',
-            'otheruserfbid',
-            'recipientid',
-            'targetid'
-        ].some(key => payloadFields[key] != null && String(payloadFields[key]).length > 0);
+            "otheruserid",
+            "otheruserfbid",
+            "recipientid",
+            "targetid",
+        ].some(
+            (key) =>
+                payloadFields[key] != null &&
+                String(payloadFields[key]).length > 0,
+        );
         return isPositiveMessengerSendType(syncGroup) && !hasDirectRecipient;
     }
 
     function isPositiveMessengerSendType(value) {
-        if (typeof value === 'number') return Number.isFinite(value) && value > 0;
-        if (typeof value !== 'string') return false;
+        if (typeof value === "number")
+            return Number.isFinite(value) && value > 0;
+        if (typeof value !== "string") return false;
         const normalized = value.trim();
         return /^\d+$/.test(normalized) && Number(normalized) > 0;
     }
@@ -1944,16 +2551,21 @@ import {
             for (const key of Object.keys(value)) {
                 fields[normalizeBridgeKey(key)] = value[key];
             }
-        } catch (e) { }
+        } catch (e) {}
         return fields;
     }
 
     function parseBridgeObject(value) {
-        if (value && typeof value === 'object' && !Array.isArray(value)) return value;
-        if (typeof value !== 'string') return null;
+        if (value && typeof value === "object" && !Array.isArray(value))
+            return value;
+        if (typeof value !== "string") return null;
         try {
             const parsed = JSON.parse(value);
-            return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+            return parsed &&
+                typeof parsed === "object" &&
+                !Array.isArray(parsed)
+                ? parsed
+                : null;
         } catch (e) {
             return null;
         }
@@ -1965,11 +2577,14 @@ import {
         }
         let payloadKey;
         try {
-            payloadKey = Object.keys(task).find(key => normalizeBridgeKey(key) === 'payload');
+            payloadKey = Object.keys(task).find(
+                (key) => normalizeBridgeKey(key) === "payload",
+            );
         } catch (e) {
             return { value: task, changed: false, blockedAll: false };
         }
-        if (!payloadKey) return { value: task, changed: false, blockedAll: false };
+        if (!payloadKey)
+            return { value: task, changed: false, blockedAll: false };
 
         const rawPayload = task[payloadKey];
         const payload = parseBridgeObject(rawPayload);
@@ -1977,19 +2592,24 @@ import {
 
         let clone = Object.assign({}, task);
         let changed = false;
-        if (typeof rawPayload === 'string') {
+        if (typeof rawPayload === "string") {
             const sanitizedSource = sanitizeJsonTaskBatchStringSource(
                 rawPayload,
-                candidate => {
-                    const sanitized = sanitizeQueueSendPayloadReadMetadata(candidate);
+                (candidate) => {
+                    const sanitized =
+                        sanitizeQueueSendPayloadReadMetadata(candidate);
                     return {
                         value: sanitized.value,
                         changed: sanitized.changed,
-                        blockedAll: false
+                        blockedAll: false,
                     };
-                }
+                },
             );
-            if (sanitizedSource.changed && !sanitizedSource.blockedAll && typeof sanitizedSource.value === 'string') {
+            if (
+                sanitizedSource.changed &&
+                !sanitizedSource.blockedAll &&
+                typeof sanitizedSource.value === "string"
+            ) {
                 clone[payloadKey] = sanitizedSource.value;
                 changed = true;
             }
@@ -2005,10 +2625,11 @@ import {
         for (const key of Object.keys(clone)) {
             if (key !== payloadKey) envelope[key] = clone[key];
         }
-        const sanitizedEnvelope = sanitizeQueueSendPayloadReadMetadata(envelope);
+        const sanitizedEnvelope =
+            sanitizeQueueSendPayloadReadMetadata(envelope);
         if (sanitizedEnvelope.changed) {
             clone = Object.assign({}, sanitizedEnvelope.value, {
-                [payloadKey]: clone[payloadKey]
+                [payloadKey]: clone[payloadKey],
             });
             changed = true;
         }
@@ -2017,13 +2638,21 @@ import {
     }
 
     function sanitizeQueueSendPayloadReadMetadata(value, depth = 0) {
-        if (!value || depth > 6 || typeof value !== 'object' || isBinaryPayload(value)) {
+        if (
+            !value ||
+            depth > 6 ||
+            typeof value !== "object" ||
+            isBinaryPayload(value)
+        ) {
             return { value, changed: false };
         }
         if (Array.isArray(value)) {
             let changed = false;
-            const next = value.map(item => {
-                const sanitized = sanitizeQueueSendPayloadReadMetadata(item, depth + 1);
+            const next = value.map((item) => {
+                const sanitized = sanitizeQueueSendPayloadReadMetadata(
+                    item,
+                    depth + 1,
+                );
                 changed = changed || sanitized.changed;
                 return sanitized.value;
             });
@@ -2051,13 +2680,19 @@ import {
                 changed = changed || truthy;
                 continue;
             }
-            if (isReadWatermarkKey(normalizedKey) && isLikelyReadWatermarkValue(child)) {
+            if (
+                isReadWatermarkKey(normalizedKey) &&
+                isLikelyReadWatermarkValue(child)
+            ) {
                 clone[key] = safeReadWatermarkValue(child);
                 changed = changed || clone[key] !== child;
                 continue;
             }
 
-            const sanitized = sanitizeQueueSendPayloadReadMetadata(child, depth + 1);
+            const sanitized = sanitizeQueueSendPayloadReadMetadata(
+                child,
+                depth + 1,
+            );
             clone[key] = sanitized.value;
             changed = changed || sanitized.changed;
         }
@@ -2066,60 +2701,78 @@ import {
 
     function isQueueSendMessageContentKey(key) {
         return [
-            'text',
-            'body',
-            'attachment',
-            'sticker',
-            'media',
-            'encryptedmessage',
-            'encryptedpayload',
-            'encryptedblob',
-            'encryptedcontent',
-            'ciphertext',
-            'reaction',
-            'messagereaction',
-            'emoji',
-            'quicklike'
+            "text",
+            "body",
+            "attachment",
+            "sticker",
+            "media",
+            "encryptedmessage",
+            "encryptedpayload",
+            "encryptedblob",
+            "encryptedcontent",
+            "ciphertext",
+            "reaction",
+            "messagereaction",
+            "emoji",
+            "quicklike",
         ].includes(key);
     }
 
-    function isQueueSendPrivacyBlockCausedOnlyByMessageContent(value, blockType) {
+    function isQueueSendPrivacyBlockCausedOnlyByMessageContent(
+        value,
+        blockType,
+    ) {
         const redacted = redactQueueSendMessageContentForMatch(value);
         const text = stringifyForMatch(redacted).toLowerCase();
-        if (blockType === 'MSG_TYPING') return !shouldBlockTypingText(text);
-        if (blockType === 'MSG_SEEN') return !shouldBlockSeenText(text);
+        if (blockType === "MSG_TYPING") return !shouldBlockTypingText(text);
+        if (blockType === "MSG_SEEN") return !shouldBlockSeenText(text);
         return false;
     }
 
     function redactQueueSendMessageContentForMatch(value, depth = 0) {
         if (!value || depth > 8 || isBinaryPayload(value)) return value;
         if (Array.isArray(value)) {
-            return value.map(item => redactQueueSendMessageContentForMatch(item, depth + 1));
+            return value.map((item) =>
+                redactQueueSendMessageContentForMatch(item, depth + 1),
+            );
         }
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
             const trimmed = value.trim();
-            if (!trimmed || (trimmed[0] !== '{' && trimmed[0] !== '[')) return value;
+            if (!trimmed || (trimmed[0] !== "{" && trimmed[0] !== "["))
+                return value;
             try {
-                return redactQueueSendMessageContentForMatch(JSON.parse(trimmed), depth + 1);
+                return redactQueueSendMessageContentForMatch(
+                    JSON.parse(trimmed),
+                    depth + 1,
+                );
             } catch (e) {
                 return value;
             }
         }
-        if (typeof value !== 'object') return value;
+        if (typeof value !== "object") return value;
 
         const clone = {};
         for (const key of Object.keys(value)) {
             const normalizedKey = normalizeBridgeKey(key);
-            clone[key] = normalizedKey === 'message' || isQueueSendMessageContentKey(normalizedKey)
-                ? '[message-content]'
-                : redactQueueSendMessageContentForMatch(value[key], depth + 1);
+            clone[key] =
+                normalizedKey === "message" ||
+                isQueueSendMessageContentKey(normalizedKey)
+                    ? "[message-content]"
+                    : redactQueueSendMessageContentForMatch(
+                          value[key],
+                          depth + 1,
+                      );
         }
         return clone;
     }
 
     function tracePostMessageOutcome(kind, blockType, outcome, message, text) {
-        if (!isPostMessageObservationEnabled() && !String(outcome || '').startsWith('drop')) return;
-        const haystack = String(text || '').toLowerCase();
+        if (
+            !isPostMessageObservationEnabled() &&
+            !String(outcome || "").startsWith("drop")
+        )
+            return;
+        const haystack = String(text || "").toLowerCase();
         const event = {
             v: 1,
             t: Math.round((Date.now() - observeStartMs) / 1000),
@@ -2131,12 +2784,14 @@ import {
             redaction: {
                 rawStored: false,
                 idsHashed: true,
-                pageSalted: true
-            }
+                pageSalted: true,
+            },
         };
 
         if (message !== undefined || haystack) {
-            event.terms = OBSERVE_TERMS.filter(term => haystack.includes(term));
+            event.terms = OBSERVE_TERMS.filter((term) =>
+                haystack.includes(term),
+            );
             event.flags = observedFlags(haystack);
             event.dataShape = describePostMessageShape(message, haystack);
             event.callSite = getPatchCallSite();
@@ -2150,12 +2805,18 @@ import {
             return { value, changed: false, blockedAll: false };
         }
 
-        if (typeof value === 'string') {
-            const parsed = sanitizeStringifiedBridgeMessage(value, sanitizeBridgeMessage);
+        if (typeof value === "string") {
+            const parsed = sanitizeStringifiedBridgeMessage(
+                value,
+                sanitizeBridgeMessage,
+            );
             if (parsed.changed) return parsed;
 
             const text = `${value} ${decodeMaybe(value)}`.toLowerCase();
-            if (!hasMessengerMessageSendIntentText(text) && (shouldBlockTypingText(text) || shouldBlockSeenText(text))) {
+            if (
+                !hasMessengerMessageSendIntentText(text) &&
+                (shouldBlockTypingText(text) || shouldBlockSeenText(text))
+            ) {
                 return { value: undefined, changed: true, blockedAll: true };
             }
 
@@ -2169,7 +2830,11 @@ import {
             for (const item of value) {
                 const itemText = stringifyForMatch(item).toLowerCase();
                 const isSendItem = isBridgeSendItemObject(item, itemText);
-                if (!isSendItem && (shouldBlockTypingText(itemText) || shouldBlockSeenText(itemText))) {
+                if (
+                    !isSendItem &&
+                    (shouldBlockTypingText(itemText) ||
+                        shouldBlockSeenText(itemText))
+                ) {
                     changed = true;
                     continue;
                 }
@@ -2181,7 +2846,11 @@ import {
                 }
 
                 if (!sanitizedItem.changed) {
-                    if (!isSendItem && (shouldBlockTypingText(itemText) || shouldBlockSeenText(itemText))) {
+                    if (
+                        !isSendItem &&
+                        (shouldBlockTypingText(itemText) ||
+                            shouldBlockSeenText(itemText))
+                    ) {
                         changed = true;
                         continue;
                     }
@@ -2194,11 +2863,11 @@ import {
             return {
                 value: changed ? next : value,
                 changed,
-                blockedAll: changed && next.length === 0
+                blockedAll: changed && next.length === 0,
             };
         }
 
-        if (typeof value === 'object') {
+        if (typeof value === "object") {
             const ownText = stringifyForMatch(value).toLowerCase();
             if (isQueueRoutedMessengerSendTask(value)) {
                 return sanitizeQueueRoutedSendReadMetadata(value);
@@ -2213,18 +2882,29 @@ import {
 
             for (const key of Object.keys(value)) {
                 const child = value[key];
-                if (child && typeof child === 'object' && !isBinaryPayload(child)) {
+                if (
+                    child &&
+                    typeof child === "object" &&
+                    !isBinaryPayload(child)
+                ) {
                     const childText = stringifyForMatch(child).toLowerCase();
-                    const childContainsSend = containsQueueRoutedMessengerSendTask(child);
-                    if (!childContainsSend &&
+                    const childContainsSend =
+                        containsQueueRoutedMessengerSendTask(child);
+                    if (
+                        !childContainsSend &&
                         !hasMessengerMessageSendIntentText(childText) &&
-                        (shouldBlockTypingText(childText) || shouldBlockSeenText(childText))) {
+                        (shouldBlockTypingText(childText) ||
+                            shouldBlockSeenText(childText))
+                    ) {
                         changed = true;
                         continue;
                     }
 
                     sawNestedContainer = true;
-                    const sanitizedChild = sanitizeBridgeMessage(child, depth + 1);
+                    const sanitizedChild = sanitizeBridgeMessage(
+                        child,
+                        depth + 1,
+                    );
                     if (sanitizedChild.blockedAll) {
                         changed = true;
                         continue;
@@ -2240,13 +2920,21 @@ import {
                 return {
                     value: clone,
                     changed: true,
-                    blockedAll: isBridgeEnvelopeMetadataOnly(clone)
+                    blockedAll: isBridgeEnvelopeMetadataOnly(clone),
                 };
             }
 
             if (!sawNestedContainer) {
-                if (!hasMessengerMessageSendIntentText(ownText) && (shouldBlockTypingText(ownText) || shouldBlockSeenText(ownText))) {
-                    return { value: undefined, changed: true, blockedAll: true };
+                if (
+                    !hasMessengerMessageSendIntentText(ownText) &&
+                    (shouldBlockTypingText(ownText) ||
+                        shouldBlockSeenText(ownText))
+                ) {
+                    return {
+                        value: undefined,
+                        changed: true,
+                        blockedAll: true,
+                    };
                 }
             }
         }
@@ -2255,68 +2943,89 @@ import {
     }
 
     function isBridgeSendItemObject(value, text) {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-        if (!isQueueRoutedMessengerSendTask(value) && !hasMessengerMessageSendIntentText(text)) return false;
+        if (!value || typeof value !== "object" || Array.isArray(value))
+            return false;
+        if (
+            !isQueueRoutedMessengerSendTask(value) &&
+            !hasMessengerMessageSendIntentText(text)
+        )
+            return false;
 
         const keys = Object.keys(value).map(normalizeBridgeKey);
-        if (keys.includes('tasks') || keys.includes('tasklist') || keys.includes('batch')) return false;
+        if (
+            keys.includes("tasks") ||
+            keys.includes("tasklist") ||
+            keys.includes("batch")
+        )
+            return false;
 
-        return keys.some(key => [
-            'label',
-            'queuename',
-            'queue',
-            'payload',
-            'sendtype',
-            'offlinethreadingid',
-            'clientmessageid',
-            'clientmutationid',
-            'otid',
-            'message',
-            'text',
-            'body',
-            'attachment',
-            'sticker',
-            'media',
-            'threadkey',
-            'threadfbid',
-            'threadid',
-            'recipientid'
-        ].includes(key));
+        return keys.some((key) =>
+            [
+                "label",
+                "queuename",
+                "queue",
+                "payload",
+                "sendtype",
+                "offlinethreadingid",
+                "clientmessageid",
+                "clientmutationid",
+                "otid",
+                "message",
+                "text",
+                "body",
+                "attachment",
+                "sticker",
+                "media",
+                "threadkey",
+                "threadfbid",
+                "threadid",
+                "recipientid",
+            ].includes(key),
+        );
     }
 
     function isBridgeEnvelopeMetadataOnly(value) {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+        if (!value || typeof value !== "object" || Array.isArray(value))
+            return false;
 
         const keys = Object.keys(value);
         if (!keys.length) return true;
 
-        return keys.every(key => {
+        return keys.every((key) => {
             const normalizedKey = normalizeBridgeKey(key);
-            return normalizedKey === 'issuenewtask' ||
-                normalizedKey === 'requestid' ||
-                normalizedKey === 'epochid' ||
-                normalizedKey === 'source' ||
-                normalizedKey === 'type';
+            return (
+                normalizedKey === "issuenewtask" ||
+                normalizedKey === "requestid" ||
+                normalizedKey === "epochid" ||
+                normalizedKey === "source" ||
+                normalizedKey === "type"
+            );
         });
     }
 
     function sanitizeStringifiedBridgeMessage(value, sanitizer) {
-        const trimmed = String(value || '').trim();
-        if (!trimmed || (trimmed[0] !== '{' && trimmed[0] !== '[')) {
+        const trimmed = String(value || "").trim();
+        if (!trimmed || (trimmed[0] !== "{" && trimmed[0] !== "[")) {
             return { value, changed: false, blockedAll: false };
         }
 
         try {
-            const sourcePreserved = sanitizeJsonTaskBatchStringSource(value, sanitizer);
+            const sourcePreserved = sanitizeJsonTaskBatchStringSource(
+                value,
+                sanitizer,
+            );
             if (sourcePreserved.changed) return sourcePreserved;
 
             const parsed = JSON.parse(trimmed);
             const sanitized = sanitizer(parsed, 0);
-            if (!sanitized.changed) return { value, changed: false, blockedAll: false };
+            if (!sanitized.changed)
+                return { value, changed: false, blockedAll: false };
             return {
-                value: sanitized.blockedAll ? undefined : JSON.stringify(sanitized.value),
+                value: sanitized.blockedAll
+                    ? undefined
+                    : JSON.stringify(sanitized.value),
                 changed: true,
-                blockedAll: sanitized.blockedAll
+                blockedAll: sanitized.blockedAll,
             };
         } catch (e) {
             return { value, changed: false, blockedAll: false };
@@ -2330,7 +3039,8 @@ import {
     function hasPostMessageTransfer(transfer) {
         if (!transfer) return false;
         if (Array.isArray(transfer)) return transfer.length > 0;
-        if (typeof transfer === 'object' && Array.isArray(transfer.transfer)) return transfer.transfer.length > 0;
+        if (typeof transfer === "object" && Array.isArray(transfer.transfer))
+            return transfer.transfer.length > 0;
         return false;
     }
 
@@ -2339,8 +3049,12 @@ import {
             return { hasTransfer: false, transfer: undefined };
         }
 
-        const originalList = Array.isArray(transfer) ? transfer : transfer.transfer;
-        const filtered = originalList.filter(item => containsTransferReference(value, item));
+        const originalList = Array.isArray(transfer)
+            ? transfer
+            : transfer.transfer;
+        const filtered = originalList.filter((item) =>
+            containsTransferReference(value, item),
+        );
         if (!filtered.length) {
             return { hasTransfer: false, transfer: undefined };
         }
@@ -2349,72 +3063,99 @@ import {
             hasTransfer: true,
             transfer: Array.isArray(transfer)
                 ? filtered
-                : Object.assign({}, transfer, { transfer: filtered })
+                : Object.assign({}, transfer, { transfer: filtered }),
         };
     }
 
-    function containsTransferReference(value, target, depth = 0, seen = new Set()) {
+    function containsTransferReference(
+        value,
+        target,
+        depth = 0,
+        seen = new Set(),
+    ) {
         if (value === target) return true;
-        if (!value || typeof value !== 'object' || !target || depth > 8) return false;
+        if (!value || typeof value !== "object" || !target || depth > 8)
+            return false;
 
         if (ArrayBuffer.isView(value) && value.buffer === target) return true;
         if (seen.has(value)) return false;
         seen.add(value);
 
         if (Array.isArray(value)) {
-            return value.some(item => containsTransferReference(item, target, depth + 1, seen));
+            return value.some((item) =>
+                containsTransferReference(item, target, depth + 1, seen),
+            );
         }
 
         try {
-            return Object.keys(value).some(key => containsTransferReference(value[key], target, depth + 1, seen));
+            return Object.keys(value).some((key) =>
+                containsTransferReference(value[key], target, depth + 1, seen),
+            );
         } catch (e) {
             return false;
         }
     }
 
-    function forwardSanitizedPostMessage(originalPostMessage, target, value, transferSafe) {
+    function forwardSanitizedPostMessage(
+        originalPostMessage,
+        target,
+        value,
+        transferSafe,
+    ) {
         if (transferSafe && transferSafe.hasTransfer) {
-            return originalPostMessage.call(target, value, transferSafe.transfer);
+            return originalPostMessage.call(
+                target,
+                value,
+                transferSafe.transfer,
+            );
         }
         return originalPostMessage.call(target, value);
     }
 
     function wrapTypingFunction(fn) {
-        if (typeof fn !== 'function') return fn;
+        if (typeof fn !== "function") return fn;
         if (fn.__ghostifyTypingWrapped) return fn;
 
         const wrapped = function (...args) {
             if (window.__ghostify_shouldBlockTyping()) {
                 const argsText = stringifyForMatch(args).toLowerCase();
-                if ((isFacebookDotCom || isFacebookMessengerProxy) && hasMessengerMessageSendIntentText(argsText)) {
+                if (
+                    (isFacebookDotCom || isFacebookMessengerProxy) &&
+                    hasMessengerMessageSendIntentText(argsText)
+                ) {
                     return fn.apply(this, args);
                 }
 
-                window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0) + 1;
+                window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ =
+                    (window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0) + 1;
                 return noopTypingResult();
             }
             return fn.apply(this, args);
         };
 
         try {
-            Object.defineProperty(wrapped, '__ghostifyTypingWrapped', {
+            Object.defineProperty(wrapped, "__ghostifyTypingWrapped", {
                 value: true,
-                configurable: true
+                configurable: true,
             });
-        } catch (e) { }
+        } catch (e) {}
 
         return wrapped;
     }
 
     function wrapTypingExport(value, allowDefault = false) {
-        if (typeof value === 'function') return wrapTypingFunction(value);
-        if (!value || typeof value !== 'object') return value;
+        if (typeof value === "function") return wrapTypingFunction(value);
+        if (!value || typeof value !== "object") return value;
 
         for (const key of Object.getOwnPropertyNames(value)) {
-            if (typeof value[key] === 'function' && (isTypingExportName(key, allowDefault) || isTypingExportName(value[key].name, allowDefault))) {
+            if (
+                typeof value[key] === "function" &&
+                (isTypingExportName(key, allowDefault) ||
+                    isTypingExportName(value[key].name, allowDefault))
+            ) {
                 try {
                     value[key] = wrapTypingFunction(value[key]);
-                } catch (e) { }
+                } catch (e) {}
             }
         }
 
@@ -2422,22 +3163,25 @@ import {
     }
 
     function hasTypingExport(value) {
-        if (typeof value === 'function') return isTypingExportName(value.name);
-        if (!value || typeof value !== 'object') return false;
+        if (typeof value === "function") return isTypingExportName(value.name);
+        if (!value || typeof value !== "object") return false;
 
-        return Object.getOwnPropertyNames(value).some(key => {
+        return Object.getOwnPropertyNames(value).some((key) => {
             try {
                 const candidate = value[key];
-                return typeof candidate === 'function' &&
-                    (isTypingExportName(key) || isTypingExportName(candidate.name));
+                return (
+                    typeof candidate === "function" &&
+                    (isTypingExportName(key) ||
+                        isTypingExportName(candidate.name))
+                );
             } catch (e) {
                 return false;
             }
         });
     }
 
-    function wrapReadReceiptFunction(fn, mode = 'block') {
-        if (typeof fn !== 'function') return fn;
+    function wrapReadReceiptFunction(fn, mode = "block") {
+        if (typeof fn !== "function") return fn;
         const existing = readReceiptWrapperMetadata.get(fn);
         if (existing?.mode === mode) return fn;
         if (!existing && fn.__ghostifySeenWrapped) return fn;
@@ -2452,15 +3196,18 @@ import {
 
         const wrapped = new Proxy(original, {
             get(target, prop, receiver) {
-                if (prop === '__ghostifySeenWrapped') return true;
+                if (prop === "__ghostifySeenWrapped") return true;
                 return Reflect.get(target, prop, receiver);
             },
             apply(target, thisArg, args) {
-                const shouldBlockSeen = window.__ghostify_shouldBlockMessengerSeen();
-                if (mode === 'force-disable-mark-read') {
-                    if (!shouldBlockSeen ||
+                const shouldBlockSeen =
+                    window.__ghostify_shouldBlockMessengerSeen();
+                if (mode === "force-disable-mark-read") {
+                    if (
+                        !shouldBlockSeen ||
                         hasNativeMessageRequestBypass() ||
-                        isCurrentMessageRequestSurface()) {
+                        isCurrentMessageRequestSurface()
+                    ) {
                         return Reflect.apply(target, thisArg, args);
                     }
                     const optionIndex = findDisableMarkReadOptionIndex(args);
@@ -2471,63 +3218,100 @@ import {
                         return Reflect.apply(target, thisArg, args);
                     }
                     const nextArgs = args.slice();
-                    nextArgs[optionIndex] = cloneDisableMarkReadOptions(args[optionIndex]);
+                    nextArgs[optionIndex] = cloneDisableMarkReadOptions(
+                        args[optionIndex],
+                    );
                     return Reflect.apply(target, thisArg, nextArgs);
                 }
-                if (mode === 'wrap-local-read-result') {
+                if (mode === "wrap-local-read-result") {
                     const result = Reflect.apply(target, thisArg, args);
                     return wrapMarkThreadAsReadHookResult(result);
                 }
                 if (shouldBlockSeen) {
                     const argsText = stringifyForMatch(args).toLowerCase();
-                    if (mode === 'block-local-read-promise') {
-                        if (hasNativeMessageRequestBypass() ||
+                    if (mode === "block-local-read-promise") {
+                        if (
+                            hasNativeMessageRequestBypass() ||
                             isCurrentMessageRequestSurface() ||
-                            isLocalReadMessageRequestHydrationText(argsText)) {
+                            isLocalReadMessageRequestHydrationText(argsText)
+                        ) {
                             return Reflect.apply(target, thisArg, args);
                         }
-                        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
-                        window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0) + 1;
+                        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
+                            (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ ||
+                                0) + 1;
+                        window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ =
+                            (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
+                                0) + 1;
                         return Promise.resolve(undefined);
                     }
-                    if (mode === 'block-local-read') {
-                        if (hasNativeMessageRequestBypass() ||
+                    if (mode === "block-local-read") {
+                        if (
+                            hasNativeMessageRequestBypass() ||
                             isCurrentMessageRequestSurface() ||
                             isLocalReadMessageRequestHydrationText(argsText) ||
                             isLocalSendAckStateText(argsText) ||
-                            isLocalSendStateMutationText(argsText)) {
+                            isLocalSendStateMutationText(argsText)
+                        ) {
                             return Reflect.apply(target, thisArg, args);
                         }
-                        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
-                        window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0) + 1;
+                        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
+                            (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ ||
+                                0) + 1;
+                        window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ =
+                            (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
+                                0) + 1;
                         return noopTypingResult();
                     }
-                    if (mode === 'sanitize' || mode === 'sanitize-block-positional-local-read') {
-                        if (hasNativeMessageRequestBypass() ||
+                    if (
+                        mode === "sanitize" ||
+                        mode === "sanitize-block-positional-local-read"
+                    ) {
+                        if (
+                            hasNativeMessageRequestBypass() ||
                             isCurrentMessageRequestSurface() ||
-                            isLocalReadMessageRequestHydrationText(argsText)) {
+                            isLocalReadMessageRequestHydrationText(argsText)
+                        ) {
                             return Reflect.apply(target, thisArg, args);
                         }
                         if (isLocalSendAckStateText(argsText)) {
                             return Reflect.apply(target, thisArg, args);
                         }
-                        if (mode === 'sanitize-block-positional-local-read' && isLocalReadPositionalI64MutationArgs(args)) {
-                            window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
-                            window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0) + 1;
+                        if (
+                            mode === "sanitize-block-positional-local-read" &&
+                            isLocalReadPositionalI64MutationArgs(args)
+                        ) {
+                            window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
+                                (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ ||
+                                    0) + 1;
+                            window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ =
+                                (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
+                                    0) + 1;
                             return noopTypingResult();
                         }
                         const sanitizedArgs = sanitizeSeenBridgeMessage(args);
-                        if (sanitizedArgs.changed && Array.isArray(sanitizedArgs.value)) {
-                            window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0) + 1;
-                            return Reflect.apply(target, thisArg, sanitizedArgs.value);
+                        if (
+                            sanitizedArgs.changed &&
+                            Array.isArray(sanitizedArgs.value)
+                        ) {
+                            window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ =
+                                (window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ ||
+                                    0) + 1;
+                            return Reflect.apply(
+                                target,
+                                thisArg,
+                                sanitizedArgs.value,
+                            );
                         }
                     } else {
-                        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
+                        window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
+                            (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ ||
+                                0) + 1;
                         return noopTypingResult();
                     }
                 }
                 return Reflect.apply(target, thisArg, args);
-            }
+            },
         });
 
         readReceiptWrapperMetadata.set(wrapped, { original, mode });
@@ -2537,28 +3321,38 @@ import {
     }
 
     function isDisableMarkReadOptions(value) {
-        if (!isPlainOpenMessageOptions(value) ||
-            !Object.prototype.hasOwnProperty.call(value, 'disableMarkRead')) return false;
+        if (
+            !isPlainOpenMessageOptions(value) ||
+            !Object.prototype.hasOwnProperty.call(value, "disableMarkRead")
+        )
+            return false;
         return true;
     }
 
     function isPlainOpenMessageOptions(value) {
-        if (Object.prototype.toString.call(value) !== '[object Object]') return false;
+        if (Object.prototype.toString.call(value) !== "[object Object]")
+            return false;
         const prototype = Object.getPrototypeOf(value);
         return prototype === null || Object.getPrototypeOf(prototype) === null;
     }
 
     function isThreadOpenMessageOptions(value) {
         if (!isPlainOpenMessageOptions(value)) return false;
-        if (Object.prototype.hasOwnProperty.call(value, 'threadKey') ||
-            Object.prototype.hasOwnProperty.call(value, 'threadID') ||
-            Object.prototype.hasOwnProperty.call(value, 'threadId') ||
-            Object.prototype.hasOwnProperty.call(value, 'threadFbid')) {
+        if (
+            Object.prototype.hasOwnProperty.call(value, "threadKey") ||
+            Object.prototype.hasOwnProperty.call(value, "threadID") ||
+            Object.prototype.hasOwnProperty.call(value, "threadId") ||
+            Object.prototype.hasOwnProperty.call(value, "threadFbid")
+        ) {
             return true;
         }
-        if (!Object.prototype.hasOwnProperty.call(value, 'thread')) return false;
+        if (!Object.prototype.hasOwnProperty.call(value, "thread"))
+            return false;
         const thread = value.thread;
-        return thread != null && (typeof thread === 'object' || typeof thread === 'string');
+        return (
+            thread != null &&
+            (typeof thread === "object" || typeof thread === "string")
+        );
     }
 
     function findDisableMarkReadOptionIndex(args) {
@@ -2575,57 +3369,86 @@ import {
                 configurable: original.configurable !== false,
                 enumerable: original.enumerable !== false,
                 value: true,
-                writable: 'writable' in original ? original.writable !== false : true
+                writable:
+                    "writable" in original ? original.writable !== false : true,
             };
-            return Object.defineProperties(Object.create(Object.getPrototypeOf(value)), descriptors);
+            return Object.defineProperties(
+                Object.create(Object.getPrototypeOf(value)),
+                descriptors,
+            );
         } catch (e) {
-            return Object.assign(Object.create(Object.getPrototypeOf(value)), value, {
-                disableMarkRead: true
-            });
+            return Object.assign(
+                Object.create(Object.getPrototypeOf(value)),
+                value,
+                {
+                    disableMarkRead: true,
+                },
+            );
         }
     }
 
     function wrapMarkThreadAsReadHookResult(result) {
-        if (typeof result !== 'function') return result;
+        if (typeof result !== "function") return result;
         const cached = markThreadAsReadCallbackWrappers.get(result);
         if (cached) return cached;
 
-        const wrapped = wrapReadReceiptFunction(result, 'block-local-read-promise');
+        const wrapped = wrapReadReceiptFunction(
+            result,
+            "block-local-read-promise",
+        );
         markThreadAsReadCallbackWrappers.set(result, wrapped);
-        window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ = (window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ || 0) + 1;
+        window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ =
+            (window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ || 0) +
+            1;
         return wrapped;
     }
 
-    function wrapReadReceiptExport(value, allowDefault = false, mode = 'block') {
-        if (typeof value === 'function') return wrapReadReceiptFunction(value, mode);
-        if (!value || typeof value !== 'object') return value;
+    function wrapReadReceiptExport(
+        value,
+        allowDefault = false,
+        mode = "block",
+    ) {
+        if (typeof value === "function")
+            return wrapReadReceiptFunction(value, mode);
+        if (!value || typeof value !== "object") return value;
 
         for (const key of Object.getOwnPropertyNames(value)) {
-            if (typeof value[key] === 'function' && (
-                isReadReceiptExportName(key, allowDefault) ||
-                isReadReceiptExportName(value[key].name, allowDefault) ||
-                isLocalReadReceiptExportName(key, allowDefault) ||
-                isLocalReadReceiptExportName(value[key].name, allowDefault)
-            )) {
+            if (
+                typeof value[key] === "function" &&
+                (isReadReceiptExportName(key, allowDefault) ||
+                    isReadReceiptExportName(value[key].name, allowDefault) ||
+                    isLocalReadReceiptExportName(key, allowDefault) ||
+                    isLocalReadReceiptExportName(value[key].name, allowDefault))
+            ) {
                 try {
                     let exportMode = mode;
-                    if (mode !== 'block-local-read' &&
-                        mode !== 'block-local-read-promise' &&
-                        mode !== 'wrap-local-read-result' &&
-                        mode !== 'force-disable-mark-read' &&
-                        mode !== 'sanitize-block-positional-local-read') {
-                        exportMode = isLocalReadReceiptExportName(key, allowDefault) ||
-                            isLocalReadReceiptExportName(value[key].name, allowDefault)
-                            ? 'sanitize'
-                            : mode;
-                    } else if (mode === 'wrap-local-read-result' && (
-                        isExactMarkThreadAsReadIdentity(key) ||
-                        isExactMarkThreadAsReadIdentity(value[key].name)
-                    )) {
-                        exportMode = 'block-local-read';
+                    if (
+                        mode !== "block-local-read" &&
+                        mode !== "block-local-read-promise" &&
+                        mode !== "wrap-local-read-result" &&
+                        mode !== "force-disable-mark-read" &&
+                        mode !== "sanitize-block-positional-local-read"
+                    ) {
+                        exportMode =
+                            isLocalReadReceiptExportName(key, allowDefault) ||
+                            isLocalReadReceiptExportName(
+                                value[key].name,
+                                allowDefault,
+                            )
+                                ? "sanitize"
+                                : mode;
+                    } else if (
+                        mode === "wrap-local-read-result" &&
+                        (isExactMarkThreadAsReadIdentity(key) ||
+                            isExactMarkThreadAsReadIdentity(value[key].name))
+                    ) {
+                        exportMode = "block-local-read";
                     }
-                    value[key] = wrapReadReceiptFunction(value[key], exportMode);
-                } catch (e) { }
+                    value[key] = wrapReadReceiptFunction(
+                        value[key],
+                        exportMode,
+                    );
+                } catch (e) {}
             }
         }
 
@@ -2633,17 +3456,20 @@ import {
     }
 
     function hasReadReceiptExport(value) {
-        if (typeof value === 'function') return isReadReceiptExportName(value.name);
-        if (!value || typeof value !== 'object') return false;
+        if (typeof value === "function")
+            return isReadReceiptExportName(value.name);
+        if (!value || typeof value !== "object") return false;
 
-        return Object.getOwnPropertyNames(value).some(key => {
+        return Object.getOwnPropertyNames(value).some((key) => {
             try {
                 const candidate = value[key];
-                return typeof candidate === 'function' &&
+                return (
+                    typeof candidate === "function" &&
                     (isReadReceiptExportName(key) ||
                         isReadReceiptExportName(candidate.name) ||
                         isLocalReadReceiptExportName(key) ||
-                        isLocalReadReceiptExportName(candidate.name));
+                        isLocalReadReceiptExportName(candidate.name))
+                );
             } catch (e) {
                 return false;
             }
@@ -2651,15 +3477,18 @@ import {
     }
 
     function hasLocalReadReceiptExport(value) {
-        if (typeof value === 'function') return isLocalReadReceiptExportName(value.name);
-        if (!value || typeof value !== 'object') return false;
+        if (typeof value === "function")
+            return isLocalReadReceiptExportName(value.name);
+        if (!value || typeof value !== "object") return false;
 
-        return Object.getOwnPropertyNames(value).some(key => {
+        return Object.getOwnPropertyNames(value).some((key) => {
             try {
                 const candidate = value[key];
-                return typeof candidate === 'function' &&
+                return (
+                    typeof candidate === "function" &&
                     (isLocalReadReceiptExportName(key) ||
-                        isLocalReadReceiptExportName(candidate.name));
+                        isLocalReadReceiptExportName(candidate.name))
+                );
             } catch (e) {
                 return false;
             }
@@ -2671,39 +3500,39 @@ import {
         if (!hasMessengerThreadTarget(text)) return false;
 
         const hasClientMessageId = includesAnyText(text, [
-            'offline_threading_id',
-            'offlinethreadingid',
-            'client_message_id',
-            'clientmessageid',
-            'client_mutation_id',
-            'clientmutationid',
-            'message_id',
-            'messageid',
-            'otid'
+            "offline_threading_id",
+            "offlinethreadingid",
+            "client_message_id",
+            "clientmessageid",
+            "client_mutation_id",
+            "clientmutationid",
+            "message_id",
+            "messageid",
+            "otid",
         ]);
         const hasLocalSendState = includesAnyText(text, [
-            'send_state',
-            'sendstate',
-            'sending',
-            'pending',
-            'send_type',
-            'sendtype'
+            "send_state",
+            "sendstate",
+            "sending",
+            "pending",
+            "send_type",
+            "sendtype",
         ]);
         const hasLocalSendPayload = includesAnyText(text, [
-            'message',
-            'text',
-            'body',
-            'attachment',
-            'sticker',
-            'media',
-            'encrypted_message',
-            'encryptedmessage',
-            'encrypted_payload',
-            'encryptedpayload',
-            'reaction',
-            'emoji',
-            'quick_like',
-            'quicklike'
+            "message",
+            "text",
+            "body",
+            "attachment",
+            "sticker",
+            "media",
+            "encrypted_message",
+            "encryptedmessage",
+            "encrypted_payload",
+            "encryptedpayload",
+            "reaction",
+            "emoji",
+            "quick_like",
+            "quicklike",
         ]);
 
         if (hasClientMessageId && hasLocalSendState && hasLocalSendPayload) {
@@ -2711,140 +3540,159 @@ import {
         }
 
         const stripped = stripFalseyPrivacyFields(text);
-        if (hasExplicitSeenWriteIntent(stripped) ||
+        if (
+            hasExplicitSeenWriteIntent(stripped) ||
             hasStrictReadReceiptWriteCommand(stripped) ||
-            hasDedicatedServerReadReceiptIntent(stripped)) {
+            hasDedicatedServerReadReceiptIntent(stripped)
+        ) {
             return false;
         }
 
-        return includesAnyText(text, [
-            'offline_threading_id',
-            'offlinethreadingid',
-            'client_message_id',
-            'clientmessageid',
-            'client_mutation_id',
-            'clientmutationid',
-            'message_id',
-            'messageid',
-            'otid'
-        ]) && includesAnyText(text, [
-            'send_state',
-            'sendstate',
-            'delivery_receipt',
-            'deliveryreceipt',
-            'delivery_receipts',
-            'message_delivered',
-            'messagedelivered',
-            'sent',
-            'delivered'
-        ]);
+        return (
+            includesAnyText(text, [
+                "offline_threading_id",
+                "offlinethreadingid",
+                "client_message_id",
+                "clientmessageid",
+                "client_mutation_id",
+                "clientmutationid",
+                "message_id",
+                "messageid",
+                "otid",
+            ]) &&
+            includesAnyText(text, [
+                "send_state",
+                "sendstate",
+                "delivery_receipt",
+                "deliveryreceipt",
+                "delivery_receipts",
+                "message_delivered",
+                "messagedelivered",
+                "sent",
+                "delivered",
+            ])
+        );
     }
 
     function isLocalSendStateMutationText(text) {
         if (!isFacebookDotCom && !isFacebookMessengerProxy) return false;
         if (!hasMessengerThreadTarget(text)) return false;
         const hasClientMessageId = includesAnyText(text, [
-            'offline_threading_id',
-            'offlinethreadingid',
-            'client_message_id',
-            'clientmessageid',
-            'client_mutation_id',
-            'clientmutationid',
-            'message_id',
-            'messageid',
-            'otid'
+            "offline_threading_id",
+            "offlinethreadingid",
+            "client_message_id",
+            "clientmessageid",
+            "client_mutation_id",
+            "clientmutationid",
+            "message_id",
+            "messageid",
+            "otid",
         ]);
         const hasSendState = includesAnyText(text, [
-            'send_state',
-            'sendstate',
-            'send_type',
-            'sendtype',
-            'sending',
-            'pending',
-            'sent',
-            'delivered',
-            'delivery_receipt',
-            'deliveryreceipt'
+            "send_state",
+            "sendstate",
+            "send_type",
+            "sendtype",
+            "sending",
+            "pending",
+            "sent",
+            "delivered",
+            "delivery_receipt",
+            "deliveryreceipt",
         ]);
         return hasClientMessageId && hasSendState;
     }
 
     function isLocalReadPositionalI64MutationArgs(args) {
-        if (!isFacebookDotCom || isFacebookMessengerProxy || isMessengerDotCom) return false;
-        if (!Array.isArray(args) || args.length < 2 || args.length > 4) return false;
+        if (!isFacebookDotCom || isFacebookMessengerProxy || isMessengerDotCom)
+            return false;
+        if (!Array.isArray(args) || args.length < 2 || args.length > 4)
+            return false;
         if (!isI64Pair(args[0]) || !isI64Pair(args[1])) return false;
-        return args.slice(2).every(value => value == null ||
-            typeof value === 'number' ||
-            typeof value === 'boolean');
+        return args
+            .slice(2)
+            .every(
+                (value) =>
+                    value == null ||
+                    typeof value === "number" ||
+                    typeof value === "boolean",
+            );
     }
 
     function isI64Pair(value) {
-        return Array.isArray(value) &&
+        return (
+            Array.isArray(value) &&
             value.length === 2 &&
-            value.every(part => Number.isInteger(part) && part >= -2147483648 && part <= 4294967295);
+            value.every(
+                (part) =>
+                    Number.isInteger(part) &&
+                    part >= -2147483648 &&
+                    part <= 4294967295,
+            )
+        );
     }
 
     function isTypingExportName(exportName, allowDefault = false) {
-        const name = String(exportName || '').toLowerCase();
+        const name = String(exportName || "").toLowerCase();
         return (
-            (allowDefault && name === 'default') ||
-            name.includes('sendtyping') ||
-            name.includes('send_typing') ||
-            name.includes('sendchatstate') ||
-            name.includes('send_chat_state') ||
-            name.includes('typingindicator')
+            (allowDefault && name === "default") ||
+            name.includes("sendtyping") ||
+            name.includes("send_typing") ||
+            name.includes("sendchatstate") ||
+            name.includes("send_chat_state") ||
+            name.includes("typingindicator")
         );
     }
 
     function isTypingDependency(moduleName) {
-        const name = String(moduleName || '').toLowerCase();
+        const name = String(moduleName || "").toLowerCase();
         return (
-            name.includes('sendchatstatefromcomposer') ||
-            name.includes('sendtypingindicator') ||
-            name.includes('send_typing_indicator') ||
-            name.includes('typingindicatorstoredprocedure') ||
-            name.includes('sendchatstate') ||
-            name.includes('send_chat_state') ||
-            (name.includes('typing') && name.includes('send'))
+            name.includes("sendchatstatefromcomposer") ||
+            name.includes("sendtypingindicator") ||
+            name.includes("send_typing_indicator") ||
+            name.includes("typingindicatorstoredprocedure") ||
+            name.includes("sendchatstate") ||
+            name.includes("send_chat_state") ||
+            (name.includes("typing") && name.includes("send"))
         );
     }
 
     function isSecureTypingStateDependency(moduleName) {
-        const name = String(moduleName || '').toLowerCase();
-        return name.includes('securetypingstate');
+        const name = String(moduleName || "").toLowerCase();
+        return name.includes("securetypingstate");
     }
 
     function isReadReceiptExportName(exportName, allowDefault = false) {
-        const name = String(exportName || '').toLowerCase();
+        const name = String(exportName || "").toLowerCase();
         return (
-            (allowDefault && name === 'default') ||
-            name.includes('sendreadreceipt') ||
-            name.includes('send_read_receipt') ||
-            name.includes('lssendreadreceipt') ||
-            name.includes('readreceiptmutation')
+            (allowDefault && name === "default") ||
+            name.includes("sendreadreceipt") ||
+            name.includes("send_read_receipt") ||
+            name.includes("lssendreadreceipt") ||
+            name.includes("readreceiptmutation")
         );
     }
 
     function isLocalReadReceiptExportName(exportName, allowDefault = false) {
-        const name = String(exportName || '').toLowerCase();
+        const name = String(exportName || "").toLowerCase();
         return (
-            (allowDefault && name === 'default') ||
-            name.includes('markthreadasread') ||
-            name.includes('mark_thread_as_read') ||
-            name.includes('markthreadread') ||
-            name.includes('markread') ||
-            name.includes('mark_read') ||
-            name.includes('markseen') ||
-            name.includes('mark_seen') ||
-            name.includes('markasread') ||
-            name.includes('readwatermark') ||
-            name.includes('read_watermark') ||
-            name.includes('lastreadwatermark') ||
-            name.includes('updatelastseenat') ||
-            name.includes('lsupdatethreadreadwatermark') ||
-            name.includes('lsmarkthreadread') ||
-            name.includes('mwmarkthreadread') ||
-            name.includes('lsupdatelastreadwatermark')
+            (allowDefault && name === "default") ||
+            name.includes("markthreadasread") ||
+            name.includes("mark_thread_as_read") ||
+            name.includes("markthreadread") ||
+            name.includes("markread") ||
+            name.includes("mark_read") ||
+            name.includes("markseen") ||
+            name.includes("mark_seen") ||
+            name.includes("markasread") ||
+            name.includes("readwatermark") ||
+            name.includes("read_watermark") ||
+            name.includes("lastreadwatermark") ||
+            name.includes("updatelastseenat") ||
+            name.includes("lsupdatethreadreadwatermark") ||
+            name.includes("lsmarkthreadread") ||
+            name.includes("mwmarkthreadread") ||
+            name.includes("lsupdatelastreadwatermark")
         );
     }
 
@@ -2852,11 +3700,11 @@ import {
         if (!isMessenger) return false;
 
         return [
-            'sendreadreceipt',
-            'lssendreadreceipt',
-            'lssendreadreceiptstoredprocedure',
-            'readreceiptmutation',
-            'sendreadreceiptmutation'
+            "sendreadreceipt",
+            "lssendreadreceipt",
+            "lssendreadreceiptstoredprocedure",
+            "readreceiptmutation",
+            "sendreadreceiptmutation",
         ].includes(normalizeReadOperationIdentity(moduleName));
     }
 
@@ -2865,74 +3713,92 @@ import {
         if (isPreservedMawReadInfrastructure(moduleName)) return false;
 
         return [
-            'markthreadasread',
-            'lsmarkthreadasread',
-            'mwmarkthreadasread',
-            'usemwlsmarkthreadasread',
-            'usemawmarkthreadasread',
-            'usemwpsafelymarkthreadasread',
-            'usemwmarkthreadasreadwhennewmessagesarrive',
-            'mawmarkthreadasread',
-            'lsupdatethreadreadwatermark',
-            'lsmarkthreadreadv2',
-            'mwmarkthreadread',
-            'lsupdatelastreadwatermark',
-            'markthreadread',
-            'updatelastreadwatermark',
-            'updatethreadreadwatermark'
+            "markthreadasread",
+            "lsmarkthreadasread",
+            "mwmarkthreadasread",
+            "usemwlsmarkthreadasread",
+            "usemawmarkthreadasread",
+            "usemwpsafelymarkthreadasread",
+            "usemwmarkthreadasreadwhennewmessagesarrive",
+            "mawmarkthreadasread",
+            "lsupdatethreadreadwatermark",
+            "lsmarkthreadreadv2",
+            "mwmarkthreadread",
+            "lsupdatelastreadwatermark",
+            "markthreadread",
+            "updatelastreadwatermark",
+            "updatethreadreadwatermark",
         ].includes(normalizeReadOperationIdentity(moduleName));
     }
 
     function normalizeReadOperationIdentity(value) {
-        return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return String(value || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
     }
 
     function isSendOpenMessageHookIdentity(value) {
         return [
-            'usemwv2sendopenmessage',
-            'usemwv2sendopenmessageimpl',
-            'usemwv2sendopenmessageimplshared'
+            "usemwv2sendopenmessage",
+            "usemwv2sendopenmessageimpl",
+            "usemwv2sendopenmessageimplshared",
         ].includes(normalizeReadOperationIdentity(value));
     }
 
     function shouldPatchSendOpenMessageHook(moduleName) {
         const isTopFrame = window.top == null || window.top === window;
-        return isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy && isTopFrame &&
-            isSendOpenMessageHookIdentity(moduleName);
+        return (
+            isFacebookDotCom &&
+            !isMessengerDotCom &&
+            !isFacebookMessengerProxy &&
+            isTopFrame &&
+            isSendOpenMessageHookIdentity(moduleName)
+        );
     }
 
     function shouldPatchOptimisticMarkThreadReadConsumer(moduleName) {
         const isTopFrame = window.top == null || window.top === window;
-        return isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy && isTopFrame &&
-            normalizeReadOperationIdentity(moduleName) === 'lsoptimisticmarkthreadreadv2';
+        return (
+            isFacebookDotCom &&
+            !isMessengerDotCom &&
+            !isFacebookMessengerProxy &&
+            isTopFrame &&
+            normalizeReadOperationIdentity(moduleName) ===
+                "lsoptimisticmarkthreadreadv2"
+        );
     }
 
     function isOptimisticMarkThreadReadLeafIdentity(value) {
-        return normalizeReadOperationIdentity(value) === 'lsmarkthreadread';
+        return normalizeReadOperationIdentity(value) === "lsmarkthreadread";
     }
 
     function wrapOptimisticMarkThreadReadLeaf(fn) {
-        if (typeof fn !== 'function') return fn;
+        if (typeof fn !== "function") return fn;
         const cached = optimisticMarkThreadReadLeafWrappers.get(fn);
         if (cached) return cached;
 
         const wrapped = new Proxy(fn, {
             apply(target, thisArg, args) {
-                if (!window.__ghostify_shouldBlockMessengerSeen() ||
+                if (
+                    !window.__ghostify_shouldBlockMessengerSeen() ||
                     hasNativeMessageRequestBypass() ||
-                    isCurrentMessageRequestSurface()) {
+                    isCurrentMessageRequestSurface()
+                ) {
                     return Reflect.apply(target, thisArg, args);
                 }
 
                 const runtime = args[args.length - 1];
-                if (!runtime || typeof runtime.resolve !== 'function') {
+                if (!runtime || typeof runtime.resolve !== "function") {
                     return Reflect.apply(target, thisArg, args);
                 }
 
-                window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
-                window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0) + 1;
+                window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
+                    (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
+                window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ =
+                    (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
+                        0) + 1;
                 return Reflect.apply(runtime.resolve, runtime, [[]]);
-            }
+            },
         });
         optimisticMarkThreadReadLeafWrappers.set(fn, wrapped);
         return wrapped;
@@ -2941,84 +3807,104 @@ import {
     function wrapOptimisticMarkThreadReadRequire(factoryArgs, moduleName) {
         if (!shouldPatchOptimisticMarkThreadReadConsumer(moduleName)) return;
         const originalRequire = factoryArgs[1];
-        if (typeof originalRequire !== 'function' || originalRequire.__ghostifyOptimisticReadRequireWrapped) return;
+        if (
+            typeof originalRequire !== "function" ||
+            originalRequire.__ghostifyOptimisticReadRequireWrapped
+        )
+            return;
 
         const wrappedRequire = function (requestedName) {
             const required = originalRequire.apply(this, arguments);
-            return isOptimisticMarkThreadReadLeafIdentity(requestedName) && typeof required === 'function'
+            return isOptimisticMarkThreadReadLeafIdentity(requestedName) &&
+                typeof required === "function"
                 ? wrapOptimisticMarkThreadReadLeaf(required)
                 : required;
         };
         try {
-            Object.defineProperty(wrappedRequire, '__ghostifyOptimisticReadRequireWrapped', {
-                value: true,
-                configurable: true
-            });
-        } catch (e) { }
+            Object.defineProperty(
+                wrappedRequire,
+                "__ghostifyOptimisticReadRequireWrapped",
+                {
+                    value: true,
+                    configurable: true,
+                },
+            );
+        } catch (e) {}
         factoryArgs[1] = wrappedRequire;
     }
 
     function isExactMarkThreadAsReadIdentity(value) {
         return [
-            'markthreadasread',
-            'lsmarkthreadasread',
-            'mwmarkthreadasread'
+            "markthreadasread",
+            "lsmarkthreadasread",
+            "mwmarkthreadasread",
         ].includes(normalizeReadOperationIdentity(value));
     }
 
     function isMarkThreadAsReadHookIdentity(value) {
         const name = normalizeReadOperationIdentity(value);
         return [
-            'usemwlsmarkthreadasread',
-            'usemawmarkthreadasread',
-            'usemwpsafelymarkthreadasread',
-            'usemwmarkthreadasreadwhennewmessagesarrive'
+            "usemwlsmarkthreadasread",
+            "usemawmarkthreadasread",
+            "usemwpsafelymarkthreadasread",
+            "usemwmarkthreadasreadwhennewmessagesarrive",
         ].includes(name);
     }
 
     function isPromiseMarkThreadAsReadIdentity(value) {
-        return [
-            'mawmarkthreadasread'
-        ].includes(normalizeReadOperationIdentity(value));
+        return ["mawmarkthreadasread"].includes(
+            normalizeReadOperationIdentity(value),
+        );
     }
 
-    function isObservedGroupLocalReadMutationIdentity(value) {
+    function isObservedGroupLocalReadMutationIdentity(_value) {
         return false;
     }
 
     function isPositionalLocalReadMutationIdentity(value) {
         return [
-            'lsupdatethreadreadwatermark',
-            'lsmarkthreadreadv2',
-            'mwmarkthreadread'
+            "lsupdatethreadreadwatermark",
+            "lsmarkthreadreadv2",
+            "mwmarkthreadread",
         ].includes(normalizeReadOperationIdentity(value));
     }
 
     function isPreservedMawReadInfrastructure(value) {
         return [
-            'mawmarkthreadasreadscheduler',
-            'mawmarkthreadasreadtxns',
-            'mawmarkthreadasreaduptoapi'
+            "mawmarkthreadasreadscheduler",
+            "mawmarkthreadasreadtxns",
+            "mawmarkthreadasreaduptoapi",
         ].includes(normalizeReadOperationIdentity(value));
     }
 
     function getLocalReadReceiptMode(moduleName) {
-        const isFacebookLocalSurface = (isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom;
-        if (!isFacebookLocalSurface) return 'sanitize';
-        if (isMarkThreadAsReadHookIdentity(moduleName)) return 'wrap-local-read-result';
-        if (isPromiseMarkThreadAsReadIdentity(moduleName)) return 'block-local-read-promise';
-        if (isFacebookDotCom && (
-            isExactMarkThreadAsReadIdentity(moduleName) ||
-            isObservedGroupLocalReadMutationIdentity(moduleName)
-        )) return 'block-local-read';
-        if (isFacebookDotCom && isPositionalLocalReadMutationIdentity(moduleName)) {
-            return 'sanitize-block-positional-local-read';
+        const isFacebookLocalSurface =
+            (isFacebookDotCom || isFacebookMessengerProxy) &&
+            !isMessengerDotCom;
+        if (!isFacebookLocalSurface) return "sanitize";
+        if (isMarkThreadAsReadHookIdentity(moduleName))
+            return "wrap-local-read-result";
+        if (isPromiseMarkThreadAsReadIdentity(moduleName))
+            return "block-local-read-promise";
+        if (
+            isFacebookDotCom &&
+            (isExactMarkThreadAsReadIdentity(moduleName) ||
+                isObservedGroupLocalReadMutationIdentity(moduleName))
+        )
+            return "block-local-read";
+        if (
+            isFacebookDotCom &&
+            isPositionalLocalReadMutationIdentity(moduleName)
+        ) {
+            return "sanitize-block-positional-local-read";
         }
-        return 'sanitize';
+        return "sanitize";
     }
 
     function moduleNameMatches(moduleName, pattern) {
-        return String(moduleName || '').toLowerCase().includes(String(pattern || '').toLowerCase());
+        return String(moduleName || "")
+            .toLowerCase()
+            .includes(String(pattern || "").toLowerCase());
     }
 
     const exportCallbacks = {};
@@ -3029,47 +3915,68 @@ import {
         exportCallbacks[moduleName].push(callback);
     }
 
-    function registerFactoryCallback(moduleName, callback) {
-        factoryCallbacks[moduleName] = factoryCallbacks[moduleName] || [];
-        factoryCallbacks[moduleName].push(callback);
-    }
-
     function wrapTypingRequire(factoryArgs, options = {}) {
-        [1, 2, 3].forEach(index => {
+        [1, 2, 3].forEach((index) => {
             const originalRequire = factoryArgs[index];
-            if (typeof originalRequire !== 'function') return;
+            if (typeof originalRequire !== "function") return;
             if (originalRequire.__ghostifyTypingRequireWrapped) return;
 
             factoryArgs[index] = function (moduleName) {
                 const required = originalRequire.apply(this, arguments);
                 let protectedExport = required;
-                if (isTypingDependency(moduleName) || (options.inspectExports && hasTypingExport(protectedExport))) {
-                    protectedExport = wrapTypingExport(protectedExport, isTypingDependency(moduleName));
+                if (
+                    isTypingDependency(moduleName) ||
+                    (options.inspectExports && hasTypingExport(protectedExport))
+                ) {
+                    protectedExport = wrapTypingExport(
+                        protectedExport,
+                        isTypingDependency(moduleName),
+                    );
                 }
-                const localReadReceiptRequire = isLocalReadReceiptDependency(moduleName) ||
-                    (options.inspectExports && hasLocalReadReceiptExport(protectedExport));
-                if (shouldPatchReadReceiptModules() &&
-                    (shouldPatchLocalReadReceiptModules() || !localReadReceiptRequire) &&
-                    !shouldLeaveLocalReadReceiptModuleUnpatched(localReadReceiptRequire) &&
-                    (isReadReceiptDependency(moduleName) || isLocalReadReceiptDependency(moduleName) || (options.inspectExports && hasReadReceiptExport(protectedExport)))) {
+                const localReadReceiptRequire =
+                    isLocalReadReceiptDependency(moduleName) ||
+                    (options.inspectExports &&
+                        hasLocalReadReceiptExport(protectedExport));
+                if (
+                    shouldPatchReadReceiptModules() &&
+                    (shouldPatchLocalReadReceiptModules() ||
+                        !localReadReceiptRequire) &&
+                    !shouldLeaveLocalReadReceiptModuleUnpatched(
+                        localReadReceiptRequire,
+                    ) &&
+                    (isReadReceiptDependency(moduleName) ||
+                        isLocalReadReceiptDependency(moduleName) ||
+                        (options.inspectExports &&
+                            hasReadReceiptExport(protectedExport)))
+                ) {
                     protectedExport = wrapReadReceiptExport(
                         protectedExport,
-                        isReadReceiptDependency(moduleName) || isLocalReadReceiptDependency(moduleName),
-                        isLocalReadReceiptDependency(moduleName) ? getLocalReadReceiptMode(moduleName) : 'block'
+                        isReadReceiptDependency(moduleName) ||
+                            isLocalReadReceiptDependency(moduleName),
+                        isLocalReadReceiptDependency(moduleName)
+                            ? getLocalReadReceiptMode(moduleName)
+                            : "block",
                     );
                 }
                 if (shouldPatchSendOpenMessageHook(moduleName)) {
-                    protectedExport = wrapSendOpenMessageExport(protectedExport, moduleName);
+                    protectedExport = wrapSendOpenMessageExport(
+                        protectedExport,
+                        moduleName,
+                    );
                 }
                 return protectedExport;
             };
 
             try {
-                Object.defineProperty(factoryArgs[index], '__ghostifyTypingRequireWrapped', {
-                    value: true,
-                    configurable: true
-                });
-            } catch (e) { }
+                Object.defineProperty(
+                    factoryArgs[index],
+                    "__ghostifyTypingRequireWrapped",
+                    {
+                        value: true,
+                        configurable: true,
+                    },
+                );
+            } catch (e) {}
         });
     }
 
@@ -3077,36 +3984,46 @@ import {
         for (const candidate of factoryArgs) {
             if (!isPatchableExportContainer(candidate)) continue;
 
-            if ('exports' in candidate) {
+            if ("exports" in candidate) {
                 try {
-                    candidate.exports = wrapTypingExport(candidate.exports, true);
-                } catch (e) { }
+                    candidate.exports = wrapTypingExport(
+                        candidate.exports,
+                        true,
+                    );
+                } catch (e) {}
             }
 
             wrapTypingExport(candidate, true);
         }
     }
 
-    registerExportCallback('LSSendTypingIndicator', blockTypingExports);
+    registerExportCallback("LSSendTypingIndicator", blockTypingExports);
 
-    registerExportCallback('LSSendTypingIndicatorStoredProcedure', blockTypingExports);
+    registerExportCallback(
+        "LSSendTypingIndicatorStoredProcedure",
+        blockTypingExports,
+    );
 
     function blockReadReceiptExports(factoryArgs) {
-        patchReadReceiptExports(factoryArgs, 'block');
+        patchReadReceiptExports(factoryArgs, "block");
     }
 
     function sanitizeReadReceiptExports(factoryArgs) {
-        patchReadReceiptExports(factoryArgs, 'sanitize');
+        patchReadReceiptExports(factoryArgs, "sanitize");
     }
 
     function patchReadReceiptExports(factoryArgs, mode) {
         for (const candidate of factoryArgs) {
             if (!isPatchableExportContainer(candidate)) continue;
 
-            if ('exports' in candidate) {
+            if ("exports" in candidate) {
                 try {
-                    candidate.exports = wrapReadReceiptExport(candidate.exports, true, mode);
-                } catch (e) { }
+                    candidate.exports = wrapReadReceiptExport(
+                        candidate.exports,
+                        true,
+                        mode,
+                    );
+                } catch (e) {}
             }
 
             wrapReadReceiptExport(candidate, true, mode);
@@ -3116,78 +4033,107 @@ import {
     function patchSendOpenMessageExports(factoryArgs, moduleName) {
         for (const candidate of factoryArgs) {
             if (!isPatchableExportContainer(candidate)) continue;
-            if ('exports' in candidate) {
+            if ("exports" in candidate) {
                 try {
-                    candidate.exports = wrapSendOpenMessageExport(candidate.exports, moduleName);
-                } catch (e) { }
+                    candidate.exports = wrapSendOpenMessageExport(
+                        candidate.exports,
+                        moduleName,
+                    );
+                } catch (e) {}
             }
             wrapSendOpenMessageExport(candidate, moduleName);
         }
     }
 
     function wrapSendOpenMessageExport(value, moduleName) {
-        if (typeof value === 'function') {
-            return wrapReadReceiptFunction(value, 'force-disable-mark-read');
+        if (typeof value === "function") {
+            return wrapReadReceiptFunction(value, "force-disable-mark-read");
         }
-        if (!value || typeof value !== 'object') return value;
+        if (!value || typeof value !== "object") return value;
         const moduleIdentity = normalizeReadOperationIdentity(moduleName);
         for (const key of Object.getOwnPropertyNames(value)) {
             let candidate;
-            try { candidate = value[key]; } catch (e) { continue; }
-            if (typeof candidate !== 'function') continue;
-            const keyIdentity = normalizeReadOperationIdentity(key);
-            const functionIdentity = normalizeReadOperationIdentity(candidate.name);
-            if (keyIdentity !== 'default' && keyIdentity !== moduleIdentity && functionIdentity !== moduleIdentity) continue;
             try {
-                value[key] = wrapReadReceiptFunction(candidate, 'force-disable-mark-read');
-            } catch (e) { }
+                candidate = value[key];
+            } catch (e) {
+                continue;
+            }
+            if (typeof candidate !== "function") continue;
+            const keyIdentity = normalizeReadOperationIdentity(key);
+            const functionIdentity = normalizeReadOperationIdentity(
+                candidate.name,
+            );
+            if (
+                keyIdentity !== "default" &&
+                keyIdentity !== moduleIdentity &&
+                functionIdentity !== moduleIdentity
+            )
+                continue;
+            try {
+                value[key] = wrapReadReceiptFunction(
+                    candidate,
+                    "force-disable-mark-read",
+                );
+            } catch (e) {}
         }
         return value;
     }
 
     function isPatchableExportContainer(candidate) {
-        if (!candidate || typeof candidate !== 'object') return false;
-        if (candidate === window || candidate === document || candidate === globalThis) return false;
+        if (!candidate || typeof candidate !== "object") return false;
+        if (
+            candidate === window ||
+            candidate === document ||
+            candidate === globalThis
+        )
+            return false;
 
         try {
-            return 'exports' in candidate || Object.getOwnPropertyNames(candidate).length <= 100;
+            return (
+                "exports" in candidate ||
+                Object.getOwnPropertyNames(candidate).length <= 100
+            );
         } catch (e) {
             return false;
         }
     }
 
-    [
-        'LSSendReadReceipt',
-        'SendReadReceipt',
-        'ReadReceiptMutation'
-    ].forEach(name => registerExportCallback(name, blockReadReceiptExports));
+    ["LSSendReadReceipt", "SendReadReceipt", "ReadReceiptMutation"].forEach(
+        (name) => registerExportCallback(name, blockReadReceiptExports),
+    );
 
     [
-        'LSUpdateThreadReadWatermark',
-        'MWMarkThreadRead',
-        'LSUpdateLastReadWatermark',
-        'MarkThreadRead',
-        'UpdateLastReadWatermark',
-        'UpdateThreadReadWatermark'
-    ].forEach(name => registerExportCallback(name, sanitizeReadReceiptExports));
+        "LSUpdateThreadReadWatermark",
+        "MWMarkThreadRead",
+        "LSUpdateLastReadWatermark",
+        "MarkThreadRead",
+        "UpdateLastReadWatermark",
+        "UpdateThreadReadWatermark",
+    ].forEach((name) =>
+        registerExportCallback(name, sanitizeReadReceiptExports),
+    );
 
     function applyExportCallbacks(factoryArgs, moduleName) {
         for (const [pattern, callbacks] of Object.entries(exportCallbacks)) {
-            const containsExactReadCallback = callbacks.includes(sanitizeReadReceiptExports) ||
+            const containsExactReadCallback =
+                callbacks.includes(sanitizeReadReceiptExports) ||
                 callbacks.includes(blockReadReceiptExports);
             const matches = containsExactReadCallback
-                ? normalizeReadOperationIdentity(moduleName) === normalizeReadOperationIdentity(pattern)
+                ? normalizeReadOperationIdentity(moduleName) ===
+                  normalizeReadOperationIdentity(pattern)
                 : moduleNameMatches(moduleName, pattern);
             if (matches) {
                 for (const callback of callbacks) {
                     try {
                         if (callback === sanitizeReadReceiptExports) {
-                            patchReadReceiptExports(factoryArgs, getLocalReadReceiptMode(moduleName));
+                            patchReadReceiptExports(
+                                factoryArgs,
+                                getLocalReadReceiptMode(moduleName),
+                            );
                         } else {
                             callback(factoryArgs);
                         }
-                    } catch (e) {
-                    }
+                    } catch (e) {}
                 }
             }
         }
@@ -3199,8 +4145,7 @@ import {
                 for (const callback of callbacks) {
                     try {
                         callback(factoryArgs);
-                    } catch (e) {
-                    }
+                    } catch (e) {}
                 }
             }
         }
@@ -3208,38 +4153,48 @@ import {
 
     function hasExportCallback(moduleName) {
         return Object.entries(exportCallbacks).some(([pattern, callbacks]) => {
-            if (callbacks.includes(sanitizeReadReceiptExports) || callbacks.includes(blockReadReceiptExports)) {
-                return normalizeReadOperationIdentity(moduleName) === normalizeReadOperationIdentity(pattern);
+            if (
+                callbacks.includes(sanitizeReadReceiptExports) ||
+                callbacks.includes(blockReadReceiptExports)
+            ) {
+                return (
+                    normalizeReadOperationIdentity(moduleName) ===
+                    normalizeReadOperationIdentity(pattern)
+                );
             }
             return moduleNameMatches(moduleName, pattern);
         });
     }
 
     function hasFactoryCallback(moduleName) {
-        return Object.keys(factoryCallbacks).some(pattern => moduleNameMatches(moduleName, pattern));
+        return Object.keys(factoryCallbacks).some((pattern) =>
+            moduleNameMatches(moduleName, pattern),
+        );
     }
 
     function hasTypingExportCallback(moduleName) {
-        return ['LSSendTypingIndicator', 'LSSendTypingIndicatorStoredProcedure']
-            .some(pattern => moduleNameMatches(moduleName, pattern));
+        return [
+            "LSSendTypingIndicator",
+            "LSSendTypingIndicatorStoredProcedure",
+        ].some((pattern) => moduleNameMatches(moduleName, pattern));
     }
 
     function hasLocalReadReceiptExportCallback(moduleName) {
         return [
-            'lsupdatethreadreadwatermark',
-            'mwmarkthreadread',
-            'lsupdatelastreadwatermark',
-            'markthreadread',
-            'updatelastreadwatermark',
-            'updatethreadreadwatermark'
+            "lsupdatethreadreadwatermark",
+            "mwmarkthreadread",
+            "lsupdatelastreadwatermark",
+            "markthreadread",
+            "updatelastreadwatermark",
+            "updatethreadreadwatermark",
         ].includes(normalizeReadOperationIdentity(moduleName));
     }
 
     function hasBlockingReadReceiptExportCallback(moduleName) {
         return [
-            'lssendreadreceipt',
-            'sendreadreceipt',
-            'readreceiptmutation'
+            "lssendreadreceipt",
+            "sendreadreceipt",
+            "readreceiptmutation",
         ].includes(normalizeReadOperationIdentity(moduleName));
     }
 
@@ -3248,23 +4203,33 @@ import {
     }
 
     function shouldPatchLocalReadReceiptModules() {
-        return isInstagram || ((isFacebookDotCom || isFacebookMessengerProxy) && !isMessengerDotCom);
+        return (
+            isInstagram ||
+            ((isFacebookDotCom || isFacebookMessengerProxy) &&
+                !isMessengerDotCom)
+        );
     }
 
-    function shouldLeaveLocalReadReceiptModuleUnpatched(isLocalReadReceiptModule) {
-        return isLocalReadReceiptModule &&
+    function shouldLeaveLocalReadReceiptModuleUnpatched(
+        isLocalReadReceiptModule,
+    ) {
+        return (
+            isLocalReadReceiptModule &&
             (!shouldPatchLocalReadReceiptModules() ||
                 hasNativeMessageRequestBypass() ||
-                isCurrentMessageRequestSurface());
+                isCurrentMessageRequestSurface())
+        );
     }
 
     function isFacebookFeedMessengerSurface() {
         if (!isFacebookDotCom || isMessengerDotCom) return false;
-        const path = String(window.location?.pathname || '').toLowerCase();
-        const search = String(window.location?.search || '').toLowerCase();
-        const hash = String(window.location?.hash || '').toLowerCase();
-        if (path.startsWith('/messages') || path.startsWith('/messenger')) return false;
-        if (search.includes('sk=messages') || hash.includes('messages')) return false;
+        const path = String(window.location?.pathname || "").toLowerCase();
+        const search = String(window.location?.search || "").toLowerCase();
+        const hash = String(window.location?.hash || "").toLowerCase();
+        if (path.startsWith("/messages") || path.startsWith("/messenger"))
+            return false;
+        if (search.includes("sk=messages") || hash.includes("messages"))
+            return false;
 
         const hasMessengerPopover =
             hasDomElement('[role="dialog"][aria-label="Messenger"]') &&
@@ -3276,146 +4241,232 @@ import {
             hasDomElement('[aria-label="Close chat"]');
         if (!hasMiniChatChrome) return false;
 
-        return hasDomElement('[role="textbox"][contenteditable="true"]') ||
+        return (
+            hasDomElement('[role="textbox"][contenteditable="true"]') ||
             hasDomElement('[aria-label^="Write to"]') ||
             hasDomElement('[aria-label^="Messages in conversation"]') ||
-            hasDomElement('[aria-label^="Conversation titled"]');
+            hasDomElement('[aria-label^="Conversation titled"]')
+        );
     }
 
     function hasDomElement(selector) {
         try {
-            return typeof document?.querySelector === 'function' && !!document.querySelector(selector);
+            return (
+                typeof document?.querySelector === "function" &&
+                !!document.querySelector(selector)
+            );
         } catch (e) {
             return false;
         }
     }
 
     function shouldProcessModule(moduleName, dependencies) {
-        const hasSendOpenMessageHook = shouldPatchSendOpenMessageHook(moduleName);
-        const hasOptimisticMarkThreadReadConsumer = shouldPatchOptimisticMarkThreadReadConsumer(moduleName);
-        if (isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy) {
+        const hasSendOpenMessageHook =
+            shouldPatchSendOpenMessageHook(moduleName);
+        const hasOptimisticMarkThreadReadConsumer =
+            shouldPatchOptimisticMarkThreadReadConsumer(moduleName);
+        if (
+            isFacebookDotCom &&
+            !isMessengerDotCom &&
+            !isFacebookMessengerProxy
+        ) {
             // Facebook's thread-list hydration modules share broad read-watermark
             // dependencies. Wrapping those factories breaks the native chat loader.
             // Keep the top-frame patch limited to the two confirmed open/read leaves.
-            return hasSendOpenMessageHook || hasOptimisticMarkThreadReadConsumer;
+            return (
+                hasSendOpenMessageHook || hasOptimisticMarkThreadReadConsumer
+            );
         }
-        if (shouldPatchOptimisticMarkThreadReadConsumer(moduleName)) return false;
-        const hasTypingModule = isTypingDependency(moduleName) ||
-            (Array.isArray(dependencies) && dependencies.some(isTypingDependency)) ||
+        if (shouldPatchOptimisticMarkThreadReadConsumer(moduleName))
+            return false;
+        const hasTypingModule =
+            isTypingDependency(moduleName) ||
+            (Array.isArray(dependencies) &&
+                dependencies.some(isTypingDependency)) ||
             hasFactoryCallback(moduleName) ||
             hasTypingExportCallback(moduleName);
 
-        const hasLocalReadReceiptModule = isLocalReadReceiptDependency(moduleName) ||
+        const hasLocalReadReceiptModule =
+            isLocalReadReceiptDependency(moduleName) ||
             hasLocalReadReceiptExportCallback(moduleName) ||
-            (Array.isArray(dependencies) && dependencies.some(isLocalReadReceiptDependency));
+            (Array.isArray(dependencies) &&
+                dependencies.some(isLocalReadReceiptDependency));
 
-        if (shouldLeaveLocalReadReceiptModuleUnpatched(hasLocalReadReceiptModule)) {
-            return hasSendOpenMessageHook ||
+        if (
+            shouldLeaveLocalReadReceiptModuleUnpatched(
+                hasLocalReadReceiptModule,
+            )
+        ) {
+            return (
+                hasSendOpenMessageHook ||
                 hasTypingModule ||
                 isReadReceiptDependency(moduleName) ||
                 hasBlockingReadReceiptExportCallback(moduleName) ||
-                (Array.isArray(dependencies) && dependencies.some(isReadReceiptDependency));
+                (Array.isArray(dependencies) &&
+                    dependencies.some(isReadReceiptDependency))
+            );
         }
 
-        const hasBlockingReadReceiptModule = isReadReceiptDependency(moduleName) ||
+        const hasBlockingReadReceiptModule =
+            isReadReceiptDependency(moduleName) ||
             hasBlockingReadReceiptExportCallback(moduleName) ||
-            (Array.isArray(dependencies) && dependencies.some(isReadReceiptDependency));
+            (Array.isArray(dependencies) &&
+                dependencies.some(isReadReceiptDependency));
 
         if (!shouldPatchReadReceiptModules()) {
             return hasSendOpenMessageHook || hasTypingModule;
         }
 
         if (!shouldPatchLocalReadReceiptModules()) {
-            return hasSendOpenMessageHook || hasTypingModule || hasBlockingReadReceiptModule;
+            return (
+                hasSendOpenMessageHook ||
+                hasTypingModule ||
+                hasBlockingReadReceiptModule
+            );
         }
 
-        return hasSendOpenMessageHook ||
+        return (
+            hasSendOpenMessageHook ||
             hasTypingModule ||
             isReadReceiptDependency(moduleName) ||
             isLocalReadReceiptDependency(moduleName) ||
-            (Array.isArray(dependencies) && (dependencies.some(isReadReceiptDependency) || dependencies.some(isLocalReadReceiptDependency))) ||
-            hasExportCallback(moduleName);
+            (Array.isArray(dependencies) &&
+                (dependencies.some(isReadReceiptDependency) ||
+                    dependencies.some(isLocalReadReceiptDependency))) ||
+            hasExportCallback(moduleName)
+        );
     }
 
     function setupModuleInterceptor() {
         let originalDefine = window.__d;
-        markPatchStatus('module_interceptor.install', { hasDefine: typeof window.__d === 'function' });
+        markPatchStatus("module_interceptor.install", {
+            hasDefine: typeof window.__d === "function",
+        });
 
         const createProxy = (target) => {
-            if (typeof target !== 'function') return target;
+            if (typeof target !== "function") return target;
 
             return new Proxy(target, {
                 apply: (fn, thisArg, args) => {
                     const moduleName = args[0];
                     const dependencies = Array.isArray(args[1]) ? args[1] : [];
-                    if (typeof moduleName === 'string') {
-                        const shouldProcess = shouldProcessModule(moduleName, dependencies);
+                    if (typeof moduleName === "string") {
+                        const shouldProcess = shouldProcessModule(
+                            moduleName,
+                            dependencies,
+                        );
                         if (shouldProcess) {
                             const originalFactory = args[2];
-                            if (typeof originalFactory !== 'function') {
+                            if (typeof originalFactory !== "function") {
                                 return fn.apply(thisArg, args);
                             }
-                            if (originalFactory.__ghostifyMessengerFactoryWrapped) {
+                            if (
+                                originalFactory.__ghostifyMessengerFactoryWrapped
+                            ) {
                                 return fn.apply(thisArg, args);
                             }
-                            const localReadReceiptModule = isLocalReadReceiptDependency(moduleName) ||
+                            const localReadReceiptModule =
+                                isLocalReadReceiptDependency(moduleName) ||
                                 hasLocalReadReceiptExportCallback(moduleName) ||
-                                (Array.isArray(dependencies) && dependencies.some(isLocalReadReceiptDependency));
-                            const avoidFactoryMutation = shouldLeaveLocalReadReceiptModuleUnpatched(localReadReceiptModule);
-                            const needsTypingExportWrap = isTypingDependency(moduleName);
-                            const sendOpenMessageHook = shouldPatchSendOpenMessageHook(moduleName);
-                            const optimisticMarkThreadReadConsumer = shouldPatchOptimisticMarkThreadReadConsumer(moduleName);
+                                (Array.isArray(dependencies) &&
+                                    dependencies.some(
+                                        isLocalReadReceiptDependency,
+                                    ));
+                            const avoidFactoryMutation =
+                                shouldLeaveLocalReadReceiptModuleUnpatched(
+                                    localReadReceiptModule,
+                                );
+                            const needsTypingExportWrap =
+                                isTypingDependency(moduleName);
+                            const sendOpenMessageHook =
+                                shouldPatchSendOpenMessageHook(moduleName);
+                            const optimisticMarkThreadReadConsumer =
+                                shouldPatchOptimisticMarkThreadReadConsumer(
+                                    moduleName,
+                                );
                             const readReceiptMode = sendOpenMessageHook
-                                ? 'force-disable-mark-read'
-                                : (isLocalReadReceiptDependency(moduleName)
-                                    ? getLocalReadReceiptMode(moduleName)
-                                    : 'block');
-                            const needsReadReceiptExportWrap = shouldPatchReadReceiptModules() && (
-                                sendOpenMessageHook ||
-                                isReadReceiptDependency(moduleName) ||
-                                (shouldPatchLocalReadReceiptModules() && isLocalReadReceiptDependency(moduleName))
-                            );
+                                ? "force-disable-mark-read"
+                                : isLocalReadReceiptDependency(moduleName)
+                                  ? getLocalReadReceiptMode(moduleName)
+                                  : "block";
+                            const needsReadReceiptExportWrap =
+                                shouldPatchReadReceiptModules() &&
+                                (sendOpenMessageHook ||
+                                    isReadReceiptDependency(moduleName) ||
+                                    (shouldPatchLocalReadReceiptModules() &&
+                                        isLocalReadReceiptDependency(
+                                            moduleName,
+                                        )));
                             const patchedFactory = originalFactory;
                             const factory = function (...factoryArgs) {
-                                if (!avoidFactoryMutation && !isSecureTypingStateDependency(moduleName)) {
+                                if (
+                                    !avoidFactoryMutation &&
+                                    !isSecureTypingStateDependency(moduleName)
+                                ) {
                                     if (optimisticMarkThreadReadConsumer) {
-                                        wrapOptimisticMarkThreadReadRequire(factoryArgs, moduleName);
+                                        wrapOptimisticMarkThreadReadRequire(
+                                            factoryArgs,
+                                            moduleName,
+                                        );
                                     } else {
                                         wrapTypingRequire(factoryArgs);
-                                        applyFactoryCallbacks(factoryArgs, moduleName);
+                                        applyFactoryCallbacks(
+                                            factoryArgs,
+                                            moduleName,
+                                        );
                                     }
                                 }
-                                const result = patchedFactory.apply(this, factoryArgs);
-                                if (needsTypingExportWrap) blockTypingExports(factoryArgs);
+                                const result = patchedFactory.apply(
+                                    this,
+                                    factoryArgs,
+                                );
+                                if (needsTypingExportWrap)
+                                    blockTypingExports(factoryArgs);
                                 if (needsReadReceiptExportWrap) {
-                                    if (sendOpenMessageHook) patchSendOpenMessageExports(factoryArgs, moduleName);
-                                    else patchReadReceiptExports(factoryArgs, readReceiptMode);
+                                    if (sendOpenMessageHook)
+                                        patchSendOpenMessageExports(
+                                            factoryArgs,
+                                            moduleName,
+                                        );
+                                    else
+                                        patchReadReceiptExports(
+                                            factoryArgs,
+                                            readReceiptMode,
+                                        );
                                 }
                                 applyExportCallbacks(factoryArgs, moduleName);
                                 return result;
                             };
                             try {
-                                Object.defineProperty(factory, '__ghostifyMessengerFactoryWrapped', {
-                                    value: true,
-                                    configurable: true
-                                });
-                            } catch (e) { }
+                                Object.defineProperty(
+                                    factory,
+                                    "__ghostifyMessengerFactoryWrapped",
+                                    {
+                                        value: true,
+                                        configurable: true,
+                                    },
+                                );
+                            } catch (e) {}
                             args[2] = factory;
                         }
                     }
                     return fn.apply(thisArg, args);
-                }
+                },
             });
         };
 
         if (window.__d) originalDefine = createProxy(window.__d);
 
-        Object.defineProperty(window, '__d', {
-            get: function () { return originalDefine; },
-            set: function (newValue) { originalDefine = createProxy(newValue); },
-            configurable: true
+        Object.defineProperty(window, "__d", {
+            get: function () {
+                return originalDefine;
+            },
+            set: function (newValue) {
+                originalDefine = createProxy(newValue);
+            },
+            configurable: true,
         });
-        markPatchStatus('module_interceptor.hooked', { ok: true });
+        markPatchStatus("module_interceptor.hooked", { ok: true });
     }
 
     if (isInstagram || isMessenger) {

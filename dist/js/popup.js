@@ -7,14 +7,13 @@ const DEFAULT_SETTINGS = {
     msgStory: true
 };
 
-
-const ELEMENT_MAP = {
-    'ig-typing': 'igTyping',
-    'ig-seen': 'igSeen',
-    'ig-story': 'igStory',
-    'msg-typing': 'msgTyping',
-    'msg-seen': 'msgSeen',
-    'msg-story': 'msgStory'
+const SETTING_INPUT_IDS = {
+    igTyping: 'ig-typing',
+    igSeen: 'ig-seen',
+    igStory: 'ig-story',
+    msgTyping: 'msg-typing',
+    msgSeen: 'msg-seen',
+    msgStory: 'msg-story'
 };
 
 const PUBLIC_STATUS_FEED_URL = 'https://ghostify-extension.vercel.app/status.json';
@@ -54,7 +53,7 @@ function loadSettings() {
     chrome.storage.local.get(['ghostifySettings'], (result) => {
         const settings = result.ghostifySettings || DEFAULT_SETTINGS;
 
-        Object.entries(ELEMENT_MAP).forEach(([elementId, settingKey]) => {
+        Object.entries(SETTING_INPUT_IDS).forEach(([settingKey, elementId]) => {
             const element = document.getElementById(elementId);
             if (element) {
                 element.checked = settings[settingKey];
@@ -74,14 +73,11 @@ function attachEventListeners() {
 }
 
 function saveSettings() {
-    const settings = {
-        igTyping: document.getElementById('ig-typing')?.checked ?? true,
-        igSeen: document.getElementById('ig-seen')?.checked ?? true,
-        igStory: document.getElementById('ig-story')?.checked ?? true,
-        msgTyping: document.getElementById('msg-typing')?.checked ?? true,
-        msgSeen: document.getElementById('msg-seen')?.checked ?? true,
-        msgStory: document.getElementById('msg-story')?.checked ?? true
-    };
+    const settings = {};
+
+    Object.entries(SETTING_INPUT_IDS).forEach(([settingKey, elementId]) => {
+        settings[settingKey] = document.getElementById(elementId)?.checked ?? DEFAULT_SETTINGS[settingKey];
+    });
 
     chrome.storage.local.set({ ghostifySettings: settings });
 }

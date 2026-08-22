@@ -4,17 +4,118 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ghostify — Read now. Reply when you’re ready.</title>
-    <meta name="description" content="Free, open-source browser privacy controls for supported Seen, Typing, and Story View signals on Instagram, Messenger, and Facebook." />
-    <meta name="theme-color" content="#f2eee5" />
-    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Free, open-source browser privacy controls for supported Seen, Typing, and Story View signals on Instagram, Messenger, and Facebook."
+    />
+    <meta name="theme-color" content="#f3eee2" />
+    <meta name="color-scheme" content="light" />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/src/assets/fonts/UncutSans-Variable.woff2"
+      crossorigin
+    />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Ghostify — Read now. Reply when you’re ready." />
-    <meta property="og:description" content="Browser-local privacy controls for supported Meta web app signals." />
+    <meta
+      property="og:description"
+      content="Browser-local privacy controls for supported Meta web app signals."
+    />
     <meta property="og:url" content="https://ghostify-extension.vercel.app/" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://ghostify-extension.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ghostify — Read now. Reply when you’re ready." />
+    <meta
+      name="twitter:description"
+      content="Browser-local privacy controls for supported Meta web app signals."
+    />
+    <meta name="twitter:image" content="https://ghostify-extension.vercel.app/og-image.png" />
     <link rel="canonical" href="https://ghostify-extension.vercel.app/" />
     <meta name="google-site-verification" content="CmJrFMQFj8nnnQa_iB177DaGzHrPMbSxeCZ2NIlppzQ" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "name": "Ghostify",
+            "applicationCategory": "BrowserApplication",
+            "operatingSystem": "Chrome, Edge, Firefox",
+            "url": "https://ghostify-extension.vercel.app/",
+            "description": "Free, open-source browser privacy controls for supported Seen, Typing, and Story View signals on Instagram, Messenger, and Facebook.",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "author": { "@type": "Person", "name": "Hendrizzzz" },
+            "license": "https://github.com/Hendrizzzz/Ghostify/blob/main/LICENSE"
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Why does Chrome say Ghostify can read and change data on these sites?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Meta’s own web-messaging proxy; Ghostify does not send your conversations, social activity, or tab URLs to a Ghostify server."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does Ghostify read my messages?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ghostify transiently inspects supported request URLs, payloads, and page or worker messages locally to identify privacy signals. It does not send conversations to Ghostify, store raw messages, or ask for social media passwords."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does it work in the mobile apps?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Ghostify is a browser extension for the web versions of Instagram, Facebook, and Messenger. It cannot affect the native iOS or Android apps."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which browsers are officially supported?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ghostify officially supports Google Chrome, Microsoft Edge, and Mozilla Firefox. Opera, Opera GX, Opera Air, Brave, Vivaldi, Arc, Dia, Yandex Browser, and NAVER Whale may also run the Chrome build when they permit Chrome Web Store extensions, but browser-specific policies can change."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I choose different controls for each platform?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Instagram has its own controls. Messenger and Facebook share a second group, and each supported signal can be switched independently."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can a platform update break a control?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Meta changes its web apps frequently. Ghostify publishes dated verification instead of promising permanent coverage and investigates credible reports when a control needs review."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What should I do after installing or updating?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Reload any open instagram.com, messenger.com, or facebook.com tabs so the current extension code starts before the page loads."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

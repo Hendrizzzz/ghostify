@@ -104,26 +104,36 @@ export function getEffectiveStatus(
   return entry.publicStatus;
 }
 
-export function getWorstStatus(entries: readonly VerificationEntry[], now = new Date()): PublicVerificationStatus {
-  return entries
-    .map((entry) => getEffectiveStatus(entry, now))
-    .sort((left, right) => STATUS_WEIGHT[right] - STATUS_WEIGHT[left])[0] || 'public_status_unavailable';
+export function getWorstStatus(
+  entries: readonly VerificationEntry[],
+  now = new Date(),
+): PublicVerificationStatus {
+  return (
+    entries
+      .map((entry) => getEffectiveStatus(entry, now))
+      .sort((left, right) => STATUS_WEIGHT[right] - STATUS_WEIGHT[left])[0] ||
+    'public_status_unavailable'
+  );
 }
 
 export function getPublicReleaseStatus(now = new Date()): PublicVerificationStatus {
   void now;
-  if (!STATUS_DATA.release.matchesVerificationBuild && (
-    STATUS_DATA.summary.publicStatus === 'maintainer_verified' ||
-    STATUS_DATA.summary.publicStatus === 'community_verified_reviewed'
-  )) return 'under_review';
+  if (
+    !STATUS_DATA.release.matchesVerificationBuild &&
+    (STATUS_DATA.summary.publicStatus === 'maintainer_verified' ||
+      STATUS_DATA.summary.publicStatus === 'community_verified_reviewed')
+  )
+    return 'under_review';
   return STATUS_DATA.summary.publicStatus;
 }
 
 export function getLastVerifiedAt(): string | null {
-  return STATUS_DATA.entries
-    .map((entry) => entry.verifiedAt)
-    .filter((value): value is string => Boolean(value) && !Number.isNaN(Date.parse(value)))
-    .sort((left, right) => Date.parse(right) - Date.parse(left))[0] || null;
+  return (
+    STATUS_DATA.entries
+      .map((entry) => entry.verifiedAt)
+      .filter((value): value is string => value !== null && !Number.isNaN(Date.parse(value)))
+      .sort((left, right) => Date.parse(right) - Date.parse(left))[0] || null
+  );
 }
 
 export function formatStatusDate(value: string | null): string {

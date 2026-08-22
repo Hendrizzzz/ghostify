@@ -73,12 +73,30 @@
     }
   };
   var MESSENGER_TYPING_RULES = [
-    createBlockRule(DYNAMIC_RULE_IDS.facebookTypingMessaging, "||facebook.com/ajax/messaging/typ.php"),
-    createBlockRule(DYNAMIC_RULE_IDS.facebookTypingChat, "||facebook.com/ajax/chat/typ.php"),
-    createBlockRule(DYNAMIC_RULE_IDS.facebookTypingMercury, "||facebook.com/ajax/mercury/typ.php"),
-    createBlockRule(DYNAMIC_RULE_IDS.messengerTypingMessaging, "||messenger.com/ajax/messaging/typ.php"),
-    createBlockRule(DYNAMIC_RULE_IDS.messengerTypingChat, "||messenger.com/ajax/chat/typ.php"),
-    createBlockRule(DYNAMIC_RULE_IDS.messengerTypingMercury, "||messenger.com/ajax/mercury/typ.php")
+    createBlockRule(
+      DYNAMIC_RULE_IDS.facebookTypingMessaging,
+      "||facebook.com/ajax/messaging/typ.php"
+    ),
+    createBlockRule(
+      DYNAMIC_RULE_IDS.facebookTypingChat,
+      "||facebook.com/ajax/chat/typ.php"
+    ),
+    createBlockRule(
+      DYNAMIC_RULE_IDS.facebookTypingMercury,
+      "||facebook.com/ajax/mercury/typ.php"
+    ),
+    createBlockRule(
+      DYNAMIC_RULE_IDS.messengerTypingMessaging,
+      "||messenger.com/ajax/messaging/typ.php"
+    ),
+    createBlockRule(
+      DYNAMIC_RULE_IDS.messengerTypingChat,
+      "||messenger.com/ajax/chat/typ.php"
+    ),
+    createBlockRule(
+      DYNAMIC_RULE_IDS.messengerTypingMercury,
+      "||messenger.com/ajax/mercury/typ.php"
+    )
   ];
   syncDynamicPrivacyRulesFromStorage();
   chrome.runtime.onInstalled.addListener(() => {
@@ -88,7 +106,11 @@
   chrome.runtime.onStartup.addListener(syncDynamicPrivacyRulesFromStorage);
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes[GHOSTIFY_SETTINGS_STORAGE_KEY]) return;
-    syncDynamicPrivacyRules(normalizePrivacySettings(changes[GHOSTIFY_SETTINGS_STORAGE_KEY].newValue)).catch(() => {
+    syncDynamicPrivacyRules(
+      normalizePrivacySettings(
+        changes[GHOSTIFY_SETTINGS_STORAGE_KEY].newValue
+      )
+    ).catch(() => {
     });
   });
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -99,7 +121,9 @@
   });
   function syncDynamicPrivacyRulesFromStorage() {
     chrome.storage.local.get([GHOSTIFY_SETTINGS_STORAGE_KEY], (result) => {
-      syncDynamicPrivacyRules(normalizePrivacySettings(result[GHOSTIFY_SETTINGS_STORAGE_KEY])).catch(() => {
+      syncDynamicPrivacyRules(
+        normalizePrivacySettings(result[GHOSTIFY_SETTINGS_STORAGE_KEY])
+      ).catch(() => {
       });
     });
   }
@@ -114,7 +138,12 @@
       addRules.push(...MESSENGER_TYPING_RULES);
     }
     await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [.../* @__PURE__ */ new Set([...LEGACY_DYNAMIC_RULE_IDS, ...CURRENT_DYNAMIC_RULE_IDS])],
+      removeRuleIds: [
+        .../* @__PURE__ */ new Set([
+          ...LEGACY_DYNAMIC_RULE_IDS,
+          ...CURRENT_DYNAMIC_RULE_IDS
+        ])
+      ],
       addRules
     });
   }

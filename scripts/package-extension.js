@@ -1,14 +1,14 @@
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 const CRC_TABLE = new Uint32Array(256);
 const STATIC_PACKAGE_ASSETS = [
-    'css/popup.css',
-    'icons/icon32.png',
-    'js/popup.js'
+    "css/popup.css",
+    "icons/icon32.png",
+    "js/popup.js",
 ];
-const TEXT_PACKAGE_EXTENSIONS = new Set(['.css', '.html', '.js', '.json']);
+const TEXT_PACKAGE_EXTENSIONS = new Set([".css", ".html", ".js", ".json"]);
 
 for (let index = 0; index < CRC_TABLE.length; index += 1) {
     let value = index;
@@ -24,18 +24,18 @@ function fail(message) {
 
 function parseArgs(argv) {
     const args = {
-        distDir: 'dist',
-        outputDir: '.',
-        expectedTag: ''
+        distDir: "dist",
+        outputDir: ".",
+        expectedTag: "",
     };
 
     for (let index = 0; index < argv.length; index += 1) {
         const arg = argv[index];
-        if (arg === '--dist-dir') {
+        if (arg === "--dist-dir") {
             args.distDir = argv[++index];
-        } else if (arg === '--output-dir') {
+        } else if (arg === "--output-dir") {
             args.outputDir = argv[++index];
-        } else if (arg === '--expected-tag') {
+        } else if (arg === "--expected-tag") {
             args.expectedTag = argv[++index];
         } else {
             fail(`Unknown argument: ${arg}`);
@@ -48,7 +48,7 @@ function parseArgs(argv) {
 }
 
 function readJson(file) {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 function crc32(buffer) {
@@ -62,7 +62,7 @@ function crc32(buffer) {
 function dosDateTime() {
     return {
         time: 0,
-        date: ((2026 - 1980) << 9) | (1 << 5) | 1
+        date: ((2026 - 1980) << 9) | (1 << 5) | 1,
     };
 }
 
@@ -91,7 +91,7 @@ function localHeader(entry) {
         writeUInt32(entry.size),
         writeUInt16(entry.nameBuffer.length),
         writeUInt16(0),
-        entry.nameBuffer
+        entry.nameBuffer,
     ]);
 }
 
@@ -114,11 +114,15 @@ function centralDirectoryHeader(entry) {
         writeUInt16(0),
         writeUInt32(0),
         writeUInt32(entry.offset),
-        entry.nameBuffer
+        entry.nameBuffer,
     ]);
 }
 
-function endOfCentralDirectory(entryCount, centralDirectorySize, centralDirectoryOffset) {
+function endOfCentralDirectory(
+    entryCount,
+    centralDirectorySize,
+    centralDirectoryOffset,
+) {
     return Buffer.concat([
         writeUInt32(0x06054b50),
         writeUInt16(0),
@@ -127,7 +131,7 @@ function endOfCentralDirectory(entryCount, centralDirectorySize, centralDirector
         writeUInt16(entryCount),
         writeUInt32(centralDirectorySize),
         writeUInt32(centralDirectoryOffset),
-        writeUInt16(0)
+        writeUInt16(0),
     ]);
 }
 
@@ -135,44 +139,66 @@ function listFiles(root) {
     const files = [];
 
     function walk(directory) {
-        for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        for (const entry of fs.readdirSync(directory, {
+            withFileTypes: true,
+        })) {
             const absolutePath = path.join(directory, entry.name);
             if (entry.isDirectory()) {
                 walk(absolutePath);
             } else if (entry.isFile()) {
-                const relativePath = path.relative(root, absolutePath).split(path.sep).join('/');
+                const relativePath = path
+                    .relative(root, absolutePath)
+                    .split(path.sep)
+                    .join("/");
                 files.push({ absolutePath, relativePath });
             }
         }
     }
 
     walk(root);
-    return files.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
+    return files.sort((left, right) =>
+        left.relativePath.localeCompare(right.relativePath),
+    );
 }
 
 function addDistFile(files, file, label) {
-    if (!file || typeof file !== 'string') fail(`${label} must be a non-empty string`);
-    const normalized = file.replace(/^\/+/, '').replace(/\\/g, '/');
-    if (path.isAbsolute(normalized) || normalized.includes('..')) {
+    if (!file || typeof file !== "string")
+        fail(`${label} must be a non-empty string`);
+    const normalized = file.replace(/^\/+/, "").replace(/\\/g, "/");
+    if (path.isAbsolute(normalized) || normalized.includes("..")) {
         fail(`Unsafe package path: ${file}`);
     }
     files.add(normalized);
 }
 
 function collectPackageFiles(manifest) {
-    const files = new Set(['manifest.json']);
+    const files = new Set(["manifest.json"]);
     for (const file of STATIC_PACKAGE_ASSETS) files.add(file);
 
-    addDistFile(files, manifest.background?.service_worker, 'background.service_worker');
-    addDistFile(files, manifest.action?.default_popup, 'action.default_popup');
-    Object.entries(manifest.icons || {}).forEach(([size, file]) => addDistFile(files, file, `icons.${size}`));
+    addDistFile(
+        files,
+        manifest.background?.service_worker,
+        "background.service_worker",
+    );
+    addDistFile(files, manifest.action?.default_popup, "action.default_popup");
+    Object.entries(manifest.icons || {}).forEach(([size, file]) =>
+        addDistFile(files, file, `icons.${size}`),
+    );
 
     for (const [index, script] of (manifest.content_scripts || []).entries()) {
-        for (const file of script.js || []) addDistFile(files, file, `content_scripts[${index}].js`);
+        for (const file of script.js || [])
+            addDistFile(files, file, `content_scripts[${index}].js`);
     }
 
-    for (const [index, group] of (manifest.web_accessible_resources || []).entries()) {
-        for (const file of group.resources || []) addDistFile(files, file, `web_accessible_resources[${index}].resources`);
+    for (const [index, group] of (
+        manifest.web_accessible_resources || []
+    ).entries()) {
+        for (const file of group.resources || [])
+            addDistFile(
+                files,
+                file,
+                `web_accessible_resources[${index}].resources`,
+            );
     }
 
     return [...files].sort();
@@ -180,17 +206,20 @@ function collectPackageFiles(manifest) {
 
 function resolvePackageFiles(distDir, expectedFiles) {
     const actualFiles = listFiles(distDir);
-    const actualSet = new Set(actualFiles.map(file => file.relativePath));
+    const actualSet = new Set(actualFiles.map((file) => file.relativePath));
     const expectedSet = new Set(expectedFiles);
-    const unexpected = actualFiles.map(file => file.relativePath).filter(file => !expectedSet.has(file));
-    const missing = expectedFiles.filter(file => !actualSet.has(file));
+    const unexpected = actualFiles
+        .map((file) => file.relativePath)
+        .filter((file) => !expectedSet.has(file));
+    const missing = expectedFiles.filter((file) => !actualSet.has(file));
 
-    if (unexpected.length) fail(`Unexpected dist file: ${unexpected.join(', ')}`);
-    if (missing.length) fail(`Missing dist file: ${missing.join(', ')}`);
+    if (unexpected.length)
+        fail(`Unexpected dist file: ${unexpected.join(", ")}`);
+    if (missing.length) fail(`Missing dist file: ${missing.join(", ")}`);
 
-    return expectedFiles.map(relativePath => ({
+    return expectedFiles.map((relativePath) => ({
         absolutePath: path.join(distDir, relativePath),
-        relativePath
+        relativePath,
     }));
 }
 
@@ -199,7 +228,7 @@ function readCanonicalPackageData(file) {
     const extension = path.posix.extname(file.relativePath).toLowerCase();
     if (!TEXT_PACKAGE_EXTENSIONS.has(extension)) return data;
 
-    return Buffer.from(data.toString('utf8').replace(/\r\n?/g, '\n'), 'utf8');
+    return Buffer.from(data.toString("utf8").replace(/\r\n?/g, "\n"), "utf8");
 }
 
 function createZip(zipPath, packageFiles) {
@@ -209,19 +238,22 @@ function createZip(zipPath, packageFiles) {
     let offset = 0;
 
     for (const file of packageFiles) {
-        if (path.isAbsolute(file.relativePath) || file.relativePath.includes('..')) {
+        if (
+            path.isAbsolute(file.relativePath) ||
+            file.relativePath.includes("..")
+        ) {
             fail(`Unsafe ZIP path: ${file.relativePath}`);
         }
 
         const data = readCanonicalPackageData(file);
-        const nameBuffer = Buffer.from(file.relativePath, 'utf8');
+        const nameBuffer = Buffer.from(file.relativePath, "utf8");
         const entry = {
             nameBuffer,
             crc: crc32(data),
             size: data.length,
             offset,
             time: timestamp.time,
-            date: timestamp.date
+            date: timestamp.date,
         };
         const header = localHeader(entry);
         body.push(header, data);
@@ -231,8 +263,15 @@ function createZip(zipPath, packageFiles) {
 
     const centralDirectoryOffset = offset;
     const centralDirectoryBuffer = Buffer.concat(centralDirectory);
-    const eocd = endOfCentralDirectory(centralDirectory.length, centralDirectoryBuffer.length, centralDirectoryOffset);
-    fs.writeFileSync(zipPath, Buffer.concat([...body, centralDirectoryBuffer, eocd]));
+    const eocd = endOfCentralDirectory(
+        centralDirectory.length,
+        centralDirectoryBuffer.length,
+        centralDirectoryOffset,
+    );
+    fs.writeFileSync(
+        zipPath,
+        Buffer.concat([...body, centralDirectoryBuffer, eocd]),
+    );
 }
 
 function main() {
@@ -241,14 +280,18 @@ function main() {
     const outputDir = path.resolve(args.outputDir);
     if (!fs.existsSync(distDir)) fail(`Missing dist directory: ${distDir}`);
 
-    const pkg = readJson('package.json');
-    const manifest = readJson(path.join(distDir, 'manifest.json'));
-    if (!pkg.version) fail('package.json must declare a version');
+    const pkg = readJson("package.json");
+    const manifest = readJson(path.join(distDir, "manifest.json"));
+    if (!pkg.version) fail("package.json must declare a version");
     if (manifest.version !== pkg.version) {
-        fail(`dist/manifest.json version ${manifest.version || '<missing>'} does not match package.json ${pkg.version}`);
+        fail(
+            `dist/manifest.json version ${manifest.version || "<missing>"} does not match package.json ${pkg.version}`,
+        );
     }
     if (args.expectedTag && args.expectedTag !== `v${pkg.version}`) {
-        fail(`Release tag ${args.expectedTag} does not match package version v${pkg.version}`);
+        fail(
+            `Release tag ${args.expectedTag} does not match package version v${pkg.version}`,
+        );
     }
 
     fs.mkdirSync(outputDir, { recursive: true });
@@ -259,10 +302,16 @@ function main() {
     if (fs.existsSync(zipPath)) fs.rmSync(zipPath, { force: true });
     if (fs.existsSync(shaPath)) fs.rmSync(shaPath, { force: true });
 
-    const packageFiles = resolvePackageFiles(distDir, collectPackageFiles(manifest));
+    const packageFiles = resolvePackageFiles(
+        distDir,
+        collectPackageFiles(manifest),
+    );
     createZip(zipPath, packageFiles);
 
-    const sha256 = crypto.createHash('sha256').update(fs.readFileSync(zipPath)).digest('hex');
+    const sha256 = crypto
+        .createHash("sha256")
+        .update(fs.readFileSync(zipPath))
+        .digest("hex");
     fs.writeFileSync(shaPath, `${sha256}  ${zipName}\n`);
 
     console.log(`created ${zipPath}`);

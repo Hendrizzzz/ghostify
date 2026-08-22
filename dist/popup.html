@@ -36,7 +36,7 @@
             </a>
             <a class="header-verification" id="public-status-link" href="https://ghostify-extension.vercel.app/status" target="_blank" rel="noopener noreferrer" aria-label="Open Ghostify status page. Verification needs review." aria-describedby="public-status-tooltip" data-status="review">
                 <span class="status-icon" aria-hidden="true"></span>
-                <span class="verification-summary" id="public-status-summary">Review</span>
+                <span class="verification-summary" id="public-status-summary" aria-live="polite">Review</span>
                 <span class="status-tooltip" id="public-status-tooltip" role="tooltip">Public status details are loading.</span>
             </a>
         </header>
@@ -54,27 +54,27 @@
                     </a>
                 </div>
                 <div class="card">
-                    <div class="row">
+                    <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon seen-icon" aria-hidden="true"><use href="#feature-seen"></use></svg>
                             <span>Hide Seen</span>
                         </span>
-                        <label class="switch" aria-label="Hide Instagram seen receipts"><input type="checkbox" id="ig-seen"><span class="track"></span></label>
-                    </div>
-                    <div class="row">
+                        <span class="switch"><input type="checkbox" id="ig-seen" aria-label="Hide Instagram seen receipts"><span class="track"></span></span>
+                    </label>
+                    <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon typing-icon" aria-hidden="true"><use href="#feature-typing"></use></svg>
                             <span>Hide Typing</span>
                         </span>
-                        <label class="switch" aria-label="Hide Instagram typing indicator"><input type="checkbox" id="ig-typing"><span class="track"></span></label>
-                    </div>
-                    <div class="row">
+                        <span class="switch"><input type="checkbox" id="ig-typing" aria-label="Hide Instagram typing indicator"><span class="track"></span></span>
+                    </label>
+                    <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon story-icon" aria-hidden="true"><use href="#feature-story"></use></svg>
                             <span>Hide Story Views</span>
                         </span>
-                        <label class="switch" aria-label="Hide Instagram story views"><input type="checkbox" id="ig-story"><span class="track"></span></label>
-                    </div>
+                        <span class="switch"><input type="checkbox" id="ig-story" aria-label="Hide Instagram story views"><span class="track"></span></span>
+                    </label>
                 </div>
             </section>
 
@@ -96,27 +96,27 @@
                     </span>
                 </div>
                 <div class="card">
-                    <div class="row">
+                    <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon seen-icon" aria-hidden="true"><use href="#feature-seen"></use></svg>
                             <span>Hide Seen</span>
                         </span>
-                        <label class="switch" aria-label="Hide Messenger and Facebook seen receipts"><input type="checkbox" id="msg-seen"><span class="track"></span></label>
-                    </div>
-                    <div class="row">
+                        <span class="switch"><input type="checkbox" id="msg-seen" aria-label="Hide Messenger and Facebook seen receipts"><span class="track"></span></span>
+                    </label>
+                    <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon typing-icon" aria-hidden="true"><use href="#feature-typing"></use></svg>
                             <span>Hide Typing</span>
                         </span>
-                        <label class="switch" aria-label="Hide Messenger and Facebook typing indicator"><input type="checkbox" id="msg-typing"><span class="track"></span></label>
-                    </div>
-                    <div class="row">
+                        <span class="switch"><input type="checkbox" id="msg-typing" aria-label="Hide Messenger and Facebook typing indicator"><span class="track"></span></span>
+                    </label>
+                    <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon story-icon" aria-hidden="true"><use href="#feature-story"></use></svg>
                             <span>Hide Story Views</span>
                         </span>
-                        <label class="switch" aria-label="Hide Messenger and Facebook story views"><input type="checkbox" id="msg-story"><span class="track"></span></label>
-                    </div>
+                        <span class="switch"><input type="checkbox" id="msg-story" aria-label="Hide Messenger and Facebook story views"><span class="track"></span></span>
+                    </label>
                 </div>
             </section>
         </section>

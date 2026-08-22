@@ -1,6 +1,9 @@
-import { GHOSTIFY_SETTINGS_STORAGE_KEY, normalizePrivacySettings } from './settings/storage.js';
+import {
+    GHOSTIFY_SETTINGS_STORAGE_KEY,
+    normalizePrivacySettings,
+} from "./settings/storage.js";
 
-const LEGACY_RUNTIME_CONFIG_STORAGE_KEY = 'ghostifyConfig';
+const LEGACY_RUNTIME_CONFIG_STORAGE_KEY = "ghostifyConfig";
 
 const DYNAMIC_RULE_IDS = {
     instagramStorySeen: 1001,
@@ -14,7 +17,7 @@ const DYNAMIC_RULE_IDS = {
     messengerTypingChat: 1105,
     messengerTypingMercury: 1106,
     facebookChangeReadStatus: 1107,
-    messengerChangeReadStatus: 1108
+    messengerChangeReadStatus: 1108,
 };
 
 const LEGACY_DYNAMIC_RULE_IDS = [1, 2, 1002, 1003, 1004];
@@ -27,26 +30,44 @@ const CURRENT_DYNAMIC_RULE_IDS = [
     DYNAMIC_RULE_IDS.messengerTypingChat,
     DYNAMIC_RULE_IDS.messengerTypingMercury,
     DYNAMIC_RULE_IDS.facebookChangeReadStatus,
-    DYNAMIC_RULE_IDS.messengerChangeReadStatus
+    DYNAMIC_RULE_IDS.messengerChangeReadStatus,
 ];
 
 const INSTAGRAM_STORY_SEEN_RULE = {
     id: DYNAMIC_RULE_IDS.instagramStorySeen,
     priority: 1,
-    action: { type: 'block' },
+    action: { type: "block" },
     condition: {
-        urlFilter: '||instagram.com/api/v1/stories/reel/seen',
-        resourceTypes: ['xmlhttprequest', 'ping', 'other']
-    }
+        urlFilter: "||instagram.com/api/v1/stories/reel/seen",
+        resourceTypes: ["xmlhttprequest", "ping", "other"],
+    },
 };
 
 const MESSENGER_TYPING_RULES = [
-    createBlockRule(DYNAMIC_RULE_IDS.facebookTypingMessaging, '||facebook.com/ajax/messaging/typ.php'),
-    createBlockRule(DYNAMIC_RULE_IDS.facebookTypingChat, '||facebook.com/ajax/chat/typ.php'),
-    createBlockRule(DYNAMIC_RULE_IDS.facebookTypingMercury, '||facebook.com/ajax/mercury/typ.php'),
-    createBlockRule(DYNAMIC_RULE_IDS.messengerTypingMessaging, '||messenger.com/ajax/messaging/typ.php'),
-    createBlockRule(DYNAMIC_RULE_IDS.messengerTypingChat, '||messenger.com/ajax/chat/typ.php'),
-    createBlockRule(DYNAMIC_RULE_IDS.messengerTypingMercury, '||messenger.com/ajax/mercury/typ.php')
+    createBlockRule(
+        DYNAMIC_RULE_IDS.facebookTypingMessaging,
+        "||facebook.com/ajax/messaging/typ.php",
+    ),
+    createBlockRule(
+        DYNAMIC_RULE_IDS.facebookTypingChat,
+        "||facebook.com/ajax/chat/typ.php",
+    ),
+    createBlockRule(
+        DYNAMIC_RULE_IDS.facebookTypingMercury,
+        "||facebook.com/ajax/mercury/typ.php",
+    ),
+    createBlockRule(
+        DYNAMIC_RULE_IDS.messengerTypingMessaging,
+        "||messenger.com/ajax/messaging/typ.php",
+    ),
+    createBlockRule(
+        DYNAMIC_RULE_IDS.messengerTypingChat,
+        "||messenger.com/ajax/chat/typ.php",
+    ),
+    createBlockRule(
+        DYNAMIC_RULE_IDS.messengerTypingMercury,
+        "||messenger.com/ajax/mercury/typ.php",
+    ),
 ];
 
 syncDynamicPrivacyRulesFromStorage();
@@ -58,20 +79,26 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onStartup.addListener(syncDynamicPrivacyRulesFromStorage);
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== 'local' || !changes[GHOSTIFY_SETTINGS_STORAGE_KEY]) return;
-    syncDynamicPrivacyRules(normalizePrivacySettings(changes[GHOSTIFY_SETTINGS_STORAGE_KEY].newValue)).catch(() => { });
+    if (areaName !== "local" || !changes[GHOSTIFY_SETTINGS_STORAGE_KEY]) return;
+    syncDynamicPrivacyRules(
+        normalizePrivacySettings(
+            changes[GHOSTIFY_SETTINGS_STORAGE_KEY].newValue,
+        ),
+    ).catch(() => {});
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'GHOSTIFY_PING') {
-        sendResponse({ status: 'alive' });
+    if (message.type === "GHOSTIFY_PING") {
+        sendResponse({ status: "alive" });
     }
     return true;
 });
 
 function syncDynamicPrivacyRulesFromStorage() {
     chrome.storage.local.get([GHOSTIFY_SETTINGS_STORAGE_KEY], (result) => {
-        syncDynamicPrivacyRules(normalizePrivacySettings(result[GHOSTIFY_SETTINGS_STORAGE_KEY])).catch(() => { });
+        syncDynamicPrivacyRules(
+            normalizePrivacySettings(result[GHOSTIFY_SETTINGS_STORAGE_KEY]),
+        ).catch(() => {});
     });
 }
 
@@ -87,8 +114,13 @@ async function syncDynamicPrivacyRules(settings) {
     }
 
     await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: [...new Set([...LEGACY_DYNAMIC_RULE_IDS, ...CURRENT_DYNAMIC_RULE_IDS])],
-        addRules
+        removeRuleIds: [
+            ...new Set([
+                ...LEGACY_DYNAMIC_RULE_IDS,
+                ...CURRENT_DYNAMIC_RULE_IDS,
+            ]),
+        ],
+        addRules,
     });
 }
 
@@ -96,10 +128,10 @@ function createBlockRule(id, urlFilter) {
     return {
         id,
         priority: 1,
-        action: { type: 'block' },
+        action: { type: "block" },
         condition: {
             urlFilter,
-            resourceTypes: ['xmlhttprequest', 'ping', 'other']
-        }
+            resourceTypes: ["xmlhttprequest", "ping", "other"],
+        },
     };
 }

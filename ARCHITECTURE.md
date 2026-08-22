@@ -213,12 +213,26 @@ The root test command is:
 npm test
 ```
 
-That command builds the bundled extension scripts and runs
-`test/messenger-send-stability.test.js`, the extension package validator tests,
-and the release ZIP dry-run tests. The Messenger/Facebook test uses a Node VM
-harness and fake browser primitives to exercise the built `dist/js/ghost.js` and
-`dist/js/messenger_patch.js` bundles. It also checks selected static assets and
-GitHub issue-template behavior.
+That command builds the bundled extension scripts and runs the full regression
+suite in `test/`:
+
+- `messenger-send-stability.test.js` — the large Node VM harness with fake
+  browser primitives exercising the built `dist/js/ghost.js` and
+  `dist/js/messenger_patch.js` bundles, plus popup asset contracts and
+  GitHub issue-template behavior
+- `firefox-popup.test.js` — popup status/rating-link runtime behavior for
+  Chromium and Firefox targets
+- `settings-defaults.test.js`, `runtime-config.test.js`,
+  `module-registry.test.js`, `module-flags.test.js` — shared settings/config/
+  module contracts
+- `package-extension.test.js`, `package-firefox.test.js` — release ZIP dry-run
+  tests for both stores
+- `validate-extension-package.test.js` — the extension package validator
+- `prepare-status-update.test.js`, `daily-verification-git.test.js` — public
+  status feed generation
+- `dependency-audit-policy.test.js` — governed audit exceptions
+- `extract-release-notes.test.js` — CHANGELOG-driven release notes
+- `version-tag-integrity.test.js` — release identity-path protection
 
 These tests protect important regression paths, but they are not a substitute
 for manual browser smoke tests on Instagram, Messenger, and Facebook before a

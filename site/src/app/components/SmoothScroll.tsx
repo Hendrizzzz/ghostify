@@ -7,9 +7,7 @@ interface SmoothScrollProps {
   enabled?: boolean;
 }
 
-const SCROLL_EASING = (progress: number) => (
-  Math.min(1, 1.001 - Math.pow(2, -10 * progress))
-);
+const SCROLL_EASING = (progress: number) => Math.min(1, 1.001 - Math.pow(2, -10 * progress));
 
 export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
   useEffect(() => {
@@ -34,15 +32,16 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
           syncTouch: false,
           virtualScroll: (input) => {
             const target = input.event.target;
-            if (!(target instanceof Element)) return;
+            if (!(target instanceof Element)) return true;
 
             const section = target.closest('.feature-scroll');
-            if (!section) return;
+            if (!section) return true;
 
             const bounds = section.getBoundingClientRect();
             if (bounds.top <= 0 && bounds.bottom >= window.innerHeight) {
               input.deltaY *= 0.75;
             }
+            return true;
           },
         });
         return;
