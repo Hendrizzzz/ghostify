@@ -114,6 +114,39 @@ svg {
   outline-offset: 3px;
 }
 
+::selection {
+  color: var(--paper-bright);
+  background: var(--coral-dark);
+}
+
+body {
+  caret-color: var(--coral-dark);
+}
+
+@media (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 15, 13, 0.32) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgba(15, 15, 13, 0.32);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 15, 13, 0.48);
+    background-clip: content-box;
+  }
+}
+
 .site-root {
   min-height: 100vh;
   overflow: clip;
