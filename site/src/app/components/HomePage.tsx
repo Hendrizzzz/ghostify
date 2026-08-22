@@ -13,6 +13,7 @@ import {
 import { formatStatusDate, getLastVerifiedAt } from '../statusData';
 import { GhostMark } from './GhostSVG';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
+import { Reveal } from './Reveal';
 import { EDGE_STORE_URL, FIREFOX_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
 
 const FEATURES: Array<{
@@ -577,7 +578,7 @@ function PrivacySection() {
   return (
     <section className="privacy-flat" id="privacy" data-scroll-scene>
       <div className="privacy-flat-panel">
-        <div className="privacy-showcase-lead">
+        <Reveal className="privacy-showcase-lead">
           <div className="privacy-showcase-copy">
             <h2>
               Made for privacy
@@ -589,12 +590,14 @@ function PrivacySection() {
           <div className="privacy-showcase-visual">
             <PrivacyIllustration />
           </div>
-        </div>
+        </Reveal>
 
         <div className="privacy-principles-static" aria-label="Ghostify privacy principles">
           {PRIVACY_TOPICS.map((topic, index) => (
-            <article
+            <Reveal
+              tag="article"
               className={`privacy-static-note privacy-static-note-${index + 1}`}
+              delay={index * 100}
               key={topic.label}
             >
               <PrivacyNoteVisual index={index} />
@@ -607,7 +610,7 @@ function PrivacySection() {
               >
                 {topic.cta} <ArrowUpRight size={15} aria-hidden="true" />
               </a>
-            </article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -674,13 +677,13 @@ function AnimatedFootprintMetric() {
 function FootprintSection() {
   return (
     <section className="footprint-section" data-scroll-scene>
-      <header>
+      <Reveal tag="header">
         <h2>Built to stay out of your way.</h2>
         <p>
           A compact footprint, no tracking relays, and no account standing between you and the
           controls.
         </p>
-      </header>
+      </Reveal>
       <div className="footprint-metrics">
         <article>
           <strong>MV3</strong>
@@ -836,14 +839,14 @@ function FactMarquee() {
 function InstallRhythm() {
   return (
     <section className="install-rhythm" aria-labelledby="install-rhythm-title" data-scroll-scene>
-      <header>
+      <Reveal tag="header">
         <h2 id="install-rhythm-title">
           One minute.
           <br />
           Then it disappears.
         </h2>
         <p>Four small moves, then Ghostify settles into the background.</p>
-      </header>
+      </Reveal>
       <div className="install-rhythm-path">
         <span className="install-path-line" aria-hidden="true">
           <i />
@@ -891,7 +894,7 @@ function AskAiSection() {
     <section className="ask-ai-section" data-scroll-scene>
       <div className="ask-ai-card">
         <div className="ask-ai-composition">
-          <div className="ask-ai-copy">
+          <Reveal className="ask-ai-copy">
             <div className="ask-ai-lead">
               <h2>
                 Don&apos;t take
@@ -911,8 +914,8 @@ function AskAiSection() {
                 </a>
               ))}
             </nav>
-          </div>
-          <div className="ask-ai-visual" aria-hidden="true">
+          </Reveal>
+          <Reveal className="ask-ai-visual" delay={140} aria-hidden="true">
             <div className="ask-ai-source-stack">
               <span className="ask-ai-tape" />
               <div className="ask-ai-question-sheet">
@@ -939,7 +942,7 @@ function AskAiSection() {
             <span className="ask-ai-ghost">
               <GhostMark size={112} />
             </span>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -1138,17 +1141,22 @@ export function HomePage() {
       <FeatureScroll />
 
       <section className="platforms-flat" id="platforms" data-scroll-scene>
-        <header>
+        <Reveal tag="header">
           <h2>
             Three controls.
             <br />
             <span>Two groups. Three places.</span>
           </h2>
           <PlatformControlMap />
-        </header>
+        </Reveal>
         <div className="platform-card-grid">
-          {PLATFORMS.map((item) => (
-            <article className={`platform-card platform-card-${item.platform}`} key={item.platform}>
+          {PLATFORMS.map((item, index) => (
+            <Reveal
+              tag="article"
+              className={`platform-card platform-card-${item.platform}`}
+              delay={index * 90}
+              key={item.platform}
+            >
               <header>
                 <PlatformLogo platform={item.platform} size={54} />
                 <span>
@@ -1170,13 +1178,15 @@ export function HomePage() {
                 <Check size={16} aria-hidden="true" />
                 {item.qualifier}
               </footer>
-            </article>
+            </Reveal>
           ))}
         </div>
-        <a className="platforms-status" href="/status">
-          Coverage changes with the platforms. See verification dated {lastVerified}.{' '}
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </a>
+        <Reveal delay={180}>
+          <a className="platforms-status" href="/status">
+            Coverage changes with the platforms. See verification dated {lastVerified}.{' '}
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </a>
+        </Reveal>
       </section>
 
       <PrivacySection />
@@ -1186,10 +1196,10 @@ export function HomePage() {
       <FactMarquee />
 
       <section className="faq-flat" data-scroll-scene>
-        <header>
+        <Reveal tag="header">
           <h2>Before you install.</h2>
           <p>Plain answers, without the disappearing fine print.</p>
-        </header>
+        </Reveal>
         <div className="faq-flat-list">
           {FAQS.map((item, index) => (
             <details key={item.q}>
@@ -1212,7 +1222,7 @@ export function HomePage() {
       <AskAiSection />
 
       <section className="home-final" data-scroll-scene>
-        <div>
+        <Reveal>
           <h2>
             <span className="home-final-brand">Ghostify,</span>
             <span className="home-final-promise">wherever you browse.</span>
@@ -1244,7 +1254,7 @@ export function HomePage() {
               <ArrowUpRight size={15} aria-hidden="true" />
             </a>
           </div>
-        </div>
+        </Reveal>
       </section>
     </div>
   );
