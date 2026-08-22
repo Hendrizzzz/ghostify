@@ -68,6 +68,31 @@ jobs:
       - name: Run actionlint
         run: docker run --rm -v "${{ github.workspace }}:/repo" --workdir /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
 
+  lint:
+    name: Lint and format
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Check Prettier formatting
+        run: npm run format:check
   extension-audit:
     name: Extension dependency audit
     runs-on: ubuntu-24.04
@@ -153,6 +178,7 @@ jobs:
     if: always()
     needs:
       - chromium-extension
+      - lint
       - firefox-extension
       - extension-audit
       - release-package
@@ -163,12 +189,13 @@ jobs:
         shell: bash
         env:
           CHROMIUM_RESULT: ${{ needs.chromium-extension.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
           FIREFOX_RESULT: ${{ needs.firefox-extension.result }}
           AUDIT_RESULT: ${{ needs.extension-audit.result }}
           CHROMIUM_PACKAGE_RESULT: ${{ needs.release-package.result }}
           FIREFOX_PACKAGE_RESULT: ${{ needs.firefox-release-package.result }}
         run: |
-          for result in "$CHROMIUM_RESULT" "$FIREFOX_RESULT" "$AUDIT_RESULT" "$CHROMIUM_PACKAGE_RESULT" "$FIREFOX_PACKAGE_RESULT"; do
+          for result in "$CHROMIUM_RESULT" "$LINT_RESULT" "$FIREFOX_RESULT" "$AUDIT_RESULT" "$CHROMIUM_PACKAGE_RESULT" "$FIREFOX_PACKAGE_RESULT"; do
             if [[ "$result" != "success" ]]; then
               echo "A required extension gate did not pass." >&2
               exit 1

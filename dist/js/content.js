@@ -43,18 +43,29 @@
   var MAX_PATTERN_LENGTH = 96;
   var UNSUPPORTED_PATTERN_META = /[|^$()[\]{}+?\\]/;
   function normalizePackagedConfig(config, fallbackConfig) {
-    if (!config || typeof config !== "object" || Array.isArray(config)) return null;
-    if (!fallbackConfig || config.version !== fallbackConfig.version) return null;
-    if (!config.patterns || typeof config.patterns !== "object" || Array.isArray(config.patterns)) return null;
+    if (!config || typeof config !== "object" || Array.isArray(config))
+      return null;
+    if (!fallbackConfig || config.version !== fallbackConfig.version)
+      return null;
+    if (!config.patterns || typeof config.patterns !== "object" || Array.isArray(config.patterns))
+      return null;
     const patternKeys = Object.keys(fallbackConfig.patterns || {});
     if (!patternKeys.length) return null;
     const patterns = {};
     for (const key of patternKeys) {
       if (!Array.isArray(config.patterns[key])) return null;
-      patterns[key] = config.patterns[key].filter((pattern) => typeof pattern === "string").map((pattern) => pattern.trim()).filter((pattern) => pattern && pattern.length <= MAX_PATTERN_LENGTH).filter((pattern) => !UNSUPPORTED_PATTERN_META.test(pattern)).slice(0, MAX_PATTERNS_PER_FEATURE);
+      patterns[key] = config.patterns[key].filter((pattern) => typeof pattern === "string").map((pattern) => pattern.trim()).filter(
+        (pattern) => pattern && pattern.length <= MAX_PATTERN_LENGTH
+      ).filter((pattern) => !UNSUPPORTED_PATTERN_META.test(pattern)).slice(0, MAX_PATTERNS_PER_FEATURE);
     }
     const allowedFeatures = new Set(patternKeys);
-    const killSwitch = Array.isArray(config.killSwitch) ? [...new Set(config.killSwitch.filter((feature) => allowedFeatures.has(feature)))] : [];
+    const killSwitch = Array.isArray(config.killSwitch) ? [
+      ...new Set(
+        config.killSwitch.filter(
+          (feature) => allowedFeatures.has(feature)
+        )
+      )
+    ] : [];
     return {
       version: config.version,
       killSwitch,
@@ -64,15 +75,125 @@
 
   // src/content.js
   var FALLBACK_CONFIG = {
-    version: "2.0.7",
+    version: "2.0.8",
     killSwitch: [],
     patterns: {
-      igTyping: ["indicate_activity", "typing_indicator", "activity_indicator", "is_typing", "direct_v2/threads/broadcast/typing", "direct_v2/threads/typing", "sendtypingindicator", "send_typing_indicator", "typing_on", "is_composing"],
-      igSeen: ["mark_read", "mark_seen", "thread_seen", "DirectMarkAsSeen", "MarkAsSeen", "DirectThreadMarkItemsSeen", "PolarisDirectMarkAsSeenMutation", "DirectSeenMutation", "usePolarisMarkThreadSeenMutation", "useigdmarkthreadasreadmutation"],
-      igStory: ["StoriesUpdateSeenMutation", "PolarisStoriesSeenMutation", "usePolarisStoriesV3SeenMutation", "reelMediaSeen", "storiesUpdateSeen", "SeenStoriesUpdateMutation", "PolarisAPIReelSeenMutation", "xdt_mark_story_reel_seen", "26997980659837802", "PolarisAPIForceStorySeenMutation", "xdt_api__v1__stories__reel__seen", "9647304595318258", "api/v1/stories/reel/seen", "stories/reel/seen", "mark_story_seen", "update_seen_for_reel", "reel_seen", "stories_update_seen", "mark_story_read"],
-      msgTyping: ["indicate_activity", "typing_indicator", "activity_indicator", "is_typing", "istyping", "sendtypingindicator", "send_typing_indicator", "sendchatstate", "send_chat_state", "ajax/messaging/typ.php", "ajax/chat/typ.php", "ajax/mercury/typ.php", "thread_typing", "orca_typing_notifications", "is_composing", "iscomposing", "composing", "chat_state", "chatstate", "typing_status", "typingstate", "securetypingstate", "mawsecuretypingstate", "typingindicatorstoredprocedure", "send_type"],
-      msgSeen: ["mark_read", "mark_seen", "thread_seen", "DirectMarkAsSeen", "MarkAsSeen", "DirectThreadMarkItemsSeen", "PolarisDirectMarkAsSeenMutation", "DirectSeenMutation", "seenByViewer", "updateLastSeenAt", "updateLastReadWatermark", "sendReadReceipt", "LSSendReadReceipt", "readReceipt", "read_receipt", "readReceiptMutation", "LSUpdateThreadReadWatermark", "LSUpdateLastReadWatermark", "last_read_watermark", "lastReadWatermark", "read_watermark", "readWatermark", "shouldSendReadReceipt", "should_send_read_receipt", "LSMarkThreadRead", "MWMarkThreadRead", "markAsRead", "change_read_status"],
-      msgStory: ["StoriesUpdateSeenMutation", "PolarisStoriesSeenMutation", "usePolarisStoriesV3SeenMutation", "reelMediaSeen", "storiesUpdateSeen", "SeenStoriesUpdateMutation", "mark_story_seen", "update_seen_for_reel", "reel_seen", "viewer_seen", "stories_update_seen", "mark_story_read"]
+      igTyping: [
+        "indicate_activity",
+        "typing_indicator",
+        "activity_indicator",
+        "is_typing",
+        "direct_v2/threads/broadcast/typing",
+        "direct_v2/threads/typing",
+        "sendtypingindicator",
+        "send_typing_indicator",
+        "typing_on",
+        "is_composing"
+      ],
+      igSeen: [
+        "mark_read",
+        "mark_seen",
+        "thread_seen",
+        "DirectMarkAsSeen",
+        "MarkAsSeen",
+        "DirectThreadMarkItemsSeen",
+        "PolarisDirectMarkAsSeenMutation",
+        "DirectSeenMutation",
+        "usePolarisMarkThreadSeenMutation",
+        "useigdmarkthreadasreadmutation"
+      ],
+      igStory: [
+        "StoriesUpdateSeenMutation",
+        "PolarisStoriesSeenMutation",
+        "usePolarisStoriesV3SeenMutation",
+        "reelMediaSeen",
+        "storiesUpdateSeen",
+        "SeenStoriesUpdateMutation",
+        "PolarisAPIReelSeenMutation",
+        "xdt_mark_story_reel_seen",
+        "26997980659837802",
+        "PolarisAPIForceStorySeenMutation",
+        "xdt_api__v1__stories__reel__seen",
+        "9647304595318258",
+        "api/v1/stories/reel/seen",
+        "stories/reel/seen",
+        "mark_story_seen",
+        "update_seen_for_reel",
+        "reel_seen",
+        "stories_update_seen",
+        "mark_story_read"
+      ],
+      msgTyping: [
+        "indicate_activity",
+        "typing_indicator",
+        "activity_indicator",
+        "is_typing",
+        "istyping",
+        "sendtypingindicator",
+        "send_typing_indicator",
+        "sendchatstate",
+        "send_chat_state",
+        "ajax/messaging/typ.php",
+        "ajax/chat/typ.php",
+        "ajax/mercury/typ.php",
+        "thread_typing",
+        "orca_typing_notifications",
+        "is_composing",
+        "iscomposing",
+        "composing",
+        "chat_state",
+        "chatstate",
+        "typing_status",
+        "typingstate",
+        "securetypingstate",
+        "mawsecuretypingstate",
+        "typingindicatorstoredprocedure",
+        "send_type"
+      ],
+      msgSeen: [
+        "mark_read",
+        "mark_seen",
+        "thread_seen",
+        "DirectMarkAsSeen",
+        "MarkAsSeen",
+        "DirectThreadMarkItemsSeen",
+        "PolarisDirectMarkAsSeenMutation",
+        "DirectSeenMutation",
+        "seenByViewer",
+        "updateLastSeenAt",
+        "updateLastReadWatermark",
+        "sendReadReceipt",
+        "LSSendReadReceipt",
+        "readReceipt",
+        "read_receipt",
+        "readReceiptMutation",
+        "LSUpdateThreadReadWatermark",
+        "LSUpdateLastReadWatermark",
+        "last_read_watermark",
+        "lastReadWatermark",
+        "read_watermark",
+        "readWatermark",
+        "shouldSendReadReceipt",
+        "should_send_read_receipt",
+        "LSMarkThreadRead",
+        "MWMarkThreadRead",
+        "markAsRead",
+        "change_read_status"
+      ],
+      msgStory: [
+        "StoriesUpdateSeenMutation",
+        "PolarisStoriesSeenMutation",
+        "usePolarisStoriesV3SeenMutation",
+        "reelMediaSeen",
+        "storiesUpdateSeen",
+        "SeenStoriesUpdateMutation",
+        "mark_story_seen",
+        "update_seen_for_reel",
+        "reel_seen",
+        "viewer_seen",
+        "stories_update_seen",
+        "mark_story_read"
+      ]
     }
   };
   (async function init() {
@@ -82,9 +203,14 @@
   })();
   async function fetchLocalConfig() {
     try {
-      const response = await fetch(chrome.runtime.getURL("config/patterns.json"));
+      const response = await fetch(
+        chrome.runtime.getURL("config/patterns.json")
+      );
       if (response.ok) {
-        const localConfig = normalizePackagedConfig(await response.json(), FALLBACK_CONFIG);
+        const localConfig = normalizePackagedConfig(
+          await response.json(),
+          FALLBACK_CONFIG
+        );
         if (!localConfig) return null;
         return localConfig;
       }
@@ -94,11 +220,14 @@
   }
   function sendConfigToGhost(config) {
     const postConfig = () => {
-      window.postMessage({
-        type: "GHOSTIFY_CONFIG_UPDATE",
-        source: "GHOSTIFY_EXTENSION",
-        config
-      }, "*");
+      window.postMessage(
+        {
+          type: "GHOSTIFY_CONFIG_UPDATE",
+          source: "GHOSTIFY_EXTENSION",
+          config
+        },
+        window.location.origin
+      );
     };
     postConfig();
     setTimeout(postConfig, 500);
@@ -106,15 +235,20 @@
   }
   function syncUserSettings() {
     function sendSettingsToPage(settings) {
-      window.postMessage({
-        type: "GHOSTIFY_SETTINGS_UPDATE",
-        source: "GHOSTIFY_EXTENSION",
-        settings
-      }, "*");
+      window.postMessage(
+        {
+          type: "GHOSTIFY_SETTINGS_UPDATE",
+          source: "GHOSTIFY_EXTENSION",
+          settings
+        },
+        window.location.origin
+      );
     }
     function loadAndSend() {
       chrome.storage.local.get([GHOSTIFY_SETTINGS_STORAGE_KEY], (result) => {
-        const settings = sanitizePrivacySettingsForPage(result[GHOSTIFY_SETTINGS_STORAGE_KEY]);
+        const settings = sanitizePrivacySettingsForPage(
+          result[GHOSTIFY_SETTINGS_STORAGE_KEY]
+        );
         sendSettingsToPage(settings);
       });
     }
@@ -130,7 +264,9 @@
     setTimeout(loadAndSend, 1500);
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === "local" && changes[GHOSTIFY_SETTINGS_STORAGE_KEY]) {
-        const newSettings = sanitizePrivacySettingsForPage(changes[GHOSTIFY_SETTINGS_STORAGE_KEY].newValue);
+        const newSettings = sanitizePrivacySettingsForPage(
+          changes[GHOSTIFY_SETTINGS_STORAGE_KEY].newValue
+        );
         sendSettingsToPage(newSettings);
       }
     });

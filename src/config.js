@@ -1,4 +1,4 @@
-import { DEFAULT_PRIVACY_SETTINGS } from './settings/defaults.js';
+import { DEFAULT_PRIVACY_SETTINGS } from "./settings/defaults.js";
 
 export const SETTINGS = { ...DEFAULT_PRIVACY_SETTINGS };
 
@@ -12,11 +12,13 @@ function isHost(domain) {
     return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
-export const isFacebookDotCom = isHost('facebook.com');
-export const isMessengerDotCom = isHost('messenger.com');
-export const isFacebookMessengerProxy = hostname === 'www.fbsbx.com' && pathname.startsWith('/maw_proxy_page');
-export const isMessenger = isFacebookDotCom || isMessengerDotCom || isFacebookMessengerProxy;
-export const isInstagram = isHost('instagram.com');
+export const isFacebookDotCom = isHost("facebook.com");
+export const isMessengerDotCom = isHost("messenger.com");
+export const isFacebookMessengerProxy =
+    hostname === "www.fbsbx.com" && pathname.startsWith("/maw_proxy_page");
+export const isMessenger =
+    isFacebookDotCom || isMessengerDotCom || isFacebookMessengerProxy;
+export const isInstagram = isHost("instagram.com");
 
 export function isKilled(feature) {
     return KILLED_FEATURES.has(feature);

@@ -12,7 +12,6 @@
     --ghost-muted: #aaa397;
     --ghost-soft: #aa98ee;
     --ghost-soft-deep: #8a72df;
-    --ghost-red: #aa98ee;
     --status-green: #27835f;
     --status-yellow: #c98b20;
     --ghost-off: #46423b;
@@ -190,6 +189,15 @@ a {
 .header-verification[data-status="verified"] .status-icon {
     background: var(--status-green);
     box-shadow: none;
+}
+
+.header-verification.is-fallback {
+    border-style: dashed;
+    border-color: rgba(237, 231, 217, 0.28);
+}
+
+.header-verification.is-fallback .status-icon {
+    background: var(--ghost-off);
 }
 
 .status-tooltip {
@@ -371,6 +379,7 @@ a {
     min-height: 42px;
     padding: 0 11px;
     border-bottom: 1px solid var(--ghost-line);
+    cursor: pointer;
     transition: background 140ms ease, color 140ms ease;
 }
 

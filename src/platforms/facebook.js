@@ -1,4 +1,4 @@
-import { SETTINGS, isFacebookDotCom, isKilled } from '../config.js';
+import { SETTINGS, isFacebookDotCom, isKilled } from "../config.js";
 
 const REQUEST_NATIVE_GRACE_MS = 15000;
 const ROOT_NATIVE_GRACE_MS = 15000;
@@ -21,33 +21,43 @@ export function startFacebookProtection() {
     };
     const markPopoverLoadIntent = (event) => {
         if (isFacebookMessengerPopoverButton(event?.target)) {
-            window.__GHOSTIFY_FACEBOOK_POPOVER_LOAD_UNTIL__ = Date.now() + POPOVER_LOAD_NATIVE_GRACE_MS;
+            window.__GHOSTIFY_FACEBOOK_POPOVER_LOAD_UNTIL__ =
+                Date.now() + POPOVER_LOAD_NATIVE_GRACE_MS;
             return;
         }
         window.__GHOSTIFY_FACEBOOK_POPOVER_LOAD_UNTIL__ = 0;
     };
 
-    document.addEventListener('pointerdown', markRequestIntent, true);
-    document.addEventListener('pointerdown', markPopoverLoadIntent, true);
-    document.addEventListener('click', markRequestIntent, true);
-    document.addEventListener('click', markPopoverLoadIntent, true);
-    document.addEventListener('keydown', (event) => {
-        if (event?.key !== 'Enter' && event?.key !== ' ') return;
-        markRequestIntent(event);
-        markPopoverLoadIntent(event);
-    }, true);
+    document.addEventListener("pointerdown", markRequestIntent, true);
+    document.addEventListener("pointerdown", markPopoverLoadIntent, true);
+    document.addEventListener("click", markRequestIntent, true);
+    document.addEventListener("click", markPopoverLoadIntent, true);
+    document.addEventListener(
+        "keydown",
+        (event) => {
+            if (event?.key !== "Enter" && event?.key !== " ") return;
+            markRequestIntent(event);
+            markPopoverLoadIntent(event);
+        },
+        true,
+    );
 }
 
 export function getFacebookSpoofState() {
     if (hasRecentMessageRequestIntent()) return null;
     if (isFacebookMessageRequestSurface()) return null;
 
-    if (SETTINGS.msgSeen && !isKilled('msgSeen')) {
-        if (hasRecentPopoverLoadIntent() && !isFacebookMessengerPopoverHydrated()) return null;
-        if (isFacebookFeedMessengerSurface()) return 'unfocused-passive';
-        if (isFacebookFeedRootSurface()) return hasRootNativeGrace() ? null : 'unfocused-passive';
+    if (SETTINGS.msgSeen && !isKilled("msgSeen")) {
+        if (
+            hasRecentPopoverLoadIntent() &&
+            !isFacebookMessengerPopoverHydrated()
+        )
+            return null;
+        if (isFacebookFeedMessengerSurface()) return "unfocused-passive";
+        if (isFacebookFeedRootSurface())
+            return hasRootNativeGrace() ? null : "unfocused-passive";
         if (!isFacebookMessagingSurface()) return null;
-        return 'unfocused';
+        return "unfocused";
     }
 
     return null;
@@ -62,42 +72,53 @@ function activateRequestNativeGrace(until) {
 function activateRootNativeGrace(until) {
     window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ = Math.max(
         Number(window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ || 0),
-        until
+        until,
     );
     emitNativeFocusSignals();
 }
 
 function hasRecentMessageRequestIntent() {
-    return Math.max(
-        Number(window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ || 0),
-        Number(window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0)
-    ) > Date.now();
+    return (
+        Math.max(
+            Number(window.__GHOSTIFY_MESSAGE_REQUEST_FOCUS_UNTIL__ || 0),
+            Number(window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ || 0),
+        ) > Date.now()
+    );
 }
 
 function hasRootNativeGrace() {
-    return isFacebookFeedRootRoute() &&
-        Number(window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ || 0) > Date.now();
+    return (
+        isFacebookFeedRootRoute() &&
+        Number(window.__GHOSTIFY_FACEBOOK_ROOT_NATIVE_UNTIL__ || 0) > Date.now()
+    );
 }
 
 function hasRecentPopoverLoadIntent() {
-    return Number(window.__GHOSTIFY_FACEBOOK_POPOVER_LOAD_UNTIL__ || 0) > Date.now();
+    return (
+        Number(window.__GHOSTIFY_FACEBOOK_POPOVER_LOAD_UNTIL__ || 0) >
+        Date.now()
+    );
 }
 
 function emitNativeFocusSignals() {
-    dispatchEventSafe(window, 'focus');
-    dispatchEventSafe(document, 'visibilitychange');
-    dispatchEventSafe(document, 'webkitvisibilitychange');
-    dispatchEventSafe(document, 'focusin');
+    dispatchEventSafe(window, "focus");
+    dispatchEventSafe(document, "visibilitychange");
+    dispatchEventSafe(document, "webkitvisibilitychange");
+    dispatchEventSafe(document, "focusin");
 }
 
 function dispatchEventSafe(target, type) {
     try {
-        if (!target || typeof target.dispatchEvent !== 'function') return;
-        const event = typeof Event === 'function'
-            ? new Event(type, { bubbles: type === 'focusin', cancelable: false })
-            : { type, target };
+        if (!target || typeof target.dispatchEvent !== "function") return;
+        const event =
+            typeof Event === "function"
+                ? new Event(type, {
+                      bubbles: type === "focusin",
+                      cancelable: false,
+                  })
+                : { type, target };
         target.dispatchEvent(event);
-    } catch (e) { }
+    } catch (e) {}
 }
 
 function isFacebookMessageRequestNavigationTarget(target) {
@@ -106,14 +127,17 @@ function isFacebookMessageRequestNavigationTarget(target) {
 
     let current = element;
     for (let depth = 0; current && depth < 5; depth += 1) {
-        const href = getElementAttribute(current, 'href').toLowerCase();
+        const href = getElementAttribute(current, "href").toLowerCase();
         const label = [
-            getElementAttribute(current, 'aria-label'),
-            getElementAttribute(current, 'title'),
+            getElementAttribute(current, "aria-label"),
+            getElementAttribute(current, "title"),
             current.innerText,
             current.textContent,
-            href
-        ].filter(Boolean).join(' ').toLowerCase();
+            href,
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
 
         if (isFacebookMessageRequestRouteText(`${href} ${label}`)) return true;
         if (isFacebookConversationRouteText(href)) return false;
@@ -129,38 +153,50 @@ function isFacebookMessengerPopoverButton(target) {
     if (!element) return false;
 
     const label = [
-        getElementAttribute(element, 'aria-label'),
-        getElementAttribute(element, 'title'),
+        getElementAttribute(element, "aria-label"),
+        getElementAttribute(element, "title"),
         element.innerText,
-        element.textContent
-    ].filter(Boolean).join(' ').trim().toLowerCase();
-    return /^messenger(?:\s|,|$)/.test(label) &&
-        !getElementAttribute(element, 'href').includes('/messages/');
+        element.textContent,
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+        .toLowerCase();
+    return (
+        /^messenger(?:\s|,|$)/.test(label) &&
+        !getElementAttribute(element, "href").includes("/messages/")
+    );
 }
 
 function getClosestRequestElement(target) {
-    if (!target || typeof target !== 'object') return null;
-    if (typeof target.closest === 'function') {
-        return target.closest('a,button,[role="link"],[role="button"],[aria-label]') || target;
+    if (!target || typeof target !== "object") return null;
+    if (typeof target.closest === "function") {
+        return (
+            target.closest(
+                'a,button,[role="link"],[role="button"],[aria-label]',
+            ) || target
+        );
     }
     return target;
 }
 
 function getElementAttribute(element, name) {
     try {
-        return String(element?.getAttribute?.(name) || '');
+        return String(element?.getAttribute?.(name) || "");
     } catch (e) {
-        return '';
+        return "";
     }
 }
 
 function isFacebookMessagingSurface() {
-    const path = String(window.location?.pathname || '').toLowerCase();
-    const search = String(window.location?.search || '').toLowerCase();
-    const hash = String(window.location?.hash || '').toLowerCase();
+    const path = String(window.location?.pathname || "").toLowerCase();
+    const search = String(window.location?.search || "").toLowerCase();
+    const hash = String(window.location?.hash || "").toLowerCase();
 
-    if (path.startsWith('/messages') || path.startsWith('/messenger')) return true;
-    if (search.includes('sk=messages') || hash.includes('messages')) return true;
+    if (path.startsWith("/messages") || path.startsWith("/messenger"))
+        return true;
+    if (search.includes("sk=messages") || hash.includes("messages"))
+        return true;
     if (isFacebookFeedMessengerSurface()) return true;
 
     return false;
@@ -173,12 +209,13 @@ function isFacebookFeedRootSurface() {
 }
 
 function isFacebookFeedRootRoute() {
-    const path = String(window.location?.pathname || '').toLowerCase();
-    const search = String(window.location?.search || '').toLowerCase();
-    const hash = String(window.location?.hash || '').toLowerCase();
+    const path = String(window.location?.pathname || "").toLowerCase();
+    const search = String(window.location?.search || "").toLowerCase();
+    const hash = String(window.location?.hash || "").toLowerCase();
 
-    if (path !== '/' && path !== '/home.php') return false;
-    if (search.includes('sk=messages') || hash.includes('messages')) return false;
+    if (path !== "/" && path !== "/home.php") return false;
+    if (search.includes("sk=messages") || hash.includes("messages"))
+        return false;
     return true;
 }
 
@@ -195,15 +232,19 @@ function isFacebookFeedMessengerSurface() {
         hasDomElement('[aria-label="Close chat"]');
     if (!hasMiniChatChrome) return false;
 
-    return hasDomElement('[role="textbox"][contenteditable="true"]') ||
+    return (
+        hasDomElement('[role="textbox"][contenteditable="true"]') ||
         hasDomElement('[aria-label^="Write to"]') ||
         hasDomElement('[aria-label^="Messages in conversation"]') ||
-        hasDomElement('[aria-label^="Conversation titled"]');
+        hasDomElement('[aria-label^="Conversation titled"]')
+    );
 }
 
 function isFacebookMessengerPopoverHydrated() {
-    return hasDomElement('[role="dialog"][aria-label="Messenger"]') &&
-        hasDomElement('[role="grid"][aria-label="Chats"]');
+    return (
+        hasDomElement('[role="dialog"][aria-label="Messenger"]') &&
+        hasDomElement('[role="grid"][aria-label="Chats"]')
+    );
 }
 
 function hasDomElement(selector) {
@@ -212,40 +253,46 @@ function hasDomElement(selector) {
 
 function getDomElement(selector) {
     try {
-        return typeof document?.querySelector === 'function' ? document.querySelector(selector) : null;
+        return typeof document?.querySelector === "function"
+            ? document.querySelector(selector)
+            : null;
     } catch (e) {
         return null;
     }
 }
 
 function isFacebookMessageRequestSurface() {
-    const path = String(window.location?.pathname || '').toLowerCase();
-    const search = String(window.location?.search || '').toLowerCase();
-    const hash = String(window.location?.hash || '').toLowerCase();
+    const path = String(window.location?.pathname || "").toLowerCase();
+    const search = String(window.location?.search || "").toLowerCase();
+    const hash = String(window.location?.hash || "").toLowerCase();
     const route = `${path} ${search} ${hash}`;
 
     return isFacebookMessageRequestRouteText(route);
 }
 
 function isFacebookMessageRequestRouteText(routeText) {
-    const route = String(routeText || '').toLowerCase();
+    const route = String(routeText || "").toLowerCase();
 
-    return route.includes('/messages/requests') ||
-        route.includes('/messages/message-requests') ||
-        route.includes('/messages/message_requests') ||
-        route.includes('folder=message_requests') ||
-        route.includes('folder=pending_threads') ||
-        route.includes('folder=filtered_threads') ||
-        route.includes('folder=spam_threads') ||
-        route.includes('message requests') ||
-        route.includes('message-requests') ||
-        route.includes('message_requests') ||
-        route.includes('pending_threads') ||
-        route.includes('filtered_threads') ||
-        route.includes('spam_threads');
+    return (
+        route.includes("/messages/requests") ||
+        route.includes("/messages/message-requests") ||
+        route.includes("/messages/message_requests") ||
+        route.includes("folder=message_requests") ||
+        route.includes("folder=pending_threads") ||
+        route.includes("folder=filtered_threads") ||
+        route.includes("folder=spam_threads") ||
+        route.includes("message requests") ||
+        route.includes("message-requests") ||
+        route.includes("message_requests") ||
+        route.includes("pending_threads") ||
+        route.includes("filtered_threads") ||
+        route.includes("spam_threads")
+    );
 }
 
 function isFacebookConversationRouteText(routeText) {
-    const route = String(routeText || '').toLowerCase();
-    return route.includes('/messages/t/') || route.includes('/messages/e2ee/t/');
+    const route = String(routeText || "").toLowerCase();
+    return (
+        route.includes("/messages/t/") || route.includes("/messages/e2ee/t/")
+    );
 }

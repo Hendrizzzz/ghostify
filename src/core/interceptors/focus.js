@@ -1,9 +1,21 @@
-import { isFacebookDotCom, isFacebookMessengerProxy, isMessengerDotCom, isInstagram } from '../../config.js';
-import { getFacebookSpoofState } from '../../platforms/facebook.js';
-import { getInstagramSpoofState } from '../../platforms/instagram.js';
-import { getMessengerSpoofState } from '../../platforms/messenger.js';
+import {
+    isFacebookDotCom,
+    isFacebookMessengerProxy,
+    isMessengerDotCom,
+    isInstagram,
+} from "../../config.js";
+import { getFacebookSpoofState } from "../../platforms/facebook.js";
+import { getInstagramSpoofState } from "../../platforms/instagram.js";
+import { getMessengerSpoofState } from "../../platforms/messenger.js";
 
-const FOCUS_EVENTS = ['visibilitychange', 'webkitvisibilitychange', 'blur', 'focus', 'focusin', 'focusout'];
+const FOCUS_EVENTS = [
+    "visibilitychange",
+    "webkitvisibilitychange",
+    "blur",
+    "focus",
+    "focusin",
+    "focusout",
+];
 
 function shouldSpoofVisibility() {
     if (isMessengerDotCom || isFacebookMessengerProxy) {
@@ -29,40 +41,54 @@ export function hookVisibility() {
     window.__GHOSTIFY_VISIBILITY_HOOKED__ = true;
 
     const originalHasFocus = document.hasFocus.bind(document);
-    const originalVisibilityState = getPropertyDescriptor('visibilityState');
-    const originalHidden = getPropertyDescriptor('hidden');
+    const originalVisibilityState = getPropertyDescriptor("visibilityState");
+    const originalHidden = getPropertyDescriptor("hidden");
     const originalAddEventListener = EventTarget.prototype.addEventListener;
-    const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+    const originalRemoveEventListener =
+        EventTarget.prototype.removeEventListener;
     const wrappedListeners = new WeakMap();
 
-    Object.defineProperty(document, 'hasFocus', {
+    Object.defineProperty(document, "hasFocus", {
         value: function () {
             const spoof = shouldSpoofVisibility();
-            if (spoof === 'hidden' || spoof === 'unfocused' || spoof === 'unfocused-passive') return false;
+            if (
+                spoof === "hidden" ||
+                spoof === "unfocused" ||
+                spoof === "unfocused-passive"
+            )
+                return false;
             return originalHasFocus();
         },
-        configurable: true
+        configurable: true,
     });
 
-    Object.defineProperty(document, 'visibilityState', {
+    Object.defineProperty(document, "visibilityState", {
         get: function () {
             const spoof = shouldSpoofVisibility();
-            if (spoof === 'hidden') return 'hidden';
-            return originalVisibilityState?.get ? originalVisibilityState.get.call(document) : 'visible';
+            if (spoof === "hidden") return "hidden";
+            return originalVisibilityState?.get
+                ? originalVisibilityState.get.call(document)
+                : "visible";
         },
-        configurable: true
+        configurable: true,
     });
 
-    Object.defineProperty(document, 'hidden', {
+    Object.defineProperty(document, "hidden", {
         get: function () {
             const spoof = shouldSpoofVisibility();
-            if (spoof === 'hidden') return true;
-            return originalHidden?.get ? originalHidden.get.call(document) : false;
+            if (spoof === "hidden") return true;
+            return originalHidden?.get
+                ? originalHidden.get.call(document)
+                : false;
         },
-        configurable: true
+        configurable: true,
     });
 
-    EventTarget.prototype.addEventListener = function (type, listener, options) {
+    EventTarget.prototype.addEventListener = function (
+        type,
+        listener,
+        options,
+    ) {
         if (!FOCUS_EVENTS.includes(type) || !listener) {
             return originalAddEventListener.call(this, type, listener, options);
         }
@@ -71,9 +97,20 @@ export function hookVisibility() {
         return originalAddEventListener.call(this, type, wrapped, options);
     };
 
-    EventTarget.prototype.removeEventListener = function (type, listener, options) {
-        const wrapped = FOCUS_EVENTS.includes(type) ? findWrappedListener(type, listener, wrappedListeners) : null;
-        return originalRemoveEventListener.call(this, type, wrapped || listener, options);
+    EventTarget.prototype.removeEventListener = function (
+        type,
+        listener,
+        options,
+    ) {
+        const wrapped = FOCUS_EVENTS.includes(type)
+            ? findWrappedListener(type, listener, wrappedListeners)
+            : null;
+        return originalRemoveEventListener.call(
+            this,
+            type,
+            wrapped || listener,
+            options,
+        );
     };
 }
 
@@ -99,21 +136,33 @@ function getWrappedListener(type, listener, wrappedListeners) {
     const wrapped = function (event) {
         const spoof = shouldSpoofVisibility();
         if (spoof) {
-            const suppressFocusEvents = spoof === 'hidden' || spoof === 'unfocused';
-            if (suppressFocusEvents && (type === 'blur' || type === 'focus' || type === 'focusin' || type === 'focusout')) {
-                if (this === window || this === document || (event && (event.target === window || event.target === document))) {
+            const suppressFocusEvents =
+                spoof === "hidden" || spoof === "unfocused";
+            if (
+                suppressFocusEvents &&
+                (type === "blur" ||
+                    type === "focus" ||
+                    type === "focusin" ||
+                    type === "focusout")
+            ) {
+                if (
+                    this === window ||
+                    this === document ||
+                    (event &&
+                        (event.target === window || event.target === document))
+                ) {
                     return;
                 }
-            } else if (spoof === 'hidden') {
+            } else if (spoof === "hidden") {
                 return;
             }
         }
 
-        if (typeof listener === 'function') {
+        if (typeof listener === "function") {
             return listener.call(this, event);
         }
 
-        if (listener && typeof listener.handleEvent === 'function') {
+        if (listener && typeof listener.handleEvent === "function") {
             return listener.handleEvent.call(listener, event);
         }
     };

@@ -1,27 +1,31 @@
-const assert = require('assert');
-const childProcess = require('child_process');
-const crypto = require('crypto');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const assert = require("assert");
+const childProcess = require("child_process");
+const crypto = require("crypto");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
 
-const repoRoot = path.resolve(__dirname, '..');
-const pkg = require('../package.json');
-const staticPopupAssets = new Set(['css/popup.css', 'icons/icon32.png', 'js/popup.js']);
-const textPackageExtensions = new Set(['.css', '.html', '.js', '.json']);
+const repoRoot = path.resolve(__dirname, "..");
+const pkg = require("../package.json");
+const staticPopupAssets = new Set([
+    "css/popup.css",
+    "icons/icon32.png",
+    "js/popup.js",
+]);
+const textPackageExtensions = new Set([".css", ".html", ".js", ".json"]);
 
 function runPackager(distDir, outputDir, extraArgs = []) {
     return childProcess.spawnSync(
         process.execPath,
         [
-            'scripts/package-extension.js',
-            '--dist-dir',
+            "scripts/package-extension.js",
+            "--dist-dir",
             distDir,
-            '--output-dir',
+            "--output-dir",
             outputDir,
-            ...extraArgs
+            ...extraArgs,
         ],
-        { cwd: repoRoot, encoding: 'utf8' }
+        { cwd: repoRoot, encoding: "utf8" },
     );
 }
 
@@ -30,9 +34,18 @@ function rewriteTextLineEndings(root, newline) {
         const absolutePath = path.join(root, entry.name);
         if (entry.isDirectory()) {
             rewriteTextLineEndings(absolutePath, newline);
-        } else if (entry.isFile() && textPackageExtensions.has(path.extname(entry.name).toLowerCase())) {
-            const normalized = fs.readFileSync(absolutePath, 'utf8').replace(/\r\n?/g, '\n');
-            fs.writeFileSync(absolutePath, normalized.replace(/\n/g, newline), 'utf8');
+        } else if (
+            entry.isFile() &&
+            textPackageExtensions.has(path.extname(entry.name).toLowerCase())
+        ) {
+            const normalized = fs
+                .readFileSync(absolutePath, "utf8")
+                .replace(/\r\n?/g, "\n");
+            fs.writeFileSync(
+                absolutePath,
+                normalized.replace(/\n/g, newline),
+                "utf8",
+            );
         }
     }
 }
@@ -41,7 +54,7 @@ function findEndOfCentralDirectory(buffer) {
     for (let offset = buffer.length - 22; offset >= 0; offset -= 1) {
         if (buffer.readUInt32LE(offset) === 0x06054b50) return offset;
     }
-    throw new Error('ZIP end of central directory record not found');
+    throw new Error("ZIP end of central directory record not found");
 }
 
 function readZipEntries(zipPath) {
@@ -52,13 +65,21 @@ function readZipEntries(zipPath) {
     const entries = new Map();
 
     for (let index = 0; index < entryCount; index += 1) {
-        assert.strictEqual(buffer.readUInt32LE(offset), 0x02014b50, 'invalid central directory entry');
+        assert.strictEqual(
+            buffer.readUInt32LE(offset),
+            0x02014b50,
+            "invalid central directory entry",
+        );
         const compressedSize = buffer.readUInt32LE(offset + 20);
         const fileNameLength = buffer.readUInt16LE(offset + 28);
         const extraLength = buffer.readUInt16LE(offset + 30);
         const commentLength = buffer.readUInt16LE(offset + 32);
         const localHeaderOffset = buffer.readUInt32LE(offset + 42);
-        const name = buffer.toString('utf8', offset + 46, offset + 46 + fileNameLength);
+        const name = buffer.toString(
+            "utf8",
+            offset + 46,
+            offset + 46 + fileNameLength,
+        );
         entries.set(name, { compressedSize, localHeaderOffset });
         offset += 46 + fileNameLength + extraLength + commentLength;
     }
@@ -70,7 +91,11 @@ function readStoredZipEntry(zip, name) {
     const entry = zip.entries.get(name);
     assert(entry, `missing ZIP entry: ${name}`);
     const offset = entry.localHeaderOffset;
-    assert.strictEqual(zip.buffer.readUInt32LE(offset), 0x04034b50, 'invalid local file header');
+    assert.strictEqual(
+        zip.buffer.readUInt32LE(offset),
+        0x04034b50,
+        "invalid local file header",
+    );
     const fileNameLength = zip.buffer.readUInt16LE(offset + 26);
     const extraLength = zip.buffer.readUInt16LE(offset + 28);
     const dataStart = offset + 30 + fileNameLength + extraLength;
@@ -78,15 +103,24 @@ function readStoredZipEntry(zip, name) {
 }
 
 function readPngDimensions(data, label) {
-    const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-    assert(data.length >= 24 && data.subarray(0, 8).equals(pngSignature), `${label} must be a PNG`);
-    assert.strictEqual(data.toString('ascii', 12, 16), 'IHDR', `${label} must have an IHDR header`);
+    const pngSignature = Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    ]);
+    assert(
+        data.length >= 24 && data.subarray(0, 8).equals(pngSignature),
+        `${label} must be a PNG`,
+    );
+    assert.strictEqual(
+        data.toString("ascii", 12, 16),
+        "IHDR",
+        `${label} must have an IHDR header`,
+    );
     return { width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
 }
 
 function requiredManifestAssets(manifest) {
     const files = new Set(staticPopupAssets);
-    files.add('manifest.json');
+    files.add("manifest.json");
     files.add(manifest.background.service_worker);
     files.add(manifest.action.default_popup);
     for (const file of Object.values(manifest.icons)) files.add(file);
@@ -99,25 +133,37 @@ function requiredManifestAssets(manifest) {
     return files;
 }
 
-const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-package-'));
+const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "ghostify-package-"));
 
 try {
-    const result = runPackager(path.join(repoRoot, 'dist'), outputDir);
+    const result = runPackager(path.join(repoRoot, "dist"), outputDir);
 
     assert.strictEqual(result.status, 0, result.stderr || result.stdout);
 
     const zipName = `ghostify-v${pkg.version}-chrome-web-store.zip`;
     const zipPath = path.join(outputDir, zipName);
     const shaPath = `${zipPath}.sha256`;
-    assert(fs.existsSync(zipPath), 'release ZIP was not created');
-    assert(fs.existsSync(shaPath), 'release checksum was not created');
+    assert(fs.existsSync(zipPath), "release ZIP was not created");
+    assert(fs.existsSync(shaPath), "release checksum was not created");
 
     const zip = readZipEntries(zipPath);
-    assert(zip.entries.has('manifest.json'), 'manifest.json must be at the ZIP root');
-    assert(!zip.entries.has('dist/manifest.json'), 'ZIP must not contain a dist/ prefix');
+    assert(
+        zip.entries.has("manifest.json"),
+        "manifest.json must be at the ZIP root",
+    );
+    assert(
+        !zip.entries.has("dist/manifest.json"),
+        "ZIP must not contain a dist/ prefix",
+    );
 
-    const manifest = JSON.parse(readStoredZipEntry(zip, 'manifest.json').toString('utf8'));
-    assert.strictEqual(manifest.version, pkg.version, 'ZIP manifest version must match package.json');
+    const manifest = JSON.parse(
+        readStoredZipEntry(zip, "manifest.json").toString("utf8"),
+    );
+    assert.strictEqual(
+        manifest.version,
+        pkg.version,
+        "ZIP manifest version must match package.json",
+    );
     for (const file of requiredManifestAssets(manifest)) {
         assert(zip.entries.has(file), `ZIP is missing required asset: ${file}`);
     }
@@ -126,44 +172,61 @@ try {
         assert.deepStrictEqual(
             readPngDimensions(readStoredZipEntry(zip, file), file),
             { width: size, height: size },
-            `${file} dimensions must match its manifest declaration`
+            `${file} dimensions must match its manifest declaration`,
         );
     }
 
-    const expectedSha = crypto.createHash('sha256').update(fs.readFileSync(zipPath)).digest('hex');
+    const expectedSha = crypto
+        .createHash("sha256")
+        .update(fs.readFileSync(zipPath))
+        .digest("hex");
     assert.strictEqual(
-        fs.readFileSync(shaPath, 'utf8').trim(),
+        fs.readFileSync(shaPath, "utf8").trim(),
         `${expectedSha}  ${zipName}`,
-        'checksum file must match the generated ZIP'
+        "checksum file must match the generated ZIP",
     );
 
     const firstBuild = fs.readFileSync(zipPath);
-    const rebuild = runPackager(path.join(repoRoot, 'dist'), outputDir);
+    const rebuild = runPackager(path.join(repoRoot, "dist"), outputDir);
     assert.strictEqual(rebuild.status, 0, rebuild.stderr || rebuild.stdout);
     assert(
         firstBuild.equals(fs.readFileSync(zipPath)),
-        'two builds from the same source tree must produce byte-identical release ZIPs'
+        "two builds from the same source tree must produce byte-identical release ZIPs",
     );
 
-    const lfDist = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-dist-lf-'));
-    const crlfDist = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-dist-crlf-'));
-    const lfOutput = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-package-lf-'));
-    const crlfOutput = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-package-crlf-'));
+    const lfDist = fs.mkdtempSync(path.join(os.tmpdir(), "ghostify-dist-lf-"));
+    const crlfDist = fs.mkdtempSync(
+        path.join(os.tmpdir(), "ghostify-dist-crlf-"),
+    );
+    const lfOutput = fs.mkdtempSync(
+        path.join(os.tmpdir(), "ghostify-package-lf-"),
+    );
+    const crlfOutput = fs.mkdtempSync(
+        path.join(os.tmpdir(), "ghostify-package-crlf-"),
+    );
     try {
-        fs.cpSync(path.join(repoRoot, 'dist'), lfDist, { recursive: true });
-        fs.cpSync(path.join(repoRoot, 'dist'), crlfDist, { recursive: true });
-        rewriteTextLineEndings(lfDist, '\n');
-        rewriteTextLineEndings(crlfDist, '\r\n');
+        fs.cpSync(path.join(repoRoot, "dist"), lfDist, { recursive: true });
+        fs.cpSync(path.join(repoRoot, "dist"), crlfDist, { recursive: true });
+        rewriteTextLineEndings(lfDist, "\n");
+        rewriteTextLineEndings(crlfDist, "\r\n");
 
         const lfResult = runPackager(lfDist, lfOutput);
         const crlfResult = runPackager(crlfDist, crlfOutput);
-        assert.strictEqual(lfResult.status, 0, lfResult.stderr || lfResult.stdout);
-        assert.strictEqual(crlfResult.status, 0, crlfResult.stderr || crlfResult.stdout);
+        assert.strictEqual(
+            lfResult.status,
+            0,
+            lfResult.stderr || lfResult.stdout,
+        );
+        assert.strictEqual(
+            crlfResult.status,
+            0,
+            crlfResult.stderr || crlfResult.stdout,
+        );
         assert(
-            fs.readFileSync(path.join(lfOutput, zipName)).equals(
-                fs.readFileSync(path.join(crlfOutput, zipName))
-            ),
-            'LF and CRLF source trees must produce byte-identical release ZIPs'
+            fs
+                .readFileSync(path.join(lfOutput, zipName))
+                .equals(fs.readFileSync(path.join(crlfOutput, zipName))),
+            "LF and CRLF source trees must produce byte-identical release ZIPs",
         );
     } finally {
         for (const directory of [lfDist, crlfDist, lfOutput, crlfOutput]) {
@@ -171,31 +234,43 @@ try {
         }
     }
 
-    const mismatchedTag = runPackager(
-        path.join(repoRoot, 'dist'),
-        outputDir,
-        ['--expected-tag', 'v0.0.0']
+    const mismatchedTag = runPackager(path.join(repoRoot, "dist"), outputDir, [
+        "--expected-tag",
+        "v0.0.0",
+    ]);
+    assert.notStrictEqual(
+        mismatchedTag.status,
+        0,
+        "mismatched release tag should fail",
     );
-    assert.notStrictEqual(mismatchedTag.status, 0, 'mismatched release tag should fail');
     assert.match(
         mismatchedTag.stderr,
-        new RegExp(`Release tag v0\\.0\\.0 does not match package version v${pkg.version}`),
-        mismatchedTag.stderr || mismatchedTag.stdout
+        new RegExp(
+            `Release tag v0\\.0\\.0 does not match package version v${pkg.version}`,
+        ),
+        mismatchedTag.stderr || mismatchedTag.stdout,
     );
 
-    const rogueDist = fs.mkdtempSync(path.join(os.tmpdir(), 'ghostify-dist-'));
-    fs.cpSync(path.join(repoRoot, 'dist'), rogueDist, { recursive: true });
-    fs.writeFileSync(path.join(rogueDist, 'debug-capture.log'), 'local debug capture');
+    const rogueDist = fs.mkdtempSync(path.join(os.tmpdir(), "ghostify-dist-"));
+    fs.cpSync(path.join(repoRoot, "dist"), rogueDist, { recursive: true });
+    fs.writeFileSync(
+        path.join(rogueDist, "debug-capture.log"),
+        "local debug capture",
+    );
     const rogueResult = runPackager(rogueDist, outputDir);
     fs.rmSync(rogueDist, { recursive: true, force: true });
-    assert.notStrictEqual(rogueResult.status, 0, 'unexpected dist files should fail packaging');
+    assert.notStrictEqual(
+        rogueResult.status,
+        0,
+        "unexpected dist files should fail packaging",
+    );
     assert.match(
         rogueResult.stderr,
         /Unexpected dist file: debug-capture\.log/,
-        rogueResult.stderr || rogueResult.stdout
+        rogueResult.stderr || rogueResult.stdout,
     );
 } finally {
     fs.rmSync(outputDir, { recursive: true, force: true });
 }
 
-console.log('package-extension release ZIP tests passed');
+console.log("package-extension release ZIP tests passed");

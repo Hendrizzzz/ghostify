@@ -11,8 +11,8 @@ Android 142 or later from the same shared runtime.
 ## Environment
 
 - Ubuntu 24.04 or another current Linux distribution
-- Node.js 24.x
-- npm 11.x
+- Node.js 22.13 or newer (the CI pipeline uses Node 24.x)
+- npm 11.x (or the npm bundled with your supported Node.js release)
 - Network access to the public npm registry for `npm ci`
 
 The build uses the open-source [`esbuild`](https://github.com/evanw/esbuild)

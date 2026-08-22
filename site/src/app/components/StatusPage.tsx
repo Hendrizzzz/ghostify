@@ -73,7 +73,8 @@ function formatStatusDetail(entry: VerificationEntry | null) {
   if (!entry) return 'No public record';
   const status = getEffectiveStatus(entry);
   const isVerified = status === 'maintainer_verified' || status === 'community_verified_reviewed';
-  if (entry.verifiedAt) return `${isVerified ? 'Verified' : 'Last verified'} ${formatStatusDate(entry.verifiedAt)}`;
+  if (entry.verifiedAt)
+    return `${isVerified ? 'Verified' : 'Last verified'} ${formatStatusDate(entry.verifiedAt)}`;
   return STATUS_META[status].short;
 }
 
@@ -86,7 +87,14 @@ function PlatformLogo({ platform }: { platform: PlatformName }) {
         <circle cx="16" cy="16" r="3.8" stroke="white" strokeWidth="2.2" />
         <circle cx="21.2" cy="10.9" r="1.45" fill="white" />
         <defs>
-          <linearGradient id="statusInstagramGradient" x1="6" y1="27" x2="27" y2="5" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id="statusInstagramGradient"
+            x1="6"
+            y1="27"
+            x2="27"
+            y2="5"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="#FEDA75" />
             <stop offset="0.32" stopColor="#FA7E1E" />
             <stop offset="0.62" stopColor="#D62976" />
@@ -104,9 +112,19 @@ function PlatformLogo({ platform }: { platform: PlatformName }) {
           d="M16 4C9.1 4 4 8.75 4 15.15c0 3.45 1.48 6.45 3.95 8.45v4.1c0 .72.77 1.18 1.39.82l3.55-2.05c1 .25 2.05.38 3.11.38 6.9 0 12-4.75 12-11.7S22.9 4 16 4Z"
           fill="url(#statusMessengerGradient)"
         />
-        <path d="M9.2 18.8 14 13.7l3.42 3.52 5.38-5.52-4.8 7.88-3.52-3.52-5.28 2.74Z" fill="white" />
+        <path
+          d="M9.2 18.8 14 13.7l3.42 3.52 5.38-5.52-4.8 7.88-3.52-3.52-5.28 2.74Z"
+          fill="white"
+        />
         <defs>
-          <linearGradient id="statusMessengerGradient" x1="5" y1="27" x2="27" y2="5" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id="statusMessengerGradient"
+            x1="5"
+            y1="27"
+            x2="27"
+            y2="5"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="#0078FF" />
             <stop offset="0.55" stopColor="#00C6FF" />
             <stop offset="1" stopColor="#A033FF" />
@@ -149,13 +167,18 @@ function CurrentNotice() {
   const overallStatus = getPublicReleaseStatus();
   const meta = STATUS_META[overallStatus];
   const heading = STATUS_DATA.summary.label;
-  const message = meta.tone === 'ok'
-    ? `Checked ${formatStatusDate(STATUS_DATA.generatedAt)} across Instagram, Messenger, and Facebook.`
-    : STATUS_DATA.summary.message;
-  const buildsMatch = STATUS_DATA.release.verificationVersion === STATUS_DATA.release.publishedVersion;
+  const message =
+    meta.tone === 'ok'
+      ? `Checked ${formatStatusDate(STATUS_DATA.generatedAt)} across Instagram, Messenger, and Facebook.`
+      : STATUS_DATA.summary.message;
+  const buildsMatch =
+    STATUS_DATA.release.verificationVersion === STATUS_DATA.release.publishedVersion;
 
   return (
-    <section className={`status-notice status-notice-${meta.tone}`} aria-label="Current status summary">
+    <section
+      className={`status-notice status-notice-${meta.tone}`}
+      aria-label="Current status summary"
+    >
       <div className="status-notice-head">
         <span className="status-notice-label">
           <StatusIcon status={overallStatus} size={18} />
@@ -168,8 +191,12 @@ function CurrentNotice() {
       <div className="status-notice-body">
         {!buildsMatch && (
           <div className="status-version-row">
-            <span className="status-version-pill">Verification build v{STATUS_DATA.release.verificationVersion}</span>
-            <span className="status-version-pill">Store v{STATUS_DATA.release.publishedVersion}</span>
+            <span className="status-version-pill">
+              Verification build v{STATUS_DATA.release.verificationVersion}
+            </span>
+            <span className="status-version-pill">
+              Store v{STATUS_DATA.release.publishedVersion}
+            </span>
           </div>
         )}
         <h1>{heading}</h1>
@@ -218,9 +245,9 @@ function statusPriority(event: (typeof STATUS_DATA.history)[number]) {
 function primaryEventForDay(events: (typeof STATUS_DATA.history)[number][]) {
   const explicitStatusEvents = events.filter((event) => !isProductUpdate(event));
   const candidates = explicitStatusEvents.length ? explicitStatusEvents : events;
-  return candidates.reduce((selected, event) => (
-    statusPriority(event) > statusPriority(selected) ? event : selected
-  ));
+  return candidates.reduce((selected, event) =>
+    statusPriority(event) > statusPriority(selected) ? event : selected,
+  );
 }
 
 function buildTimelineDays(year: number, today: Date): TimelineDay[] {
@@ -259,9 +286,10 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
     if (!inYear || time < launchTime) {
       tone = 'outside';
       label = time < launchTime ? 'Before the Chrome Web Store launch' : 'Outside this year';
-      detail = time < launchTime
-        ? `Ghostify launched on the Chrome Web Store on ${formatStatusDate(STATUS_DATA.release.publishedAt)}.`
-        : 'This date is outside the selected year.';
+      detail =
+        time < launchTime
+          ? `Ghostify launched on the Chrome Web Store on ${formatStatusDate(STATUS_DATA.release.publishedAt)}.`
+          : 'This date is outside the selected year.';
     } else if (time > today.getTime()) {
       tone = 'upcoming';
       label = 'Upcoming date';
@@ -272,10 +300,16 @@ function buildTimelineDays(year: number, today: Date): TimelineDay[] {
       detail = 'No status update has been merged for this date.';
     } else if (latestEvent) {
       tone = toneForStatus(latestEvent.publicStatus);
-      label = tone === 'clear' ? 'No known issue recorded' : tone === 'issue' ? 'Known issue' : 'Under review';
-      detail = tone === 'clear'
-        ? 'No newer issue was recorded after the latest status update.'
-        : latestEvent.summary;
+      label =
+        tone === 'clear'
+          ? 'No known issue recorded'
+          : tone === 'issue'
+            ? 'Known issue'
+            : 'Under review';
+      detail =
+        tone === 'clear'
+          ? 'No newer issue was recorded after the latest status update.'
+          : latestEvent.summary;
     }
 
     if (event) {
@@ -305,33 +339,42 @@ function VerificationTimeline() {
   }, []);
   const launchYear = new Date(`${STATUS_DATA.release.publishedAt}T00:00:00Z`).getUTCFullYear();
   const currentYear = Math.max(launchYear, today.getUTCFullYear());
-  const years = Array.from({ length: currentYear - launchYear + 1 }, (_, index) => currentYear - index);
+  const years = Array.from(
+    { length: currentYear - launchYear + 1 },
+    (_, index) => currentYear - index,
+  );
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const days = useMemo(() => buildTimelineDays(selectedYear, today), [selectedYear, today]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const selected = selectedDate
-    ? days.find((day) => day.date === selectedDate && day.date.startsWith(`${selectedYear}-`)) ?? null
+    ? (days.find((day) => day.date === selectedDate && day.date.startsWith(`${selectedYear}-`)) ??
+      null)
     : null;
   const latestUpdate = STATUS_DATA.history[0];
   const latestDay = days.find((day) => day.date === latestUpdate.date) ?? null;
-  const detail = selected ?? latestDay ?? {
-    date: latestUpdate.date,
-    tone: toneForStatus(latestUpdate.publicStatus),
-    label: latestUpdate.title,
-    detail: latestUpdate.summary,
-    hasUpdate: isProductUpdate(latestUpdate),
-    updateLabel: null,
-  };
-  const months = useMemo(() => Array.from({ length: 12 }, (_, month) => {
-    const first = new Date(Date.UTC(selectedYear, month, 1));
-    const firstFullWeek = new Date(first);
-    firstFullWeek.setUTCDate(first.getUTCDate() + ((7 - first.getUTCDay()) % 7));
-    const firstCell = days.find((day) => day.date === toDateKey(firstFullWeek));
-    return {
-      label: new Intl.DateTimeFormat('en', { month: 'short', timeZone: 'UTC' }).format(first),
-      column: firstCell?.column ?? 1,
+  const detail = selected ??
+    latestDay ?? {
+      date: latestUpdate.date,
+      tone: toneForStatus(latestUpdate.publicStatus),
+      label: latestUpdate.title,
+      detail: latestUpdate.summary,
+      hasUpdate: isProductUpdate(latestUpdate),
+      updateLabel: null,
     };
-  }), [days, selectedYear]);
+  const months = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, month) => {
+        const first = new Date(Date.UTC(selectedYear, month, 1));
+        const firstFullWeek = new Date(first);
+        firstFullWeek.setUTCDate(first.getUTCDate() + ((7 - first.getUTCDay()) % 7));
+        const firstCell = days.find((day) => day.date === toDateKey(firstFullWeek));
+        return {
+          label: new Intl.DateTimeFormat('en', { month: 'short', timeZone: 'UTC' }).format(first),
+          column: firstCell?.column ?? 1,
+        };
+      }),
+    [days, selectedYear],
+  );
 
   const changeYear = (year: number) => {
     setSelectedYear(year);
@@ -344,7 +387,10 @@ function VerificationTimeline() {
 
     const targetColumn = latestDay?.column ?? 54;
     const target = (targetColumn / 54) * calendar.scrollWidth - calendar.clientWidth * 0.72;
-    calendar.scrollLeft = Math.max(0, Math.min(calendar.scrollWidth - calendar.clientWidth, target));
+    calendar.scrollLeft = Math.max(
+      0,
+      Math.min(calendar.scrollWidth - calendar.clientWidth, target),
+    );
   }, [latestDay?.column, selectedYear]);
 
   return (
@@ -353,7 +399,12 @@ function VerificationTimeline() {
         <strong>Status calendar</strong>
         <div className="status-timeline-years" aria-label="Choose a status year">
           {years.map((year) => (
-            <button type="button" className={year === selectedYear ? 'is-active' : undefined} onClick={() => changeYear(year)} key={year}>
+            <button
+              type="button"
+              className={year === selectedYear ? 'is-active' : undefined}
+              onClick={() => changeYear(year)}
+              key={year}
+            >
               {year}
             </button>
           ))}
@@ -366,13 +417,23 @@ function VerificationTimeline() {
         <span className="is-issue">Known issue</span>
         <span className="is-quiet">No update</span>
       </div>
-      <p className="status-calendar-hint" aria-hidden="true">Current period in view · Swipe to explore the year</p>
+      <p className="status-calendar-hint" aria-hidden="true">
+        Current period in view · Swipe to explore the year
+      </p>
       <div className="status-calendar-wrap" ref={calendarRef}>
         <div className="status-calendar-months" aria-hidden="true">
-          {months.map((month) => <span style={{ gridColumn: month.column }} key={month.label}>{month.label}</span>)}
+          {months.map((month) => (
+            <span style={{ gridColumn: month.column }} key={month.label}>
+              {month.label}
+            </span>
+          ))}
         </div>
         <div className="status-calendar-body">
-          <div className="status-calendar-weekdays" aria-hidden="true"><span>Mon</span><span>Wed</span><span>Fri</span></div>
+          <div className="status-calendar-weekdays" aria-hidden="true">
+            <span>Mon</span>
+            <span>Wed</span>
+            <span>Fri</span>
+          </div>
           <div className={`status-calendar-days${selectedDate ? ' has-selection' : ''}`}>
             {days.map((day) => (
               <button
@@ -382,11 +443,14 @@ function VerificationTimeline() {
                 aria-label={`${formatStatusDate(day.date)}: ${day.label}${day.updateLabel ? `. Product update: ${day.updateLabel}` : ''}`}
                 aria-pressed={selectedDate === day.date}
                 disabled={day.tone === 'outside'}
-                onClick={() => setSelectedDate((current) => current === day.date ? null : day.date)}
+                onClick={() =>
+                  setSelectedDate((current) => (current === day.date ? null : day.date))
+                }
                 key={day.date}
               >
                 <span className="status-calendar-tooltip" role="tooltip">
-                  <b>{formatStatusDate(day.date)}</b>{day.label}
+                  <b>{formatStatusDate(day.date)}</b>
+                  {day.label}
                   {day.updateLabel && <em>Product update · {day.updateLabel}</em>}
                 </span>
               </button>
@@ -406,11 +470,17 @@ function VerificationTimeline() {
   );
 }
 
-function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[number]; entries: VerificationEntry[] }) {
+function PlatformRow({
+  platform,
+  entries,
+}: {
+  platform: (typeof PLATFORMS)[number];
+  entries: VerificationEntry[];
+}) {
   const platformStatus = getPlatformWorstStatus(entries);
-  const verifiedBuildOnly = !STATUS_DATA.release.matchesVerificationBuild && (
-    platformStatus === 'maintainer_verified' || platformStatus === 'community_verified_reviewed'
-  );
+  const verifiedBuildOnly =
+    !STATUS_DATA.release.matchesVerificationBuild &&
+    (platformStatus === 'maintainer_verified' || platformStatus === 'community_verified_reviewed');
 
   return (
     <article className="status-platform-row">
@@ -421,7 +491,11 @@ function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[numbe
             <strong>{platform.name}</strong>
             <StatusPill
               status={platformStatus}
-              label={verifiedBuildOnly ? `Verified in v${STATUS_DATA.release.verificationVersion}` : undefined}
+              label={
+                verifiedBuildOnly
+                  ? `Verified in v${STATUS_DATA.release.verificationVersion}`
+                  : undefined
+              }
             />
           </div>
           <div className="status-platform-sub">
@@ -438,7 +512,9 @@ function PlatformRow({ platform, entries }: { platform: (typeof PLATFORMS)[numbe
           return (
             <div className="status-feature-row" key={feature}>
               <span>{feature}</span>
-              <span className={`status-feature-state status-${STATUS_META[status].tone}`}>{formatStatusDetail(entry)}</span>
+              <span className={`status-feature-state status-${STATUS_META[status].tone}`}>
+                {formatStatusDetail(entry)}
+              </span>
             </div>
           );
         })}
@@ -472,7 +548,11 @@ function StatusActions() {
         <History size={16} strokeWidth={1.8} />
         View history
       </a>
-      <a href="https://github.com/Hendrizzzz/Ghostify/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">
+      <a
+        href="https://github.com/Hendrizzzz/Ghostify/issues/new?template=bug_report.yml"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <ExternalLink size={16} strokeWidth={1.8} />
         Report an issue
       </a>
@@ -493,7 +573,10 @@ const HISTORY_EVENT_META: Record<HistoryEventTone, { label: string }> = {
 function getHistoryEventTone(item: HistoryItem): HistoryEventTone {
   if (isProductUpdate(item)) return 'update';
   if (item.publicStatus === 'known_issue') return 'issue';
-  if (item.publicStatus === 'maintainer_verified' || item.publicStatus === 'community_verified_reviewed') {
+  if (
+    item.publicStatus === 'maintainer_verified' ||
+    item.publicStatus === 'community_verified_reviewed'
+  ) {
     return 'operational';
   }
   return 'review';
@@ -527,8 +610,11 @@ function buildHistoryGroups() {
   });
   return [...groups.entries()].map(([key, items]) => ({
     key,
-    label: new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric', timeZone: 'UTC' })
-      .format(new Date(`${key}-01T00:00:00Z`)),
+    label: new Intl.DateTimeFormat('en', {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(`${key}-01T00:00:00Z`)),
     items,
   }));
 }
@@ -537,8 +623,12 @@ function CurrentStatus() {
   return (
     <>
       <div className="status-utility-row">
-        <a className="status-home-link" href="/"><ArrowLeft size={15} /> Back to Ghostify</a>
-        <a className="status-history-link" href="/status/history">View history</a>
+        <a className="status-home-link" href="/">
+          <ArrowLeft size={15} /> Back to Ghostify
+        </a>
+        <a className="status-history-link" href="/status/history">
+          View history
+        </a>
       </div>
       <CurrentNotice />
       <SystemStatus />
@@ -550,7 +640,9 @@ function CurrentStatus() {
 function HistoryStatus() {
   return (
     <>
-      <a className="status-home-link" href="/status"><ArrowLeft size={15} /> Current status</a>
+      <a className="status-home-link" href="/status">
+        <ArrowLeft size={15} /> Current status
+      </a>
       <section className="status-panel" aria-labelledby="history-heading">
         <div className="status-panel-head">
           <h1 id="history-heading">Status history</h1>
@@ -558,12 +650,19 @@ function HistoryStatus() {
         </div>
         <div className="status-history-list">
           {buildHistoryGroups().map((group) => (
-            <section className="status-history-group" aria-labelledby={`history-${group.key}`} key={group.key}>
+            <section
+              className="status-history-group"
+              aria-labelledby={`history-${group.key}`}
+              key={group.key}
+            >
               <h3 id={`history-${group.key}`}>{group.label}</h3>
               {group.items.map((item) => {
                 const tone = getHistoryEventTone(item);
                 return (
-                  <article className={`status-history-row is-${tone}`} key={`${item.date}-${item.title}`}>
+                  <article
+                    className={`status-history-row is-${tone}`}
+                    key={`${item.date}-${item.title}`}
+                  >
                     <span className={`status-history-icon is-${tone}`} aria-hidden="true">
                       <HistoryEventIcon tone={tone} size={15} />
                     </span>
@@ -587,7 +686,9 @@ function HistoryStatus() {
 export function StatusPage({ view }: StatusPageProps) {
   return (
     <section className="status-page" aria-label="Ghostify public verification status">
-      <div className="status-shell">{view === 'history' ? <HistoryStatus /> : <CurrentStatus />}</div>
+      <div className="status-shell">
+        {view === 'history' ? <HistoryStatus /> : <CurrentStatus />}
+      </div>
 
       <style>{`
         .status-page {

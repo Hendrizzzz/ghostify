@@ -13,12 +13,7 @@ import {
 import { formatStatusDate, getLastVerifiedAt } from '../statusData';
 import { GhostMark } from './GhostSVG';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
-import {
-  EDGE_STORE_URL,
-  FIREFOX_STORE_URL,
-  GITHUB_URL,
-  StoreCta,
-} from './SiteChrome';
+import { EDGE_STORE_URL, FIREFOX_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
 
 const FEATURES: Array<{
   platform: MetaPlatform;
@@ -73,17 +68,36 @@ const PLATFORMS: Array<{
   url: string;
   qualifier: string;
 }> = [
-  { platform: 'instagram', name: 'Instagram', url: 'instagram.com', qualifier: 'Its own control group' },
-  { platform: 'messenger', name: 'Messenger', url: 'messenger.com', qualifier: 'Shared settings with Facebook' },
-  { platform: 'facebook', name: 'Facebook', url: 'facebook.com', qualifier: 'Shared settings with Messenger' },
+  {
+    platform: 'instagram',
+    name: 'Instagram',
+    url: 'instagram.com',
+    qualifier: 'Its own control group',
+  },
+  {
+    platform: 'messenger',
+    name: 'Messenger',
+    url: 'messenger.com',
+    qualifier: 'Shared settings with Facebook',
+  },
+  {
+    platform: 'facebook',
+    name: 'Facebook',
+    url: 'facebook.com',
+    qualifier: 'Shared settings with Messenger',
+  },
 ];
 
-const AI_PROMPT = 'Is the Ghostify browser extension by Hendrizzzz right for me? Use only its official Chrome Web Store listing, Firefox Add-ons listing, and GitHub documentation. Explain in plain English what it helps me do, what stays on my device, why it needs access to Instagram, Facebook, and Messenger, and its real limitations. Ignore unrelated Ghostify products and third-party directories. Keep it short.';
+const AI_PROMPT =
+  'Is the Ghostify browser extension by Hendrizzzz right for me? Use only its official Chrome Web Store listing, Firefox Add-ons listing, and GitHub documentation. Explain in plain English what it helps me do, what stays on my device, why it needs access to Instagram, Facebook, and Messenger, and its real limitations. Ignore unrelated Ghostify products and third-party directories. Keep it short.';
 
 const AI_LINKS = [
   { name: 'ChatGPT', href: `https://chatgpt.com/?q=${encodeURIComponent(AI_PROMPT)}` },
   { name: 'Claude', href: `https://claude.ai/new?q=${encodeURIComponent(AI_PROMPT)}` },
-  { name: 'Perplexity', href: `https://www.perplexity.ai/search/new?q=${encodeURIComponent(AI_PROMPT)}` },
+  {
+    name: 'Perplexity',
+    href: `https://www.perplexity.ai/search/new?q=${encodeURIComponent(AI_PROMPT)}`,
+  },
 ];
 
 const EXTENSION_FOOTPRINT_KIB = 64.57;
@@ -125,7 +139,11 @@ function SignalStreams() {
       <span className="signal-stream signal-stream-seen">seen</span>
       <span className="signal-stream signal-stream-typing">
         typing
-        <i className="signal-stream-dots"><b /><b /><b /></i>
+        <i className="signal-stream-dots">
+          <b />
+          <b />
+          <b />
+        </i>
       </span>
       <span className="signal-stream signal-stream-story">story view</span>
     </div>
@@ -143,10 +161,13 @@ function HeroSignalFlow() {
       const shouldPlay = visible && !document.hidden;
       flow.classList.toggle('is-motion-paused', !shouldPlay);
     };
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      sync();
-    }, { rootMargin: '140px 0px' });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        sync();
+      },
+      { rootMargin: '140px 0px' },
+    );
     observer.observe(flow);
     document.addEventListener('visibilitychange', sync);
     return () => {
@@ -191,19 +212,20 @@ function HeroDetails() {
           const distance = Math.max(1, Math.hypot(dx, dy));
           const proximity = Math.max(0, 1 - distance / 150);
           const repel = proximity * proximity * 34;
-          const repelX = dx / distance * repel;
-          const repelY = dy / distance * repel;
+          const repelX = (dx / distance) * repel;
+          const repelY = (dy / distance) * repel;
           tile.style.setProperty('--mouse-x', `${(x * depth + repelX).toFixed(2)}px`);
           tile.style.setProperty('--mouse-y', `${(y * depth + repelY).toFixed(2)}px`);
           tile.classList.toggle('is-avoiding', proximity > 0.12);
         });
       });
     };
-    const reset = () => tiles.forEach((tile) => {
-      tile.style.setProperty('--mouse-x', '0px');
-      tile.style.setProperty('--mouse-y', '0px');
-      tile.classList.remove('is-avoiding');
-    });
+    const reset = () =>
+      tiles.forEach((tile) => {
+        tile.style.setProperty('--mouse-x', '0px');
+        tile.style.setProperty('--mouse-y', '0px');
+        tile.classList.remove('is-avoiding');
+      });
     window.addEventListener('pointermove', update, { passive: true });
     document.documentElement.addEventListener('mouseleave', reset);
     return () => {
@@ -215,43 +237,132 @@ function HeroDetails() {
 
   return (
     <div className="hero-details" aria-hidden="true" ref={detailsRef}>
-      <span className="hero-detail hero-detail-instagram"><i className="hero-detail-stage"><PlatformLogo platform="instagram" size={34} /></i></span>
-      <span className="hero-detail hero-detail-messenger"><i className="hero-detail-stage"><PlatformLogo platform="messenger" size={36} /></i></span>
-      <span className="hero-detail hero-detail-facebook"><i className="hero-detail-stage"><PlatformLogo platform="facebook" size={36} /></i></span>
-      <span className="hero-detail hero-detail-seen"><i className="hero-detail-stage"><EyeOff size={27} /></i></span>
-      <span className="hero-detail hero-detail-typing"><i className="hero-detail-stage"><MessageCircle size={27} /></i></span>
-      <span className="hero-detail hero-detail-story"><i className="hero-detail-stage"><CirclePlay size={28} /></i></span>
-      <span className="hero-detail hero-detail-local"><i className="hero-detail-stage"><ShieldCheck size={27} /></i></span>
-      <span className="hero-detail hero-detail-browser"><i className="hero-detail-stage"><img src="/edge-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-chrome"><i className="hero-detail-stage"><img src="/chrome-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-brave"><i className="hero-detail-stage"><img src="/brave-current.svg?v=2" alt="" /></i></span>
-      <span className="hero-detail hero-detail-opera"><i className="hero-detail-stage"><img src="/opera-current.svg?v=2" alt="" /></i></span>
-      <span className="hero-detail hero-detail-arc"><i className="hero-detail-stage"><img src="/arc-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-vivaldi"><i className="hero-detail-stage"><img src="/vivaldi-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-opera-gx"><i className="hero-detail-stage"><img src="/opera-gx-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-dia"><i className="hero-detail-stage"><img src="/dia-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-opera-air"><i className="hero-detail-stage"><img src="/opera-air-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-yandex"><i className="hero-detail-stage"><img src="/yandex-current.svg" alt="" /></i></span>
-      <span className="hero-detail hero-detail-firefox"><i className="hero-detail-stage"><img src="/firefox-current.svg" alt="" /></i></span>
+      <span className="hero-detail hero-detail-instagram">
+        <i className="hero-detail-stage">
+          <PlatformLogo platform="instagram" size={34} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-messenger">
+        <i className="hero-detail-stage">
+          <PlatformLogo platform="messenger" size={36} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-facebook">
+        <i className="hero-detail-stage">
+          <PlatformLogo platform="facebook" size={36} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-seen">
+        <i className="hero-detail-stage">
+          <EyeOff size={27} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-typing">
+        <i className="hero-detail-stage">
+          <MessageCircle size={27} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-story">
+        <i className="hero-detail-stage">
+          <CirclePlay size={28} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-local">
+        <i className="hero-detail-stage">
+          <ShieldCheck size={27} />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-browser">
+        <i className="hero-detail-stage">
+          <img src="/edge-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-chrome">
+        <i className="hero-detail-stage">
+          <img src="/chrome-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-brave">
+        <i className="hero-detail-stage">
+          <img src="/brave-current.svg?v=2" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-opera">
+        <i className="hero-detail-stage">
+          <img src="/opera-current.svg?v=2" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-arc">
+        <i className="hero-detail-stage">
+          <img src="/arc-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-vivaldi">
+        <i className="hero-detail-stage">
+          <img src="/vivaldi-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-opera-gx">
+        <i className="hero-detail-stage">
+          <img src="/opera-gx-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-dia">
+        <i className="hero-detail-stage">
+          <img src="/dia-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-opera-air">
+        <i className="hero-detail-stage">
+          <img src="/opera-air-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-yandex">
+        <i className="hero-detail-stage">
+          <img src="/yandex-current.svg" alt="" />
+        </i>
+      </span>
+      <span className="hero-detail hero-detail-firefox">
+        <i className="hero-detail-stage">
+          <img src="/firefox-current.svg" alt="" />
+        </i>
+      </span>
     </div>
   );
 }
 
 function PlatformControlMap() {
   return (
-    <div className="platform-control-map" aria-label="Instagram has its own controls. Messenger and Facebook share a control group.">
+    <div
+      className="platform-control-map"
+      aria-label="Instagram has its own controls. Messenger and Facebook share a control group."
+    >
       <article className="control-map-note control-map-note-own">
-        <span className="control-map-word" aria-hidden="true">own</span>
+        <span className="control-map-word" aria-hidden="true">
+          own
+        </span>
         <PlatformLogo platform="instagram" size={36} />
-        <span><small>Instagram</small><strong>Its own switches.</strong></span>
+        <span>
+          <small>Instagram</small>
+          <strong>Its own switches.</strong>
+        </span>
       </article>
       <article className="control-map-note control-map-note-shared">
-        <span className="control-map-word" aria-hidden="true">together</span>
-        <span className="control-map-pair">
-          <i><PlatformLogo platform="messenger" size={32} /></i>
-          <i><PlatformLogo platform="facebook" size={32} /></i>
+        <span className="control-map-word" aria-hidden="true">
+          together
         </span>
-        <span><small>Messenger + Facebook</small><strong>One shared set.</strong></span>
+        <span className="control-map-pair">
+          <i>
+            <PlatformLogo platform="messenger" size={32} />
+          </i>
+          <i>
+            <PlatformLogo platform="facebook" size={32} />
+          </i>
+        </span>
+        <span>
+          <small>Messenger + Facebook</small>
+          <strong>One shared set.</strong>
+        </span>
       </article>
     </div>
   );
@@ -262,16 +373,36 @@ function PrivacyIllustration() {
     <div className="privacy-illustration" aria-hidden="true">
       <div className="privacy-browser">
         <div className="privacy-browser-bar">
-          <span className="privacy-window-dots"><i /><i /><i /></span>
-          <span className="privacy-browser-url"><LockKeyhole size={11} /> supported tab</span>
+          <span className="privacy-window-dots">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="privacy-browser-url">
+            <LockKeyhole size={11} /> supported tab
+          </span>
         </div>
         <div className="privacy-browser-body">
           <div className="privacy-signal-list">
-            <span><EyeOff size={15} /><b>Seen receipt</b><CircleCheck size={15} /></span>
-            <span><MessageCircle size={15} /><b>Typing signal</b><CircleCheck size={15} /></span>
-            <span><CirclePlay size={15} /><b>Story view</b><CircleCheck size={15} /></span>
+            <span>
+              <EyeOff size={15} />
+              <b>Seen receipt</b>
+              <CircleCheck size={15} />
+            </span>
+            <span>
+              <MessageCircle size={15} />
+              <b>Typing signal</b>
+              <CircleCheck size={15} />
+            </span>
+            <span>
+              <CirclePlay size={15} />
+              <b>Story view</b>
+              <CircleCheck size={15} />
+            </span>
           </div>
-          <span className="privacy-browser-ghost"><GhostMark size={82} bodyColor="#f3eee2" eyeColor="#0f0f0d" /></span>
+          <span className="privacy-browser-ghost">
+            <GhostMark size={82} bodyColor="#f3eee2" eyeColor="#0f0f0d" />
+          </span>
         </div>
       </div>
     </div>
@@ -310,26 +441,50 @@ function PrivacyNoteVisual({ index }: { index: number }) {
     return (
       <div className="privacy-note-art privacy-note-art-controls" aria-hidden="true">
         <svg viewBox="0 0 340 166" role="presentation">
-          <path className="privacy-art-wash" d="M21 113C54 34 204 10 318 61c-32 70-185 105-297 52Z" />
+          <path
+            className="privacy-art-wash"
+            d="M21 113C54 34 204 10 318 61c-32 70-185 105-297 52Z"
+          />
           <path className="privacy-art-paper" d="m42 35 240-13 18 112-246 14Z" />
           <path className="privacy-art-tape" d="m131 22 63-4 3 16-64 4Z" />
-          <g className="privacy-art-slider privacy-art-slider-seen" transform="translate(60 61) rotate(-2)">
-            <text x="0" y="5">SEEN</text>
+          <g
+            className="privacy-art-slider privacy-art-slider-seen"
+            transform="translate(60 61) rotate(-2)"
+          >
+            <text x="0" y="5">
+              SEEN
+            </text>
             <path d="M57 0h139" />
             <circle cx="91" cy="0" r="13" />
-            <text className="privacy-art-state" x="211" y="5">YOURS</text>
+            <text className="privacy-art-state" x="211" y="5">
+              YOURS
+            </text>
           </g>
-          <g className="privacy-art-slider privacy-art-slider-typing" transform="translate(57 94) rotate(1)">
-            <text x="0" y="5">TYPING</text>
+          <g
+            className="privacy-art-slider privacy-art-slider-typing"
+            transform="translate(57 94) rotate(1)"
+          >
+            <text x="0" y="5">
+              TYPING
+            </text>
             <path d="M57 0h139" />
             <circle cx="153" cy="0" r="13" />
-            <text className="privacy-art-state" x="211" y="5">YOURS</text>
+            <text className="privacy-art-state" x="211" y="5">
+              YOURS
+            </text>
           </g>
-          <g className="privacy-art-slider privacy-art-slider-story" transform="translate(63 126) rotate(-1)">
-            <text x="0" y="5">STORY VIEW</text>
+          <g
+            className="privacy-art-slider privacy-art-slider-story"
+            transform="translate(63 126) rotate(-1)"
+          >
+            <text x="0" y="5">
+              STORY VIEW
+            </text>
             <path d="M57 0h139" />
             <circle cx="125" cy="0" r="13" />
-            <text className="privacy-art-state" x="211" y="5">YOURS</text>
+            <text className="privacy-art-state" x="211" y="5">
+              YOURS
+            </text>
           </g>
         </svg>
       </div>
@@ -342,12 +497,26 @@ function PrivacyNoteVisual({ index }: { index: number }) {
         <svg viewBox="0 0 340 166" role="presentation">
           <path className="privacy-art-wash" d="M17 101c47-68 193-89 308-20-46 66-204 96-308 20Z" />
           <path className="privacy-chat-route" d="M31 111c60 48 214 49 280-18" />
-          <path className="privacy-chat-shape privacy-chat-shape-one" d="M34 27h135a18 18 0 0 1 18 18v35a18 18 0 0 1-18 18H91l-33 24 8-24H34A18 18 0 0 1 16 80V45a18 18 0 0 1 18-18Z" />
-          <text className="privacy-chat-label" x="42" y="54">CONVERSATION</text>
-          <text className="privacy-chat-copy" x="42" y="77">keeps moving</text>
-          <path className="privacy-chat-shape privacy-chat-shape-two" d="M192 45h116a18 18 0 0 1 18 18v28a18 18 0 0 1-18 18h-24l8 24-35-24h-65a18 18 0 0 1-18-18V63a18 18 0 0 1 18-18Z" />
-          <text className="privacy-chat-label privacy-chat-label-dark" x="201" y="72">PRIVACY</text>
-          <text className="privacy-chat-copy privacy-chat-copy-dark" x="201" y="94">stays local</text>
+          <path
+            className="privacy-chat-shape privacy-chat-shape-one"
+            d="M34 27h135a18 18 0 0 1 18 18v35a18 18 0 0 1-18 18H91l-33 24 8-24H34A18 18 0 0 1 16 80V45a18 18 0 0 1 18-18Z"
+          />
+          <text className="privacy-chat-label" x="42" y="54">
+            CONVERSATION
+          </text>
+          <text className="privacy-chat-copy" x="42" y="77">
+            keeps moving
+          </text>
+          <path
+            className="privacy-chat-shape privacy-chat-shape-two"
+            d="M192 45h116a18 18 0 0 1 18 18v28a18 18 0 0 1-18 18h-24l8 24-35-24h-65a18 18 0 0 1-18-18V63a18 18 0 0 1 18-18Z"
+          />
+          <text className="privacy-chat-label privacy-chat-label-dark" x="201" y="72">
+            PRIVACY
+          </text>
+          <text className="privacy-chat-copy privacy-chat-copy-dark" x="201" y="94">
+            stays local
+          </text>
           <circle className="privacy-chat-route-dot" cx="51" cy="122" r="4" />
           <circle className="privacy-chat-route-dot" cx="290" cy="111" r="4" />
         </svg>
@@ -364,23 +533,39 @@ function PrivacyNoteVisual({ index }: { index: number }) {
     <div className="privacy-note-art privacy-note-art-proof" aria-hidden="true">
       <svg viewBox="0 0 340 166" role="presentation">
         <path className="privacy-art-wash" d="M18 113c29-76 183-110 306-54-23 76-188 116-306 54Z" />
-        <path className="privacy-art-tape privacy-proof-tape" transform="rotate(2 170 22)" d="m136 14 68-2 1 17-67 2Z" />
+        <path
+          className="privacy-art-tape privacy-proof-tape"
+          transform="rotate(2 170 22)"
+          d="m136 14 68-2 1 17-67 2Z"
+        />
         <g className="privacy-proof-sheet privacy-proof-sheet-source" transform="rotate(-7 101 83)">
           <rect x="37" y="35" width="128" height="96" rx="9" />
-          <text x="53" y="61">SOURCE</text>
-          <text className="privacy-proof-kind" x="53" y="82">CORE</text>
+          <text x="53" y="61">
+            SOURCE
+          </text>
+          <text className="privacy-proof-kind" x="53" y="82">
+            CORE
+          </text>
           <path d="M53 96h83M53 108h67M53 120h76" />
         </g>
         <g className="privacy-proof-sheet privacy-proof-sheet-check" transform="rotate(5 191 73)">
           <rect x="127" y="22" width="128" height="102" rx="9" />
-          <text x="144" y="50">CHECKS</text>
-          <text className="privacy-proof-date" x="144" y="73">{verifiedDate}</text>
+          <text x="144" y="50">
+            CHECKS
+          </text>
+          <text className="privacy-proof-date" x="144" y="73">
+            {verifiedDate}
+          </text>
           <path className="privacy-proof-tick" d="m188 91 10 10 23-28" />
         </g>
         <g className="privacy-proof-release">
           <path d="m231 49 78 13-12 75-79-14Z" />
-          <text x="247" y="83">RELEASES</text>
-          <text x="248" y="102">PUBLIC</text>
+          <text x="247" y="83">
+            RELEASES
+          </text>
+          <text x="248" y="102">
+            PUBLIC
+          </text>
         </g>
         <circle className="privacy-proof-stamp" cx="282" cy="126" r="24" />
       </svg>
@@ -394,7 +579,11 @@ function PrivacySection() {
       <div className="privacy-flat-panel">
         <div className="privacy-showcase-lead">
           <div className="privacy-showcase-copy">
-            <h2>Made for privacy<br />that stays <em>yours.</em></h2>
+            <h2>
+              Made for privacy
+              <br />
+              that stays <em>yours.</em>
+            </h2>
             <p>Three ways Ghostify keeps control close to you.</p>
           </div>
           <div className="privacy-showcase-visual">
@@ -404,7 +593,10 @@ function PrivacySection() {
 
         <div className="privacy-principles-static" aria-label="Ghostify privacy principles">
           {PRIVACY_TOPICS.map((topic, index) => (
-            <article className={`privacy-static-note privacy-static-note-${index + 1}`} key={topic.label}>
+            <article
+              className={`privacy-static-note privacy-static-note-${index + 1}`}
+              key={topic.label}
+            >
               <PrivacyNoteVisual index={index} />
               <h3>{topic.title}</h3>
               <p>{topic.body}</p>
@@ -438,20 +630,23 @@ function AnimatedFootprintMetric() {
     }
 
     let frame = 0;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      observer.disconnect();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
 
-      const startedAt = performance.now();
-      const update = (now: number) => {
-        const progress = Math.min(1, (now - startedAt) / 900);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setValue(EXTENSION_FOOTPRINT_KIB * eased);
-        if (progress < 1) frame = window.requestAnimationFrame(update);
-      };
+        const startedAt = performance.now();
+        const update = (now: number) => {
+          const progress = Math.min(1, (now - startedAt) / 900);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setValue(EXTENSION_FOOTPRINT_KIB * eased);
+          if (progress < 1) frame = window.requestAnimationFrame(update);
+        };
 
-      frame = window.requestAnimationFrame(update);
-    }, { threshold: 0.45 });
+        frame = window.requestAnimationFrame(update);
+      },
+      { threshold: 0.45 },
+    );
 
     observer.observe(metric);
     return () => {
@@ -463,8 +658,14 @@ function AnimatedFootprintMetric() {
   const displayValue = value === 0 ? '0' : value.toFixed(2);
 
   return (
-    <article ref={metricRef} aria-label={`${EXTENSION_FOOTPRINT_KIB.toFixed(2)} KiB extension footprint`}>
-      <strong aria-hidden="true">{displayValue}<span>KiB</span></strong>
+    <article
+      ref={metricRef}
+      aria-label={`${EXTENSION_FOOTPRINT_KIB.toFixed(2)} KiB extension footprint`}
+    >
+      <strong aria-hidden="true">
+        {displayValue}
+        <span>KiB</span>
+      </strong>
       <small aria-hidden="true">extension footprint</small>
     </article>
   );
@@ -475,13 +676,25 @@ function FootprintSection() {
     <section className="footprint-section" data-scroll-scene>
       <header>
         <h2>Built to stay out of your way.</h2>
-        <p>A compact footprint, no tracking relays, and no account standing between you and the controls.</p>
+        <p>
+          A compact footprint, no tracking relays, and no account standing between you and the
+          controls.
+        </p>
       </header>
       <div className="footprint-metrics">
-        <article><strong>MV3</strong><small>extension architecture</small></article>
+        <article>
+          <strong>MV3</strong>
+          <small>extension architecture</small>
+        </article>
         <AnimatedFootprintMetric />
-        <article><strong>0</strong><small>tracking relays</small></article>
-        <article><strong>0</strong><small>Ghostify accounts required</small></article>
+        <article>
+          <strong>0</strong>
+          <small>tracking relays</small>
+        </article>
+        <article>
+          <strong>0</strong>
+          <small>Ghostify accounts required</small>
+        </article>
       </div>
     </section>
   );
@@ -503,7 +716,10 @@ function ScrollChoreography() {
         const { scene } = state;
         const rect = scene.getBoundingClientRect();
         const distance = window.innerHeight + rect.height;
-        const progress = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / Math.max(1, distance)));
+        const progress = Math.min(
+          1,
+          Math.max(0, (window.innerHeight - rect.top) / Math.max(1, distance)),
+        );
         state.target = progress;
       });
     };
@@ -571,10 +787,13 @@ function FactMarquee() {
     const sync = () => {
       track.style.animationPlayState = visible && !document.hidden ? 'running' : 'paused';
     };
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      sync();
-    }, { rootMargin: '120px 0px' });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        sync();
+      },
+      { rootMargin: '120px 0px' },
+    );
     observer.observe(marquee);
     document.addEventListener('visibilitychange', sync);
     return () => {
@@ -587,12 +806,19 @@ function FactMarquee() {
     <section className="fact-marquee" aria-label="Ghostify at a glance" ref={marqueeRef}>
       <div className="fact-marquee-signature">
         <GhostMark size={42} bodyColor="#d8d2ff" eyeColor="#0f0f0d" />
-        <span><small>Ghostify</small><strong>quiet by design.</strong></span>
+        <span>
+          <small>Ghostify</small>
+          <strong>quiet by design.</strong>
+        </span>
       </div>
       <div className="fact-marquee-viewport">
         <div className="fact-marquee-track">
           {[0, 1].map((copy) => (
-            <div className="fact-marquee-group" aria-hidden={copy === 1 ? 'true' : undefined} key={copy}>
+            <div
+              className="fact-marquee-group"
+              aria-hidden={copy === 1 ? 'true' : undefined}
+              key={copy}
+            >
               {FACTS.map(({ label, text }) => (
                 <span className="fact-marquee-phrase" key={label}>
                   <small>{label}</small>
@@ -611,17 +837,49 @@ function InstallRhythm() {
   return (
     <section className="install-rhythm" aria-labelledby="install-rhythm-title" data-scroll-scene>
       <header>
-        <h2 id="install-rhythm-title">One minute.<br />Then it disappears.</h2>
+        <h2 id="install-rhythm-title">
+          One minute.
+          <br />
+          Then it disappears.
+        </h2>
         <p>Four small moves, then Ghostify settles into the background.</p>
       </header>
       <div className="install-rhythm-path">
-        <span className="install-path-line" aria-hidden="true"><i /></span>
-        <span className="install-path-ghost" aria-hidden="true"><GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" /></span>
+        <span className="install-path-line" aria-hidden="true">
+          <i />
+        </span>
+        <span className="install-path-ghost" aria-hidden="true">
+          <GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" />
+        </span>
         <ol>
-        <li><span>01</span><div><strong>Add Ghostify</strong><small>Install from Chrome, Edge, or Firefox.</small></div></li>
-        <li><span>02</span><div><strong>Pin Ghostify</strong><small>Open Extensions, then pin Ghostify for quick access.</small></div></li>
-        <li><span>03</span><div><strong>Reload your Meta tabs</strong><small>Let Ghostify start before the page does.</small></div></li>
-        <li><span>04</span><div><strong>Choose your quiet</strong><small>Switch Seen, Typing, and Story Views independently.</small></div></li>
+          <li>
+            <span>01</span>
+            <div>
+              <strong>Add Ghostify</strong>
+              <small>Install from Chrome, Edge, or Firefox.</small>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <strong>Pin Ghostify</strong>
+              <small>Open Extensions, then pin Ghostify for quick access.</small>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <strong>Reload your Meta tabs</strong>
+              <small>Let Ghostify start before the page does.</small>
+            </div>
+          </li>
+          <li>
+            <span>04</span>
+            <div>
+              <strong>Choose your quiet</strong>
+              <small>Switch Seen, Typing, and Story Views independently.</small>
+            </div>
+          </li>
         </ol>
       </div>
     </section>
@@ -635,8 +893,15 @@ function AskAiSection() {
         <div className="ask-ai-composition">
           <div className="ask-ai-copy">
             <div className="ask-ai-lead">
-              <h2>Don&apos;t take<br />our word for it.</h2>
-              <p>Open a prepared question in the model you already use. It asks for a plain-English answer grounded in Ghostify&apos;s public documentation.</p>
+              <h2>
+                Don&apos;t take
+                <br />
+                our word for it.
+              </h2>
+              <p>
+                Open a prepared question in the model you already use. It asks for a plain-English
+                answer grounded in Ghostify&apos;s public documentation.
+              </p>
             </div>
             <nav className="ask-ai-actions" aria-label="Ask an AI assistant about Ghostify">
               {AI_LINKS.map((item) => (
@@ -655,7 +920,11 @@ function AskAiSection() {
                   <span>Prepared question</span>
                   <span>Public documentation</span>
                 </div>
-                <strong>Explain Ghostify<br />in plain English.</strong>
+                <strong>
+                  Explain Ghostify
+                  <br />
+                  in plain English.
+                </strong>
                 <div className="ask-ai-source-list">
                   <span>Store listings</span>
                   <span>Public source</span>
@@ -667,7 +936,9 @@ function AskAiSection() {
                 <strong>attached</strong>
               </div>
             </div>
-            <span className="ask-ai-ghost"><GhostMark size={112} /></span>
+            <span className="ask-ai-ghost">
+              <GhostMark size={112} />
+            </span>
           </div>
         </div>
       </div>
@@ -684,10 +955,14 @@ function FeatureSignalRail({ platform }: { platform: MetaPlatform }) {
   ];
 
   return (
-    <div className={`feature-signal-rail feature-signal-focus-${focus}`} aria-label="Supported controls shown in this recording">
+    <div
+      className={`feature-signal-rail feature-signal-focus-${focus}`}
+      aria-label="Supported controls shown in this recording"
+    >
       {signals.map((signal) => (
         <span className={signal.key === focus ? 'is-active' : undefined} key={signal.key}>
-          {signal.icon}{signal.label}
+          {signal.icon}
+          {signal.label}
         </span>
       ))}
     </div>
@@ -698,31 +973,14 @@ function FeatureScroll() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeFeature = FEATURES[activeIndex];
-  const signalNote = activeFeature.platform === 'messenger' ? 'Seen stays here.' : 'Story view stays here.';
-  const atmosphereWord = activeFeature.platform === 'messenger'
-    ? 'held'
-    : activeFeature.platform === 'instagram'
-      ? 'quiet'
-      : 'local';
-
-  useEffect(() => {
-    const preload = () => {
-      FEATURES.forEach((feature) => {
-        const image = new Image();
-        image.src = feature.src;
-      });
-    };
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-    if (idleWindow.requestIdleCallback) {
-      const handle = idleWindow.requestIdleCallback(preload, { timeout: 1800 });
-      return () => idleWindow.cancelIdleCallback?.(handle);
-    }
-    const handle = window.setTimeout(preload, 500);
-    return () => window.clearTimeout(handle);
-  }, []);
+  const signalNote =
+    activeFeature.platform === 'messenger' ? 'Seen stays here.' : 'Story view stays here.';
+  const atmosphereWord =
+    activeFeature.platform === 'messenger'
+      ? 'held'
+      : activeFeature.platform === 'instagram'
+        ? 'quiet'
+        : 'local';
 
   useEffect(() => {
     let frame = 0;
@@ -735,7 +993,7 @@ function FeatureScroll() {
       const progress = Math.min(1, Math.max(0, -rect.top / distance));
       const nextIndex = Math.min(FEATURES.length - 1, Math.round(progress * (FEATURES.length - 1)));
       section.style.setProperty('--feature-progress', progress.toFixed(3));
-      setActiveIndex((current) => current === nextIndex ? current : nextIndex);
+      setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
     };
     const requestUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -773,14 +1031,22 @@ function FeatureScroll() {
           </div>
           <div className="feature-scroll-tools">
             <FeatureSignalRail platform={activeFeature.platform} />
-            <a href="/status">See current verification <ArrowUpRight size={16} aria-hidden="true" /></a>
+            <a href="/status">
+              See current verification <ArrowUpRight size={16} aria-hidden="true" />
+            </a>
           </div>
         </div>
 
         <figure className="feature-scroll-media" key={`media-${activeFeature.platform}`}>
           <div className="feature-media-frame">
-            <div className={`feature-signal-note feature-signal-note-${activeFeature.platform}`} aria-hidden="true">
-              <span className="feature-note-source"><PlatformLogo platform={activeFeature.platform} size={25} /><small>{activeFeature.name} on the web</small></span>
+            <div
+              className={`feature-signal-note feature-signal-note-${activeFeature.platform}`}
+              aria-hidden="true"
+            >
+              <span className="feature-note-source">
+                <PlatformLogo platform={activeFeature.platform} size={25} />
+                <small>{activeFeature.name} on the web</small>
+              </span>
               <strong>{signalNote}</strong>
             </div>
             <div className={`feature-media-crop feature-media-crop-${activeFeature.platform}`}>
@@ -789,6 +1055,7 @@ function FeatureScroll() {
                 alt={`${activeFeature.name} running with Ghostify in the browser`}
                 width={activeFeature.width}
                 height={activeFeature.height}
+                loading="lazy"
                 decoding="async"
               />
             </div>
@@ -846,11 +1113,19 @@ export function HomePage() {
         <HeroDetails />
         <div className="home-hero-inner">
           <div className="home-hero-copy">
-            <h1>No <em>seen.</em><br className="hero-title-break" aria-hidden="true" /> No pressure.</h1>
-            <p>Ghostify gives you control over supported Seen, Typing, and Story View signals on Instagram, Messenger, and Facebook — directly in your browser.</p>
+            <h1>
+              No <em>seen.</em>
+              <br className="hero-title-break" aria-hidden="true" /> No pressure.
+            </h1>
+            <p>
+              Ghostify gives you control over supported Seen, Typing, and Story View signals on
+              Instagram, Messenger, and Facebook — directly in your browser.
+            </p>
             <div className="home-hero-actions">
               <StoreCta />
-              <a href="#features">See it in action <ArrowDown size={16} aria-hidden="true" /></a>
+              <a href="#features">
+                See it in action <ArrowDown size={16} aria-hidden="true" />
+              </a>
             </div>
           </div>
 
@@ -864,7 +1139,11 @@ export function HomePage() {
 
       <section className="platforms-flat" id="platforms" data-scroll-scene>
         <header>
-          <h2>Three controls.<br /><span>Two groups. Three places.</span></h2>
+          <h2>
+            Three controls.
+            <br />
+            <span>Two groups. Three places.</span>
+          </h2>
           <PlatformControlMap />
         </header>
         <div className="platform-card-grid">
@@ -872,18 +1151,32 @@ export function HomePage() {
             <article className={`platform-card platform-card-${item.platform}`} key={item.platform}>
               <header>
                 <PlatformLogo platform={item.platform} size={54} />
-                <span><strong>{item.name}</strong><small>{item.url}</small></span>
+                <span>
+                  <strong>{item.name}</strong>
+                  <small>{item.url}</small>
+                </span>
               </header>
               <div className="platform-card-controls">
                 {['Hide Seen', 'Hide Typing', 'Hide Story Views'].map((control) => (
-                  <div key={control}><span>{control}</span><i aria-hidden="true"><b /></i></div>
+                  <div key={control}>
+                    <span>{control}</span>
+                    <i aria-hidden="true">
+                      <b />
+                    </i>
+                  </div>
                 ))}
               </div>
-              <footer><Check size={16} aria-hidden="true" />{item.qualifier}</footer>
+              <footer>
+                <Check size={16} aria-hidden="true" />
+                {item.qualifier}
+              </footer>
             </article>
           ))}
         </div>
-        <a className="platforms-status" href="/status">Coverage changes with the platforms. See verification dated {lastVerified}. <ArrowUpRight size={16} aria-hidden="true" /></a>
+        <a className="platforms-status" href="/status">
+          Coverage changes with the platforms. See verification dated {lastVerified}.{' '}
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
       </section>
 
       <PrivacySection />
@@ -901,9 +1194,14 @@ export function HomePage() {
           {FAQS.map((item, index) => (
             <details key={item.q}>
               <summary>
-                <span className="faq-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span className="faq-index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <strong className="faq-question">{item.q}</strong>
-                <span className="faq-toggle" aria-hidden="true"><i /><i /></span>
+                <span className="faq-toggle" aria-hidden="true">
+                  <i />
+                  <i />
+                </span>
               </summary>
               <p>{item.a}</p>
             </details>
@@ -919,15 +1217,28 @@ export function HomePage() {
             <span className="home-final-brand">Ghostify,</span>
             <span className="home-final-promise">wherever you browse.</span>
           </h2>
-          <p>Quiet privacy controls for supported Meta web apps, available for Chrome, Edge, and Firefox.</p>
+          <p>
+            Quiet privacy controls for supported Meta web apps, available for Chrome, Edge, and
+            Firefox.
+          </p>
           <div className="home-final-actions">
             <StoreCta />
-            <a className="browser-store-link" href={EDGE_STORE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              className="browser-store-link"
+              href={EDGE_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img className="browser-logo" src="/edge-current.svg" alt="" />
               Get for Edge
               <ArrowUpRight size={15} aria-hidden="true" />
             </a>
-            <a className="browser-store-link" href={FIREFOX_STORE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              className="browser-store-link"
+              href={FIREFOX_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img className="browser-logo" src="/firefox-current.svg" alt="" />
               Get for Firefox
               <ArrowUpRight size={15} aria-hidden="true" />

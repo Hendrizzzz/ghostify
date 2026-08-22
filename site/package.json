@@ -4,9 +4,10 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "audit:high": "npm audit --audit-level=high",
     "audit:runtime": "npm audit --omit=dev --audit-level=high",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "dev": "vite"
   },
   "dependencies": {
@@ -18,7 +19,11 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "6.0.5",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3",
     "vite": "8.2.0"
   }
 }

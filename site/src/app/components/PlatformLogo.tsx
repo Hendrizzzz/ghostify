@@ -55,7 +55,14 @@ export function PlatformLogo({
         aria-label="Messenger"
       >
         <defs>
-          <linearGradient id={gradientId} x1="7" y1="29" x2="25" y2="3" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id={gradientId}
+            x1="7"
+            y1="29"
+            x2="25"
+            y2="3"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop stopColor="#006aff" />
             <stop offset="0.48" stopColor="#00b2ff" />
             <stop offset="1" stopColor="#a033ff" />
@@ -65,7 +72,10 @@ export function PlatformLogo({
           d="M16 3.1C8.54 3.1 3 8.23 3 15.15c0 3.73 1.6 6.98 4.28 9.14v4.43c0 .78.83 1.27 1.5.89l3.85-2.22c1.09.27 2.22.41 3.37.41 7.46 0 13-5.13 13-12.65S23.46 3.1 16 3.1Z"
           fill={`url(#${gradientId})`}
         />
-        <path d="m8.65 19.1 5.2-5.52 3.7 3.81 5.82-5.98-5.2 8.54-3.81-3.81-5.71 2.96Z" fill="white" />
+        <path
+          d="m8.65 19.1 5.2-5.52 3.7 3.81 5.82-5.98-5.2 8.54-3.81-3.81-5.71 2.96Z"
+          fill="white"
+        />
       </svg>
     );
   }
