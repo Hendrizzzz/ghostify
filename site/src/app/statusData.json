@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "product": "Ghostify",
-  "productVersion": "2.0.7",
+  "productVersion": "2.0.8",
   "generatedAt": "2026-08-22T01:48:01Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
-    "publishedVersion": "2.0.7",
-    "verificationVersion": "2.0.7",
+    "publishedVersion": "2.0.8",
+    "verificationVersion": "2.0.8",
     "checkedAt": "2026-08-10T23:27:09Z",
     "matchesVerificationBuild": true,
     "storeUrl": "https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm"

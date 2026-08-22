@@ -9,6 +9,44 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
+## [2.0.8] - 2026-08-23
+
+### Added
+
+- Added agent and design context documents (`AGENTS.md`, `PRODUCT.md`,
+  `DESIGN.md`), a pull-request template, a Code of Conduct, and a support
+  guide, plus a README documentation index.
+- Added ESLint, Prettier, and EditorConfig for the extension sources with a
+  matching CI lint gate, and TypeScript checking for the website build.
+
+### Changed
+
+- Made the whole popup row clickable for each privacy toggle instead of only
+  the small switch track, kept the visible labels programmatically associated
+  with their switches, and announced public status updates politely to screen
+  readers.
+- Wired the bundled Uncut Sans typeface into the website so headlines no longer
+  depend on operating-system fonts, tokenized the repeated section gutters,
+  strengthened muted-text contrast, restored visible page scrollbars, and
+  removed forced single-line headings.
+- Deferred loading of the large feature demo recordings until visitors scroll
+  near them instead of prefetching all three on page load, and added an error
+  boundary around the website app.
+- Added social preview metadata (generated og image, Twitter card summary,
+  structured SoftwareApplication and FAQ data), robots.txt, and a sitemap for
+  the website.
+
+### Fixed
+
+- Fixed the public status pill in the popup looking identical when the status
+  feed was unavailable by giving the fallback state a dashed border and dimmed
+  indicator dot.
+- Restricted the extension's configuration bridge to post to the page's own
+  origin, shared the duplicated diagnostic version constant, and removed dead
+  helper functions without changing interception behavior.
+- Removed roughly 1,250 lines of unused legacy website styles left over from
+  the previous design generation and fixed two latent website type errors.
+
 ## [2.0.7] - 2026-08-11
 
 ### Added
