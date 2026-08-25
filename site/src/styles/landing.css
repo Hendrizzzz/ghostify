@@ -4824,3 +4824,320 @@
     background 160ms ease,
     transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* -- Signal-catch scene: pinned, scrubbed proof ------------------- */
+.signal-catch {
+  height: 280vh;
+  position: relative;
+  background: var(--home-cream);
+}
+
+.signal-catch-sticky {
+  height: 100svh;
+  position: sticky;
+  top: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.signal-catch-stage {
+  width: min(92vw, calc((100svh - 290px) * 1.364));
+  position: relative;
+}
+
+.signal-catch-net {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.signal-catch-net .net-path {
+  fill: none;
+  stroke: rgba(15, 15, 13, 0.32);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.signal-catch-net .net-nodes circle {
+  fill: var(--home-ink);
+}
+
+.signal-catch-net .net-labels text {
+  fill: rgba(15, 15, 13, 0.52);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.catch-pill {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 1.5px solid rgba(15, 15, 13, 0.8);
+  border-radius: 999px;
+  background: #f8f2e7;
+  box-shadow: 3px 3px 0 rgba(15, 15, 13, 0.16);
+  font-size: 13px;
+  font-weight: 620;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.catch-pill-seen { left: 10%; top: 14.55%; }
+.catch-pill-typing { left: 6.7%; top: 50%; }
+.catch-pill-story { left: 10%; top: 85.45%; }
+
+.catch-pill-dots {
+  display: inline-flex;
+  gap: 2.5px;
+}
+
+.catch-pill-dots b {
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: catchDot 1.1s ease-in-out infinite;
+}
+
+.catch-pill-dots b:nth-child(2) { animation-delay: 0.14s; }
+.catch-pill-dots b:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes catchDot {
+  0%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+.signal-catch-ghost {
+  position: absolute;
+  left: 86.7%;
+  top: 50%;
+  z-index: 2;
+  margin: -84px 0 0 -84px;
+  width: 168px;
+  height: 168px;
+}
+
+.signal-catch-ghost svg {
+  width: 100%;
+  height: 100%;
+}
+
+.catch-ring {
+  width: 158px;
+  height: 158px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -79px 0 0 -79px;
+  border: 1.5px dashed rgba(63, 44, 134, 0.55);
+  border-radius: 50%;
+  opacity: 0.35;
+}
+
+.catch-stamp {
+  position: absolute;
+  right: -78px;
+  top: -10px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 14px 16px 12px;
+  border: 2px solid rgba(63, 44, 134, 0.65);
+  border-radius: 12px 16px 10px 14px;
+  background: var(--home-lavender);
+  color: #3f2c86;
+  box-shadow: 3px 4px 0 rgba(15, 15, 13, 0.18);
+  transform: rotate(-6deg);
+}
+
+.catch-stamp b {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.catch-stamp small {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.signal-catch-caption {
+  margin: 30px 0 0;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.signal-catch-caption span {
+  font-family: var(--font-display);
+  font-stretch: 92%;
+  font-size: clamp(1.2rem, 2.1vw, 1.8rem);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.signal-catch-caption span:nth-child(3) {
+  color: #3f2c86;
+  font-family: var(--font-editorial);
+  font-variation-settings: 'opsz' 40;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.signal-catch-rail {
+  position: absolute;
+  left: clamp(16px, 2.6vw, 40px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 10px 12px;
+  align-items: center;
+}
+
+.signal-catch-rail .rail-track {
+  grid-row: 1 / span 3;
+  width: 2px;
+  height: 100%;
+  min-height: 118px;
+  position: relative;
+  border-radius: 999px;
+  background: rgba(15, 15, 13, 0.14);
+  overflow: hidden;
+}
+
+.signal-catch-rail .rail-track i {
+  position: absolute;
+  inset: 0;
+  background: var(--home-ink);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.signal-catch-rail .rail-step {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(15, 15, 13, 0.38);
+  transition: color 220ms ease;
+}
+
+.signal-catch-rail .rail-step.is-active {
+  color: #3f2c86;
+}
+
+@media (max-width: 760px) {
+  .signal-catch-stage {
+    width: min(94vw, calc((100svh - 320px) * 1.364));
+  }
+
+  .catch-pill {
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+
+  .signal-catch-ghost {
+    width: 112px;
+    height: 112px;
+    margin: -56px 0 0 -56px;
+  }
+
+  .catch-ring {
+    width: 108px;
+    height: 108px;
+    margin: -54px 0 0 -54px;
+  }
+
+  .catch-stamp {
+    right: -46px;
+    padding: 10px 12px 9px;
+  }
+
+  .catch-stamp b { font-size: 16px; }
+  .signal-catch-rail { display: none; }
+}
+
+/* -- Journey ghost: one ghost, traveling the whole page ----------- */
+.journey-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  display: none;
+}
+
+@media (min-width: 1081px) {
+  .journey-layer { display: block; }
+}
+
+.journey-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.journey-ghost-inner {
+  filter: drop-shadow(4px 6px 0 rgba(15, 15, 13, 0.1));
+}
+
+.journey-ghost.is-on-dark svg path:first-of-type {
+  fill: #f3eee2;
+}
+
+.journey-ghost.is-on-dark svg path:nth-of-type(2) {
+  fill: #0f0f0d;
+}
+
+/* -- Hero strike on "seen." ---------------------------------------- */
+.hero-seen {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-seen-strike {
+  position: absolute;
+  left: -3%;
+  right: -3%;
+  top: 55%;
+  height: 0.058em;
+  border-radius: 999px;
+  background: var(--home-accent);
+  transform: scaleX(0) rotate(-3deg);
+  transform-origin: left center;
+}
+
+/* -- Reveal instant helper (SplitText headers) --------------------- */
+.reveal.is-instant {
+  opacity: 1;
+  translate: 0 0;
+  filter: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-catch-rail .rail-track i {
+    transform: scaleY(1);
+  }
+
+  .hero-seen-strike {
+    transform: scaleX(1) rotate(-3deg);
+  }
+}

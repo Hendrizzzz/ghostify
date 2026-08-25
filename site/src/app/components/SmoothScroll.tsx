@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
+import { gsap, ScrollTrigger, ensureGsap } from '../animation/gsapSetup';
 
 interface SmoothScrollProps {
   children: ReactNode;
@@ -13,6 +14,8 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
   useEffect(() => {
     if (!enabled) return;
 
+    ensureGsap();
+
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const coarsePointer = window.matchMedia('(pointer: coarse)');
     let lenis: Lenis | null = null;
@@ -23,7 +26,7 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
       if (shouldSmooth && !lenis) {
         lenis = new Lenis({
           anchors: true,
-          autoRaf: true,
+          autoRaf: false,
           duration: 1.2,
           easing: SCROLL_EASING,
           overscroll: true,
@@ -44,12 +47,26 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
             return true;
           },
         });
+
+        lenis.on('scroll', ScrollTrigger.update);
+        const raf = (time: number) => lenis?.raf(time * 1000);
+        gsap.ticker.add(raf);
+        gsap.ticker.lagSmoothing(0);
+        ScrollTrigger.refresh();
+
+        const teardown = () => {
+          gsap.ticker.remove(raf);
+          lenis?.destroy();
+          lenis = null;
+        };
+        (syncPreference as unknown as { teardown?: () => void }).teardown = teardown;
         return;
       }
 
       if (!shouldSmooth && lenis) {
-        lenis.destroy();
-        lenis = null;
+        (syncPreference as unknown as { teardown?: () => void }).teardown?.();
+        (syncPreference as unknown as { teardown?: () => void }).teardown = undefined;
+        ScrollTrigger.refresh();
       }
     };
 
@@ -60,7 +77,8 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
     return () => {
       reducedMotion.removeEventListener('change', syncPreference);
       coarsePointer.removeEventListener('change', syncPreference);
-      lenis?.destroy();
+      (syncPreference as unknown as { teardown?: () => void }).teardown?.();
+      (syncPreference as unknown as { teardown?: () => void }).teardown = undefined;
     };
   }, [enabled]);
 

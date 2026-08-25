@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUpRight,
@@ -13,6 +13,8 @@ import { formatStatusDate, getLastVerifiedAt } from '../statusData';
 import { GhostMark } from './GhostSVG';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
 import { Reveal } from './Reveal';
+import { SignalCatchScene } from '../animation/SignalCatchScene';
+import { GhostJourney } from '../animation/GhostJourney';
 import { EDGE_STORE_URL, FIREFOX_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
 
 const FEATURES: Array<{
@@ -52,7 +54,7 @@ const FEATURES: Array<{
     platform: 'facebook',
     name: 'Facebook',
     title: 'Bring the same quiet control to Facebook.',
-    body: 'Story-view, typing, and Seen controls share one setting group with Messenger — the privacy choice follows you across Meta’s web messaging.',
+    body: 'Story-view, typing, and Seen controls share one setting group with Messenger â€” the privacy choice follows you across Metaâ€™s web messaging.',
     webm: '/media/facebook-hide-story.webm',
     mp4: '/media/facebook-hide-story.mp4',
     poster: '/media/facebook-hide-story-poster.webp',
@@ -132,7 +134,7 @@ const EXTENSION_FOOTPRINT_KIB = 64.57;
 const FAQS = [
   {
     q: 'Why does Chrome say Ghostify can read and change data on these sites?',
-    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Meta’s own web-messaging proxy — it is not a window into everything you do.',
+    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Metaâ€™s own web-messaging proxy â€” it is not a window into everything you do.',
   },
   {
     q: 'Does Ghostify read my messages?',
@@ -159,61 +161,6 @@ const FAQS = [
     a: 'Reload any open instagram.com, messenger.com, or facebook.com tabs so the current extension code starts before the page loads.',
   },
 ];
-
-function SignalStreams() {
-  return (
-    <div className="signal-streams">
-      <span className="signal-stream signal-stream-seen">seen</span>
-      <span className="signal-stream signal-stream-typing">
-        typing
-        <i className="signal-stream-dots">
-          <b />
-          <b />
-          <b />
-        </i>
-      </span>
-      <span className="signal-stream signal-stream-story">story view</span>
-    </div>
-  );
-}
-
-function HeroSignalFlow() {
-  const flowRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const flow = flowRef.current;
-    if (!flow) return;
-    let visible = true;
-    const sync = () => {
-      const shouldPlay = visible && !document.hidden;
-      flow.classList.toggle('is-motion-paused', !shouldPlay);
-    };
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting;
-        sync();
-      },
-      { rootMargin: '140px 0px' },
-    );
-    observer.observe(flow);
-    document.addEventListener('visibilitychange', sync);
-    return () => {
-      observer.disconnect();
-      document.removeEventListener('visibilitychange', sync);
-    };
-  }, []);
-
-  return (
-    <div className="hero-signal-flow" aria-hidden="true" ref={flowRef}>
-      <SignalStreams />
-
-      <div className="signal-processor">
-        <span className="signal-catch-ring" />
-        <GhostMark size={148} bodyColor="#0f0f0d" eyeColor="#ffffff" />
-      </div>
-    </div>
-  );
-}
 
 function HeroDetails() {
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -669,8 +616,8 @@ function AskAiSection() {
         <div className="ask-ai-composition">
           <Reveal className="ask-ai-copy">
             <div className="ask-ai-lead">
-              <h2>
-                Don&apos;t take
+              <h2 data-split>
+            Don&apos;t take
                 <br />
                 our word for it.
               </h2>
@@ -866,17 +813,18 @@ export function HomePage() {
   return (
     <div className="home-page">
       <ScrollChoreography />
+      <GhostJourney />
       <section className="home-hero">
         <HeroDetails />
         <div className="home-hero-inner">
           <div className="home-hero-copy">
             <h1>
-              No <em>seen.</em>
+              No <em className="hero-seen"><span className="hero-seen-word">seen.</span><i className="hero-seen-strike" aria-hidden="true" /></em>
               <br className="hero-title-break" aria-hidden="true" /> No pressure.
             </h1>
             <p>
               Ghostify gives you control over supported Seen, Typing, and Story View signals on
-              Instagram, Messenger, and Facebook — directly in your browser.
+              Instagram, Messenger, and Facebook â€” directly in your browser.
             </p>
             <div className="home-hero-actions">
               <StoreCta />
@@ -885,18 +833,16 @@ export function HomePage() {
               </a>
             </div>
           </div>
-
-          <div className="home-hero-art">
-            <HeroSignalFlow />
-          </div>
         </div>
       </section>
+
+      <SignalCatchScene />
 
       <FeatureScroll />
 
       <section className="platforms-flat is-dark" id="platforms" data-scroll-scene>
         <Reveal tag="header">
-          <h2>
+          <h2 data-split>
             Three controls.
             <br />
             <span>Two groups. Three places.</span>
@@ -945,14 +891,14 @@ export function HomePage() {
 
       <section className="privacy-band" id="privacy" data-scroll-scene>
         <Reveal tag="header">
-          <h2>
+          <h2 data-split>
             Local by default.
             <br />
             <span>Open to inspection.</span>
           </h2>
           <p>
             The controls run inside your browser. Nothing about your messages, tabs, or settings
-            reaches a Ghostify server — there is no Ghostify server to reach.
+            reaches a Ghostify server â€” there is no Ghostify server to reach.
           </p>
         </Reveal>
         <Reveal className="privacy-band-panel" delay={120}>
@@ -1002,7 +948,7 @@ export function HomePage() {
 
       <section className="faq-flat" data-scroll-scene>
         <Reveal tag="header">
-          <h2>Before you install.</h2>
+          <h2 data-split>Before you install.</h2>
           <p>Plain answers, without the disappearing fine print.</p>
         </Reveal>
         <div className="faq-flat-list">
