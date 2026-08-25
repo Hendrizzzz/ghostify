@@ -585,7 +585,7 @@ function FactMarquee() {
   return (
     <section className="fact-marquee" aria-label="Ghostify at a glance" ref={marqueeRef}>
       <div className="fact-marquee-signature">
-        <GhostMark size={42} bodyColor="#d8d2ff" eyeColor="#0f0f0d" />
+        <GhostMark size={42} bodyColor="#f3eee2" eyeColor="#0f0f0d" />
         <span>
           <small>Ghostify</small>
           <strong>quiet by design.</strong>
@@ -694,13 +694,13 @@ function AskAiSection() {
               <span className="ask-ai-tape" />
               <div className="ask-ai-question-sheet">
                 <div className="ask-ai-sheet-meta">
-                  <span>Prepared question</span>
-                  <span>Public documentation</span>
+                  <span>From your browser</span>
+                  <span>To any model</span>
                 </div>
                 <strong>
-                  Explain Ghostify
+                  &ldquo;Explain Ghostify
                   <br />
-                  in plain English.
+                  in plain English.&rdquo;
                 </strong>
                 <div className="ask-ai-source-list">
                   <span>Store listings</span>
