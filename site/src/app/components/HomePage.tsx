@@ -601,7 +601,6 @@ function FactMarquee() {
             >
               {FACTS.map(({ label, text }) => (
                 <span className="fact-marquee-phrase" key={label}>
-                  <small>{label}</small>
                   <strong>{text}</strong>
                 </span>
               ))}
@@ -702,11 +701,6 @@ function AskAiSection() {
                   <br />
                   in plain English.&rdquo;
                 </strong>
-                <div className="ask-ai-source-list">
-                  <span>Store listings</span>
-                  <span>Public source</span>
-                  <span>Known limits</span>
-                </div>
               </div>
               <div className="ask-ai-source-tab">
                 <small>Sources</small>
@@ -901,8 +895,6 @@ export function HomePage() {
       <FeatureScroll />
 
       <section className="platforms-flat is-dark" id="platforms" data-scroll-scene>
-        <div id="privacy" aria-hidden="true" />
-
         <Reveal tag="header">
           <h2>
             Three controls.
@@ -948,6 +940,59 @@ export function HomePage() {
             Coverage changes with the platforms. See verification dated {lastVerified}.{' '}
             <ArrowUpRight size={16} aria-hidden="true" />
           </a>
+        </Reveal>
+      </section>
+
+      <section className="privacy-band" id="privacy" data-scroll-scene>
+        <Reveal tag="header">
+          <h2>
+            Local by default.
+            <br />
+            <span>Open to inspection.</span>
+          </h2>
+          <p>
+            The controls run inside your browser. Nothing about your messages, tabs, or settings
+            reaches a Ghostify server — there is no Ghostify server to reach.
+          </p>
+        </Reveal>
+        <Reveal className="privacy-band-panel" delay={120}>
+          <ul>
+            <li>
+              <Check size={17} aria-hidden="true" />
+              <span>
+                <strong>No Ghostify account</strong>
+                <small>Nothing new to sign into. Install and switch it on.</small>
+              </span>
+            </li>
+            <li>
+              <Check size={17} aria-hidden="true" />
+              <span>
+                <strong>No messages through Ghostify</strong>
+                <small>Signals are held on your device; conversations stay between you and the app.</small>
+              </span>
+            </li>
+            <li>
+              <Check size={17} aria-hidden="true" />
+              <span>
+                <strong>No social passwords</strong>
+                <small>Ghostify never asks for your Instagram, Facebook, or Messenger login.</small>
+              </span>
+            </li>
+          </ul>
+          <div className="privacy-band-links">
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+              Read the source
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
+            <a
+              href={`${GITHUB_URL}/blob/main/PRIVACY.md`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Review every permission
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
+          </div>
         </Reveal>
       </section>
 
