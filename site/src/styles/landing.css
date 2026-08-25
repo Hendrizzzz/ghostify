@@ -5229,14 +5229,6 @@
   filter: drop-shadow(4px 6px 0 rgba(15, 15, 13, 0.1));
 }
 
-.journey-ghost.is-on-dark svg path:first-of-type {
-  fill: #f3eee2;
-}
-
-.journey-ghost.is-on-dark svg path:nth-of-type(2) {
-  fill: #0f0f0d;
-}
-
 /* -- Hero strike on "seen." ---------------------------------------- */
 .hero-seen {
   position: relative;
