@@ -2540,17 +2540,6 @@
   letter-spacing: -0.012em;
 }
 
-.ask-ai-tape {
-  width: 74px;
-  height: 20px;
-  position: absolute;
-  top: -11px;
-  left: 50%;
-  z-index: 4;
-  background: rgba(200, 190, 255, 0.72);
-  transform: translateX(-50%) rotate(1deg);
-}
-
 .ask-ai-source-tab {
   min-width: 120px;
   padding: 15px 18px 14px;
@@ -4827,7 +4816,7 @@
 
 /* -- Signal-catch scene: the mail desk ----------------------------- */
 .signal-catch {
-  height: 280vh;
+  height: 460vh;
   position: relative;
   background: var(--home-cream);
 }
@@ -4836,14 +4825,50 @@
   height: 100svh;
   position: sticky;
   top: 0;
-  display: grid;
-  place-items: center;
   overflow: hidden;
 }
 
+.catch-grid-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(15, 15, 13, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 15, 13, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(120% 90% at 50% 45%, #000 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 45%, #000 55%, transparent 100%);
+}
+
+.catch-headline {
+  position: absolute;
+  left: clamp(24px, 6vw, 96px);
+  top: clamp(96px, 14svh, 160px);
+  z-index: 4;
+  margin: 0;
+  max-width: 520px;
+  font-family: var(--font-display);
+  font-stretch: 90%;
+  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+  font-weight: 560;
+  letter-spacing: -0.028em;
+  line-height: 0.98;
+}
+
+.catch-headline em {
+  font-family: var(--font-editorial);
+  font-variation-settings: 'opsz' 72;
+  font-style: italic;
+  font-weight: 480;
+  color: var(--home-accent);
+  letter-spacing: -0.012em;
+}
+
 .signal-catch-stage {
-  width: min(92vw, calc((100svh - 290px) * 1.364));
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  transform: translate(-50%, -50%);
+  width: min(96vw, calc((100svh - 200px) * 1.364));
 }
 
 .signal-catch-net {
@@ -4855,15 +4880,15 @@
 
 .signal-catch-net .catch-route {
   fill: none;
-  stroke: rgba(15, 15, 13, 0.34);
-  stroke-width: 1.5;
+  stroke: rgba(15, 15, 13, 0.36);
+  stroke-width: 1.75;
   stroke-linecap: round;
-  stroke-dasharray: 1.5 9;
-  animation: routeMarch 1.4s linear infinite;
+  stroke-dasharray: 2 10;
+  animation: routeMarch 1.3s linear infinite;
 }
 
 @keyframes routeMarch {
-  to { stroke-dashoffset: -10.5; }
+  to { stroke-dashoffset: -12; }
 }
 
 .catch-desk {
@@ -4874,35 +4899,37 @@
 
 .catch-tray {
   position: absolute;
-  left: 70.5%;
-  top: 37%;
-  width: 25%;
-  height: 28%;
-  border: 1.5px dashed rgba(15, 15, 13, 0.42);
-  border-radius: 14px;
-  background: rgba(251, 248, 240, 0.55);
+  left: 69.5%;
+  top: 36%;
+  width: 27%;
+  height: 30%;
+  border: 1.5px dashed rgba(15, 15, 13, 0.45);
+  border-radius: 16px;
+  background: rgba(251, 248, 240, 0.6);
 }
 
-.catch-tray-label {
+.catch-tray-label,
+.catch-tray-count {
   position: absolute;
-  top: -20px;
-  left: 6px;
-  color: rgba(15, 15, 13, 0.5);
+  color: rgba(15, 15, 13, 0.52);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
+.catch-tray-label { top: -22px; left: 8px; }
+.catch-tray-count { bottom: -24px; right: 8px; color: #3f2c86; }
+
 .signal-catch-ghost {
   position: absolute;
   left: 79%;
-  top: 16.5%;
-  width: 148px;
-  height: 148px;
-  margin: -74px 0 0 -74px;
+  top: 15%;
+  width: 188px;
+  height: 188px;
+  margin: -94px 0 0 -94px;
 }
 
 .signal-catch-ghost svg {
@@ -4910,60 +4937,75 @@
   height: 100%;
 }
 
-.catch-stamp {
-  position: absolute;
-  right: -34px;
-  top: -34px;
+/* Ink-only rubber stamps: printed on the paper, never a chip. */
+.postmark {
   display: grid;
   justify-items: center;
   gap: 2px;
-  padding: 13px 15px 11px;
-  border: 2px solid rgba(63, 44, 134, 0.65);
-  border-radius: 12px 16px 10px 14px;
-  background: var(--home-lavender);
+  padding: 10px 16px 9px;
+  border: 2.5px solid rgba(63, 44, 134, 0.82);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(63, 44, 134, 0.32),
+    0 0 0 0.5px rgba(63, 44, 134, 0.18);
   color: #3f2c86;
-  box-shadow: 3px 4px 0 rgba(15, 15, 13, 0.18);
-  transform: rotate(-7deg);
+  mix-blend-mode: multiply;
 }
 
-.catch-stamp b {
+.postmark b {
   font-family: var(--font-display);
-  font-size: 21px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-}
-
-.catch-stamp small {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 600;
+  font-stretch: 92%;
+  font-size: 24px;
+  font-weight: 750;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  line-height: 1;
+}
+
+.postmark small {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.postmark .postmark-foot {
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(63, 44, 134, 0.4);
+}
+
+.catch-stamp {
+  position: absolute;
+  right: -44px;
+  top: -46px;
+  transform: rotate(-7deg);
 }
 
 .catch-envelope {
   position: absolute;
   left: 78.5%;
-  top: 44%;
-  width: 152px;
-  height: 104px;
-  margin: -52px 0 0 -76px;
+  top: 43%;
+  width: 196px;
+  height: 134px;
+  margin: -67px 0 0 -98px;
   z-index: 3;
   will-change: transform;
 }
 
 .catch-envelope-typing { left: 78%; top: 50%; }
-.catch-envelope-story { left: 78.5%; top: 56%; }
+.catch-envelope-story { left: 78.5%; top: 57%; }
 
 .envelope-inner {
   width: 100%;
   height: 100%;
   position: relative;
-  border: 1.5px solid rgba(15, 15, 13, 0.78);
-  border-radius: 7px 9px 7px 9px;
+  border: 1.5px solid rgba(15, 15, 13, 0.8);
+  border-radius: 8px 10px 8px 10px;
   background: #fbf8f0;
-  box-shadow: 4px 5px 0 rgba(15, 15, 13, 0.14);
+  box-shadow: 5px 6px 0 rgba(15, 15, 13, 0.13);
 }
 
 .envelope-flap {
@@ -4971,58 +5013,58 @@
   inset: -1.5px -1.5px auto -1.5px;
   height: 48%;
   background:
-    linear-gradient(102deg, transparent 49.55%, rgba(15, 15, 13, 0.32) 49.55%, rgba(15, 15, 13, 0.32) 50.45%, transparent 50.45%),
-    linear-gradient(-102deg, transparent 49.55%, rgba(15, 15, 13, 0.32) 49.55%, rgba(15, 15, 13, 0.32) 50.45%, transparent 50.45%);
+    linear-gradient(102deg, transparent 49.6%, rgba(15, 15, 13, 0.3) 49.6%, rgba(15, 15, 13, 0.3) 50.4%, transparent 50.4%),
+    linear-gradient(-102deg, transparent 49.6%, rgba(15, 15, 13, 0.3) 49.6%, rgba(15, 15, 13, 0.3) 50.4%, transparent 50.4%);
 }
 
 .envelope-postage {
   position: absolute;
-  right: 8px;
-  top: 8px;
-  width: 22px;
-  height: 26px;
+  right: 10px;
+  top: 10px;
+  width: 27px;
+  height: 32px;
   border: 1.5px dashed rgba(63, 44, 134, 0.55);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .envelope-lines {
   position: absolute;
-  left: 10px;
-  bottom: 26px;
+  left: 12px;
+  bottom: 34px;
   display: grid;
-  gap: 5px;
+  gap: 6px;
 }
 
 .envelope-lines i {
-  width: 54px;
-  height: 2px;
+  width: 68px;
+  height: 2.5px;
   border-radius: 999px;
   background: rgba(15, 15, 13, 0.18);
 }
 
 .envelope-lines i:last-child {
-  width: 38px;
+  width: 46px;
   background: rgba(15, 15, 13, 0.12);
 }
 
 .envelope-label {
   position: absolute;
-  left: 10px;
-  bottom: 9px;
+  left: 12px;
+  bottom: 11px;
   font-family: var(--font-display);
   font-stretch: 92%;
-  font-size: 11.5px;
+  font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.01em;
 }
 
 .envelope-sub {
   position: absolute;
-  right: 9px;
-  bottom: 9px;
+  right: 11px;
+  bottom: 11px;
   color: rgba(15, 15, 13, 0.48);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.06em;
 }
@@ -5031,41 +5073,37 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  display: grid;
-  justify-items: center;
-  padding: 7px 12px 6px;
-  border: 2px solid rgba(63, 44, 134, 0.7);
-  border-radius: 9px 12px 8px 12px;
-  background: rgba(216, 210, 255, 0.92);
-  color: #3f2c86;
-  box-shadow: 2px 3px 0 rgba(15, 15, 13, 0.16);
-  transform: translate(-50%, -50%) rotate(-11deg);
+  transform: translate(-50%, -50%) rotate(-9deg);
+  padding: 6px 11px 5px;
+  border-width: 2px;
   opacity: 0;
 }
 
-.envelope-stamp b {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
+.envelope-stamp b { font-size: 16px; }
+.envelope-stamp small:first-of-type { display: none; }
 
 .signal-catch-caption {
-  margin: 26px 0 0;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(28px, 6svh, 64px);
+  transform: translateX(-50%);
+  margin: 0;
   display: grid;
   justify-items: center;
-  gap: 7px;
+  gap: 6px;
   text-align: center;
+  z-index: 4;
+  width: max-content;
+  max-width: 92vw;
 }
 
 .signal-catch-caption span {
   font-family: var(--font-display);
   font-stretch: 92%;
-  font-size: clamp(1.2rem, 2.1vw, 1.8rem);
+  font-size: clamp(1.15rem, 2vw, 1.7rem);
   font-weight: 560;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.12;
 }
 
 .signal-catch-caption span:nth-child(3) {
@@ -5085,6 +5123,7 @@
   grid-template-columns: auto auto;
   gap: 10px 12px;
   align-items: center;
+  z-index: 4;
 }
 
 .signal-catch-rail .rail-track {
@@ -5121,42 +5160,48 @@
 }
 
 @media (max-width: 760px) {
+  .catch-headline {
+    left: 20px;
+    right: 20px;
+    top: 88px;
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+  }
+
   .signal-catch-stage {
-    width: min(94vw, calc((100svh - 330px) * 1.364));
+    width: 96vw;
+    top: 55%;
   }
 
   .catch-envelope {
-    width: 104px;
-    height: 72px;
-    margin: -36px 0 0 -52px;
+    width: 128px;
+    height: 88px;
+    margin: -44px 0 0 -64px;
   }
 
-  .envelope-label { font-size: 9px; bottom: 6px; left: 7px; }
+  .envelope-label { font-size: 10px; bottom: 7px; left: 8px; }
   .envelope-sub { display: none; }
-  .envelope-lines { bottom: 18px; left: 7px; gap: 4px; }
-  .envelope-lines i { width: 36px; height: 1.5px; }
-  .envelope-lines i:last-child { width: 26px; }
-  .envelope-postage { width: 15px; height: 18px; right: 5px; top: 5px; }
-  .envelope-stamp { padding: 4px 8px 4px; }
+  .envelope-lines { bottom: 22px; left: 8px; gap: 4px; }
+  .envelope-lines i { width: 44px; height: 2px; }
+  .envelope-lines i:last-child { width: 30px; }
+  .envelope-postage { width: 18px; height: 22px; right: 6px; top: 6px; }
+
+  .envelope-stamp { padding: 4px 7px 3px; border-width: 1.5px; }
   .envelope-stamp b { font-size: 11px; }
 
   .signal-catch-ghost {
-    width: 96px;
-    height: 96px;
-    margin: -48px 0 0 -48px;
-    left: 80%;
-    top: 15%;
+    width: 116px;
+    height: 116px;
+    margin: -58px 0 0 -58px;
+    left: 81%;
+    top: 13%;
   }
 
-  .catch-stamp {
-    right: -18px;
-    top: -26px;
-    padding: 9px 11px 8px;
-  }
-
-  .catch-stamp b { font-size: 14px; }
+  .catch-stamp { right: -16px; top: -40px; padding: 7px 10px 6px; }
+  .catch-stamp b { font-size: 15px; }
+  .catch-stamp small { font-size: 7px; letter-spacing: 0.16em; }
   .signal-catch-rail { display: none; }
-  .catch-tray-label { font-size: 7px; top: -15px; }
+  .catch-tray-label { font-size: 8px; top: -16px; }
+  .catch-tray-count { font-size: 8px; bottom: -18px; }
 }
 
 /* -- Journey ghost: one ghost, traveling the whole page ----------- */

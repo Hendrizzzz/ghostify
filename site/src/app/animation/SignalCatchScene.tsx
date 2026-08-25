@@ -3,9 +3,9 @@ import { GhostMark } from '../components/GhostSVG';
 import { gsap, ensureGsap, prefersReducedMotion } from './gsapSetup';
 
 const ROUTES = {
-  seen: 'M -80 150 C 150 128, 300 205, 460 185 C 580 170, 660 240, 706 290',
-  typing: 'M -80 330 C 170 312, 320 348, 480 330 C 590 318, 650 326, 702 330',
-  story: 'M -80 510 C 160 498, 300 428, 460 452 C 590 472, 660 402, 706 370',
+  seen: 'M -80 128 C 150 104, 300 190, 460 168 C 580 152, 660 226, 708 282',
+  typing: 'M -80 330 C 170 310, 320 350, 480 330 C 590 316, 650 324, 704 330',
+  story: 'M -80 532 C 160 520, 300 442, 460 468 C 590 490, 660 414, 708 378',
 };
 
 function CatchEnvelope({ kind }: { kind: 'seen' | 'typing' | 'story' }) {
@@ -21,8 +21,9 @@ function CatchEnvelope({ kind }: { kind: 'seen' | 'typing' | 'story' }) {
         </span>
         <strong className="envelope-label">{label}</strong>
         <small className="envelope-sub">for: you only</small>
-        <span className="envelope-stamp">
-          <b>held</b>
+        <span className="envelope-stamp postmark">
+          <small>Ghostify post</small>
+          <b>Held</b>
         </span>
       </div>
     </div>
@@ -39,11 +40,14 @@ export function SignalCatchScene() {
 
     const ctx = gsap.context(() => {
       const envelopes = Array.from(root.querySelectorAll<HTMLElement>('.catch-envelope'));
-      const inners = envelopes.map((envelope) => envelope.querySelector<HTMLElement>('.envelope-inner'));
+      const inners = envelopes.map((envelope) =>
+        envelope.querySelector<HTMLElement>('.envelope-inner'),
+      );
       const stamps = Array.from(root.querySelectorAll<HTMLElement>('.envelope-stamp'));
       const trayStamp = root.querySelector<HTMLElement>('.catch-stamp');
+      const counter = root.querySelector<HTMLElement>('.catch-tray-count');
       const ghost = root.querySelector<HTMLElement>('.signal-catch-ghost');
-      const routes = root.querySelectorAll<SVGPathElement>('.catch-route');
+      const ghostInner = ghost?.querySelector<HTMLElement>('.journey-ghost-inner');
       const intro = root.querySelectorAll<HTMLElement>('.catch-intro');
       const captionLines = root.querySelectorAll<HTMLElement>('.signal-catch-caption span');
       const railFill = root.querySelector<HTMLElement>('.signal-catch-rail i');
@@ -55,30 +59,38 @@ export function SignalCatchScene() {
           trigger: root,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 0.55,
+          scrub: 0.7,
           onUpdate: (self) => {
-            const step = self.progress < 0.3 ? 0 : self.progress < 0.72 ? 1 : 2;
+            const progress = self.progress;
+            const step = progress < 0.24 ? 0 : progress < 0.68 ? 1 : 2;
             steps.forEach((item, index) => {
               item.classList.toggle('is-active', index === step);
             });
-            if (railFill) railFill.style.transform = `scaleY(${self.progress.toFixed(4)})`;
+            if (railFill) railFill.style.transform = `scaleY(${progress.toFixed(4)})`;
+            if (counter) {
+              const held =
+                (progress > 0.3 ? 1 : 0) + (progress > 0.48 ? 1 : 0) + (progress > 0.66 ? 1 : 0);
+              const next = `Held ${held} / 3`;
+              if (counter.textContent !== next) counter.textContent = next;
+            }
           },
         },
       });
 
       tl.fromTo(
         intro,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.05, ease: 'power2.out', stagger: 0.012 },
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.045, ease: 'power2.out', stagger: 0.012 },
         0,
       );
 
       const pressGhost = (at: number) => {
-        if (!ghost) return;
-        tl.to(ghost, { scale: 0.93, duration: 0.025, ease: 'power2.in' }, at).to(
-          ghost,
-          { scale: 1, duration: 0.035, ease: 'power2.out' },
-          at + 0.025,
+        const target = ghostInner ?? ghost;
+        if (!target) return;
+        tl.to(target, { scale: 0.92, duration: 0.022, ease: 'power2.in' }, at).to(
+          target,
+          { scale: 1, duration: 0.034, ease: 'power2.out' },
+          at + 0.022,
         );
       };
 
@@ -88,8 +100,8 @@ export function SignalCatchScene() {
         const inner = inners[index];
         if (!route || !inner) return;
 
-        const moveStart = 0.07 + index * 0.185;
-        const moveDur = 0.155;
+        const moveStart = 0.055 + index * 0.185;
+        const moveDur = 0.185;
 
         gsap.set(envelope, {
           motionPath: { path: route, align: route, alignOrigin: [0.5, 0.5] },
@@ -110,42 +122,55 @@ export function SignalCatchScene() {
           moveStart,
         );
 
-        if (inner) {
-          tl.to(inner, { rotation: 4.5, duration: moveDur * 0.4, ease: 'sine.in' }, moveStart)
-            .to(inner, { rotation: -3.5, duration: moveDur * 0.35, ease: 'sine.inOut' }, moveStart + moveDur * 0.4)
-            .to(inner, { rotation: 0, duration: moveDur * 0.25, ease: 'sine.out' }, moveStart + moveDur * 0.75);
-        }
+        tl.to(inner, { rotation: 5, duration: moveDur * 0.38, ease: 'sine.in' }, moveStart)
+          .to(
+            inner,
+            { rotation: -4, duration: moveDur * 0.36, ease: 'sine.inOut' },
+            moveStart + moveDur * 0.38,
+          )
+          .to(
+            inner,
+            { rotation: 0, duration: moveDur * 0.26, ease: 'sine.out' },
+            moveStart + moveDur * 0.74,
+          );
 
-        const stampAt = moveStart + moveDur + 0.005;
+        const stampAt = moveStart + moveDur + 0.008;
         tl.fromTo(
           stamps[index],
-          { opacity: 0, scale: 1.9, rotation: -26 },
-          { opacity: 1, scale: 1, rotation: -11, duration: 0.035, ease: 'power3.in' },
+          { opacity: 0, scale: 2.2, rotation: -30 },
+          { opacity: 1, scale: 1, rotation: -9, duration: 0.032, ease: 'power3.in' },
           stampAt,
+        );
+        tl.to(inner, { scaleY: 0.9, duration: 0.018, ease: 'power2.in' }, stampAt).to(
+          inner,
+          { scaleY: 1, duration: 0.03, ease: 'power2.out' },
+          stampAt + 0.018,
         );
         pressGhost(stampAt);
 
-        if (inner) {
-          tl.to(inner, { rotation: -4 + index * 3.5, y: index * 3, duration: 0.03, ease: 'power2.out' }, stampAt + 0.04);
-        }
+        tl.to(
+          inner,
+          { rotation: -5 + index * 4, y: index * 4, duration: 0.03, ease: 'power2.out' },
+          stampAt + 0.045,
+        );
       });
 
       if (trayStamp) {
         tl.fromTo(
           trayStamp,
-          { opacity: 0, scale: 2.1, rotation: -20 },
-          { opacity: 1, scale: 1, rotation: -7, duration: 0.04, ease: 'power3.in' },
-          0.8,
+          { opacity: 0, scale: 2.4, rotation: -24 },
+          { opacity: 1, scale: 1, rotation: -6, duration: 0.036, ease: 'power3.in' },
+          0.72,
         );
-        pressGhost(0.8);
+        pressGhost(0.72);
       }
 
       captionLines.forEach((line, index) => {
         tl.fromTo(
           line,
-          { opacity: 0, y: 18 },
-          { opacity: 1, y: 0, duration: 0.055, ease: 'power2.out' },
-          0.85 + index * 0.05,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.05, ease: 'power2.out' },
+          0.8 + index * 0.055,
         );
       });
     }, root);
@@ -156,6 +181,8 @@ export function SignalCatchScene() {
   return (
     <section className="signal-catch" aria-label="How Ghostify holds signals" ref={rootRef}>
       <div className="signal-catch-sticky">
+        <div className="catch-grid-bg" aria-hidden="true" />
+
         <div className="signal-catch-rail" aria-hidden="true">
           <span className="rail-track">
             <i />
@@ -164,6 +191,10 @@ export function SignalCatchScene() {
           <span className="rail-step">Hold</span>
           <span className="rail-step">Quiet</span>
         </div>
+
+        <h2 className="catch-headline catch-intro">
+          Nothing leaves <em>this desk.</em>
+        </h2>
 
         <div className="signal-catch-stage">
           <svg
@@ -181,27 +212,31 @@ export function SignalCatchScene() {
 
           <div className="catch-desk" aria-hidden="true">
             <span className="catch-tray catch-intro">
-              <small className="catch-tray-label">outgoing tray — nothing leaves</small>
+              <small className="catch-tray-label">outgoing tray</small>
+              <small className="catch-tray-count">Held 0 / 3</small>
             </span>
-            <span className="catch-stamp catch-intro">
-              <b>held</b>
-              <small>in this browser</small>
+            <span className="catch-stamp postmark catch-intro">
+              <small>Ghostify post</small>
+              <b>Held</b>
+              <small className="postmark-foot">in this browser</small>
             </span>
             <span className="signal-catch-ghost catch-intro">
-              <GhostMark size={148} bodyColor="#0f0f0d" eyeColor="#ffffff" />
+              <span className="journey-ghost-inner">
+                <GhostMark size={188} bodyColor="#0f0f0d" eyeColor="#ffffff" />
+              </span>
             </span>
           </div>
 
           <CatchEnvelope kind="seen" />
           <CatchEnvelope kind="typing" />
           <CatchEnvelope kind="story" />
-
-          <p className="signal-catch-caption">
-            <span>Three letters try to leave your tabs.</span>
-            <span>The ghost postmaster holds every one.</span>
-            <span>Delivered: nothing.</span>
-          </p>
         </div>
+
+        <p className="signal-catch-caption">
+          <span>Three letters try to leave your tabs.</span>
+          <span>The ghost postmaster holds every one.</span>
+          <span>Delivered: nothing.</span>
+        </p>
       </div>
     </section>
   );

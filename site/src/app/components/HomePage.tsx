@@ -637,7 +637,6 @@ function AskAiSection() {
           </Reveal>
           <Reveal className="ask-ai-visual" delay={140} aria-hidden="true">
             <div className="ask-ai-source-stack">
-              <span className="ask-ai-tape" />
               <div className="ask-ai-question-sheet">
                 <div className="ask-ai-sheet-meta">
                   <span>From your browser</span>
