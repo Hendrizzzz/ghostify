@@ -6,7 +6,6 @@ import {
   CircleCheck,
   EyeOff,
   CirclePlay,
-  LockKeyhole,
   MessageCircle,
   ShieldCheck,
 } from 'lucide-react';
@@ -31,7 +30,7 @@ const FEATURES: Array<{
     platform: 'messenger',
     name: 'Messenger',
     title: 'Read it. Leave the reply for later.',
-    body: 'Open supported conversations without turning the moment you read into a demand to answer. Ghostify holds the supported Seen signal while Messenger keeps working normally.',
+    body: 'Read the message when it arrives; reply when it suits you. Ghostify holds the Seen signal in your browser while Messenger keeps working normally.',
     webm: '/media/messenger-hide-seen.webm',
     mp4: '/media/messenger-hide-seen.mp4',
     poster: '/media/messenger-hide-seen-poster.webp',
@@ -42,7 +41,7 @@ const FEATURES: Array<{
     platform: 'instagram',
     name: 'Instagram',
     title: 'Watch the story. Stay off the list.',
-    body: 'Ghostify keeps the story experience intact while holding the supported viewer signal locally. You choose the control; the rest of Instagram stays familiar.',
+    body: 'Watch stories as usual while your name stays off the viewer list. The control lives on your device; the rest of Instagram stays familiar.',
     webm: '/media/instagram-hide-story.webm',
     mp4: '/media/instagram-hide-story.mp4',
     poster: '/media/instagram-hide-story-poster.webp',
@@ -53,7 +52,7 @@ const FEATURES: Array<{
     platform: 'facebook',
     name: 'Facebook',
     title: 'Bring the same quiet control to Facebook.',
-    body: 'Supported story-view, typing, and Seen controls share one setting group with Messenger, so the privacy choice follows the way Meta’s web messaging works.',
+    body: 'Story-view, typing, and Seen controls share one setting group with Messenger — the privacy choice follows you across Meta’s web messaging.',
     webm: '/media/facebook-hide-story.webm',
     mp4: '/media/facebook-hide-story.mp4',
     poster: '/media/facebook-hide-story-poster.webp',
@@ -133,7 +132,7 @@ const EXTENSION_FOOTPRINT_KIB = 64.57;
 const FAQS = [
   {
     q: 'Why does Chrome say Ghostify can read and change data on these sites?',
-    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Meta’s own web-messaging proxy; Ghostify does not send your conversations, social activity, or tab URLs to a Ghostify server.',
+    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Meta’s own web-messaging proxy — it is not a window into everything you do.',
   },
   {
     q: 'Does Ghostify read my messages?',
@@ -396,255 +395,6 @@ function PlatformControlMap() {
   );
 }
 
-function PrivacyIllustration() {
-  return (
-    <div className="privacy-illustration" aria-hidden="true">
-      <div className="privacy-browser">
-        <div className="privacy-browser-bar">
-          <span className="privacy-window-dots">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span className="privacy-browser-url">
-            <LockKeyhole size={11} /> supported tab
-          </span>
-        </div>
-        <div className="privacy-browser-body">
-          <div className="privacy-signal-list">
-            <span>
-              <EyeOff size={15} />
-              <b>Seen receipt</b>
-              <CircleCheck size={15} />
-            </span>
-            <span>
-              <MessageCircle size={15} />
-              <b>Typing signal</b>
-              <CircleCheck size={15} />
-            </span>
-            <span>
-              <CirclePlay size={15} />
-              <b>Story view</b>
-              <CircleCheck size={15} />
-            </span>
-          </div>
-          <span className="privacy-browser-ghost">
-            <GhostMark size={82} bodyColor="#f3eee2" eyeColor="#0f0f0d" />
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const PRIVACY_TOPICS = [
-  {
-    label: 'Your controls',
-    title: 'Each signal stays in your hands.',
-    body: 'Seen, typing, and story-view controls remain separate, so you decide exactly what changes.',
-    href: `${GITHUB_URL}/blob/main/PRIVACY.md`,
-    cta: 'Review every permission',
-    external: true,
-  },
-  {
-    label: 'Normal browsing',
-    title: 'Privacy without breaking the conversation.',
-    body: 'Regression checks cover messages, navigation, and media while supported signals are held back.',
-    href: '/status',
-    cta: 'See the latest checks',
-    external: false,
-  },
-  {
-    label: 'Public evidence',
-    title: 'Nothing important is hidden.',
-    body: 'The Core source and release history stay public when Meta changes its web apps.',
-    href: GITHUB_URL,
-    cta: 'Read the source',
-    external: true,
-  },
-];
-
-function PrivacyNoteVisual({ index }: { index: number }) {
-  if (index === 0) {
-    return (
-      <div className="privacy-note-art privacy-note-art-controls" aria-hidden="true">
-        <svg viewBox="0 0 340 166" role="presentation">
-          <path
-            className="privacy-art-wash"
-            d="M21 113C54 34 204 10 318 61c-32 70-185 105-297 52Z"
-          />
-          <path className="privacy-art-paper" d="m42 35 240-13 18 112-246 14Z" />
-          <path className="privacy-art-tape" d="m131 22 63-4 3 16-64 4Z" />
-          <g
-            className="privacy-art-slider privacy-art-slider-seen"
-            transform="translate(60 61) rotate(-2)"
-          >
-            <text x="0" y="5">
-              SEEN
-            </text>
-            <path d="M57 0h139" />
-            <circle cx="91" cy="0" r="13" />
-            <text className="privacy-art-state" x="211" y="5">
-              YOURS
-            </text>
-          </g>
-          <g
-            className="privacy-art-slider privacy-art-slider-typing"
-            transform="translate(57 94) rotate(1)"
-          >
-            <text x="0" y="5">
-              TYPING
-            </text>
-            <path d="M57 0h139" />
-            <circle cx="153" cy="0" r="13" />
-            <text className="privacy-art-state" x="211" y="5">
-              YOURS
-            </text>
-          </g>
-          <g
-            className="privacy-art-slider privacy-art-slider-story"
-            transform="translate(63 126) rotate(-1)"
-          >
-            <text x="0" y="5">
-              STORY VIEW
-            </text>
-            <path d="M57 0h139" />
-            <circle cx="125" cy="0" r="13" />
-            <text className="privacy-art-state" x="211" y="5">
-              YOURS
-            </text>
-          </g>
-        </svg>
-      </div>
-    );
-  }
-
-  if (index === 1) {
-    return (
-      <div className="privacy-note-art privacy-note-art-conversation" aria-hidden="true">
-        <svg viewBox="0 0 340 166" role="presentation">
-          <path className="privacy-art-wash" d="M17 101c47-68 193-89 308-20-46 66-204 96-308 20Z" />
-          <path className="privacy-chat-route" d="M31 111c60 48 214 49 280-18" />
-          <path
-            className="privacy-chat-shape privacy-chat-shape-one"
-            d="M34 27h135a18 18 0 0 1 18 18v35a18 18 0 0 1-18 18H91l-33 24 8-24H34A18 18 0 0 1 16 80V45a18 18 0 0 1 18-18Z"
-          />
-          <text className="privacy-chat-label" x="42" y="54">
-            CONVERSATION
-          </text>
-          <text className="privacy-chat-copy" x="42" y="77">
-            keeps moving
-          </text>
-          <path
-            className="privacy-chat-shape privacy-chat-shape-two"
-            d="M192 45h116a18 18 0 0 1 18 18v28a18 18 0 0 1-18 18h-24l8 24-35-24h-65a18 18 0 0 1-18-18V63a18 18 0 0 1 18-18Z"
-          />
-          <text className="privacy-chat-label privacy-chat-label-dark" x="201" y="72">
-            PRIVACY
-          </text>
-          <text className="privacy-chat-copy privacy-chat-copy-dark" x="201" y="94">
-            stays local
-          </text>
-          <circle className="privacy-chat-route-dot" cx="51" cy="122" r="4" />
-          <circle className="privacy-chat-route-dot" cx="290" cy="111" r="4" />
-        </svg>
-        <span className="privacy-conversation-ghost">
-          <GhostMark size={54} bodyColor="#f3eee2" eyeColor="#0f0f0d" />
-        </span>
-      </div>
-    );
-  }
-
-  const verifiedDate = formatStatusDate(getLastVerifiedAt()).toUpperCase();
-
-  return (
-    <div className="privacy-note-art privacy-note-art-proof" aria-hidden="true">
-      <svg viewBox="0 0 340 166" role="presentation">
-        <path className="privacy-art-wash" d="M18 113c29-76 183-110 306-54-23 76-188 116-306 54Z" />
-        <path
-          className="privacy-art-tape privacy-proof-tape"
-          transform="rotate(2 170 22)"
-          d="m136 14 68-2 1 17-67 2Z"
-        />
-        <g className="privacy-proof-sheet privacy-proof-sheet-source" transform="rotate(-7 101 83)">
-          <rect x="37" y="35" width="128" height="96" rx="9" />
-          <text x="53" y="61">
-            SOURCE
-          </text>
-          <text className="privacy-proof-kind" x="53" y="82">
-            CORE
-          </text>
-          <path d="M53 96h83M53 108h67M53 120h76" />
-        </g>
-        <g className="privacy-proof-sheet privacy-proof-sheet-check" transform="rotate(5 191 73)">
-          <rect x="127" y="22" width="128" height="102" rx="9" />
-          <text x="144" y="50">
-            CHECKS
-          </text>
-          <text className="privacy-proof-date" x="144" y="73">
-            {verifiedDate}
-          </text>
-          <path className="privacy-proof-tick" d="m188 91 10 10 23-28" />
-        </g>
-        <g className="privacy-proof-release">
-          <path d="m231 49 78 13-12 75-79-14Z" />
-          <text x="247" y="83">
-            RELEASES
-          </text>
-          <text x="248" y="102">
-            PUBLIC
-          </text>
-        </g>
-        <circle className="privacy-proof-stamp" cx="282" cy="126" r="24" />
-      </svg>
-    </div>
-  );
-}
-
-function PrivacySection() {
-  return (
-    <section className="privacy-flat" id="privacy" data-scroll-scene>
-      <div className="privacy-flat-panel">
-        <Reveal className="privacy-showcase-lead">
-          <div className="privacy-showcase-copy">
-            <h2>
-              Made for privacy
-              <br />
-              that stays <em>yours.</em>
-            </h2>
-            <p>Three ways Ghostify keeps control close to you.</p>
-          </div>
-          <div className="privacy-showcase-visual">
-            <PrivacyIllustration />
-          </div>
-        </Reveal>
-
-        <div className="privacy-principles-static" aria-label="Ghostify privacy principles">
-          {PRIVACY_TOPICS.map((topic, index) => (
-            <Reveal
-              tag="article"
-              className={`privacy-static-note privacy-static-note-${index + 1}`}
-              delay={index * 100}
-              key={topic.label}
-            >
-              <PrivacyNoteVisual index={index} />
-              <h3>{topic.title}</h3>
-              <p>{topic.body}</p>
-              <a
-                href={topic.href}
-                target={topic.external ? '_blank' : undefined}
-                rel={topic.external ? 'noopener noreferrer' : undefined}
-              >
-                {topic.cta} <ArrowUpRight size={15} aria-hidden="true" />
-              </a>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function AnimatedFootprintMetric() {
   const metricRef = useRef<HTMLElement>(null);
   const [value, setValue] = useState(0);
@@ -875,9 +625,6 @@ function InstallRhythm() {
         <p>Four small moves, then Ghostify settles into the background.</p>
       </Reveal>
       <div className="install-rhythm-path">
-        <span className="install-path-line" aria-hidden="true">
-          <i />
-        </span>
         <span className="install-path-ghost" aria-hidden="true">
           <GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" />
         </span>
@@ -1153,7 +900,9 @@ export function HomePage() {
 
       <FeatureScroll />
 
-      <section className="platforms-flat" id="platforms" data-scroll-scene>
+      <section className="platforms-flat is-dark" id="platforms" data-scroll-scene>
+        <div id="privacy" aria-hidden="true" />
+
         <Reveal tag="header">
           <h2>
             Three controls.
@@ -1202,8 +951,6 @@ export function HomePage() {
         </Reveal>
       </section>
 
-      <PrivacySection />
-
       <FootprintSection />
       <InstallRhythm />
       <FactMarquee />
@@ -1241,8 +988,7 @@ export function HomePage() {
             <span className="home-final-promise">wherever you browse.</span>
           </h2>
           <p>
-            Quiet privacy controls for supported Meta web apps, available for Chrome, Edge, and
-            Firefox.
+            One extension, three platforms, zero accounts. Free for Chrome, Edge, and Firefox.
           </p>
           <div className="home-final-actions">
             <StoreCta />
