@@ -27,9 +27,9 @@ export function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
         lenis = new Lenis({
           anchors: true,
           autoRaf: false,
-          duration: 1.2,
+          duration: 1.05,
           easing: SCROLL_EASING,
-          overscroll: true,
+          overscroll: false,
           smoothWheel: true,
           stopInertiaOnNavigate: true,
           syncTouch: false,
