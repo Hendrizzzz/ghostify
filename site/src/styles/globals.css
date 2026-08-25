@@ -305,15 +305,23 @@ body {
   letter-spacing: -0.01em;
   text-decoration: none;
   transition:
-    transform 180ms ease,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
     background 180ms ease,
     box-shadow 180ms ease;
 }
 
-.store-cta:hover {
-  transform: translateY(-2px);
-  background: #292823;
-  box-shadow: 0 10px 24px rgba(23, 23, 20, 0.14);
+@media (hover: hover) and (pointer: fine) {
+  .store-cta:hover {
+    transform: translateY(-2px);
+    background: #292823;
+    box-shadow: 0 10px 24px rgba(23, 23, 20, 0.14);
+  }
+}
+
+.store-cta:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  transition-duration: 80ms;
 }
 
 .store-cta-compact {

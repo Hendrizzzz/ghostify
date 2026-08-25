@@ -21,7 +21,9 @@ const FEATURES: Array<{
   name: string;
   title: string;
   body: string;
-  src: string;
+  webm: string;
+  mp4: string;
+  poster: string;
   width: number;
   height: number;
 }> = [
@@ -30,7 +32,9 @@ const FEATURES: Array<{
     name: 'Messenger',
     title: 'Read it. Leave the reply for later.',
     body: 'Open supported conversations without turning the moment you read into a demand to answer. Ghostify holds the supported Seen signal while Messenger keeps working normally.',
-    src: '/messenger-hide-seen.gif',
+    webm: '/media/messenger-hide-seen.webm',
+    mp4: '/media/messenger-hide-seen.mp4',
+    poster: '/media/messenger-hide-seen-poster.webp',
     width: 864,
     height: 782,
   },
@@ -39,7 +43,9 @@ const FEATURES: Array<{
     name: 'Instagram',
     title: 'Watch the story. Stay off the list.',
     body: 'Ghostify keeps the story experience intact while holding the supported viewer signal locally. You choose the control; the rest of Instagram stays familiar.',
-    src: '/instagram-hide-story.gif',
+    webm: '/media/instagram-hide-story.webm',
+    mp4: '/media/instagram-hide-story.mp4',
+    poster: '/media/instagram-hide-story-poster.webp',
     width: 859,
     height: 782,
   },
@@ -48,11 +54,32 @@ const FEATURES: Array<{
     name: 'Facebook',
     title: 'Bring the same quiet control to Facebook.',
     body: 'Supported story-view, typing, and Seen controls share one setting group with Messenger, so the privacy choice follows the way Meta’s web messaging works.',
-    src: '/facebook-hide-story.gif',
+    webm: '/media/facebook-hide-story.webm',
+    mp4: '/media/facebook-hide-story.mp4',
+    poster: '/media/facebook-hide-story-poster.webp',
     width: 844,
     height: 782,
   },
 ];
+
+function FeatureRecording({ feature }: { feature: typeof FEATURES[number] }) {
+  return (
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      poster={feature.poster}
+      aria-label={`${feature.name} running with Ghostify in the browser`}
+      width={feature.width}
+      height={feature.height}
+    >
+      <source src={feature.webm} type="video/webm" />
+      <source src={feature.mp4} type="video/mp4" />
+    </video>
+  );
+}
 
 const FACTS = [
   { label: 'Source open', text: 'Read every line.' },
@@ -1053,14 +1080,7 @@ function FeatureScroll() {
               <strong>{signalNote}</strong>
             </div>
             <div className={`feature-media-crop feature-media-crop-${activeFeature.platform}`}>
-              <img
-                src={activeFeature.src}
-                alt={`${activeFeature.name} running with Ghostify in the browser`}
-                width={activeFeature.width}
-                height={activeFeature.height}
-                loading="lazy"
-                decoding="async"
-              />
+              <FeatureRecording feature={activeFeature} />
             </div>
           </div>
         </figure>
@@ -1091,14 +1111,7 @@ function FeatureScroll() {
             <h2>{feature.title}</h2>
             <p>{feature.body}</p>
             <FeatureSignalRail platform={feature.platform} />
-            <img
-              src={feature.src}
-              alt={`${feature.name} running with Ghostify in the browser`}
-              width={feature.width}
-              height={feature.height}
-              loading="lazy"
-              decoding="async"
-            />
+            <FeatureRecording feature={feature} />
           </article>
         ))}
       </div>
