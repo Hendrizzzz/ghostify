@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { HomePage } from './components/HomePage';
 import { SiteFooter, SiteHeader } from './components/SiteChrome';
-import { SmoothScroll } from './components/SmoothScroll';
 import { StatusPage } from './components/StatusPage';
 
 export default function App() {
@@ -43,17 +42,15 @@ export default function App() {
   }, [statusView]);
 
   return (
-    <SmoothScroll enabled={!statusView}>
-      <div className={`site-root${statusView ? ' is-status-view' : ''}`}>
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
-        <SiteHeader />
-        <main id="main-content">
-          {statusView ? <StatusPage view={statusView} /> : <HomePage />}
-        </main>
-        <SiteFooter />
-      </div>
-    </SmoothScroll>
+    <div className={`site-root${statusView ? ' is-status-view' : ''}`}>
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <SiteHeader />
+      <main id="main-content">
+        {statusView ? <StatusPage view={statusView} /> : <HomePage />}
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
