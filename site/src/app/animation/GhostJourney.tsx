@@ -15,17 +15,15 @@ const vw = () => window.innerWidth;
 const vh = () => window.innerHeight;
 
 const WAYPOINTS: Waypoint[] = [
-  { selector: '.home-hero', x: gutterX, y: () => vh() * 0.22, scale: 1 },
+  { selector: '.home-hero', x: gutterX, y: () => vh() * 0.24, scale: 1 },
   { selector: '.signal-catch', hide: true, x: gutterX, y: () => vh() * 0.5 },
-  { selector: '.feature-scroll', x: gutterX, y: () => vh() * 0.32, scale: 0.82 },
+  { selector: '.feature-scroll', x: gutterX, y: () => vh() * 0.36, scale: 0.85 },
   { selector: '.platforms-flat', x: gutterX, y: () => vh() * 0.44, scale: 0.9 },
-  { selector: '.privacy-band', x: () => vw() * 0.68, y: () => vh() * 0.38, scale: 1 },
-  { selector: '.footprint-section', x: gutterX, y: () => vh() * 0.34, scale: 0.88 },
-  { selector: '.install-rhythm', x: gutterX, y: () => vh() * 0.4, scale: 0.88 },
-  { selector: '.fact-marquee', x: gutterX, y: () => vh() * 0.5 },
-  { selector: '.faq-flat', x: () => vw() * 0.13, y: () => vh() * 0.56, scale: 1.05 },
-  { selector: '.ask-ai-section', x: gutterX, y: () => vh() * 0.36, scale: 0.92 },
-  { selector: '.home-final', x: () => vw() * 0.74, y: () => vh() * 0.3, scale: 1 },
+  { selector: '.privacy-band', x: () => vw() * 0.8, y: () => vh() * 0.4, scale: 1 },
+  { selector: '.footprint-section', x: gutterX, y: () => vh() * 0.4, scale: 0.9 },
+  { selector: '.install-rhythm', hide: true, x: gutterX, y: () => vh() * 0.4 },
+  { selector: '.faq-flat', x: () => vw() * 0.16, y: () => vh() * 0.55, scale: 1.05 },
+  { selector: '.home-final', x: () => vw() * 0.74, y: () => vh() * 0.32, scale: 1 },
 ];
 
 export function GhostJourney() {
@@ -71,7 +69,7 @@ export function GhostJourney() {
                 trigger: document.body,
                 start: 'top top',
                 end: 'bottom bottom',
-                scrub: 0.9,
+                scrub: 1.1,
               },
             });
 
