@@ -23,7 +23,7 @@ const WAYPOINTS: Waypoint[] = [
   { selector: '.privacy-band', x: () => vw() * 0.68, y: () => vh() * 0.38, scale: 1 },
   { selector: '.footprint-section', x: gutterX, y: () => vh() * 0.34, scale: 0.88 },
   { selector: '.install-rhythm', x: () => vw() * 0.3, y: () => vh() * 0.62, scale: 0.9 },
-  { selector: '.fact-marquee', dark: true, hide: true, x: gutterX, y: () => vh() * 0.5 },
+  { selector: '.fact-marquee', dark: true, x: gutterX, y: () => vh() * 0.5 },
   { selector: '.faq-flat', x: () => vw() * 0.13, y: () => vh() * 0.56, scale: 1.05 },
   { selector: '.ask-ai-section', x: gutterX, y: () => vh() * 0.36, scale: 0.92 },
   { selector: '.home-final', x: () => vw() * 0.74, y: () => vh() * 0.3, scale: 1 },
@@ -45,33 +45,68 @@ export function GhostJourney() {
       '(min-width: 1081px) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
       () => {
         const ctx = gsap.context(() => {
-          const setX = gsap.quickTo(ghost, 'x', { duration: 0.9, ease: 'power3.out' });
-          const setY = gsap.quickTo(ghost, 'y', { duration: 0.9, ease: 'power3.out' });
-          const setScale = gsap.quickTo(ghost, 'scale', { duration: 0.9, ease: 'power3.out' });
-          const setOpacity = gsap.quickTo(ghost, 'opacity', { duration: 0.4, ease: 'power2.out' });
-
           const first = WAYPOINTS[0];
           gsap.set(ghost, { x: first.x(), y: first.y(), scale: first.scale ?? 1 });
 
-          const applyWaypoint = (waypoint: Waypoint) => {
-            setX(waypoint.x());
-            setY(waypoint.y());
-            setScale(waypoint.scale ?? 1);
-            setOpacity(waypoint.hide ? 0 : 1);
-            ghost.classList.toggle('is-on-dark', !!waypoint.dark);
+          let journey: gsap.core.Timeline | null = null;
+
+          const documentTop = (selector: string) => {
+            const section = document.querySelector<HTMLElement>(selector);
+            if (!section) return null;
+            return section.getBoundingClientRect().top + window.scrollY;
           };
 
-          const journeyTriggers: ScrollTrigger[] = WAYPOINTS.map((waypoint) => {
-            const section = document.querySelector<HTMLElement>(waypoint.selector);
-            if (!section) return null as unknown as ScrollTrigger;
-            return ScrollTrigger.create({
-              trigger: section,
-              start: 'top 55%',
-              end: 'bottom 55%',
-              onEnter: () => applyWaypoint(waypoint),
-              onEnterBack: () => applyWaypoint(waypoint),
+          const buildJourney = () => {
+            journey?.scrollTrigger?.kill();
+            journey?.kill();
+
+            const maxScroll = Math.max(1, ScrollTrigger.maxScroll(window));
+            const points = WAYPOINTS.map((waypoint) => ({
+              waypoint,
+              top: documentTop(waypoint.selector),
+            })).filter((point): point is { waypoint: Waypoint; top: number } => point.top !== null);
+            if (points.length < 2) return;
+
+            journey = gsap.timeline({
+              scrollTrigger: {
+                trigger: document.body,
+                start: 'top top',
+                end: 'bottom bottom',
+                scrub: 0.9,
+              },
             });
-          }).filter(Boolean);
+
+            for (let index = 0; index < points.length - 1; index += 1) {
+              const current = points[index];
+              const next = points[index + 1];
+              const segmentStart = Math.max(0, current.top - vh() * 0.5);
+              const segmentEnd = Math.max(segmentStart + 1, next.top - vh() * 0.5);
+
+              journey.to(
+                ghost,
+                {
+                  x: next.waypoint.x(),
+                  y: next.waypoint.y(),
+                  scale: next.waypoint.scale ?? 1,
+                  opacity: next.waypoint.hide ? 0 : 1,
+                  ease: 'none',
+                  duration: segmentEnd - segmentStart,
+                },
+                segmentStart,
+              );
+
+              if (next.waypoint.dark !== current.waypoint.dark) {
+                journey.call(
+                  () => ghost.classList.toggle('is-on-dark', !!next.waypoint.dark),
+                  undefined,
+                  segmentStart + (segmentEnd - segmentStart) * 0.5,
+                );
+              }
+            }
+          };
+
+          buildJourney();
+          ScrollTrigger.addEventListener('refresh', buildJourney);
 
           const inner = ghost.querySelector<HTMLElement>('.journey-ghost-inner');
           if (inner) {
@@ -124,7 +159,9 @@ export function GhostJourney() {
 
           return () => {
             gsap.ticker.remove(tick);
-            journeyTriggers.forEach((trigger) => trigger.kill());
+            ScrollTrigger.removeEventListener('refresh', buildJourney);
+            journey?.scrollTrigger?.kill();
+            journey?.kill();
           };
         });
 

@@ -965,8 +965,9 @@
 
 .feature-scroll {
   --feature-progress: 0;
-  /* Keep the feature journey consistent across short and tall windows. */
-  height: calc(100svh + 2400px);
+  /* Keep the feature journey consistent across short and tall windows.
+     1200px per platform: fast flicks can't skip a whole platform. */
+  height: calc(100svh + 3600px);
   position: relative;
   background: linear-gradient(
     180deg,

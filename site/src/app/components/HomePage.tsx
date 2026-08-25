@@ -708,7 +708,7 @@ function FeatureScroll() {
       const rect = section.getBoundingClientRect();
       const distance = Math.max(1, rect.height - window.innerHeight);
       const progress = Math.min(1, Math.max(0, -rect.top / distance));
-      const nextIndex = Math.min(FEATURES.length - 1, Math.round(progress * (FEATURES.length - 1)));
+      const nextIndex = Math.min(FEATURES.length - 1, Math.floor(progress * FEATURES.length));
       section.style.setProperty('--feature-progress', progress.toFixed(3));
       setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
     };
@@ -730,7 +730,7 @@ function FeatureScroll() {
     if (!section) return;
     const sectionTop = window.scrollY + section.getBoundingClientRect().top;
     const distance = Math.max(0, section.offsetHeight - window.innerHeight);
-    const progress = FEATURES.length === 1 ? 0 : index / (FEATURES.length - 1);
+      const progress = FEATURES.length === 0 ? 0 : (index + 0.5) / FEATURES.length;
     window.scrollTo({ top: sectionTop + distance * progress, behavior: 'smooth' });
   };
 
