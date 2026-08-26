@@ -31,12 +31,12 @@ export function LandingChoreography() {
                   opacity: 0,
                   filter: 'blur(8px)',
                   duration: 0.85,
-                  ease: 'power3.out',
+                  ease: 'expo.out',
                   stagger: 0.08,
                 },
                 0.42,
               )
-              .from(actions, { y: 22, opacity: 0, duration: 0.75, ease: 'power3.out' }, 0.58);
+              .from(actions, { y: 22, opacity: 0, duration: 0.75, ease: 'expo.out' }, 0.58);
           }
         }
 
@@ -81,7 +81,14 @@ export function LandingChoreography() {
               .from(split.words, { yPercent: 120, duration: 1.0, stagger: 0.06 }, 0)
               .from(
                 rest,
-                { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1 },
+                {
+                  y: 24,
+                  opacity: 0,
+                  filter: 'blur(6px)',
+                  duration: 0.82,
+                  ease: 'expo.out',
+                  stagger: 0.09,
+                },
                 0.38,
               );
           }

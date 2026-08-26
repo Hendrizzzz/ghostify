@@ -256,6 +256,20 @@
   font-size: 14px;
   font-weight: 620;
   text-underline-offset: 5px;
+  transition:
+    transform 160ms var(--ease-out-soft),
+    color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-hero-actions > a:not(.store-cta):hover {
+    transform: translateY(-1px);
+  }
+}
+
+.home-hero-actions > a:not(.store-cta):active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 
 .home-hero-art {
@@ -1033,7 +1047,7 @@
   min-height: 380px;
   padding-top: 10px;
   align-self: start;
-  animation: featureCopyIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: featureCopyIn 420ms var(--ease-out-soft) both;
 }
 
 .feature-platform-name {
@@ -1102,6 +1116,20 @@
   font-size: 13px;
   font-weight: 600;
   text-underline-offset: 5px;
+  transition:
+    transform 160ms var(--ease-out-soft),
+    color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .feature-scroll-tools > a:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.feature-scroll-tools > a:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 
 .feature-signal-rail {
@@ -1150,7 +1178,7 @@
   z-index: 2;
   display: flex;
   justify-content: flex-end;
-  animation: featureMediaIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: featureMediaIn 520ms var(--ease-out-soft) both;
 }
 
 .feature-media-frame {
@@ -1235,6 +1263,7 @@
   border: 1px solid rgba(15, 15, 13, 0.18);
   border-radius: 14px;
   box-shadow: 0 38px 90px rgba(15, 15, 13, 0.24);
+  transition: filter 220ms var(--ease-out-soft);
 }
 
 .feature-media-crop-facebook img,
@@ -1299,7 +1328,7 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    transform 140ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms var(--ease-out-soft),
     color 180ms ease;
 }
 
@@ -1693,10 +1722,24 @@
   color: rgba(15, 15, 13, 0.62);
   font-size: 12px;
   text-decoration: none;
+  transition:
+    transform 160ms var(--ease-out-soft),
+    color 180ms ease;
 }
 
 .platforms-status:hover {
   color: var(--home-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .platforms-status:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.platforms-status:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 
 #privacy {
@@ -1989,13 +2032,21 @@
   font-weight: 620;
   text-decoration-color: var(--home-accent);
   text-underline-offset: 5px;
-  transition: color 180ms ease;
+  transition:
+    transform 160ms var(--ease-out-soft),
+    color 180ms ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .privacy-band-links a:hover {
     color: #3f2c86;
+    transform: translateY(-1px);
   }
+}
+
+.privacy-band-links a:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 
 @media (max-width: 1080px) {
@@ -2296,8 +2347,8 @@
   box-shadow: var(--plate-shadow);
   transform: rotate(-0.45deg);
   transition:
-    transform 240ms cubic-bezier(0.23, 1, 0.32, 1),
-    box-shadow 240ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 240ms var(--ease-out-soft),
+    box-shadow 240ms var(--ease-out-soft),
     border-color 180ms ease;
 }
 
@@ -2418,7 +2469,8 @@
   transition:
     color 180ms ease,
     background 180ms ease,
-    transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+    transform 220ms var(--ease-out-soft);
+  will-change: transform;
 }
 
 .faq-toggle i {
@@ -2453,7 +2505,7 @@
   color: rgba(15, 15, 13, 0.64);
   font-size: 14px;
   line-height: 1.72;
-  animation: faqAnswerIn 240ms ease both;
+  animation: faqAnswerIn 240ms var(--ease-out-soft) both;
 }
 
 @keyframes faqAnswerIn {
@@ -2563,9 +2615,9 @@
   box-shadow: 2px 3px 0 rgba(15, 15, 13, 0.18);
   text-decoration: none;
   transition:
-    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms var(--ease-out-soft),
     background 180ms ease,
-    box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow 160ms var(--ease-out-soft);
 }
 
 .ask-ai-actions strong {
@@ -2822,7 +2874,7 @@
   font-weight: 600;
   text-decoration: none;
   transition:
-    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms var(--ease-out-soft),
     border-color 160ms ease,
     background 160ms ease;
 }
@@ -5347,14 +5399,14 @@
 
 .signal-catch-rail {
   position: absolute;
-  left: clamp(16px, 2.6vw, 40px);
+  left: clamp(22px, 2.8vw, 44px);
   top: 50%;
   transform: translateY(-50%);
   display: grid;
   grid-template-columns: auto auto;
-  gap: 10px 12px;
+  gap: 10px 14px;
   align-items: center;
-  z-index: 4;
+  z-index: 5;
 }
 
 .signal-catch-rail .rail-track {

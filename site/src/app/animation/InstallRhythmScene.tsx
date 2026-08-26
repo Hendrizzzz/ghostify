@@ -67,15 +67,15 @@ export function InstallRhythmScene() {
           tl.to(path, { opacity: 1, ease: 'none', duration: 1 }, 0);
         }
 
-        // Steps stagger in as the ink reaches them
+        // Steps stagger in as the ink reaches them — expo.out for premium settle
         tl.to(
           items,
           {
             y: 0,
             opacity: 1,
-            duration: 0.55,
-            stagger: 0.14,
-            ease: 'power3.out',
+            duration: 0.58,
+            stagger: 0.13,
+            ease: 'expo.out',
           },
           0.12,
         );

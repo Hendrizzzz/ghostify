@@ -44,9 +44,9 @@ export function FaqAskAiScene() {
           gsap.to(details, {
             y: 0,
             opacity: 1,
-            duration: 0.62,
+            duration: 0.64,
             stagger: 0.07,
-            ease: 'power3.out',
+            ease: 'expo.out',
             scrollTrigger: {
               trigger: faq,
               start: 'top 78%',
@@ -72,17 +72,17 @@ export function FaqAskAiScene() {
               start: 'top 76%',
               once: true,
             },
-            defaults: { ease: 'power3.out' },
+            defaults: { ease: 'expo.out' },
           });
 
-          askTl.to(sheet, { y: 0, rotation: 0, duration: 0.7 }, 0);
-          if (tab) askTl.to(tab, { y: 0, rotation: 4, duration: 0.65 }, 0.12);
+          askTl.to(sheet, { y: 0, rotation: 0, duration: 0.72 }, 0);
+          if (tab) askTl.to(tab, { y: 0, rotation: 4, duration: 0.66 }, 0.12);
           if (stack) {
             // Subtle stack settle — restrained, secondary beat.
             askTl.fromTo(
               stack,
               { rotation: -2.6 },
-              { rotation: -2.2, duration: 0.7, ease: 'power3.out' },
+              { rotation: -2.2, duration: 0.72, ease: 'expo.out' },
               0,
             );
           }

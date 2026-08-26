@@ -712,29 +712,98 @@ function FeatureScroll() {
         : 'local';
 
   useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
+    try {
       const section = sectionRef.current;
       if (!section) return;
-      const rect = section.getBoundingClientRect();
-      const distance = Math.max(1, rect.height - window.innerHeight);
-      const progress = Math.min(1, Math.max(0, -rect.top / distance));
-      const nextIndex = Math.min(FEATURES.length - 1, Math.floor(progress * FEATURES.length));
-      section.style.setProperty('--feature-progress', progress.toFixed(3));
-      setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
-    };
-    const requestUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener('scroll', requestUpdate, { passive: true });
-    window.addEventListener('resize', requestUpdate);
-    return () => {
-      window.removeEventListener('scroll', requestUpdate);
-      window.removeEventListener('resize', requestUpdate);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        section.style.setProperty('--feature-progress', '0');
+        return;
+      }
+
+      const mediaCrop = section.querySelector<HTMLElement>('.feature-media-crop');
+      let frame = 0;
+      let current = 0;
+      let target = 0;
+      let lastTime = performance.now();
+      let willChangeTimer: number | undefined;
+
+      const measure = () => {
+        const rect = section.getBoundingClientRect();
+        const distance = Math.max(1, rect.height - window.innerHeight);
+        target = Math.min(1, Math.max(0, -rect.top / distance));
+      };
+
+      const setWillChange = () => {
+        if (window.matchMedia('(min-width: 1081px)').matches === false) return;
+        if (mediaCrop && mediaCrop.style.willChange !== 'transform, filter') {
+          mediaCrop.style.willChange = 'transform, filter';
+        }
+        if (willChangeTimer) window.clearTimeout(willChangeTimer);
+        willChangeTimer = window.setTimeout(() => {
+          if (mediaCrop) mediaCrop.style.willChange = 'auto';
+        }, 220);
+      };
+
+      const update = (now: number) => {
+        frame = 0;
+        const elapsed = Math.min(64, Math.max(0, now - lastTime));
+        const blend = 1 - Math.exp(-elapsed / 142);
+        const diff = target - current;
+        if (Math.abs(diff) > 0.0005) {
+          current += diff * blend;
+          setWillChange();
+        } else {
+          current = target;
+        }
+        section.style.setProperty('--feature-progress', current.toFixed(3));
+        const nextIndex = Math.min(
+          FEATURES.length - 1,
+          Math.floor(current * FEATURES.length + 0.0001),
+        );
+        setActiveIndex((prev) => (prev === nextIndex ? prev : nextIndex));
+        if (mediaCrop && window.matchMedia('(min-width: 1081px)').matches) {
+          const t = current * FEATURES.length;
+          const d = Math.abs(t - Math.round(t));
+          const blur = d < 0.14 ? (0.14 - d) * 1.9 : 0;
+          mediaCrop.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : '';
+        }
+        lastTime = now;
+        if (Math.abs(target - current) > 0.0005) {
+          frame = window.requestAnimationFrame(update);
+        }
+      };
+
+      const requestUpdate = (isScroll: boolean) => {
+        measure();
+        if (isScroll) setWillChange();
+        if (!frame) {
+          lastTime = performance.now();
+          frame = window.requestAnimationFrame(update);
+        }
+      };
+
+      measure();
+      current = target;
+      section.style.setProperty('--feature-progress', current.toFixed(3));
+      setActiveIndex(Math.min(FEATURES.length - 1, Math.floor(current * FEATURES.length)));
+
+      const onScroll = () => requestUpdate(true);
+      const onResize = () => requestUpdate(false);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onResize);
+      return () => {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onResize);
+        if (frame) window.cancelAnimationFrame(frame);
+        if (willChangeTimer) window.clearTimeout(willChangeTimer);
+        if (mediaCrop) {
+          mediaCrop.style.willChange = 'auto';
+          mediaCrop.style.filter = '';
+        }
+      };
+    } catch {
+      // fail-open: never break host page
+    }
   }, []);
 
   const moveToFeature = (index: number) => {

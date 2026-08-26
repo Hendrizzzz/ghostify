@@ -1,4 +1,6 @@
 :root {
+  /* Motion language: expo-out for premium entrances. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   /* Brand palette: warm paper, near-black ink, violet accent. */
   --paper: #f3eee2;
   --paper-bright: #fbf8f0;
@@ -305,7 +307,7 @@ body {
   letter-spacing: -0.01em;
   text-decoration: none;
   transition:
-    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms var(--ease-out-soft),
     background 180ms ease,
     box-shadow 180ms ease;
 }
