@@ -319,6 +319,7 @@ export function SignalCatchScene() {
               {KINDS.map((kind) => (
                 <path
                   key={`base-${kind}`}
+                  id={`route-${kind}`}
                   d={APPROACH[kind]}
                   className="catch-route-base catch-intro"
                 />
