@@ -46,6 +46,7 @@ export function GhostJourney() {
           gsap.set(ghost, { x: first.x(), y: first.y(), scale: first.scale ?? 1 });
 
           let journey: gsap.core.Timeline | null = null;
+          let lastFingerprint = '';
 
           const documentTop = (selector: string) => {
             const section = document.querySelector<HTMLElement>(selector);
@@ -54,15 +55,22 @@ export function GhostJourney() {
           };
 
           const buildJourney = () => {
-            journey?.scrollTrigger?.kill();
-            journey?.kill();
-
             const maxScroll = Math.max(1, ScrollTrigger.maxScroll(window));
             const points = WAYPOINTS.map((waypoint) => ({
               waypoint,
               top: documentTop(waypoint.selector),
             })).filter((point): point is { waypoint: Waypoint; top: number } => point.top !== null);
             if (points.length < 2) return;
+
+            // Skip the rebuild when the route hasn't moved — unrelated
+            // ScrollTrigger refreshes (reveals, images, Lenis) would otherwise
+            // kill and recreate the timeline mid-flight for no reason.
+            const fingerprint = `${points.map((point) => Math.round(point.top)).join(',')}|${Math.round(maxScroll)}|${Math.round(vw())}x${Math.round(vh())}`;
+            if (fingerprint === lastFingerprint) return;
+            lastFingerprint = fingerprint;
+
+            journey?.scrollTrigger?.kill();
+            journey?.kill();
 
             journey = gsap.timeline({
               scrollTrigger: {
@@ -73,11 +81,22 @@ export function GhostJourney() {
               },
             });
 
+            // Max ghost pixels traveled per scrolled pixel. Long sweeps get a
+            // proportionally longer slice of the timeline instead of racing
+            // across the viewport in a short scroll gap.
+            const maxSpeed = 2.0;
+            let cursor = Math.max(0, points[0].top - vh() * 0.5);
+
             for (let index = 0; index < points.length - 1; index += 1) {
               const current = points[index];
               const next = points[index + 1];
-              const segmentStart = Math.max(0, current.top - vh() * 0.5);
-              const segmentEnd = Math.max(segmentStart + 1, next.top - vh() * 0.5);
+              const naturalEnd = Math.max(cursor + 1, next.top - vh() * 0.5);
+              const distance = Math.hypot(
+                next.waypoint.x() - current.waypoint.x(),
+                next.waypoint.y() - current.waypoint.y(),
+              );
+              const duration = Math.max(naturalEnd - cursor, distance / maxSpeed);
+              const fade = Math.max(1, duration * 0.28);
 
               journey.to(
                 ghost,
@@ -85,13 +104,33 @@ export function GhostJourney() {
                   x: next.waypoint.x(),
                   y: next.waypoint.y(),
                   scale: next.waypoint.scale ?? 1,
-                  opacity: next.waypoint.hide ? 0 : 1,
-                  ease: 'none',
-                  duration: segmentEnd - segmentStart,
+                  ease: 'power1.inOut',
+                  duration,
                 },
-                segmentStart,
+                cursor,
               );
+
+              // Fade only near the segment edges so the ghost is never a
+              // half-transparent blur drifting across the page mid-travel.
+              if (next.waypoint.hide) {
+                journey.to(ghost, { opacity: 0, ease: 'power1.out', duration: fade }, cursor);
+              } else if (current.waypoint.hide) {
+                journey.to(
+                  ghost,
+                  { opacity: 1, ease: 'power1.in', duration: fade },
+                  cursor + duration - fade,
+                );
+              }
+
+              cursor += duration;
             }
+
+            // Render the full path once so every tween captures its true start
+            // value along the route, then land on the current scroll position.
+            // Without this, a rebuild while scrolled down records the ghost's
+            // mid-flight position as a segment start and bends the route.
+            const progress = journey.scrollTrigger?.progress ?? 0;
+            journey.progress(1).progress(0).progress(progress);
           };
 
           buildJourney();
