@@ -1,11 +1,21 @@
-﻿import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { GhostMark } from '../components/GhostSVG';
-import { gsap, ensureGsap, prefersReducedMotion } from './gsapSetup';
+import {
+  gsap,
+  ScrollTrigger,
+  ensureGsap,
+  prefersReducedMotion,
+  CustomWiggle,
+  SplitText,
+} from './gsapSetup';
 
 const KINDS = ['seen', 'typing', 'story'] as const;
 type Kind = (typeof KINDS)[number];
 
-/* Stage coordinates (viewBox 900 x 620). The ghost sits at the checkpoint. */
+/* Stage coordinates (viewBox 900 x 620). The approach/exit paths are
+   INVISIBLE guides — the only visible ink is the comet trail that rides a
+   path while its pulse is in flight, then erases itself. No drawn lines,
+   ever: the connection is communicated by motion, not by diagram wires. */
 const APPROACH: Record<Kind, string> = {
   seen: 'M 215 160 C 330 148, 392 232, 464 286',
   typing: 'M 215 300 C 330 300, 396 302, 460 301',
@@ -19,6 +29,28 @@ const RIPPLE_AT: Record<Kind, { cx: number; cy: number }> = {
   typing: { cx: 460, cy: 301 },
   story: { cx: 464, cy: 316 },
 };
+
+/* Discrete story beats. Scroll position only chooses WHICH beat is on
+   stage (beatFor); each beat then plays at its own fixed, choreographed
+   pace — scroll velocity can never race, smear, or zap the animation. */
+const BEAT_LINES = [0.13, 0.34, 0.55, 0.73, 0.88] as const;
+const ADDR_AT_BEAT_START = [
+  'instagram.com',
+  'instagram.com',
+  'instagram.com',
+  'messenger.com',
+  'instagram.com',
+  'instagram.com',
+];
+const RAIL_STEP_FOR_BEAT = [0, 0, 0, 0, 1, 2];
+const RAIL_FILL_FOR_BEAT = [0.02, 0.2, 0.42, 0.62, 0.8, 1];
+
+function beatFor(progress: number): number {
+  for (let i = 0; i < BEAT_LINES.length; i += 1) {
+    if (progress < BEAT_LINES[i]) return i;
+  }
+  return BEAT_LINES.length;
+}
 
 function SignalIcon({ kind }: { kind: Kind }) {
   if (kind === 'seen') {
@@ -53,253 +85,364 @@ export function SignalCatchScene() {
     const root = rootRef.current;
     if (!root || prefersReducedMotion()) return;
 
+    CustomWiggle.create('ghostRecoil', { wiggles: 4, type: 'easeOut' });
+
     const ctx = gsap.context(() => {
       const ghost = root.querySelector<HTMLElement>('.signal-catch-ghost');
       const ghostInner = ghost?.querySelector<HTMLElement>('.journey-ghost-inner');
       const serverDot = root.querySelector<HTMLElement>('.catch-server-dot');
+      const serverCard = root.querySelector<HTMLElement>('.catch-server-card');
       const counter = root.querySelector<HTMLElement>('.catch-tray-count');
       const intro = root.querySelectorAll<HTMLElement>('.catch-intro');
       const railFill = root.querySelector<HTMLElement>('.signal-catch-rail i');
       const steps = root.querySelectorAll<HTMLElement>('.signal-catch-rail .rail-step');
       const captions = root.querySelectorAll<HTMLElement>('.signal-catch-caption span');
-      const exitPath = root.querySelector<SVGPathElement>('#route-exit');
-      const litPaths = KINDS.map((kind) =>
-        root.querySelector<SVGPathElement>(`#route-lit-${kind}`),
-      );
-      const pulses = KINDS.map(
-        (kind) => root.querySelector<HTMLElement>(`.catch-pulse-${kind}`),
-      );
+      const addrText = root.querySelector<HTMLElement>('.catch-addr-text');
+      const rows = KINDS.map((k) => root.querySelector<HTMLElement>(`.catch-row-${k}`));
+      const chips = KINDS.map((k) => root.querySelector<HTMLElement>(`.catch-chip-${k}`));
+      const pulses = KINDS.map((k) => root.querySelector<HTMLElement>(`.catch-pulse-${k}`));
+      const trails = KINDS.map((k) => root.querySelector<SVGPathElement>(`#trail-${k}`));
+      const glows = KINDS.map((k) => root.querySelector<SVGPathElement>(`#trail-glow-${k}`));
+      const ripples = KINDS.map((k) => root.querySelector<SVGCircleElement>(`#ripple-${k}`));
+      const exitTrail = root.querySelector<SVGPathElement>('#trail-exit');
+      const exitGlow = root.querySelector<SVGPathElement>('#trail-glow-exit');
+      const calmRipple = root.querySelector<SVGCircleElement>('#ripple-calm');
       const spark = root.querySelector<HTMLElement>('.catch-spark');
 
-      // Solid lit overlays are drawn on in sync with each pulse; the exit
-      // wire is a dim dashed hope that gets severed in the HOLD phase.
-      litPaths.forEach((path) => {
-        if (!path) return;
-        const len = path.getTotalLength();
-        gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+      // Initial state: stage hidden; trails zero-length (they are the only
+      // visible ink on a path, and only while a pulse is in flight).
+      gsap.set(intro, { opacity: 0, y: 18 });
+      [...trails, ...glows, exitTrail, exitGlow].forEach((path) => {
+        if (path) gsap.set(path, { visibility: 'visible', drawSVG: '0% 0%' });
       });
-      pulses.forEach((pulse, index) => {
-        if (!pulse) return;
-        gsap.set(pulse, {
-          motionPath: {
-            path: `#route-${KINDS[index]}`,
-            align: `#route-${KINDS[index]}`,
-            alignOrigin: [0.5, 0.5],
-          },
-          scale: 0.4,
-          opacity: 0,
+
+      /* ---- beat plumbing ------------------------------------------------ */
+      const beats: gsap.core.Timeline[] = [];
+
+      // Rewind the whole stage to the state this beat starts from, so any
+      // jump (fast flick up/down, refresh mid-pin) lands deterministically.
+      const normalize = (tl: gsap.core.Timeline, beat: number) => {
+        const caught = Math.max(0, Math.min(3, beat - 1));
+        const dotOp = beat >= 5 ? 0.08 : 1 - 0.25 * caught;
+        const capOn = beat >= 5 ? 1 : 0;
+        rows.forEach((row, i) => {
+          if (row) {
+            tl.to(row, { opacity: i < caught ? 1 : 0.5, duration: 0.2, ease: 'power1.out' }, 0);
+          }
         });
-      });
-      if (spark && exitPath) {
-        gsap.set(spark, {
-          motionPath: { path: exitPath, align: exitPath, alignOrigin: [0.5, 0.5], start: 0, end: 0 },
-          opacity: 0,
+        chips.forEach((chip, i) => {
+          if (!chip) return;
+          if (i < caught) {
+            tl.to(chip, { y: 0, scale: 1, opacity: 1, duration: 0.2, ease: 'power1.out' }, 0);
+          } else {
+            tl.to(chip, { y: 22, scale: 0.7, opacity: 0, duration: 0.18, ease: 'power1.out' }, 0);
+          }
         });
-      }
-
-      const tl = gsap.timeline({
-        defaults: { ease: 'none' },
-        scrollTrigger: {
-          trigger: root,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 1.2,
-          // Magnetic story beats — a flick always lands on a meaningful
-          // state instead of smearing the whole scene in one flick.
-          snap: {
-            snapTo: [0, 0.22, 0.375, 0.53, 0.7, 0.8, 0.93, 1],
-            duration: { min: 0.2, max: 0.5 },
-            delay: 0.08,
-            ease: 'power1.inOut',
-          },
-          onUpdate: (self) => {
-            const progress = self.progress;
-            const step = progress < 0.68 ? 0 : progress < 0.87 ? 1 : 2;
-            steps.forEach((item, index) => {
-              item.classList.toggle('is-active', index === step);
-            });
-            if (railFill) railFill.style.transform = `scaleY(${progress.toFixed(4)})`;
-            if (counter) {
-              const held =
-                (progress > 0.25 ? 1 : 0) + (progress > 0.41 ? 1 : 0) + (progress > 0.56 ? 1 : 0);
-              const next = `held ${held} / 3`;
-              if (counter.textContent !== next) counter.textContent = next;
-            }
-          },
-        },
-      });
-
-      // Intro — the stage assembles.
-      tl.fromTo(
-        intro,
-        { opacity: 0, y: 18 },
-        { opacity: 1, y: 0, duration: 0.05, ease: 'power2.out', stagger: 0.008 },
-        0,
-      );
-
-      // The browser's address bar follows whichever tab is firing.
-      const addrText = root.querySelector<HTMLElement>('.catch-addr-text');
-      if (addrText) {
-        tl.set(addrText, { textContent: 'instagram.com' }, 0.1);
-        tl.set(addrText, { textContent: 'messenger.com' }, 0.255);
-        tl.set(addrText, { textContent: 'instagram.com' }, 0.41);
-      }
-
-      KINDS.forEach((kind, index) => {
-        const row = root.querySelector<HTMLElement>(`.catch-row-${kind}`);
-        const pulse = pulses[index];
-        const chip = root.querySelector<HTMLElement>(`.catch-chip-${kind}`);
-        const ripple = root.querySelector<SVGPathElement>(`#ripple-${kind}`);
-        const lit = litPaths[index];
-        if (!pulse || !lit) return;
-
-        const start = 0.1 + index * 0.155;
-        const travel = 0.105;
-        const catchAt = start + travel + 0.005;
-
-        // The row fires.
-        if (row) {
-          tl.fromTo(
-            row,
-            { opacity: 0.5 },
-            { opacity: 1, duration: 0.012, ease: 'power1.out' },
-            start,
-          );
-        }
-
-        // Pulse launches and rides the wire; the wire lights up behind it.
-        tl.set(pulse, { opacity: 1, scale: 1 }, start).to(
-          pulse,
-          {
-            motionPath: {
-              path: `#route-${kind}`,
-              align: `#route-${kind}`,
-              alignOrigin: [0.5, 0.5],
+        if (counter) tl.set(counter, { textContent: `held ${caught} / 3` }, 0);
+        if (serverDot) tl.to(serverDot, { opacity: dotOp, duration: 0.25, ease: 'power1.out' }, 0);
+        if (serverCard) tl.to(serverCard, { opacity: beat >= 5 ? 0.6 : 1, duration: 0.25 }, 0);
+        if (addrText) tl.set(addrText, { textContent: ADDR_AT_BEAT_START[beat] }, 0);
+        captions.forEach((cap, i) => {
+          tl.to(
+            cap,
+            {
+              opacity: i === capOn ? 1 : 0,
+              y: i === capOn ? 0 : i < capOn ? -10 : 14,
+              duration: 0.22,
+              ease: 'power1.out',
             },
-            ease: 'power1.inOut',
-            duration: travel,
-          },
-          start,
-        );
-        tl.to(lit, { strokeDashoffset: 0, ease: 'power1.inOut', duration: travel }, start);
-
-        // The ghost leans into the catch.
+            0,
+          );
+        });
         if (ghost) {
           tl.to(
             ghost,
-            { x: -12, rotation: -5, duration: travel * 0.45, ease: 'power1.out' },
-            start + travel * 0.55,
+            { rotation: 0, scaleX: 1, scaleY: 1, x: 0, y: 0, duration: 0.2, ease: 'power1.out' },
+            0,
           );
         }
+        pulses.forEach((p) => p && tl.set(p, { opacity: 0, y: 0 }, 0));
+        if (spark) tl.set(spark, { opacity: 0, y: 0, scale: 1 }, 0);
+        [...trails, ...glows, exitTrail, exitGlow].forEach((path) => {
+          if (path) tl.set(path, { drawSVG: '0% 0%' }, 0);
+        });
+        [...ripples, calmRipple].forEach((r) => r && tl.set(r, { scale: 0.35, opacity: 0 }, 0));
+      };
 
-        // Caught — the pulse is absorbed, the wire ripples.
-        tl.to(pulse, { scale: 0.15, opacity: 0, duration: 0.018, ease: 'power3.in' }, catchAt);
+      const buildBeat = (beat: number, action: (tl: gsap.core.Timeline) => void) => {
+        const tl = gsap.timeline({ paused: true, defaults: { ease: 'power2.out' } });
+        normalize(tl, beat);
+        const act = gsap.timeline({ defaults: { ease: 'power2.out' } });
+        action(act);
+        tl.add(act, 0.32);
+        tl.to({}, { duration: 0.35 }); // tail room so a beat never clips
+        beats.push(tl);
+      };
+
+      /* ---- the catch, choreographed once per signal ---------------------- */
+      const buildCatch = (tl: gsap.core.Timeline, kind: Kind, beat: number) => {
+        const i = KINDS.indexOf(kind);
+        const row = rows[i];
+        const pulse = pulses[i];
+        const pair = [trails[i], glows[i]].filter(Boolean) as SVGPathElement[];
+        const chip = chips[i];
+        const ripple = ripples[i];
+        const lean = kind === 'seen' ? -6 : kind === 'story' ? 6 : -3;
+
+        // The row wakes and fires.
+        if (row) tl.fromTo(row, { opacity: 0.5 }, { opacity: 1, duration: 0.18 }, 0);
+
+        // Pulse launches; the comet trail draws behind it, then erases.
+        if (pulse) {
+          tl.set(pulse, { opacity: 0, scale: 0.5 }, 0)
+            .to(pulse, { opacity: 1, scale: 1.05, duration: 0.16 }, 0.02)
+            .to(
+              pulse,
+              {
+                motionPath: {
+                  path: `#route-${kind}`,
+                  align: `#route-${kind}`,
+                  alignOrigin: [0.5, 0.5],
+                },
+                duration: 0.85,
+                ease: 'power1.inOut',
+              },
+              0.12,
+            )
+            .to(pulse, { scale: 0.2, opacity: 0, duration: 0.16, ease: 'power3.in' }, 0.97);
+        }
+        if (pair.length) {
+          tl.set(pair, { drawSVG: '0% 0%' }, 0)
+            .to(pair, { drawSVG: '0% 100%', duration: 0.85, ease: 'power1.inOut' }, 0.12)
+            .to(pair, { drawSVG: '100% 100%', duration: 0.4, ease: 'power1.in' }, 1.0);
+        }
+
+        // The ghost leans in, squashes, swallows, and recoils.
+        if (ghost) {
+          tl.to(ghost, { rotation: lean, duration: 0.22 }, 0.72)
+            .to(ghost, { scaleY: 0.84, scaleX: 1.12, duration: 0.14 }, 0.97)
+            .to(ghost, { scaleY: 1, scaleX: 1, duration: 0.55, ease: 'ghostRecoil' }, 1.12)
+            .to(ghost, { rotation: 0, duration: 0.8, ease: 'ghostRecoil' }, 0.98);
+        }
+        if (ghostInner) {
+          tl.to(ghostInner, { scaleY: 1.14, scaleX: 0.94, duration: 0.14 }, 1.0).to(
+            ghostInner,
+            { scaleY: 1, scaleX: 1, duration: 0.4, ease: 'power2.inOut' },
+            1.16,
+          );
+        }
         if (ripple) {
           tl.fromTo(
             ripple,
-            { opacity: 0.55, scale: 0.3 },
-            { opacity: 0, scale: 2.4, duration: 0.05, ease: 'power1.out' },
-            catchAt,
-          );
-        }
-        if (ghost) {
-          tl.to(ghost, { scaleX: 1.14, scaleY: 0.84, duration: 0.006, ease: 'power2.in' }, catchAt)
-            .to(
-              ghost,
-              { scaleX: 1, scaleY: 1, duration: 0.02, ease: 'power2.out' },
-              catchAt + 0.006,
-            )
-            .to(ghost, { x: 0, rotation: 0, duration: 0.03, ease: 'power1.inOut' }, catchAt + 0.008);
-        }
-
-        // A spark escapes down the exit wire — and dies mid-flight.
-        if (spark && exitPath) {
-          tl.to(
-            spark,
-            {
-              motionPath: {
-                path: exitPath,
-                align: exitPath,
-                alignOrigin: [0.5, 0.5],
-                start: 0,
-                end: 0.24,
-              },
-              opacity: 0,
-              scale: 0.4,
-              duration: 0.035,
-              ease: 'power1.out',
-            },
-            catchAt + 0.004,
+            { scale: 0.35, opacity: 0.9 },
+            { scale: 1.7, opacity: 0, duration: 0.6, ease: 'power1.out', immediateRender: false },
+            0.98,
           );
         }
 
-        // The held chip drops into the local tray.
+        // The signal lands in the held tray; the server waits a little less.
         if (chip) {
           tl.fromTo(
             chip,
-            { opacity: 0, scale: 1.8, rotation: -14 },
-            { opacity: 1, scale: 1, rotation: -3, duration: 0.012, ease: 'power3.in' },
-            catchAt + 0.008,
+            {
+              y: -56,
+              scale: 0.55,
+              opacity: 0,
+              rotation: kind === 'seen' ? -10 : kind === 'story' ? 10 : 0,
+            },
+            {
+              y: 0,
+              scale: 1,
+              opacity: 1,
+              rotation: 0,
+              duration: 0.55,
+              ease: 'bounce.out',
+              immediateRender: false,
+            },
+            1.05,
           );
         }
-
-        // The server's waiting dot dims another step.
-        if (serverDot) {
-          tl.to(serverDot, { opacity: 1 - (index + 1) * 0.27, duration: 0.02 }, catchAt + 0.01);
+        if (counter) {
+          tl.set(counter, { textContent: `held ${beat} / 3` }, 1.2).fromTo(
+            counter,
+            { scale: 1.3 },
+            { scale: 1, duration: 0.3, immediateRender: false },
+            1.2,
+          );
         }
-      });
+        if (serverDot) tl.to(serverDot, { opacity: 1 - 0.25 * beat, duration: 0.4 }, 1.05);
 
-      // HOLD — the exit wire visibly breaks apart; nothing will ever cross it.
-      if (exitPath) {
-        tl.to(
-          exitPath,
-          { strokeDasharray: '2 44', opacity: 0.12, duration: 0.04, ease: 'power1.inOut' },
-          0.74,
-        );
-      }
-      if (serverDot) {
-        tl.to(serverDot, { opacity: 0.1, duration: 0.03 }, 0.76);
-      }
-      if (ghost) {
-        tl.to(ghost, { y: -9, duration: 0.04, ease: 'sine.inOut' }, 0.76).to(
-          ghost,
-          { y: 0, duration: 0.05, ease: 'sine.inOut' },
-          0.8,
-        );
-      }
+        // The address bar follows whichever tab is firing.
+        if (addrText && beat === 2) {
+          tl.to(
+            addrText,
+            {
+              scrambleText: { text: 'messenger.com', chars: 'lowerCase', speed: 1.4 },
+              duration: 0.55,
+            },
+            0.05,
+          );
+        }
+        if (addrText && beat === 3) {
+          tl.to(
+            addrText,
+            {
+              scrambleText: { text: 'instagram.com', chars: 'lowerCase', speed: 1.4 },
+              duration: 0.55,
+            },
+            0.05,
+          );
+        }
+      };
 
-      // Captions crossfade — one line at a time, never a wall of text.
-      const captionAt: Array<[number, number]> = [
-        [0.04, 0.64],
-        [0.68, 0.83],
-        [0.87, 2],
-      ];
-      captions.forEach((caption, index) => {
-        const [inAt, outAt] = captionAt[index];
+      /* ---- the six beats -------------------------------------------------- */
+      // 0 — the desk assembles.
+      buildBeat(0, (tl) => {
         tl.fromTo(
-          caption,
-          { opacity: 0, y: 14 },
-          { opacity: 1, y: 0, duration: 0.03, ease: 'power2.out' },
-          inAt,
+          intro,
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.55, stagger: 0.05 },
+          0,
         );
-        if (outAt < 2) {
-          tl.to(caption, { opacity: 0, y: -10, duration: 0.025, ease: 'power1.in' }, outAt);
+      });
+
+      // 1-3 — seen, typing, story: fired, caught, held.
+      buildBeat(1, (tl) => buildCatch(tl, 'seen', 1));
+      buildBeat(2, (tl) => buildCatch(tl, 'typing', 2));
+      buildBeat(3, (tl) => buildCatch(tl, 'story', 3));
+
+      // 4 — HOLD: one spark makes a run for the server and dies mid-air.
+      buildBeat(4, (tl) => {
+        if (captions[0]) {
+          tl.to(captions[0], { opacity: 0, y: -10, duration: 0.3, ease: 'power1.in' }, 0);
+        }
+        if (captions[1]) {
+          tl.fromTo(captions[1], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, 0.25);
+        }
+        if (spark) {
+          tl.to(spark, { opacity: 1, scale: 1, duration: 0.12 }, 0.35)
+            .to(
+              spark,
+              {
+                motionPath: {
+                  path: '#route-exit',
+                  align: '#route-exit',
+                  alignOrigin: [0.5, 0.5],
+                  start: 0,
+                  end: 0.45,
+                },
+                duration: 0.75,
+                ease: 'power1.in',
+              },
+              0.4,
+            )
+            .to(spark, { opacity: 0.25, duration: 0.07, yoyo: true, repeat: 5, ease: 'none' }, 1.15)
+            .to(
+              spark,
+              { y: '+=18', scale: 0.2, opacity: 0, duration: 0.35, ease: 'power2.in' },
+              1.55,
+            );
+        }
+        const exitPair = [exitTrail, exitGlow].filter(Boolean) as SVGPathElement[];
+        if (exitPair.length) {
+          tl.set(exitPair, { drawSVG: '0% 0%' }, 0.35)
+            .to(exitPair, { drawSVG: '0% 45%', duration: 0.75, ease: 'power1.in' }, 0.4)
+            .to(exitPair, { drawSVG: '0% 0%', duration: 0.5, ease: 'power2.in' }, 1.35);
+        }
+        if (serverDot) tl.to(serverDot, { opacity: 0.08, duration: 0.5 }, 1.2);
+        if (serverCard) {
+          tl.to(serverCard, { keyframes: { x: [-3, 3, -2, 2, 0] }, duration: 0.45 }, 1.2);
+        }
+        if (ghost) {
+          tl.to(ghost, { y: -8, duration: 0.25 }, 1.1).to(
+            ghost,
+            { y: 0, duration: 0.5, ease: 'power2.inOut' },
+            1.4,
+          );
         }
       });
 
-      // Idle hover on the ghost's inner layer so it never fights the scrub.
-      if (ghostInner) {
-        gsap.to(ghostInner, {
-          y: -10,
-          rotation: 3,
-          duration: 2.6,
-          ease: 'sine.inOut',
-          yoyo: true,
-          repeat: -1,
+      // 5 — QUIET: nothing arrived. The desk rests.
+      buildBeat(5, (tl) => {
+        if (captions[1]) {
+          tl.to(captions[1], { opacity: 0, y: -10, duration: 0.3, ease: 'power1.in' }, 0);
+        }
+        if (captions[2]) {
+          tl.fromTo(captions[2], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45 }, 0.3);
+        }
+        if (calmRipple) {
+          tl.fromTo(
+            calmRipple,
+            { scale: 0.4, opacity: 0.55 },
+            { scale: 2.4, opacity: 0, duration: 1.3, ease: 'power1.out', immediateRender: false },
+            0.4,
+          );
+        }
+        if (ghost) {
+          tl.to(ghost, { y: -6, duration: 0.6, ease: 'sine.inOut' }, 0.2).to(
+            ghost,
+            { y: 0, duration: 1.0, ease: 'sine.inOut' },
+            0.9,
+          );
+        }
+      });
+
+      /* ---- scroll wiring: position picks the beat, never the pace -------- */
+      let currentBeat = -1;
+      const goToBeat = (index: number) => {
+        if (index === currentBeat || !beats[index]) return;
+        currentBeat = index;
+        steps.forEach((el, i) => el.classList.toggle('is-active', i === RAIL_STEP_FOR_BEAT[index]));
+        if (railFill) {
+          gsap.to(railFill, {
+            scaleY: RAIL_FILL_FOR_BEAT[index],
+            duration: 0.5,
+            ease: 'power2.out',
+          });
+        }
+        beats.forEach((b, i) => {
+          if (i !== index) b.pause();
+        });
+        beats[index].restart();
+      };
+
+      // Pre-assemble the normalized beat-0 stage so the pin never shows a
+      // half-built scene; the first scroll step into the pin replays intro.
+      beats[0].pause(0.31);
+
+      const st = ScrollTrigger.create({
+        trigger: root,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (self) => goToBeat(beatFor(self.progress)),
+      });
+      if (st.progress > 0) goToBeat(beatFor(st.progress));
+
+      /* ---- headline: masked word rise on first approach ------------------- */
+      const headline = root.querySelector<HTMLElement>('.catch-headline');
+      if (headline) {
+        const split = new SplitText(headline, {
+          type: 'lines,words',
+          linesClass: 'catch-split-line',
+        });
+        gsap.set(split.words, { yPercent: 115 });
+        gsap.to(split.words, {
+          yPercent: 0,
+          duration: 0.9,
+          ease: 'power4.out',
+          stagger: 0.05,
+          scrollTrigger: {
+            trigger: root,
+            start: 'top 60%',
+            toggleActions: 'play none none reverse',
+          },
         });
       }
 
-      // The held tray breathes — the end state stays alive at a glance.
+      // Idle life on separate layers/properties so it never fights the beats.
+      if (ghostInner) {
+        gsap.to(ghostInner, { y: -10, duration: 2.6, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+      }
       const tray = root.querySelector<HTMLElement>('.catch-tray');
       if (tray) {
         gsap.to(tray, {
@@ -311,9 +454,6 @@ export function SignalCatchScene() {
           transformOrigin: 'center bottom',
         });
       }
-
-      // Pad the timeline so the QUIET payoff holds until the pin releases.
-      tl.to({}, { duration: 0.07 }, 0.93);
     }, root);
 
     return () => ctx.revert();
@@ -331,7 +471,7 @@ export function SignalCatchScene() {
           <span className="rail-step">Quiet</span>
         </div>
 
-        <h2 className="catch-headline catch-intro">
+        <h2 className="catch-headline">
           Nothing leaves <em>this desk.</em>
         </h2>
 
@@ -342,24 +482,49 @@ export function SignalCatchScene() {
             preserveAspectRatio="xMidYMid meet"
             aria-hidden="true"
           >
+            <defs>
+              <linearGradient
+                id="catch-trail-grad"
+                x1="180"
+                y1="0"
+                x2="800"
+                y2="0"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0" stopColor="#6f59c8" stopOpacity="0" />
+                <stop offset="0.3" stopColor="#6f59c8" stopOpacity="0.85" />
+                <stop offset="0.42" stopColor="#6f59c8" stopOpacity="1" />
+                <stop offset="0.75" stopColor="#6f59c8" stopOpacity="0" />
+              </linearGradient>
+            </defs>
             <g className="catch-routes">
               {KINDS.map((kind) => (
                 <path
-                  key={`base-${kind}`}
+                  key={`guide-${kind}`}
                   id={`route-${kind}`}
                   d={APPROACH[kind]}
-                  className="catch-route-base catch-intro"
+                  className="catch-route-guide"
                 />
               ))}
               {KINDS.map((kind) => (
                 <path
-                  key={`lit-${kind}`}
-                  id={`route-lit-${kind}`}
+                  key={`glow-${kind}`}
+                  id={`trail-glow-${kind}`}
                   d={APPROACH[kind]}
-                  className="catch-route-lit"
+                  className="catch-trail-glow"
                 />
               ))}
-              <path id="route-exit" d={EXIT} className="catch-route-exit catch-intro" />
+              {KINDS.map((kind) => (
+                <path
+                  key={`trail-${kind}`}
+                  id={`trail-${kind}`}
+                  d={APPROACH[kind]}
+                  className="catch-trail"
+                />
+              ))}
+              <path id="route-exit" d={EXIT} className="catch-route-guide" />
+              <path id="trail-glow-exit" d={EXIT} className="catch-trail-glow" />
+              <path id="trail-exit" d={EXIT} className="catch-trail" />
             </g>
             <g className="catch-ripples">
               {KINDS.map((kind) => (
@@ -372,6 +537,7 @@ export function SignalCatchScene() {
                   r={30}
                 />
               ))}
+              <circle id="ripple-calm" className="catch-ripple" cx={478} cy={300} r={46} />
             </g>
           </svg>
 
@@ -422,7 +588,7 @@ export function SignalCatchScene() {
                 </span>
               ))}
             </div>
-            <small className="catch-tray-count">held 0 / 3</small>
+            <small className="catch-tray-count">held 3 / 3</small>
           </div>
 
           <div className="catch-server catch-intro" aria-hidden="true">
