@@ -103,7 +103,15 @@ export function SignalCatchScene() {
           trigger: root,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 0.7,
+          scrub: 1.2,
+          // Magnetic story beats — a flick always lands on a meaningful
+          // state instead of smearing the whole scene in one flick.
+          snap: {
+            snapTo: [0, 0.22, 0.375, 0.53, 0.7, 0.8, 0.93, 1],
+            duration: { min: 0.2, max: 0.5 },
+            delay: 0.08,
+            ease: 'power1.inOut',
+          },
           onUpdate: (self) => {
             const progress = self.progress;
             const step = progress < 0.68 ? 0 : progress < 0.87 ? 1 : 2;
@@ -128,6 +136,14 @@ export function SignalCatchScene() {
         { opacity: 1, y: 0, duration: 0.05, ease: 'power2.out', stagger: 0.008 },
         0,
       );
+
+      // The browser's address bar follows whichever tab is firing.
+      const addrText = root.querySelector<HTMLElement>('.catch-addr-text');
+      if (addrText) {
+        tl.set(addrText, { textContent: 'instagram.com' }, 0.1);
+        tl.set(addrText, { textContent: 'messenger.com' }, 0.255);
+        tl.set(addrText, { textContent: 'instagram.com' }, 0.41);
+      }
 
       KINDS.forEach((kind, index) => {
         const row = root.querySelector<HTMLElement>(`.catch-row-${kind}`);
@@ -274,12 +290,25 @@ export function SignalCatchScene() {
       // Idle hover on the ghost's inner layer so it never fights the scrub.
       if (ghostInner) {
         gsap.to(ghostInner, {
-          y: -8,
-          rotation: 2,
-          duration: 2.2,
+          y: -10,
+          rotation: 3,
+          duration: 2.6,
           ease: 'sine.inOut',
           yoyo: true,
           repeat: -1,
+        });
+      }
+
+      // The held tray breathes — the end state stays alive at a glance.
+      const tray = root.querySelector<HTMLElement>('.catch-tray');
+      if (tray) {
+        gsap.to(tray, {
+          scale: 1.02,
+          duration: 2.8,
+          ease: 'sine.inOut',
+          yoyo: true,
+          repeat: -1,
+          transformOrigin: 'center bottom',
         });
       }
 
@@ -293,8 +322,6 @@ export function SignalCatchScene() {
   return (
     <section className="signal-catch" aria-label="How Ghostify holds signals" ref={rootRef}>
       <div className="signal-catch-sticky">
-        <div className="catch-grid-bg" aria-hidden="true" />
-
         <div className="signal-catch-rail" aria-hidden="true">
           <span className="rail-track">
             <i />
@@ -351,6 +378,16 @@ export function SignalCatchScene() {
           <div className="catch-tab" aria-hidden="true">
             <small className="catch-micro catch-micro-tab catch-intro">your tab</small>
             <div className="catch-tab-card catch-intro">
+              <div className="catch-chrome" aria-hidden="true">
+                <span className="catch-lights">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="catch-addr">
+                  <span className="catch-addr-text">instagram.com</span>
+                </span>
+              </div>
               {KINDS.map((kind) => (
                 <div
                   key={kind}
@@ -389,16 +426,18 @@ export function SignalCatchScene() {
           </div>
 
           <div className="catch-server catch-intro" aria-hidden="true">
-            <small className="catch-micro">meta server</small>
-            <div className="catch-server-stack">
-              <i />
-              <i />
-              <i />
+            <div className="catch-server-card">
+              <small className="catch-server-title">Meta server</small>
+              <div className="catch-server-stack">
+                <i />
+                <i />
+                <i />
+              </div>
+              <span className="catch-server-dot-wrap">
+                <span className="catch-server-dot" />
+              </span>
+              <small className="catch-server-status">delivered: 0</small>
             </div>
-            <span className="catch-server-dot-wrap">
-              <span className="catch-server-dot" />
-            </span>
-            <small className="catch-server-status">delivered: 0</small>
           </div>
 
           {KINDS.map((kind) => (

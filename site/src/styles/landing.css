@@ -4817,7 +4817,7 @@
 
 /* -- Signal-catch scene: the mail desk ----------------------------- */
 .signal-catch {
-  height: 460vh;
+  height: 550vh;
   position: relative;
   background: var(--home-cream);
 }
@@ -4829,16 +4829,6 @@
   overflow: hidden;
 }
 
-.catch-grid-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgba(15, 15, 13, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 15, 13, 0.035) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(120% 90% at 50% 45%, #000 55%, transparent 100%);
-  -webkit-mask-image: radial-gradient(120% 90% at 50% 45%, #000 55%, transparent 100%);
-}
 
 .catch-headline {
   position: absolute;
@@ -4913,9 +4903,9 @@
 
 .catch-micro {
   position: absolute;
-  color: rgba(15, 15, 13, 0.5);
+  color: rgba(15, 15, 13, 0.62);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -4935,11 +4925,55 @@
   top: 18%;
   width: 19.5%;
   height: 64%;
+  overflow: hidden;
   border: 1.5px solid rgba(15, 15, 13, 0.75);
   border-radius: 16px;
   background: #fbf8f0;
   box-shadow: 6px 7px 0 rgba(15, 15, 13, 0.08);
 }
+
+.catch-chrome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1.5px solid rgba(15, 15, 13, 0.28);
+  background: rgba(15, 15, 13, 0.025);
+}
+
+.catch-lights {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.catch-lights i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.catch-lights i:nth-child(1) { background: #d97b6c; }
+.catch-lights i:nth-child(2) { background: #d9b36c; }
+.catch-lights i:nth-child(3) { background: #7ba05b; }
+
+.catch-addr {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 12px;
+  border: 1.5px solid rgba(15, 15, 13, 0.3);
+  border-radius: 999px;
+  background: #fff;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(15, 15, 13, 0.62);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catch-addr-text { font-weight: 600; }
 
 .catch-micro-tab {
   left: 3.5%;
@@ -4959,7 +4993,7 @@
 .catch-row small {
   font-family: var(--font-display);
   font-stretch: 92%;
-  font-size: clamp(11px, 1.2vw, 15px);
+  font-size: clamp(14px, 1.4vw, 17px);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: rgba(15, 15, 13, 0.82);
@@ -5020,9 +5054,9 @@
 .catch-tray-label,
 .catch-tray-count {
   position: absolute;
-  color: rgba(15, 15, 13, 0.52);
+  color: rgba(15, 15, 13, 0.6);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -5064,16 +5098,30 @@
 
 .catch-server {
   position: absolute;
-  left: 87%;
+  left: 86%;
   top: 46.5%;
   transform: translate(-50%, -50%);
-  display: grid;
-  justify-items: center;
-  gap: 7px;
 }
 
-.catch-server .catch-micro {
-  position: static;
+.catch-server-card {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  padding: 16px 18px 14px;
+  border: 1.5px solid rgba(15, 15, 13, 0.7);
+  border-radius: 14px;
+  background: #fbf8f0;
+  box-shadow: 5px 6px 0 rgba(15, 15, 13, 0.08);
+}
+
+.catch-server-title {
+  color: rgba(15, 15, 13, 0.62);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .catch-server-stack {
@@ -5110,9 +5158,9 @@
 }
 
 .catch-server-status {
-  color: rgba(15, 15, 13, 0.5);
+  color: rgba(15, 15, 13, 0.62);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -5250,7 +5298,13 @@
     top: 55%;
   }
 
-  .catch-micro { font-size: 8px; }
+  .catch-micro { font-size: 11px; }
+  .catch-chrome { gap: 6px; padding: 7px 8px; }
+  .catch-lights { gap: 4px; }
+  .catch-lights i { width: 7px; height: 7px; }
+  .catch-addr { padding: 3px 8px; font-size: 11px; }
+  .catch-server-card { padding: 10px 12px 9px; gap: 6px; }
+  .catch-server-title { font-size: 11px; }
   .catch-micro-tab { top: calc(14% - 18px); }
   .catch-tab-card { width: 25%; border-radius: 12px; }
   .catch-row { gap: 6px; }
@@ -5272,8 +5326,8 @@
   .catch-chips { gap: 5px; }
   .catch-chip { padding: 3px 6px; font-size: 7px; gap: 3px; }
   .catch-chip svg { width: 9px; height: 9px; }
-  .catch-tray-label { font-size: 8px; top: -16px; }
-  .catch-tray-count { font-size: 8px; bottom: -18px; }
+  .catch-tray-label { font-size: 11px; top: -18px; }
+  .catch-tray-count { font-size: 11px; bottom: -20px; }
 
   .catch-server-stack i { width: 30px; height: 9px; }
   .catch-server-dot { width: 7px; height: 7px; }
