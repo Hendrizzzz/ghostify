@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUpRight,
@@ -15,6 +15,7 @@ import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
 import { Reveal } from './Reveal';
 import { SignalCatchScene } from '../animation/SignalCatchScene';
 import { GhostJourney } from '../animation/GhostJourney';
+import { LandingChoreography } from '../animation/LandingChoreography';
 import { EDGE_STORE_URL, FIREFOX_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
 
 const FEATURES: Array<{
@@ -54,7 +55,7 @@ const FEATURES: Array<{
     platform: 'facebook',
     name: 'Facebook',
     title: 'Bring the same quiet control to Facebook.',
-    body: 'Story-view, typing, and Seen controls share one setting group with Messenger â€” the privacy choice follows you across Metaâ€™s web messaging.',
+    body: 'Story-view, typing, and Seen controls share one setting group with Messenger — the privacy choice follows you across Meta’s web messaging.',
     webm: '/media/facebook-hide-story.webm',
     mp4: '/media/facebook-hide-story.mp4',
     poster: '/media/facebook-hide-story-poster.webp',
@@ -63,7 +64,7 @@ const FEATURES: Array<{
   },
 ];
 
-function FeatureRecording({ feature }: { feature: typeof FEATURES[number] }) {
+function FeatureRecording({ feature }: { feature: (typeof FEATURES)[number] }) {
   return (
     <video
       autoPlay
@@ -134,7 +135,7 @@ const EXTENSION_FOOTPRINT_KIB = 64.57;
 const FAQS = [
   {
     q: 'Why does Chrome say Ghostify can read and change data on these sites?',
-    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Metaâ€™s own web-messaging proxy â€” it is not a window into everything you do.',
+    a: 'Ghostify needs access to supported Instagram, Messenger, and Facebook tabs so it can identify and hold the privacy signals you switch off. That access is limited to those Meta web apps and Meta’s own web-messaging proxy — it is not a window into everything you do.',
   },
   {
     q: 'Does Ghostify read my messages?',
@@ -617,7 +618,7 @@ function AskAiSection() {
           <Reveal className="ask-ai-copy">
             <div className="ask-ai-lead">
               <h2 data-split>
-            Don&apos;t take
+                Don&apos;t take
                 <br />
                 our word for it.
               </h2>
@@ -730,7 +731,7 @@ function FeatureScroll() {
     if (!section) return;
     const sectionTop = window.scrollY + section.getBoundingClientRect().top;
     const distance = Math.max(0, section.offsetHeight - window.innerHeight);
-      const progress = FEATURES.length === 0 ? 0 : (index + 0.5) / FEATURES.length;
+    const progress = FEATURES.length === 0 ? 0 : (index + 0.5) / FEATURES.length;
     window.scrollTo({ top: sectionTop + distance * progress, behavior: 'smooth' });
   };
 
@@ -813,17 +814,22 @@ export function HomePage() {
     <div className="home-page">
       <ScrollChoreography />
       <GhostJourney />
+      <LandingChoreography />
       <section className="home-hero">
         <HeroDetails />
         <div className="home-hero-inner">
           <div className="home-hero-copy">
             <h1>
-              No <em className="hero-seen"><span className="hero-seen-word">seen.</span><i className="hero-seen-strike" aria-hidden="true" /></em>
+              No{' '}
+              <em className="hero-seen">
+                <span className="hero-seen-word">seen.</span>
+                <i className="hero-seen-strike" aria-hidden="true" />
+              </em>
               <br className="hero-title-break" aria-hidden="true" /> No pressure.
             </h1>
             <p>
               Ghostify gives you control over supported Seen, Typing, and Story View signals on
-              Instagram, Messenger, and Facebook â€” directly in your browser.
+              Instagram, Messenger, and Facebook — directly in your browser.
             </p>
             <div className="home-hero-actions">
               <StoreCta />
@@ -890,14 +896,14 @@ export function HomePage() {
 
       <section className="privacy-band" id="privacy" data-scroll-scene>
         <Reveal tag="header">
-          <h2 data-split>
+          <h2>
             Local by default.
             <br />
             <span>Open to inspection.</span>
           </h2>
           <p>
             The controls run inside your browser. Nothing about your messages, tabs, or settings
-            reaches a Ghostify server â€” there is no Ghostify server to reach.
+            reaches a Ghostify server — there is no Ghostify server to reach.
           </p>
         </Reveal>
         <Reveal className="privacy-band-panel" delay={120}>
@@ -913,7 +919,9 @@ export function HomePage() {
               <Check size={17} aria-hidden="true" />
               <span>
                 <strong>No messages through Ghostify</strong>
-                <small>Signals are held on your device; conversations stay between you and the app.</small>
+                <small>
+                  Signals are held on your device; conversations stay between you and the app.
+                </small>
               </span>
             </li>
             <li>
@@ -977,9 +985,7 @@ export function HomePage() {
             <span className="home-final-brand">Ghostify,</span>
             <span className="home-final-promise">wherever you browse.</span>
           </h2>
-          <p>
-            One extension, three platforms, zero accounts. Free for Chrome, Edge, and Firefox.
-          </p>
+          <p>One extension, three platforms, zero accounts. Free for Chrome, Edge, and Firefox.</p>
           <div className="home-final-actions">
             <StoreCta />
             <a

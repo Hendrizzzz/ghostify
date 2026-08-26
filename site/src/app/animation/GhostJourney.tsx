@@ -150,6 +150,8 @@ export function GhostJourney() {
 
           let lastY = window.scrollY;
           let lastTime = performance.now();
+          let marqueeRate = 1;
+          let marqueeDirection = 1;
           const leanTo = inner
             ? gsap.quickTo(inner, 'rotation', { duration: 0.5, ease: 'power2.out' })
             : null;
@@ -180,7 +182,13 @@ export function GhostJourney() {
                   ) ?? null;
             }
             if (marqueeAnimation) {
-              marqueeAnimation.playbackRate = 1 + Math.min(2.2, Math.abs(velocity) * 0.004);
+              // The marquee flows with you: scroll direction steers it, speed
+              // amplifies it, and the rate eases so flips never pop.
+              if (velocity > 0.2) marqueeDirection = 1;
+              else if (velocity < -0.2) marqueeDirection = -1;
+              const target = marqueeDirection * (1 + Math.min(2.2, Math.abs(velocity) * 0.004));
+              marqueeRate += (target - marqueeRate) * 0.08;
+              marqueeAnimation.playbackRate = marqueeRate;
             }
           };
           gsap.ticker.add(tick);

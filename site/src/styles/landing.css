@@ -2037,7 +2037,7 @@
 }
 
 .install-rhythm::before {
-  content: '01 â€” 02 â€” 03 â€” 04';
+  content: '01 — 02 — 03 — 04';
   position: absolute;
   left: 50%;
   bottom: 18px;
@@ -3521,7 +3521,7 @@
   color: rgba(243, 238, 226, 0.62);
 }
 
-/* Status and history â€” same visual language as the landing page */
+/* Status and history — same visual language as the landing page */
 .site-root.is-status-view,
 .site-root.is-status-view main {
   color: var(--home-ink);
@@ -4747,37 +4747,6 @@
     filter var(--reveal-duration) var(--ease-out-soft);
   transition-delay: var(--reveal-delay, 0ms);
   will-change: auto;
-}
-
-@keyframes heroRise {
-  from {
-    opacity: 0;
-    transform: translateY(26px);
-    filter: blur(9px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-.home-hero-copy h1,
-.home-hero-copy > p,
-.home-hero-actions {
-  animation: heroRise 840ms var(--ease-out-soft) backwards;
-}
-
-.home-hero-copy h1 {
-  animation-delay: 60ms;
-}
-
-.home-hero-copy > p {
-  animation-delay: 210ms;
-}
-
-.home-hero-actions {
-  animation-delay: 360ms;
 }
 
 @keyframes heroTileSettle {
