@@ -16,6 +16,9 @@ import { Reveal } from './Reveal';
 import { SignalCatchScene } from '../animation/SignalCatchScene';
 import { GhostJourney } from '../animation/GhostJourney';
 import { LandingChoreography } from '../animation/LandingChoreography';
+import { PlatformsDeck } from '../animation/PlatformsDeck';
+import { InstallRhythmScene } from '../animation/InstallRhythmScene';
+import { FaqAskAiScene } from '../animation/FaqAskAiScene';
 import { EDGE_STORE_URL, FIREFOX_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
 
 const FEATURES: Array<{
@@ -572,6 +575,14 @@ function InstallRhythm() {
         <p>Four small moves, then Ghostify settles into the background.</p>
       </Reveal>
       <div className="install-rhythm-path">
+        <svg
+          className="install-path-line"
+          aria-hidden="true"
+          viewBox="0 0 100 400"
+          preserveAspectRatio="none"
+        >
+          <path d="M 7 14 L 7 386" />
+        </svg>
         <span className="install-path-ghost" aria-hidden="true">
           <GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" />
         </span>
@@ -815,6 +826,9 @@ export function HomePage() {
       <ScrollChoreography />
       <GhostJourney />
       <LandingChoreography />
+      <PlatformsDeck />
+      <InstallRhythmScene />
+      <FaqAskAiScene />
       <section className="home-hero">
         <HeroDetails />
         <div className="home-hero-inner">

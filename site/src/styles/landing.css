@@ -1804,6 +1804,80 @@
   }
 }
 
+/* -- Platforms pinned deck progress rail (desktop scrub affordance) ------ */
+.platforms-deck-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.platforms-deck-progress .deck-track {
+  width: 92px;
+  height: 2px;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(243, 238, 226, 0.14);
+}
+
+.platforms-deck-progress .deck-track i {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--home-lavender);
+  transform-origin: left center;
+}
+
+.platforms-deck-progress .deck-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.platforms-deck-progress .deck-dots b {
+  width: 6px;
+  height: 6px;
+  display: block;
+  border-radius: 50%;
+  background: rgba(243, 238, 226, 0.22);
+  transition:
+    background 220ms ease,
+    transform 220ms ease;
+}
+
+.platforms-deck-progress .deck-dots b.is-active {
+  background: var(--home-lavender);
+  transform: scale(1.22);
+}
+
+.platforms-deck-progress small {
+  color: rgba(243, 238, 226, 0.52);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 1080px), (pointer: coarse) {
+  .platforms-deck-progress {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platforms-deck-progress {
+    display: none;
+  }
+}
+
 /* Privacy band: the receipt of what Ghostify does not do. */
 .privacy-band {
   padding: clamp(72px, 8vw, 110px) var(--home-edge);
@@ -2093,8 +2167,28 @@
   position: absolute;
   right: 30px;
   top: -26px;
+  z-index: 3;
   rotate: 7deg;
   filter: drop-shadow(4px 5px 0 rgba(139, 112, 221, 0.5));
+  will-change: transform;
+}
+
+.install-path-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.install-path-line path {
+  fill: none;
+  stroke: rgba(136, 115, 207, 0.42);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .install-rhythm ol {
@@ -4764,7 +4858,7 @@
   }
 }
 
-/* Press feedback ï¿½ buttons answer the press (scale 0.92-0.97, fast release) */
+/* Press feedback — buttons answer the press (scale 0.92-0.97, fast release) */
 .faq-flat summary:active .faq-toggle {
   transform: scale(0.92);
   transition-duration: 80ms;
