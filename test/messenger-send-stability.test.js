@@ -12156,7 +12156,7 @@ function testPopupMessengerSeenWarning() {
     const note =
         "Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know.";
     const warning =
-        "Facebook.com group chats may not send with Hide Seen on. Use messenger.com or turn Hide Seen off and refresh.";
+        "Facebook.com group chats may not send with Hide Seen on. Use messenger.com or turn Hide Seen off and refresh. Developer help is appreciated.";
 
     assert(
         !popupHtml.includes(note),
