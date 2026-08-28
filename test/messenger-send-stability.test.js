@@ -12149,11 +12149,14 @@ function testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestTe
     );
 }
 
-function testPopupMessengerSeenNoteIsRemoved() {
+function testPopupMessengerSeenWarning() {
     const popupHtml = fs.readFileSync("dist/popup.html", "utf8");
     const popupCss = fs.readFileSync("dist/css/popup.css", "utf8");
+    const popupJs = fs.readFileSync("dist/js/popup.js", "utf8");
     const note =
         "Facebook’s unread UI bug is fixed. If an unread chat still gets marked as read with Hide Seen on, let us know.";
+    const warning =
+        "Facebook.com group chats may not send with Hide Seen on. Use messenger.com or turn Hide Seen off and refresh.";
 
     assert(
         !popupHtml.includes(note),
@@ -12173,9 +12176,58 @@ function testPopupMessengerSeenNoteIsRemoved() {
         "Messenger/Facebook Hide Seen tooltip should avoid technical verification language",
     );
     assert(
-        !popupCss.includes(".info-icon") &&
-            !popupHtml.includes('class="info-icon"'),
-        "Messenger/Facebook Hide Seen should not keep unused info-button styling or markup",
+        popupHtml.includes('id="msg-seen-warning"') &&
+            popupHtml.includes('aria-describedby="msg-seen-warning-tooltip"') &&
+            popupHtml.includes('id="msg-seen-warning-tooltip"') &&
+            popupHtml.includes('role="tooltip"') &&
+            popupHtml.includes(warning) &&
+            popupHtml.includes(" hidden>"),
+        "Messenger/Facebook Hide Seen should expose a compact hidden group-chat warning",
+    );
+    assert(
+        popupCss.includes(".warning-trigger") &&
+            popupCss.includes(".warning-trigger:hover .warning-tooltip") &&
+            popupCss.includes(".warning-trigger:focus .warning-tooltip") &&
+            popupCss.includes("max-width: min(250px, calc(100vw - 24px));") &&
+            popupCss.includes("z-index: 30;") &&
+            popupCss.includes("--status-yellow: #c98b20;") &&
+            !popupCss.includes("--status-red"),
+        "Messenger/Facebook Hide Seen warning should use a compact amber custom tooltip",
+    );
+    assert(
+        popupJs.includes("updateMessengerSeenWarning") &&
+            popupJs.includes("Boolean(settings.msgSeen)") &&
+            popupJs.includes("input.id === SETTING_INPUT_IDS.msgSeen"),
+        "Messenger/Facebook Hide Seen warning should follow the shared toggle",
+    );
+}
+
+function testPopupMessengerSeenWarningFollowsSetting() {
+    const popupSource = fs.readFileSync("dist/js/popup.js", "utf8");
+    const warningElement = { hidden: true };
+    const context = {
+        document: {
+            addEventListener() {},
+            getElementById(id) {
+                return id === "msg-seen-warning" ? warningElement : null;
+            },
+        },
+        window: null,
+    };
+    context.window = context;
+    vm.runInNewContext(popupSource, context, { filename: "popup.js" });
+
+    context.updateMessengerSeenWarning(true);
+    assert.strictEqual(
+        warningElement.hidden,
+        false,
+        "Messenger/Facebook Hide Seen warning should show when Hide Seen is enabled",
+    );
+    context.updateMessengerSeenWarning(false);
+    assert.strictEqual(
+        warningElement.hidden,
+        true,
+        "Messenger/Facebook Hide Seen warning should hide when Hide Seen is disabled",
     );
 }
 
@@ -12960,7 +13012,8 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMessageRequestClicksTemporarilyRestoreNativeFocus();
     testFacebookNestedMessageRequestClicksTemporarilyRestoreNativeFocus();
     testFacebookNormalConversationClicksDoNotInheritSiblingMessageRequestText();
-    testPopupMessengerSeenNoteIsRemoved();
+    testPopupMessengerSeenWarning();
+    testPopupMessengerSeenWarningFollowsSetting();
     testPopupSupportLinksUseGuidedIssueForms();
     testLocalStatusCheckerIsRemovedFromPopupRuntime();
     testPopupPublicStatusSummaryUsesWorkingProofDate();

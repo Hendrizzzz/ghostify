@@ -59,6 +59,7 @@ function loadSettings() {
                 element.checked = settings[settingKey];
             }
         });
+        updateMessengerSeenWarning(Boolean(settings.msgSeen));
     });
 }
 
@@ -68,8 +69,18 @@ function attachEventListeners() {
     inputs.forEach(input => {
         input.addEventListener('change', () => {
             saveSettings();
+            if (input.id === SETTING_INPUT_IDS.msgSeen) {
+                updateMessengerSeenWarning(input.checked);
+            }
         });
     });
+}
+
+function updateMessengerSeenWarning(isEnabled) {
+    const warningElement = document.getElementById('msg-seen-warning');
+    if (warningElement) {
+        warningElement.hidden = !isEnabled;
+    }
 }
 
 function saveSettings() {

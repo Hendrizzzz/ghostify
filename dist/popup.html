@@ -96,13 +96,17 @@
                     </span>
                 </div>
                 <div class="card">
-                    <label class="row">
-                        <span class="row-label">
+                    <div class="row">
+                        <label class="row-label" for="msg-seen">
                             <svg class="feature-icon seen-icon" aria-hidden="true"><use href="#feature-seen"></use></svg>
                             <span>Hide Seen</span>
-                        </span>
+                        </label>
+                        <button type="button" class="warning-trigger" id="msg-seen-warning" aria-label="Facebook group chat sending warning" aria-describedby="msg-seen-warning-tooltip" hidden>
+                            <span aria-hidden="true">!</span>
+                            <span class="warning-tooltip" id="msg-seen-warning-tooltip" role="tooltip">Facebook.com group chats may not send with Hide Seen on. Use messenger.com or turn Hide Seen off and refresh.</span>
+                        </button>
                         <span class="switch"><input type="checkbox" id="msg-seen" aria-label="Hide Messenger and Facebook seen receipts"><span class="track"></span></span>
-                    </label>
+                    </div>
                     <label class="row">
                         <span class="row-label">
                             <svg class="feature-icon typing-icon" aria-hidden="true"><use href="#feature-typing"></use></svg>
