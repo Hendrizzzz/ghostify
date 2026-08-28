@@ -9,6 +9,14 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
+## [2.0.9] - 2026-08-29
+
+### Added
+
+- Added a compact popup warning beside Facebook/Messenger Hide Seen for the
+  known Facebook.com group-chat sending issue, with a workaround to use
+  messenger.com or turn Hide Seen off and refresh.
+
 ## [2.0.8] - 2026-08-23
 
 ### Added
