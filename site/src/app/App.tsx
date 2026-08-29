@@ -47,9 +47,7 @@ export default function App() {
         Skip to content
       </a>
       <SiteHeader />
-      <main id="main-content">
-        {statusView ? <StatusPage view={statusView} /> : <HomePage />}
-      </main>
+      <main id="main-content">{statusView ? <StatusPage view={statusView} /> : <HomePage />}</main>
       <SiteFooter />
     </div>
   );
