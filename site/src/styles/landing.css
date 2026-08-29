@@ -1175,7 +1175,9 @@
   min-width: 0;
   margin: 0;
   position: relative;
-  z-index: 2;
+  /* Above the feature nav (z-index 5) so its bottom rule tucks behind the
+     screenshot plate instead of cutting across it. */
+  z-index: 6;
   display: flex;
   justify-content: flex-end;
   animation: featureMediaIn 520ms var(--ease-out-soft) both;
@@ -1312,7 +1314,19 @@
   z-index: 5;
   display: flex;
   align-items: stretch;
-  border-top: 1px solid rgba(15, 15, 13, 0.18);
+  /* The rule is drawn as a gradient line that dissolves before the media
+     column, so on laptop widths it slips behind the screenshot plate
+     instead of striking through it. The media figure also rides above the
+     nav (z-index 6) as a second guard. */
+  background-image: linear-gradient(
+    90deg,
+    rgba(15, 15, 13, 0.18) 0,
+    rgba(15, 15, 13, 0.18) 42%,
+    rgba(15, 15, 13, 0) 52%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: 0 0;
 }
 
 .feature-scroll-nav button {
@@ -1625,8 +1639,8 @@
   display: flex;
   justify-content: flex-end;
   border-radius: 999px;
-  background: var(--home-ink);
-  animation: platformSwitchTrack 7.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  background: rgba(136, 115, 207, 0.45);
+  transition: background 420ms var(--ease-out-soft);
 }
 
 .platform-card-controls b {
@@ -1635,66 +1649,20 @@
   border-radius: 50%;
   background: var(--home-accent);
   transform: translateX(0);
-  animation: platformSwitchThumb 7.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transition:
+    transform 420ms var(--ease-out-soft),
+    background 420ms var(--ease-out-soft);
 }
 
-.platform-card-controls > div:nth-child(2) i,
-.platform-card-controls > div:nth-child(2) b {
-  animation-delay: -2.4s;
+/* Off state — flipped independently per row by PlatformControlAutoplay
+   (random intervals, never in sync across cards). */
+.platform-card-controls > div.is-off i {
+  background: rgba(243, 238, 226, 0.14);
 }
 
-.platform-card-controls > div:nth-child(3) i,
-.platform-card-controls > div:nth-child(3) b {
-  animation-delay: -4.8s;
-}
-
-.platform-card-instagram .platform-card-controls i,
-.platform-card-instagram .platform-card-controls b {
-  animation-duration: 8.1s;
-  animation-direction: reverse;
-}
-
-.platform-card-instagram .platform-card-controls > div:nth-child(1) i,
-.platform-card-instagram .platform-card-controls > div:nth-child(1) b {
-  animation-delay: -1.35s;
-}
-
-.platform-card-instagram .platform-card-controls > div:nth-child(2) i,
-.platform-card-instagram .platform-card-controls > div:nth-child(2) b {
-  animation-delay: -4.05s;
-}
-
-.platform-card-instagram .platform-card-controls > div:nth-child(3) i,
-.platform-card-instagram .platform-card-controls > div:nth-child(3) b {
-  animation-delay: -6.75s;
-}
-
-@keyframes platformSwitchTrack {
-  0%,
-  28%,
-  72%,
-  100% {
-    background: var(--home-ink);
-  }
-  36%,
-  64% {
-    background: rgba(15, 15, 13, 0.24);
-  }
-}
-
-@keyframes platformSwitchThumb {
-  0%,
-  28%,
-  72%,
-  100% {
-    transform: translateX(0);
-    background: var(--home-accent);
-  }
-  36%,
-  64% {
-    transform: translateX(-16px);
-    background: rgba(15, 15, 13, 0.46);
-  }
+.platform-card-controls > div.is-off i b {
+  transform: translateX(-16px);
+  background: rgba(243, 238, 226, 0.4);
 }
 
 .platform-card footer {
@@ -1817,14 +1785,9 @@
   color: rgba(243, 238, 226, 0.82);
 }
 
-.platforms-flat.is-dark .platform-card-controls i,
-.platforms-flat.is-dark .platform-card-controls b {
-  animation: none;
-}
-
 .platforms-flat.is-dark .platform-card-controls i {
   justify-content: flex-end;
-  background: rgba(243, 238, 226, 0.16);
+  background: rgba(136, 115, 207, 0.45);
 }
 
 .platforms-flat.is-dark .platform-card footer {
@@ -2226,9 +2189,14 @@
 
 .install-path-line {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  /* Fixed left gutter: the path used to stretch to the card width (7% x),
+     which put the line right on top of the step numbers on narrow/laptop
+     viewports. A fixed 40px rail always sits left of the content, with the
+     card's own padding (>= 30px) guaranteeing clearance. */
+  left: 0;
+  top: 0;
   height: 100%;
+  width: 40px;
   pointer-events: none;
   z-index: 1;
   overflow: visible;
@@ -2735,11 +2703,14 @@
 
 .ask-ai-ghost {
   position: absolute;
-  right: 3%;
-  bottom: 3px;
+  /* Peek from the sheet's bottom-left corner: the bottom-right is the
+     SOURCES tab's spot, and the ghost used to stamp itself right over the
+     "attached" label on laptop widths. */
+  left: 2%;
+  bottom: 2px;
   z-index: 4;
-  transform: rotate(3deg) translateY(34%);
-  transform-origin: right bottom;
+  transform: rotate(-4deg) translateY(32%);
+  transform-origin: left bottom;
 }
 
 .home-final {
@@ -3366,7 +3337,9 @@
   }
   .install-rhythm-path {
     min-height: 0;
-    padding: 28px 20px 30px;
+    /* Extra left padding keeps the step numbers clear of the 40px path
+       gutter rail on phones. */
+    padding: 28px 20px 30px 30px;
     border-radius: 26px;
   }
   .install-path-ghost {
@@ -4943,653 +4916,6 @@
     transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* -- Signal-catch scene: the mail desk ----------------------------- */
-.signal-catch {
-  height: 550vh;
-  position: relative;
-  background: var(--home-cream);
-}
-
-.signal-catch-sticky {
-  height: 100svh;
-  position: sticky;
-  top: 0;
-  overflow: hidden;
-}
-
-.catch-headline {
-  position: absolute;
-  left: clamp(24px, 6vw, 96px);
-  top: clamp(96px, 14svh, 160px);
-  z-index: 4;
-  margin: 0;
-  max-width: 430px;
-  font-family: var(--font-display);
-  font-stretch: 90%;
-  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
-  font-weight: 560;
-  letter-spacing: -0.028em;
-  line-height: 0.98;
-}
-
-.catch-headline em {
-  font-family: var(--font-editorial);
-  font-variation-settings: 'opsz' 72;
-  font-style: italic;
-  font-weight: 480;
-  color: var(--home-accent);
-  letter-spacing: -0.012em;
-}
-
-/* SplitText line masks for the masked word rise (keep descenders visible). */
-.signal-catch .catch-split-line {
-  overflow: hidden;
-  padding-bottom: 0.09em;
-  margin-bottom: -0.09em;
-}
-
-.signal-catch-stage {
-  position: absolute;
-  left: 50%;
-  top: 53%;
-  transform: translate(-50%, -50%);
-  width: min(96vw, calc((100svh - 200px) * 1.364));
-}
-
-.signal-catch-net {
-  width: 100%;
-  height: auto;
-  display: block;
-  overflow: visible;
-}
-
-/* Motion guides are invisible; the comet trail is the only visible ink,
-   and only while a pulse is in flight (GSAP DrawSVG drives it). */
-.signal-catch-net .catch-route-guide {
-  fill: none;
-  stroke: none;
-}
-
-.signal-catch-net .catch-trail {
-  fill: none;
-  stroke: url(#catch-trail-grad);
-  stroke-width: 3;
-  stroke-linecap: round;
-  visibility: hidden;
-}
-
-.signal-catch-net .catch-trail-glow {
-  fill: none;
-  stroke: url(#catch-trail-grad);
-  stroke-width: 10;
-  stroke-linecap: round;
-  opacity: 0.28;
-  filter: blur(5px);
-  visibility: hidden;
-}
-
-.signal-catch-net .catch-ripple {
-  fill: none;
-  stroke: #6f59c8;
-  stroke-width: 2;
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.catch-micro {
-  position: absolute;
-  color: rgba(15, 15, 13, 0.62);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.catch-tab,
-.catch-checkpoint {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.catch-tab-card {
-  position: absolute;
-  left: 3.5%;
-  top: 18%;
-  width: 19.5%;
-  height: 64%;
-  overflow: hidden;
-  border: 1.5px solid rgba(15, 15, 13, 0.75);
-  border-radius: 16px;
-  background: #fbf8f0;
-  box-shadow: 6px 7px 0 rgba(15, 15, 13, 0.08);
-}
-
-.catch-chrome {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-bottom: 1.5px solid rgba(15, 15, 13, 0.28);
-  background: rgba(15, 15, 13, 0.025);
-}
-
-.catch-lights {
-  display: flex;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-
-.catch-lights i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.catch-lights i:nth-child(1) {
-  background: #d97b6c;
-}
-.catch-lights i:nth-child(2) {
-  background: #d9b36c;
-}
-.catch-lights i:nth-child(3) {
-  background: #7ba05b;
-}
-
-.catch-addr {
-  flex: 1;
-  min-width: 0;
-  padding: 5px 12px;
-  border: 1.5px solid rgba(15, 15, 13, 0.3);
-  border-radius: 999px;
-  background: #fff;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(15, 15, 13, 0.62);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.catch-addr-text {
-  font-weight: 600;
-}
-
-.catch-micro-tab {
-  left: 3.5%;
-  top: calc(18% - 24px);
-}
-
-.catch-row {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.catch-row small {
-  font-family: var(--font-display);
-  font-stretch: 92%;
-  font-size: clamp(14px, 1.4vw, 17px);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: rgba(15, 15, 13, 0.82);
-}
-
-.catch-row-icon {
-  display: grid;
-  place-items: center;
-  width: clamp(26px, 2.6vw, 34px);
-  height: clamp(26px, 2.6vw, 34px);
-  border: 1.5px solid rgba(15, 15, 13, 0.55);
-  border-radius: 50%;
-  background: #fff;
-  color: rgba(15, 15, 13, 0.8);
-  flex: 0 0 auto;
-}
-
-.catch-row-icon svg {
-  width: 55%;
-  height: 55%;
-}
-
-.signal-catch-ghost {
-  position: absolute;
-  left: 52.4%;
-  top: 48.4%;
-  width: 150px;
-  height: 150px;
-  margin: -75px 0 0 -75px;
-  z-index: 3;
-  will-change: transform;
-}
-
-.signal-catch-ghost svg {
-  width: 100%;
-  height: 100%;
-}
-
-.catch-micro-ghost {
-  left: 52.4%;
-  top: calc(48.4% + 86px);
-  transform: translateX(-50%);
-}
-
-.catch-tray {
-  position: absolute;
-  left: 39%;
-  top: 73%;
-  width: 26%;
-  padding: 13px 10px 11px;
-  border: 1.5px dashed rgba(15, 15, 13, 0.45);
-  border-radius: 16px;
-  background: rgba(251, 248, 240, 0.65);
-  display: flex;
-  justify-content: center;
-}
-
-.catch-tray-label,
-.catch-tray-count {
-  position: absolute;
-  color: rgba(15, 15, 13, 0.6);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.catch-tray-label {
-  top: -22px;
-  left: 10px;
-}
-.catch-tray-count {
-  bottom: -24px;
-  right: 10px;
-  color: #3f2c86;
-}
-
-.catch-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.catch-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
-  border: 1.5px solid rgba(63, 44, 134, 0.8);
-  border-radius: 7px;
-  color: #3f2c86;
-  background: rgba(255, 253, 248, 0.9);
-  box-shadow: 2px 3px 0 rgba(63, 44, 134, 0.14);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  will-change: transform;
-}
-
-.catch-chip svg {
-  width: 12px;
-  height: 12px;
-}
-
-.catch-server {
-  position: absolute;
-  left: 86%;
-  top: 46.5%;
-  transform: translate(-50%, -50%);
-}
-
-.catch-server-card {
-  display: grid;
-  justify-items: center;
-  gap: 9px;
-  padding: 16px 18px 14px;
-  border: 1.5px solid rgba(15, 15, 13, 0.7);
-  border-radius: 14px;
-  background: #fbf8f0;
-  box-shadow: 5px 6px 0 rgba(15, 15, 13, 0.08);
-}
-
-.catch-server-title {
-  color: rgba(15, 15, 13, 0.62);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.catch-server-stack {
-  display: grid;
-  gap: 4px;
-}
-
-.catch-server-stack i {
-  width: clamp(34px, 3.6vw, 46px);
-  height: 11px;
-  border: 1.5px solid rgba(15, 15, 13, 0.7);
-  border-radius: 4px;
-  background: #fbf8f0;
-  box-shadow: 3px 3px 0 rgba(15, 15, 13, 0.07);
-}
-
-.catch-server-dot-wrap {
-  display: block;
-  margin-top: 2px;
-  animation: serverWait 1.5s ease-in-out infinite;
-}
-
-.catch-server-dot {
-  display: block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #3f2c86;
-}
-
-@keyframes serverWait {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.35;
-    transform: scale(0.78);
-  }
-}
-
-.catch-server-status {
-  color: rgba(15, 15, 13, 0.62);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.catch-pulse {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 38px;
-  height: 38px;
-  margin: -19px 0 0 -19px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #6f59c8;
-  color: #fff;
-  box-shadow:
-    0 0 0 7px rgba(111, 89, 200, 0.16),
-    0 4px 10px rgba(63, 44, 134, 0.3);
-  opacity: 0;
-  z-index: 4;
-  will-change: transform;
-}
-
-.catch-pulse svg {
-  width: 18px;
-  height: 18px;
-}
-
-.catch-spark {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
-  border-radius: 50%;
-  background: #3f2c86;
-  opacity: 0;
-  z-index: 4;
-  will-change: transform;
-}
-
-.signal-catch-caption {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(28px, 6svh, 64px);
-  transform: translateX(-50%);
-  margin: 0;
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  text-align: center;
-  z-index: 4;
-  width: max-content;
-  max-width: 92vw;
-}
-
-.signal-catch-caption span {
-  grid-area: 1 / 1;
-  opacity: 0;
-  font-family: var(--font-display);
-  font-stretch: 92%;
-  font-size: clamp(1.15rem, 2vw, 1.7rem);
-  font-weight: 560;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
-}
-
-.signal-catch-caption span:nth-child(3) {
-  color: #3f2c86;
-  font-family: var(--font-editorial);
-  font-variation-settings: 'opsz' 40;
-  font-style: italic;
-  font-weight: 500;
-}
-
-.signal-catch-rail {
-  position: absolute;
-  left: clamp(22px, 2.8vw, 44px);
-  top: 50%;
-  transform: translateY(-50%);
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 10px 14px;
-  align-items: center;
-  z-index: 5;
-}
-
-.signal-catch-rail .rail-track {
-  grid-row: 1 / span 3;
-  width: 2px;
-  height: 100%;
-  min-height: 118px;
-  position: relative;
-  border-radius: 999px;
-  background: rgba(15, 15, 13, 0.14);
-  overflow: hidden;
-}
-
-.signal-catch-rail .rail-track i {
-  position: absolute;
-  inset: 0;
-  background: var(--home-ink);
-  transform: scaleY(0);
-  transform-origin: top;
-}
-
-.signal-catch-rail .rail-step {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(15, 15, 13, 0.38);
-  transition: color 220ms ease;
-}
-
-.signal-catch-rail .rail-step.is-active {
-  color: #3f2c86;
-}
-
-@media (max-width: 760px) {
-  .catch-headline {
-    left: 20px;
-    right: 20px;
-    top: 88px;
-    font-size: clamp(1.7rem, 8vw, 2.4rem);
-  }
-
-  .signal-catch-stage {
-    width: 96vw;
-    top: 55%;
-  }
-
-  .catch-micro {
-    font-size: 11px;
-  }
-  .catch-chrome {
-    gap: 6px;
-    padding: 7px 8px;
-  }
-  .catch-lights {
-    gap: 4px;
-  }
-  .catch-lights i {
-    width: 7px;
-    height: 7px;
-  }
-  .catch-addr {
-    padding: 3px 8px;
-    font-size: 11px;
-  }
-  .catch-server-card {
-    padding: 10px 12px 9px;
-    gap: 6px;
-  }
-  .catch-server-title {
-    font-size: 11px;
-  }
-  .catch-micro-tab {
-    top: calc(14% - 18px);
-  }
-  .catch-tab-card {
-    width: 25%;
-    border-radius: 12px;
-  }
-  .catch-row {
-    gap: 6px;
-  }
-  .catch-row small {
-    font-size: 10px;
-  }
-  .catch-row-icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  .signal-catch-ghost {
-    width: 104px;
-    height: 104px;
-    margin: -52px 0 0 -52px;
-  }
-  .catch-micro-ghost {
-    display: none;
-  }
-
-  .catch-pulse {
-    width: 28px;
-    height: 28px;
-    margin: -14px 0 0 -14px;
-  }
-  .catch-pulse svg {
-    width: 14px;
-    height: 14px;
-  }
-  .catch-spark {
-    width: 7px;
-    height: 7px;
-    margin: -3.5px 0 0 -3.5px;
-  }
-
-  .catch-tray {
-    left: 33%;
-    width: 36%;
-    padding: 8px 6px 7px;
-  }
-  .catch-chips {
-    gap: 5px;
-  }
-  .catch-chip {
-    padding: 3px 6px;
-    font-size: 7px;
-    gap: 3px;
-  }
-  .catch-chip svg {
-    width: 9px;
-    height: 9px;
-  }
-  .catch-tray-label {
-    font-size: 11px;
-    top: -18px;
-  }
-  .catch-tray-count {
-    font-size: 11px;
-    bottom: -20px;
-  }
-
-  .catch-server-stack i {
-    width: 30px;
-    height: 9px;
-  }
-  .catch-server-dot {
-    width: 7px;
-    height: 7px;
-  }
-  .catch-server-status {
-    font-size: 7.5px;
-  }
-  .signal-catch-rail {
-    display: none;
-  }
-}
-
-/* -- Journey ghost: one ghost, traveling the whole page ----------- */
-.journey-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  pointer-events: none;
-  display: none;
-}
-
-@media (min-width: 1081px) {
-  .journey-layer {
-    display: block;
-  }
-}
-
-.journey-ghost {
-  position: absolute;
-  left: 0;
-  top: 0;
-  will-change: transform;
-}
-
-.journey-ghost-inner {
-  filter: drop-shadow(4px 6px 0 rgba(15, 15, 13, 0.1));
-}
-
 /* -- Hero strike on "seen." ---------------------------------------- */
 .hero-seen {
   position: relative;
@@ -5617,27 +4943,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .signal-catch-rail .rail-track i {
-    transform: scaleY(1);
-  }
-
-  .signal-catch-caption span {
-    grid-area: auto;
-    opacity: 1;
-  }
-
-  .signal-catch-caption {
-    gap: 6px;
-  }
-
-  .catch-server-dot-wrap {
-    animation: none;
-  }
-
-  .catch-server-dot {
-    opacity: 0.1;
-  }
-
   .hero-seen-strike {
     transform: scaleX(1) rotate(-3deg);
   }

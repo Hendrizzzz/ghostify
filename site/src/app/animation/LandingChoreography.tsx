@@ -1,5 +1,11 @@
 import { useLayoutEffect } from 'react';
-import { gsap, SplitText, ensureGsap, prefersReducedMotion } from './gsapSetup';
+import {
+  gsap,
+  SplitText,
+  ensureGsap,
+  prefersReducedMotion,
+  keepSplitDescenders,
+} from './gsapSetup';
 
 /* Page-level choreography that isn't the ghost's journey: the hero's
    on-load cascade, the privacy statement filling with ink as you scroll,
@@ -20,7 +26,9 @@ export function LandingChoreography() {
           const paras = heroCopy.querySelectorAll<HTMLElement>(':scope > p');
           const actions = heroCopy.querySelector<HTMLElement>('.home-hero-actions');
           if (h1) {
-            const split = SplitText.create(h1, { type: 'words', mask: 'words' });
+            const split = keepSplitDescenders(
+              SplitText.create(h1, { type: 'words', mask: 'words' }),
+            );
             gsap
               .timeline({ defaults: { ease: 'expo.out' } })
               .from(split.words, { yPercent: 118, duration: 1.05, stagger: 0.055 }, 0.08)
@@ -72,7 +80,9 @@ export function LandingChoreography() {
           const h2 = finalReveal.querySelector('h2');
           const rest = finalReveal.querySelectorAll<HTMLElement>('p, .home-final-actions');
           if (h2) {
-            const split = SplitText.create(h2, { type: 'words', mask: 'words' });
+            const split = keepSplitDescenders(
+              SplitText.create(h2, { type: 'words', mask: 'words' }),
+            );
             gsap
               .timeline({
                 scrollTrigger: { trigger: '.home-final', start: 'top 74%', once: true },

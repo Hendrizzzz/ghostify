@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { ensureGsap, gsap, prefersReducedMotion } from './gsapSetup';
 
 /* Pinned deck for `.platforms-flat` — awwwards scroll-storytelling beat.
@@ -43,7 +43,9 @@ export function PlatformsDeck() {
 
             gsap.set(cards, {
               transformOrigin: 'center bottom',
-              willChange: 'transform, opacity, filter',
+              // No `filter` here on purpose: scrubbed blur on three large
+              // cards forces repaints every scroll frame and reads as lag.
+              willChange: 'transform, opacity',
             });
             if (grid) gsap.set(grid, { perspective: 900 });
             cards.forEach((card, i) => {
@@ -51,12 +53,11 @@ export function PlatformsDeck() {
                 y: 74 + i * 7,
                 rotation: rotations[i] ?? (i % 2 ? 2.6 : -2.6),
                 scale: 0.97,
-                opacity: 0.72,
-                filter: 'blur(3px)',
+                opacity: 0.55,
               });
             });
             if (status) {
-              gsap.set(status, { opacity: 0, y: 14, filter: 'blur(6px)' });
+              gsap.set(status, { opacity: 0, y: 14 });
             }
 
             // Progress rail — minimal, premium, non-interactive.
@@ -114,7 +115,6 @@ export function PlatformsDeck() {
                   rotation: 0,
                   scale: 1,
                   opacity: 1,
-                  filter: 'blur(0px)',
                   ease: 'none',
                   duration: 0.32,
                 },
@@ -146,7 +146,6 @@ export function PlatformsDeck() {
                 {
                   opacity: 1,
                   y: 0,
-                  filter: 'blur(0px)',
                   ease: 'none',
                   duration: 0.18,
                 },
@@ -198,6 +197,65 @@ export function PlatformsDeck() {
     } catch {
       // fail-open: never break host page
     }
+  }, []);
+
+  return null;
+}
+
+/* The Hide Seen / Hide Typing / Hide Story Views rows on each platform card
+   flip themselves on and off. Every row runs its own timer with a fresh
+   random interval, so no two rows — and no two cards — ever move in sync.
+   Flips pause while the grid is off-screen, the tab is hidden, or the user
+   prefers reduced motion. Renders nothing. */
+export function PlatformControlAutoplay() {
+  useEffect(() => {
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>('.platform-card-controls > div'),
+    );
+    if (!rows.length) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let inView = true;
+    const grid = document.querySelector<HTMLElement>('.platform-card-grid');
+    const observer =
+      typeof IntersectionObserver !== 'undefined' && grid
+        ? new IntersectionObserver(
+            (entries) => {
+              inView = entries[0]?.isIntersecting ?? true;
+            },
+            { rootMargin: '120px' },
+          )
+        : null;
+    if (observer && grid) observer.observe(grid);
+
+    const timers = new Set<number>();
+    const loop = (row: HTMLElement) => {
+      const id = window.setTimeout(
+        () => {
+          timers.delete(id);
+          if (inView && !document.hidden) row.classList.toggle('is-off');
+          loop(row);
+        },
+        2400 + Math.random() * 5600,
+      );
+      timers.add(id);
+    };
+    // Staggered first flips so the deck never starts in lockstep.
+    rows.forEach((row, index) => {
+      const id = window.setTimeout(
+        () => {
+          timers.delete(id);
+          loop(row);
+        },
+        1400 + Math.random() * 3800 + index * 240,
+      );
+      timers.add(id);
+    });
+
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      observer?.disconnect();
+    };
   }, []);
 
   return null;

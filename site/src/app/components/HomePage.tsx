@@ -13,10 +13,10 @@ import { formatStatusDate, getLastVerifiedAt } from '../statusData';
 import { GhostMark } from './GhostSVG';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
 import { Reveal } from './Reveal';
-import { SignalCatchScene } from '../animation/SignalCatchScene';
 import { GhostJourney } from '../animation/GhostJourney';
+import { GhostMascot } from './GhostMascot';
 import { LandingChoreography } from '../animation/LandingChoreography';
-import { PlatformsDeck } from '../animation/PlatformsDeck';
+import { PlatformsDeck, PlatformControlAutoplay } from '../animation/PlatformsDeck';
 import { InstallRhythmScene } from '../animation/InstallRhythmScene';
 import { FaqAskAiScene } from '../animation/FaqAskAiScene';
 import { EDGE_STORE_URL, FIREFOX_STORE_URL, GITHUB_URL, StoreCta } from './SiteChrome';
@@ -578,10 +578,10 @@ function InstallRhythm() {
         <svg
           className="install-path-line"
           aria-hidden="true"
-          viewBox="0 0 100 400"
+          viewBox="0 0 40 400"
           preserveAspectRatio="none"
         >
-          <path d="M 7 14 L 7 386" />
+          <path d="M 15 10 L 15 390" />
         </svg>
         <span className="install-path-ghost" aria-hidden="true">
           <GhostMark size={58} bodyColor="#0f0f0d" eyeColor="#f3eee2" />
@@ -894,8 +894,10 @@ export function HomePage() {
     <div className="home-page">
       <ScrollChoreography />
       <GhostJourney />
+      <GhostMascot />
       <LandingChoreography />
       <PlatformsDeck />
+      <PlatformControlAutoplay />
       <InstallRhythmScene />
       <FaqAskAiScene />
       <section className="home-hero">
@@ -923,8 +925,6 @@ export function HomePage() {
           </div>
         </div>
       </section>
-
-      <SignalCatchScene />
 
       <FeatureScroll />
 
