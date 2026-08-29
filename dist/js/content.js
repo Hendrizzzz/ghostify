@@ -75,7 +75,7 @@
 
   // src/content.js
   var FALLBACK_CONFIG = {
-    version: "2.0.9",
+    version: "2.0.10",
     killSwitch: [],
     patterns: {
       igTyping: [

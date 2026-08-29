@@ -12185,6 +12185,12 @@ function testPopupMessengerSeenWarning() {
         "Messenger/Facebook Hide Seen should expose a compact hidden group-chat warning",
     );
     assert(
+        popupHtml.includes(
+            '<label class="switch"><input type="checkbox" id="msg-seen"',
+        ),
+        "Messenger/Facebook Hide Seen visible switch should activate its checkbox",
+    );
+    assert(
         popupCss.includes(".warning-trigger") &&
             popupCss.includes(".warning-trigger:hover .warning-tooltip") &&
             popupCss.includes(".warning-trigger:focus .warning-tooltip") &&
