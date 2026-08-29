@@ -33,3 +33,5 @@ _raw_assets/
 
 *.tmp
 *.temp
+
+verify/
