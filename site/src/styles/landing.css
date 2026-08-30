@@ -983,7 +983,8 @@
   --feature-progress: 0;
   /* Keep the feature journey consistent across short and tall windows.
      1200px per platform: fast flicks can't skip a whole platform. */
-  height: calc(100svh + 3600px);
+  --feature-journey-extra: clamp(2380px, calc(550vw - 3560px), 3600px);
+  height: calc(100svh + var(--feature-journey-extra));
   position: relative;
   background: linear-gradient(
     180deg,
@@ -1711,8 +1712,6 @@
 }
 
 #privacy {
-  display: block;
-  height: 0;
   scroll-margin-top: 96px;
 }
 
@@ -1807,6 +1806,19 @@
     width: calc(100% - 20px);
     margin-block: 12px 56px;
     border-radius: 30px;
+  }
+}
+
+/* Keep the desktop platform story aligned to the panel's visual top. The
+   decorative relationship map still owns the header row's height, but the
+   headline should not be pushed down into an empty left-side void. */
+@media (min-width: 861px) {
+  .site-root:not(.is-status-view) .platforms-flat.is-dark > header {
+    align-items: start;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark > header h2 {
+    padding-top: 20px;
   }
 }
 
@@ -1987,6 +1999,8 @@
 }
 
 .privacy-band-links a {
+  min-height: 44px;
+  padding: 8px 4px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2873,7 +2887,7 @@
   transition-duration: 80ms;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1080px), (pointer: coarse) {
   .install-rhythm {
     grid-template-columns: minmax(280px, 0.8fr) minmax(460px, 1.2fr);
     gap: 54px;
@@ -3702,7 +3716,7 @@
 
 .site-root.is-status-view .status-page .status-home-link {
   width: fit-content;
-  min-height: 38px;
+  min-height: 44px;
   margin-bottom: 26px;
   padding: 0 13px;
   display: inline-flex;
@@ -3916,7 +3930,7 @@
 }
 
 .site-root.is-status-view .status-page .status-timeline-years button {
-  min-height: 30px;
+  min-height: 44px;
   padding: 0 11px;
   border: 1px solid rgba(15, 15, 13, 0.15);
   border-radius: 999px;
@@ -4404,6 +4418,23 @@
 
   .site-root.is-status-view .status-page .status-platform-row {
     min-height: 0;
+  }
+}
+
+@media (min-width: 621px) and (max-width: 920px) {
+  .site-root.is-status-view .status-page .status-calendar-hint {
+    margin: -2px 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: rgba(15, 15, 13, 0.5);
+    font: 600 9px/1.4 var(--font-mono);
+    letter-spacing: 0.01em;
+  }
+
+  .site-root.is-status-view .status-page .status-calendar-wrap {
+    margin-top: -8px;
+    padding-top: 8px;
   }
 }
 
@@ -4955,5 +4986,298 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-seen-strike {
     transform: scaleX(1) rotate(-3deg);
+  }
+}
+
+/* Large desktop composition: use the room available on 27-inch screens and
+   above without changing the established phone, tablet, or 24-inch layout. */
+@media (min-width: 1600px) {
+  .site-root:not(.is-status-view) {
+    --home-large-content: clamp(1280px, calc(97vw - 582px), 2400px);
+    --home-large-platform-content: clamp(1420px, calc(97vw - 582px), 2400px);
+    --home-large-header: clamp(1120px, calc(50vw + 160px), 2000px);
+    --home-edge: max(32px, calc((100vw - var(--home-large-content)) / 2));
+    --home-platform-edge: max(
+      32px,
+      calc((100vw - var(--home-large-platform-content)) / 2)
+    );
+    --type-hero-size: clamp(6rem, 5vw, 8rem);
+    --type-section-size: clamp(3.65rem, calc(4vw - 18.4px), 5.25rem);
+    --type-feature-size: clamp(3.2rem, calc(2vw + 12.8px), 4rem);
+    --type-body-lg-size: clamp(16px, 1vw, 18px);
+    --type-body-size: clamp(14px, calc(0.15625vw + 11px), 15px);
+    --type-caption-size: clamp(12px, calc(0.15625vw + 9px), 13px);
+    --type-label-size: clamp(11px, calc(0.15625vw + 8px), 12px);
+  }
+
+  .site-root:not(.is-status-view) .site-header {
+    width: min(calc(100% - 64px), var(--home-large-header));
+    min-height: clamp(60px, calc(1.25vw + 36px), 68px);
+    padding: 8px 16px 8px 22px;
+  }
+
+  .site-root:not(.is-status-view) .site-header .brand-lockup {
+    font-size: clamp(20px, calc(0.3125vw + 14px), 22px);
+  }
+
+  .site-root:not(.is-status-view) .site-header .primary-nav {
+    gap: 8px;
+  }
+
+  .site-root:not(.is-status-view) .site-header .primary-nav a {
+    font-size: clamp(13px, calc(0.15625vw + 10px), 14px);
+  }
+
+  .site-root:not(.is-status-view) .home-hero,
+  .site-root:not(.is-status-view) .home-hero-inner {
+    min-height: 900px;
+  }
+
+  .site-root:not(.is-status-view) .home-hero-inner {
+    width: min(calc(100% - 96px), var(--home-large-content));
+  }
+
+  .site-root:not(.is-status-view) .home-hero-copy {
+    max-width: var(--home-large-content);
+  }
+
+  .site-root:not(.is-status-view) .home-hero-copy > p:not(.home-hero-provenance) {
+    max-width: 760px;
+  }
+
+  .site-root:not(.is-status-view) .home-hero-art {
+    height: clamp(380px, 30vw, 560px);
+  }
+
+  .site-root:not(.is-status-view) .hero-signal-flow {
+    width: min(100%, var(--home-large-content));
+    --processor-size: clamp(150px, calc(6.25vw + 30px), 190px);
+  }
+
+  .site-root:not(.is-status-view) .hero-detail {
+    width: clamp(64px, calc(3.125vw - 8px), 84px);
+    height: clamp(64px, calc(3.125vw - 8px), 84px);
+  }
+
+  .site-root:not(.is-status-view) .hero-detail-opera-gx,
+  .site-root:not(.is-status-view) .hero-detail-dia,
+  .site-root:not(.is-status-view) .hero-detail-opera-air,
+  .site-root:not(.is-status-view) .hero-detail-yandex,
+  .site-root:not(.is-status-view) .hero-detail-firefox {
+    width: clamp(52px, calc(3.125vw - 8px), 72px);
+    height: clamp(52px, calc(3.125vw - 8px), 72px);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-sticky {
+    padding-block: clamp(96px, calc(5vw + 12px), 132px);
+    grid-template-columns: minmax(340px, 0.84fr) minmax(520px, 1.16fr);
+    align-items: center;
+    align-content: center;
+    gap: clamp(60px, 8vw, 130px);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-sticky::before {
+    font-size: clamp(5rem, 5vw, 8rem);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-copy {
+    min-height: clamp(640px, 28vw, 760px);
+    align-self: center;
+  }
+
+  .site-root:not(.is-status-view) .feature-copy-changing {
+    min-height: clamp(420px, 22vw, 560px);
+  }
+
+  .site-root:not(.is-status-view) .feature-copy-changing h2 {
+    max-width: 840px;
+  }
+
+  .site-root:not(.is-status-view) .feature-copy-changing > p {
+    max-width: 680px;
+    font-size: 18px;
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-media {
+    align-self: center;
+  }
+
+  .site-root:not(.is-status-view) .feature-media-frame {
+    width: min(100%, 1320px);
+    padding-top: clamp(88px, calc(2.3vw + 51px), 110px);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-media img,
+  .site-root:not(.is-status-view) .feature-scroll-media video {
+    max-height: clamp(760px, 36vw, 1120px);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-nav {
+    width: auto;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark {
+    padding-inline: var(--home-platform-edge);
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat > header,
+  .site-root:not(.is-status-view) .platform-card-grid,
+  .site-root:not(.is-status-view) .footprint-section > header,
+  .site-root:not(.is-status-view) .footprint-metrics,
+  .site-root:not(.is-status-view) .site-footer > * {
+    width: min(100%, var(--home-large-platform-content));
+  }
+
+  .site-root:not(.is-status-view) .footprint-section > header,
+  .site-root:not(.is-status-view) .footprint-metrics,
+  .site-root:not(.is-status-view) .site-footer > * {
+    width: min(100%, var(--home-large-content));
+  }
+
+  .site-root:not(.is-status-view) .platform-control-map {
+    width: min(100%, clamp(490px, calc(23.4375vw + 40px), 640px));
+    min-height: 300px;
+  }
+
+  .site-root:not(.is-status-view) .platform-card {
+    padding: clamp(28px, calc(0.625vw + 16px), 34px)
+      clamp(28px, calc(0.78125vw + 13px), 34px)
+      clamp(24px, calc(0.625vw + 12px), 28px);
+    border-radius: clamp(28px, calc(0.625vw + 16px), 32px);
+  }
+
+  .site-root:not(.is-status-view) .platform-card strong {
+    font-size: clamp(20px, calc(0.3125vw + 14px), 22px);
+  }
+
+  .site-root:not(.is-status-view) .footprint-metrics strong {
+    font-size: clamp(4.4rem, 4vw, 6rem);
+  }
+
+  .site-root:not(.is-status-view) .install-rhythm {
+    min-height: clamp(680px, calc(12.5vw + 440px), 760px);
+  }
+
+  .site-root:not(.is-status-view) .install-rhythm-path {
+    min-height: clamp(520px, calc(9.375vw + 340px), 580px);
+  }
+
+  .site-root:not(.is-status-view) .ask-ai-card {
+    min-height: clamp(490px, calc(10.9375vw + 280px), 560px);
+    padding-block: clamp(54px, calc(3.125vw + 16px), 96px);
+  }
+
+  .site-root:not(.is-status-view) .home-final > div {
+    min-height: clamp(470px, calc(14.0625vw + 200px), 560px);
+  }
+}
+
+@media (min-width: 1600px) and (max-height: 900px), (min-width: 2200px) {
+  .site-root:not(.is-status-view) .feature-scroll-sticky {
+    grid-template-rows: auto auto;
+    row-gap: clamp(28px, 2vw, 48px);
+  }
+
+  .site-root:not(.is-status-view) .feature-copy-changing > p {
+    max-width: 680px;
+    font-size: 18px;
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-nav {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    grid-column: 1 / -1;
+  }
+
+  .site-root:not(.is-status-view) .ask-ai-lead h2 {
+    font-size: clamp(3.78rem, 4.2vw, 5.2rem);
+  }
+
+  .site-root:not(.is-status-view) .ask-ai-source-stack {
+    width: min(100%, 560px);
+  }
+}
+
+/* 24-inch desktop baseline: keep the platform story legible and composed as
+   one deliberate desktop scene on 27-inch, 32-inch, and larger displays. The
+   surrounding panel can breathe; its readable inner deck does not scale into
+   an oversized variant. */
+@media (min-width: 1920px) {
+  .site-root:not(.is-status-view) .platforms-flat.is-dark {
+    min-height: 100svh;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark > header,
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card-grid {
+    width: min(100%, 1376px);
+    margin-inline: auto;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-control-map {
+    width: min(100%, 490px);
+    min-height: 300px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark h2 {
+    font-size: 3.65rem;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card {
+    padding: 28px 28px 24px;
+    border-radius: 28px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card strong {
+    font-size: 20px;
+  }
+}
+
+/* Short desktop windows still need the pinned deck's rail and status link to
+   remain reachable while the scene is held in place. Compress vertical rhythm
+   only; the desktop card treatment and scroll choreography stay intact. */
+@media (min-width: 1081px) and (max-height: 900px) {
+  .site-root:not(.is-status-view) .platforms-flat.is-dark {
+    padding-top: 64px;
+    padding-bottom: 56px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-control-map {
+    min-height: 200px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card-grid {
+    margin-top: 52px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card {
+    padding-top: 22px;
+    padding-bottom: 18px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card-controls {
+    margin-top: 18px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card-controls > div {
+    min-height: 52px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card footer {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  .site-root:not(.is-status-view) .platforms-flat.is-dark .platforms-status {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 1081px) and (max-height: 900px) {
+  .site-root:not(.is-status-view) .feature-scroll-media img,
+  .site-root:not(.is-status-view) .feature-scroll-media video {
+    max-height: min(clamp(520px, 45vw, 700px), calc(100svh - 400px));
   }
 }
