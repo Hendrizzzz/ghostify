@@ -2782,6 +2782,16 @@
   text-wrap: balance;
 }
 
+/* The brand line splits into masked words (SplitText mask: 'words');
+   its 0.88 line-height clips the italic caps at the mask's top edge,
+   so the mask needs a little breathing room above the glyphs. */
+.home-final-brand,
+.home-final-brand-mask {
+  overflow: visible;
+  padding-top: 0.14em;
+  margin-top: -0.14em;
+}
+
 .home-final-brand {
   width: max-content;
   max-width: 100%;
