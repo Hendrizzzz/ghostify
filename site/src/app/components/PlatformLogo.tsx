@@ -21,8 +21,7 @@ export function PlatformLogo({
         height={size}
         viewBox="0 0 24 24"
         fill="none"
-        role="img"
-        aria-label="Instagram"
+        aria-hidden="true"
       >
         <defs>
           <radialGradient id={gradientId} cx="30%" cy="107%" r="120%">
@@ -51,8 +50,7 @@ export function PlatformLogo({
         height={size}
         viewBox="0 0 32 32"
         fill="none"
-        role="img"
-        aria-label="Messenger"
+        aria-hidden="true"
       >
         <defs>
           <linearGradient
@@ -87,8 +85,7 @@ export function PlatformLogo({
       height={size}
       viewBox="0 0 32 32"
       fill="none"
-      role="img"
-      aria-label="Facebook"
+      aria-hidden="true"
     >
       <circle cx="16" cy="16" r="14" fill="#1877f2" />
       <path

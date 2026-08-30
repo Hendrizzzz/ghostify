@@ -41,6 +41,26 @@ export default function App() {
     ogUrl?.setAttribute('content', url);
   }, [statusView]);
 
+  useEffect(() => {
+    if (statusView || !window.location.hash) return;
+
+    const scrollToHashTarget = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      document.getElementById(id)?.scrollIntoView({ block: 'start' });
+    };
+
+    let retryTimer = 0;
+    const frame = window.requestAnimationFrame(() => {
+      scrollToHashTarget();
+      retryTimer = window.setTimeout(scrollToHashTarget, 420);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (retryTimer) window.clearTimeout(retryTimer);
+    };
+  }, [statusView]);
+
   return (
     <div className={`site-root${statusView ? ' is-status-view' : ''}`}>
       <a className="skip-link" href="#main-content">
