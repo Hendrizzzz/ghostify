@@ -4997,10 +4997,7 @@
     --home-large-platform-content: clamp(1420px, calc(97vw - 582px), 2400px);
     --home-large-header: clamp(1120px, calc(50vw + 160px), 2000px);
     --home-edge: max(32px, calc((100vw - var(--home-large-content)) / 2));
-    --home-platform-edge: max(
-      32px,
-      calc((100vw - var(--home-large-platform-content)) / 2)
-    );
+    --home-platform-edge: max(32px, calc((100vw - var(--home-large-platform-content)) / 2));
     --type-hero-size: clamp(6rem, 5vw, 8rem);
     --type-section-size: clamp(3.65rem, calc(4vw - 18.4px), 5.25rem);
     --type-feature-size: clamp(3.2rem, calc(2vw + 12.8px), 4rem);
@@ -5140,8 +5137,7 @@
   }
 
   .site-root:not(.is-status-view) .platform-card {
-    padding: clamp(28px, calc(0.625vw + 16px), 34px)
-      clamp(28px, calc(0.78125vw + 13px), 34px)
+    padding: clamp(28px, calc(0.625vw + 16px), 34px) clamp(28px, calc(0.78125vw + 13px), 34px)
       clamp(24px, calc(0.625vw + 12px), 28px);
     border-radius: clamp(28px, calc(0.625vw + 16px), 32px);
   }
