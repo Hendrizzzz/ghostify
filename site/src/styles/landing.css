@@ -1185,7 +1185,11 @@
 }
 
 .feature-media-frame {
-  width: min(100%, 760px);
+  /* Size the plate from the recording itself. A fixed max-width makes
+     portrait recordings leave an accidental empty column inside the frame. */
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
   position: relative;
   padding-top: 88px;
   transform: translate3d(0, calc(var(--feature-progress, 0) * -18px), 0);
@@ -1261,7 +1265,10 @@
 }
 
 .feature-media-crop {
+  width: fit-content;
   max-width: 100%;
+  display: inline-block;
+  vertical-align: top;
   overflow: hidden;
   border: 1px solid rgba(15, 15, 13, 0.18);
   border-radius: 14px;
@@ -1717,10 +1724,12 @@
 
 /* Platforms absorbed into the dark panel; privacy content retired */
 .platforms-flat.is-dark {
-  width: calc(100% - 32px);
+  /* This is a content panel, not a full-bleed viewport scene. Keeping a
+     deliberate ceiling makes its composition hold on 27- and 32-inch screens. */
+  width: min(calc(100% - 32px), 1600px);
   margin-block: 20px 88px;
   margin-inline: auto;
-  padding: clamp(64px, 6vw, 96px) max(32px, calc((100vw - 1420px) / 2)) clamp(64px, 6vw, 88px);
+  padding: clamp(64px, 6vw, 96px) clamp(32px, 5vw, 88px) clamp(64px, 6vw, 88px);
   border: 1px solid rgba(243, 238, 226, 0.14);
   border-radius: clamp(28px, 4vw, 44px);
   background:
@@ -1819,80 +1828,6 @@
 
   .site-root:not(.is-status-view) .platforms-flat.is-dark > header h2 {
     padding-top: 20px;
-  }
-}
-
-/* -- Platforms pinned deck progress rail (desktop scrub affordance) ------ */
-.platforms-deck-progress {
-  position: absolute;
-  left: 50%;
-  bottom: 22px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.platforms-deck-progress .deck-track {
-  width: 92px;
-  height: 2px;
-  display: block;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(243, 238, 226, 0.14);
-}
-
-.platforms-deck-progress .deck-track i {
-  width: 100%;
-  height: 100%;
-  display: block;
-  background: var(--home-lavender);
-  transform-origin: left center;
-}
-
-.platforms-deck-progress .deck-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.platforms-deck-progress .deck-dots b {
-  width: 6px;
-  height: 6px;
-  display: block;
-  border-radius: 50%;
-  background: rgba(243, 238, 226, 0.22);
-  transition:
-    background 220ms ease,
-    transform 220ms ease;
-}
-
-.platforms-deck-progress .deck-dots b.is-active {
-  background: var(--home-lavender);
-  transform: scale(1.22);
-}
-
-.platforms-deck-progress small {
-  color: rgba(243, 238, 226, 0.52);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-@media (max-width: 1080px), (pointer: coarse) {
-  .platforms-deck-progress {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .platforms-deck-progress {
-    display: none;
   }
 }
 
@@ -2796,11 +2731,9 @@
   text-wrap: balance;
 }
 
-/* The brand line splits into masked words (SplitText mask: 'words');
-   its 0.88 line-height clips the italic caps at the mask's top edge,
-   so the mask needs a little breathing room above the glyphs. */
-.home-final-brand,
-.home-final-brand-mask {
+/* The runtime SplitText masks receive their own clipping guard. This outer
+   space also protects the un-split reduced-motion version of the italic line. */
+.home-final-brand {
   overflow: visible;
   padding-top: 0.14em;
   margin-top: -0.14em;
@@ -5100,7 +5033,9 @@
   }
 
   .site-root:not(.is-status-view) .feature-media-frame {
-    width: min(100%, 1320px);
+    width: fit-content;
+    max-width: 100%;
+    margin-left: auto;
     padding-top: clamp(88px, calc(2.3vw + 51px), 110px);
   }
 
@@ -5114,7 +5049,8 @@
   }
 
   .site-root:not(.is-status-view) .platforms-flat.is-dark {
-    padding-inline: var(--home-platform-edge);
+    width: min(calc(100% - 32px), 1600px);
+    padding-inline: clamp(32px, 5vw, 88px);
   }
 
   .site-root:not(.is-status-view) .platforms-flat > header,
@@ -5203,7 +5139,7 @@
    an oversized variant. */
 @media (min-width: 1920px) {
   .site-root:not(.is-status-view) .platforms-flat.is-dark {
-    min-height: 100svh;
+    min-height: 0;
   }
 
   .site-root:not(.is-status-view) .platforms-flat.is-dark > header,
@@ -5275,5 +5211,57 @@
   .site-root:not(.is-status-view) .feature-scroll-media img,
   .site-root:not(.is-status-view) .feature-scroll-media video {
     max-height: min(clamp(520px, 45vw, 700px), calc(100svh - 400px));
+  }
+}
+
+/* Compact laptops have enough width for the interactive story, but not enough
+   height for the spacious desktop composition. Keep the same scroll sequence,
+   while grouping its copy, recording, and selector into one compact scene. */
+@media (min-width: 1081px) and (max-width: 1439px) and (pointer: fine) {
+  .site-root:not(.is-status-view) .feature-scroll-sticky {
+    padding-top: clamp(48px, 4vw, 64px);
+    padding-bottom: clamp(24px, 3vw, 40px);
+    grid-template-columns: minmax(0, 0.95fr) minmax(400px, 1.05fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: center;
+    align-content: stretch;
+    column-gap: clamp(36px, 4vw, 64px);
+    row-gap: 16px;
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-copy,
+  .site-root:not(.is-status-view) .feature-copy-changing {
+    min-height: 0;
+  }
+
+  .site-root:not(.is-status-view) .feature-copy-changing {
+    padding-top: 0;
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-tools {
+    margin-top: clamp(26px, 2.5vw, 34px);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-media {
+    align-self: center;
+  }
+
+  .site-root:not(.is-status-view) .feature-media-frame {
+    /* Leave the signal label a true clear space above the recording. */
+    padding-top: clamp(74px, 5vw, 86px);
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-media img,
+  .site-root:not(.is-status-view) .feature-scroll-media video {
+    max-height: min(clamp(420px, 35vw, 500px), calc(100svh - 220px));
+  }
+
+  .site-root:not(.is-status-view) .feature-scroll-nav {
+    width: 100%;
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    grid-column: 1 / -1;
   }
 }
