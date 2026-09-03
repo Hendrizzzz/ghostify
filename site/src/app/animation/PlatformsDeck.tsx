@@ -14,13 +14,16 @@ export function PlatformsDeck() {
       const mm = gsap.matchMedia();
 
       mm.add(
-        '(min-width: 1081px) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
+        '(min-width: 1081px) and (min-height: 760px) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
         () => {
           const ctx = gsap.context(() => {
             const section = document.querySelector<HTMLElement>('.platforms-flat');
             if (!section) return;
             const cards = Array.from(section.querySelectorAll<HTMLElement>('.platform-card'));
             if (cards.length < 3) return;
+            // A pin freezes the panel at the viewport top. Fall back to the
+            // normal reveal when a short window cannot show all of its content.
+            if (Math.ceil(section.getBoundingClientRect().height) > window.innerHeight) return;
             const grid = section.querySelector<HTMLElement>('.platform-card-grid');
             const status = section.querySelector<HTMLElement>('.platforms-status');
             const header = section.querySelector<HTMLElement>('.platforms-flat > header');

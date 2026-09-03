@@ -812,7 +812,10 @@ function FeatureScroll() {
     const sectionTop = window.scrollY + section.getBoundingClientRect().top;
     const distance = Math.max(0, section.offsetHeight - window.innerHeight);
     const progress = FEATURES.length === 0 ? 0 : (index + 0.5) / FEATURES.length;
-    window.scrollTo({ top: sectionTop + distance * progress, behavior: 'smooth' });
+    window.scrollTo({
+      top: sectionTop + distance * progress,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
   };
 
   return (
