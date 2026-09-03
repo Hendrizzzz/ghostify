@@ -31,12 +31,15 @@ export const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* SplitText mask wrappers clip at the line box (that is what makes the
-   masked word rise work), which beheads descenders — g, p, y, j — on
-   headings with tight line-height. Padding the mask open and pulling the
-   layout back with a negative margin keeps the animation AND the glyphs. */
+   masked word rise work), which can trim italic caps and descenders on
+   headings with tight line-height. Padding the mask open on both edges and
+   pulling the layout back with matching negative margins keeps the animation
+   and the whole glyph intact. */
 export function keepSplitDescenders<T extends { masks: ArrayLike<Element> }>(split: T): T {
   Array.from(split.masks).forEach((maskEl) => {
     if (maskEl instanceof HTMLElement) {
+      maskEl.style.paddingTop = '0.14em';
+      maskEl.style.marginTop = '-0.14em';
       maskEl.style.paddingBottom = '0.14em';
       maskEl.style.marginBottom = '-0.14em';
     }

@@ -1,11 +1,10 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { ensureGsap, gsap, prefersReducedMotion } from './gsapSetup';
 
-/* Pinned deck for `.platforms-flat` — awwwards scroll-storytelling beat.
+/* Scroll-driven deck for `.platforms-flat` — a desktop storytelling beat.
    Desktop-only, scrubbed, fail-open. Three cards rise like being dealt:
-   y + rotation + scale + blur resolved sequentially. Previous cards settle
-   slightly as the next arrives. A minimal progress rail lives at the
-   bottom of the pinned section. Mobile keeps the existing Reveal grid. */
+   y + rotation + scale resolved sequentially. Previous cards settle
+   slightly as the next arrives. Mobile keeps the existing Reveal grid. */
 export function PlatformsDeck() {
   useLayoutEffect(() => {
     try {
@@ -60,42 +59,17 @@ export function PlatformsDeck() {
               gsap.set(status, { opacity: 0, y: 14 });
             }
 
-            // Progress rail — minimal, premium, non-interactive.
-            let progress = section.querySelector<HTMLElement>('.platforms-deck-progress');
-            if (!progress) {
-              progress = document.createElement('div');
-              progress.className = 'platforms-deck-progress';
-              progress.setAttribute('aria-hidden', 'true');
-              progress.innerHTML =
-                '<span class="deck-track"><i></i></span><span class="deck-dots"><b></b><b></b><b></b></span><small>hold to read</small>';
-              section.appendChild(progress);
-            }
-            const progressFill = progress.querySelector<HTMLElement>('.deck-track i');
-            const progressDots = Array.from(progress.querySelectorAll<HTMLElement>('.deck-dots b'));
-            if (progressFill) {
-              gsap.set(progressFill, { scaleX: 0, transformOrigin: 'left center' });
-            }
-            if (progress) gsap.set(progress, { opacity: 0, y: 8 });
-
             const tl = gsap.timeline({
               scrollTrigger: {
                 trigger: section,
-                start: 'top top',
-                end: () => `+=${Math.round(window.innerHeight * 1.95)}`,
-                pin: section,
-                pinSpacing: true,
+                start: 'top 78%',
+                end: 'bottom 34%',
                 scrub: 0.8,
-                anticipatePin: 1,
                 invalidateOnRefresh: true,
               },
             });
 
-            // Reveal rail immediately as pin locks.
-            if (progress) {
-              tl.to(progress, { opacity: 1, y: 0, duration: 0.22, ease: 'none' }, 0);
-            }
-
-            // Gentle header drift — stays readable while pin holds.
+            // Gentle header drift — stays readable while the deck progresses.
             if (header) {
               tl.fromTo(header, { y: 0 }, { y: -8, ease: 'none', duration: 1 }, 0);
               const notes = header.querySelectorAll<HTMLElement>('.control-map-note');
@@ -153,29 +127,10 @@ export function PlatformsDeck() {
               );
             }
 
-            // Progress scrub — continuous.
-            if (progressFill) {
-              tl.to(progressFill, { scaleX: 1, ease: 'none', duration: 1 }, 0);
-            }
-            // Dots follow scroll progress; keep in sync on scrub.
-            if (progressDots.length) progressDots[0]?.classList.add('is-active');
-            tl.eventCallback('onUpdate', () => {
-              const st = tl.scrollTrigger;
-              if (!st) return;
-              const p = st.progress;
-              progressDots.forEach((dot, i) => {
-                const threshold = 0.08 + i * 0.22;
-                if (p >= threshold) dot.classList.add('is-active');
-                else dot.classList.remove('is-active');
-              });
-            });
           });
 
           return () => {
             ctx.revert();
-            // Clean rail when this media branch tears down (unmatch / unmount).
-            const rail = document.querySelector('.platforms-flat .platforms-deck-progress');
-            if (rail) rail.remove();
           };
         },
       );
@@ -183,11 +138,6 @@ export function PlatformsDeck() {
       mm.add('(max-width: 1080px), (pointer: coarse), (prefers-reduced-motion: reduce)', () => {
         const cards = document.querySelectorAll<HTMLElement>('.platform-card');
         if (cards.length) gsap.set(cards, { clearProps: 'all' });
-        const section = document.querySelector<HTMLElement>('.platforms-flat');
-        if (section) {
-          const rail = section.querySelector('.platforms-deck-progress');
-          if (rail) rail.remove();
-        }
         const statuses = document.querySelectorAll<HTMLElement>('.platforms-status');
         statuses.forEach((el) => gsap.set(el, { clearProps: 'all' }));
         return () => {};
