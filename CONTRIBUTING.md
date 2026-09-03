@@ -35,12 +35,66 @@ possible.
 ## Submitting Code
 
 1. Fork the repo
-2. Create a branch: `git checkout -b fix/your-fix` or `feature/your-feature`
+2. Create a branch using the [Git naming policy](#git-naming-policy)
 3. Make source changes in `src/` when editing bundled scripts, then run `npm run build`
 4. Edit `dist/` directly only for popup/static assets that do not have a source counterpart
 5. Test on Instagram, Messenger, and Facebook pages affected by the change
 6. Run `npm run ci` before submitting a PR
 7. Submit a PR with a clear description
+
+## Git Naming Policy
+
+Use one shared convention for branches, commits, and pull-request titles. This
+keeps the history readable and ensures the squash commit describes the change
+accurately.
+
+### Branches
+
+Create a short, descriptive lowercase branch using this form:
+
+```text
+<type>/<short-kebab-case-summary>
+```
+
+Use a Conventional Commit type for `<type>`: `feat`, `fix`, `docs`, `chore`,
+`refactor`, `test`, `ci`, `build`, or `perf`. Use only lowercase letters,
+numbers, hyphens, and the single separating slash. Do not prefix a branch with
+a tool, person, or machine name.
+
+Examples:
+
+```text
+fix/responsive-viewport-layout
+feat/firefox-install-guidance
+docs/release-checklist
+```
+
+### Commits and pull-request titles
+
+Use the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+subject format for every commit and PR title:
+
+```text
+<type>(<optional-scope>): <imperative lowercase summary>
+```
+
+Use a scope when it makes the affected area clearer, such as `site`, `status`,
+`popup`, or `messenger`. A `fix` corrects a bug, while a `feat` adds a
+user-facing capability. Keep the PR title identical to the intended squash
+commit title; merge PRs with **Squash and merge**.
+
+Examples:
+
+```text
+fix(site): harden responsive viewport layouts
+feat(popup): add keyboard shortcut hint
+docs: clarify Firefox release checklist
+```
+
+This repository policy applies GitHub Flow's recommendation for short,
+descriptive branches and GitHub-safe branch characters. It supplements
+Conventional Commits, which standardizes commit subjects but does not prescribe
+branch names.
 
 ## Browser Targets
 

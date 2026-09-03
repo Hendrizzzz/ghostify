@@ -2820,7 +2820,12 @@
   transition-duration: 80ms;
 }
 
-@media (max-width: 1080px), (pointer: coarse) {
+/* Below 688px tall, a fine-pointer desktop uses this complete normal-flow
+   feature list too: its cinematic scene has a 720px minimum and would clip
+   its selector at high Windows/browser display scaling. */
+@media (max-width: 1080px),
+  (pointer: coarse),
+  (min-width: 1081px) and (max-height: 687px) and (pointer: fine) {
   .install-rhythm {
     grid-template-columns: minmax(280px, 0.8fr) minmax(460px, 1.2fr);
     gap: 54px;
@@ -5181,7 +5186,7 @@
   }
 
   .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card-grid {
-    margin-top: 52px;
+    margin-top: 44px;
   }
 
   .site-root:not(.is-status-view) .platforms-flat.is-dark .platform-card {
@@ -5214,10 +5219,12 @@
   }
 }
 
-/* Compact laptops have enough width for the interactive story, but not enough
-   height for the spacious desktop composition. Keep the same scroll sequence,
-   while grouping its copy, recording, and selector into one compact scene. */
-@media (min-width: 1081px) and (max-width: 1439px) and (pointer: fine) {
+/* Compact and short-window desktops share one resilient feature composition.
+   A short browser viewport can happen at any physical width (for example,
+   1920×1080 with Windows display scaling). Keeping the selector in normal
+   flow here prevents it from covering the verification link. */
+@media (min-width: 1081px) and (max-width: 1439px) and (pointer: fine),
+  (min-width: 1081px) and (max-height: 900px) and (pointer: fine) {
   .site-root:not(.is-status-view) .feature-scroll-sticky {
     padding-top: clamp(48px, 4vw, 64px);
     padding-bottom: clamp(24px, 3vw, 40px);
