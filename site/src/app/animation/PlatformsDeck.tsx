@@ -59,17 +59,26 @@ export function PlatformsDeck() {
               gsap.set(status, { opacity: 0, y: 14 });
             }
 
+            // Hold the compact content panel just long enough for the dealt-card
+            // sequence to resolve. The panel keeps its natural content height;
+            // pinning controls the scroll narrative, not the visual dimensions.
+            const getPinDistance = () =>
+              Math.round(Math.min(Math.max(window.innerHeight * 1.3, 760), 1160));
+
             const tl = gsap.timeline({
               scrollTrigger: {
                 trigger: section,
-                start: 'top 78%',
-                end: 'bottom 34%',
+                start: 'top top',
+                end: () => `+=${getPinDistance()}`,
+                pin: section,
+                pinSpacing: true,
                 scrub: 0.8,
+                anticipatePin: 1,
                 invalidateOnRefresh: true,
               },
             });
 
-            // Gentle header drift — stays readable while the deck progresses.
+            // Gentle header drift — stays readable while the panel is held.
             if (header) {
               tl.fromTo(header, { y: 0 }, { y: -8, ease: 'none', duration: 1 }, 0);
               const notes = header.querySelectorAll<HTMLElement>('.control-map-note');
