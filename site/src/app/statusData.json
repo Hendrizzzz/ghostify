@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.0.10",
-  "generatedAt": "2026-09-03T06:03:48Z",
+  "generatedAt": "2026-09-03T10:45:13Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
@@ -16,8 +16,8 @@
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
     "publicStatus": "under_review",
-    "label": "Version 2.0.10 rollout in progress",
-    "message": "Ghostify 2.0.10 was accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons on August 29, 2026. Live verification of the current Store build is pending."
+    "label": "Version 2.0.10 live on all stores",
+    "message": "Ghostify 2.0.10 is listed and accepted on the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons as of August 29, 2026. The feature-control entries below reflect the latest recorded verification build."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -47,10 +47,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Instagram Hide Seen on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Instagram Hide Seen was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "instagram-hide-typing",
@@ -61,10 +61,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Instagram Hide Typing on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Instagram Hide Typing was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "instagram-hide-story-views",
@@ -75,10 +75,10 @@
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Instagram Hide Story Views on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Instagram Hide Story Views was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "messenger-hide-seen",
@@ -89,10 +89,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Messenger Hide Seen on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Messenger Hide Seen was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "messenger-hide-typing",
@@ -103,10 +103,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Messenger Hide Typing on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Messenger Hide Typing was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "messenger-hide-story-views",
@@ -117,10 +117,10 @@
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Messenger Hide Story Views on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Messenger Hide Story Views was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "facebook-hide-seen",
@@ -131,10 +131,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Facebook Hide Seen on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Facebook Hide Seen was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "facebook-hide-typing",
@@ -145,10 +145,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Facebook Hide Typing on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Facebook Hide Typing was recorded on September 2, 2026 in v2.0.8."
     },
     {
       "id": "facebook-hide-story-views",
@@ -159,10 +159,10 @@
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Post-release verification pending for v2.0.10",
+      "reviewRecord": "v2.0.10 store listing confirmed; control verification remains from v2.0.8",
       "verifiedAt": "2026-09-02T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Live verification for Facebook Hide Story Views on v2.0.10 is pending. Last verified on September 2, 2026 in v2.0.8."
+      "notes": "Ghostify v2.0.10 is listed and accepted on all three stores. The latest control verification for Facebook Hide Story Views was recorded on September 2, 2026 in v2.0.8."
     }
   ],
   "history": [
@@ -170,8 +170,8 @@
       "date": "2026-09-03",
       "publicStatus": "under_review",
       "eventType": "investigation",
-      "title": "Ghostify 2.0.10 rollout verification pending",
-      "summary": "Ghostify 2.0.9 and 2.0.10 were accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons on August 29, 2026. Live verification of the current Store build is pending."
+      "title": "Ghostify 2.0.10 store listing confirmed",
+      "summary": "Ghostify 2.0.9 and 2.0.10 are listed and accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons as of August 29, 2026. The feature-control entries reflect the latest recorded verification build."
     },
     {
       "date": "2026-09-02",
@@ -198,15 +198,15 @@
       "date": "2026-08-29",
       "publicStatus": "under_review",
       "eventType": "release",
-      "title": "Ghostify 2.0.10 accepted on all supported stores",
-      "summary": "Ghostify 2.0.10 was accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons."
+      "title": "Ghostify 2.0.10 live on all supported stores",
+      "summary": "Ghostify 2.0.10 is listed and accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons."
     },
     {
       "date": "2026-08-29",
       "publicStatus": "under_review",
       "eventType": "release",
-      "title": "Ghostify 2.0.9 accepted on all supported stores",
-      "summary": "Ghostify 2.0.9 was accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons before the same-day 2.0.10 update."
+      "title": "Ghostify 2.0.9 live on all supported stores",
+      "summary": "Ghostify 2.0.9 was listed and accepted by the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons before the same-day 2.0.10 update."
     },
     {
       "date": "2026-08-29",
