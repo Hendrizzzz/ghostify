@@ -126,7 +126,6 @@ export function PlatformsDeck() {
                 0.83,
               );
             }
-
           });
 
           return () => {
