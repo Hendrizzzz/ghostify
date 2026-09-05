@@ -55,7 +55,16 @@ in `site/`.
 
 ## Conventions
 
-- Conventional Commits (`fix:`, `feat:`, `chore(status):`, ...); squash-merge PRs.
+- Branch names: `<type>/<short-kebab-description>`, using a standard type such as
+  `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `ci/`, `build/`, or
+  `perf/`. Do not prefix branches with an agent, tool, or username.
+- Commit messages: Conventional Commits, `<type>(<optional-scope>): <imperative summary>`
+  (for example, `fix(status): credit maintainer on daily verification commits`).
+- PR titles: use the same Conventional Commit format as commit messages so the
+  squash-merge commit is correctly named (for example, `fix(status): credit maintainer on daily verification commits`).
+- Keep branch names, commit messages, and PR titles specific to one logical change;
+  avoid vague labels such as `update`, `changes`, `misc`, or `fix stuff`.
+- Squash-merge PRs.
 - 4-space indent for extension JS, 2-space for `site/`; Prettier + ESLint run in CI.
   Markdown, YAML, and everything under `.github/` are excluded from Prettier on
   purpose — docs contain validator-pinned phrases.

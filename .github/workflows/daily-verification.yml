@@ -289,6 +289,8 @@ jobs:
           BRANCH: ${{ needs.validate-proposal.outputs.branch }}
           TITLE: ${{ needs.validate-proposal.outputs.title }}
           BASE_SHA: ${{ needs.validate-proposal.outputs.base_sha }}
+          MAINTAINER_NAME: Hendrizzzz
+          MAINTAINER_EMAIL: 139997209+Hendrizzzz@users.noreply.github.com
           GH_TOKEN: ${{ github.token }}
         run: |
           gh auth setup-git
@@ -308,7 +310,7 @@ jobs:
           fi
           git diff --check
           git add site/src/app/statusData.json
-          git commit -m "$TITLE"
+          git commit -m "$TITLE" -m "Co-authored-by: $MAINTAINER_NAME <$MAINTAINER_EMAIL>"
           if [[ "$MODE" == "verified" ]]; then
             git push --force-with-lease --set-upstream origin "$BRANCH"
           else

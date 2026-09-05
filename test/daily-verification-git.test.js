@@ -165,6 +165,16 @@ assert(
     "the write-enabled publishing job must not install package dependencies",
 );
 assert(
+    publishJob.includes("MAINTAINER_NAME: Hendrizzzz") &&
+        publishJob.includes(
+            "MAINTAINER_EMAIL: 139997209+Hendrizzzz@users.noreply.github.com",
+        ) &&
+        publishJob.includes(
+            'git commit -m "$TITLE" -m "Co-authored-by: $MAINTAINER_NAME <$MAINTAINER_EMAIL>"',
+        ),
+    "daily status proposal commits must credit the maintainer alongside GitHub Actions",
+);
+assert(
     publishJob.includes(
         "DEPENDENCY_REVIEW_FAILED: ${{ needs.validate-proposal.outputs.dependency_review_failed }}",
     ) &&
