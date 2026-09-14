@@ -17,14 +17,14 @@ const exception = {
 const policy = { schemaVersion: 1, exceptions: [exception] };
 const lockfile = {
     packages: {
-        "": { devDependencies: { "web-ext": "10.5.0" } },
+        "": { devDependencies: { "web-ext": "10.6.0" } },
         "node_modules/web-ext": {
-            version: "10.5.0",
+            version: "10.6.0",
             dev: true,
-            dependencies: { "addons-linter": "10.8.0" },
+            dependencies: { "addons-linter": "10.10.0" },
         },
         "node_modules/addons-linter": {
-            version: "10.8.0",
+            version: "10.10.0",
             dev: true,
             dependencies: { "image-size": "2.0.2" },
         },
