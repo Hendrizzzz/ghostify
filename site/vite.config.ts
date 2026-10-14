@@ -1,6 +1,6 @@
 import { copyFileSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const statusSource = resolve(process.cwd(), 'src/app/statusData.json');
@@ -31,4 +31,10 @@ function publicStatusFeed(): Plugin {
 export default defineConfig({
   publicDir: 'public',
   plugins: [react(), publicStatusFeed()],
+  server: {
+    fs: {
+      // The landing page embeds the shipped popup markup and styles 1:1.
+      allow: [searchForWorkspaceRoot(process.cwd()), resolve(process.cwd(), '../dist')],
+    },
+  },
 });

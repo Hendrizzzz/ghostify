@@ -1,0 +1,62 @@
+/* The few document-wide defaults the rebuilt site needs when it loads on
+   its own. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-padding-top: 86px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0c0b0a;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+summary,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+.skip-link {
+  position: fixed;
+  left: 16px;
+  top: 12px;
+  z-index: 1000;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: #0c0b0a;
+  background: #f4f1ea;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}

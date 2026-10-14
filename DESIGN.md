@@ -8,13 +8,12 @@ update it deliberately when replacing parts.
 ## Brand core (shared)
 
 - **Identity:** a quiet ghost — privacy that recedes. Friendly, calm, honest.
-- **Palette:** warm paper cream `#f3eee2`, near-black ink `#0f0f0d`, violet
-  accent `#8873cf` (deep `#6856b0`, lavender tint `#d8d2ff`). Status greens
-  `#27835f` / `#287a50` and amber `#c98b20` are reserved for verification
+- **Palette:** both surfaces are dark-first. Site ink `#050506` / `#070607`,
+  text `#f4f1ea`, violet light `#aa98ee` / `#b9a8ff` / `#8873cf`. Status ok
+  `#4fb487`, review `#e0a63a`, issue `#e2725b` are reserved for verification
   semantics; never decorative.
-- **Type:** Uncut Sans Variable (brand sans, wired via `@font-face` in
-  `site/src/styles/index.css`), Newsreader Variable italic for editorial
-  watermarks, Commit Mono for data/receipts/labels.
+- **Type:** the system UI stack only (`-apple-system`, Segoe UI Variable,
+  `system-ui`). No webfonts, serif accents, mono eyebrows or numbered labels.
 - **Voice:** short, plain, first-person-plural-free. "Read now. Reply when
   you're ready."
 
@@ -38,56 +37,42 @@ Dark-first, low-glare, fixed 320px shell.
 
 ## Site (`site/`)
 
-**World:** quiet analog stationery-editorialism on warm paper — taped sheets,
-hard offset shadows, dashed stamp circles, oversized italic serif ghost-words
-("held", "quiet", "local") drifting behind sections, mono uppercase evidence
-tags ("SOURCE / CORE / CHECKS"). One identity, not several: prefer extending
-this world over importing new material languages.
+**World:** a short film. The ghost is the only character; the footage is real
+Ghostify recordings, cropped, never a reconstructed Meta interface. The popup
+shot embeds the shipped `dist/popup.html` + `dist/css/popup.css` 1:1.
 
-### Tokens
+### Structure
 
-Root tokens in `site/src/styles/globals.css`; landing-page tokens in
-`site/src/styles/landing.css` (`--home-*`, including `--home-edge` container
-gutter). Known legacy alias: `--coral` is actually the violet accent — use
-`--accent` / `--accent-strong` in new work. The status page carries its own
-compatibility token layer (`--g-*` plus `.is-status-view` overrides); keep
-status restyling inside that layer until it is consolidated.
+All site code lives in `site/src/cinema/`; `site/src/app/statusData.*` is the
+status feed source.
 
-### Layout
+- `Film.tsx` — the stepped film: one wheel, swipe or key gesture moves exactly
+  one shot (GSAP Observer + ScrollTrigger), with a cooldown that absorbs
+  trackpad momentum. Native scroll is released before the first and after the
+  last shot. Esc / Skip / End jump to the end card; each shot has a URL hash.
+- Shot order: opener ("Press anywhere to begin") → cold open → receipt → dots
+  → story → switches → wide (official platform marks) → privacy → end card.
+- `Stills.tsx` — the film as still frames for `prefers-reduced-motion` or a
+  film that cannot start. Sound stays off there.
+- `sound.ts` — procedural Web Audio score, no audio files. On by default, but
+  only starts on a real user activation (press, key, tap); it never claims to
+  be on before the context is running. Muting is remembered in localStorage.
+- `Ghost.tsx` — the vector mark: SMIL hem, CSS blink, pointer-following eyes,
+  plus the back-lit silhouette and poses.
+- `Landing.tsx` (film + FAQ as end credits), `Status.tsx` (current + history),
+  `Shell.tsx` (store links, header, footer).
 
-- Landing container edge padding: `var(--edge-pad)` (header/footer) and
-  `var(--home-edge)` (sections) — never paste the raw `calc()` again.
-- Breakpoints in force: 390 / 620 / 820 / 1060 px (globals) plus landing-page
-  steps around 360–1081. Collapse duplicates opportunistically; do not add new ones.
+### Layout and motion
 
-### Type scale
+- Landscape screens get the widescreen cut; phones and portrait tablets get the
+  vertical cut, chosen by aspect ratio, not device sniffing.
+- Letterbox bars, grain, a subtitle scrim and light spill from the footage are
+  the whole material language. Do not add glass, gradients-as-decoration or
+  beams.
+- Inactive shots use `content-visibility` so only the live shot lays out.
 
-Hero/section/subsection sizes are fluid clamps (`--type-hero-size`,
-`--type-section-size`, ... in `landing.css`). Minimum body-label size is 11px;
-informational text must hold ≥4.5:1 contrast against its surface. Decorative
-illustration micro-type (mock browser chrome, calendar cells) may stay smaller.
+### Accessibility and performance floor
 
-### Motion
-
-- Scroll engine: hand-rolled rAF progress vars (`--scene-progress`,
-  `--feature-progress`); Lenis smooth scroll disabled for touch and
-  reduced-motion users.
-- Every animation pauses off-screen (IntersectionObserver) and under
-  `visibilitychange`.
-- Global `prefers-reduced-motion` kill switch in globals.css is load-bearing —
-  keep it last in cascade order.
-
-### Accessibility floor
-
-44px hit targets, `:focus-visible` rings in accent violet, skip link, semantic
-landmarks, `aria-live` on async status regions, explicit width/height on media.
-
-### Roadmap (agreed gaps, in order)
-
-1. Convert demo GIFs (~29 MB total) to muted looping `<video>` with posters.
-2. Consolidate the status page token layer into one file and flatten its
-   specificity war.
-3. True dark mode via semantic token swap (the dark footer/privacy panels are
-   the reference palette).
-4. Popup source migration into `src/popup/` with build integration.
-5. Split `HomePage.tsx` into section components; unify platform logos.
+44px hit targets, `:focus-visible` rings, skip link, semantic landmarks,
+reduced-motion stills, ≥4.5:1 text contrast. Lighthouse target is ≥90 in every
+category on mobile and desktop.

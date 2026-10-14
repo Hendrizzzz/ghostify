@@ -35,7 +35,9 @@ replace it with green. Manual dispatch supports `reported`, `in-progress`,
 `known-issue`, and `verified` updates. Green proposals also require the recorded
 Store version to match the verification build.
 
-Vite copies the original Ghostify browser recordings from `public/` into the
-production build. The landing page lazy-loads those GIFs as authentic feature
-evidence rather than reconstructing the Meta interfaces. Keep the recordings
-current and avoid replacing them with synthetic product mockups.
+The site lives in `src/cinema/` (see DESIGN.md). It plays cropped Ghostify
+recordings from `public/media/` as real feature evidence rather than
+reconstructing the Meta interfaces, and embeds the shipped popup from the
+repository's `dist/` 1:1, so the site build needs the whole repository, not
+just `site/`. Keep the recordings current and avoid replacing them with
+synthetic product mockups.

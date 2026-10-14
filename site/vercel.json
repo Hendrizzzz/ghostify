@@ -52,5 +52,22 @@
       "source": "/status",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/preview",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/preview/status",
+      "destination": "/status",
+      "permanent": false
+    },
+    {
+      "source": "/preview/status/history",
+      "destination": "/status/history",
+      "permanent": false
+    }
   ]
 }
