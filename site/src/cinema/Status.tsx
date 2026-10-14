@@ -28,6 +28,10 @@ const WORD: Record<Tone, string> = {
   none: 'No data',
 };
 
+/* A switch with a fix underway says so, rather than "Being checked". */
+const cellWord = (status: PublicVerificationStatus) =>
+  status === 'work_in_progress' ? 'Fix in progress' : WORD[tone(status)];
+
 const TAG: Record<string, string> = {
   verification: 'Check',
   release: 'Release',
@@ -251,7 +255,9 @@ export default function Status({ base, view }: { base: string; view: 'current' |
       ? 'Everything is working.'
       : overall === 'issue'
         ? 'Some switches have a known issue.'
-        : 'Some switches are being checked.';
+        : entries.some((e) => e.publicStatus === 'work_in_progress')
+          ? 'A fix is in progress.'
+          : 'Some switches are being checked.';
   const lastChecked = formatStatusDate(getLastVerifiedAt());
   const release = STATUS_DATA.release;
   const notable = history.filter((e) => e.eventType !== 'verification').slice(0, 8);
@@ -324,7 +330,9 @@ export default function Status({ base, view }: { base: string; view: 'current' |
                         const t = e ? tone(e.publicStatus) : 'none';
                         return (
                           <td key={f} data-label={f}>
-                            <span className={`st-chip is-${t}`}>{WORD[t]}</span>
+                            <span className={`st-chip is-${t}`}>
+                              {e ? cellWord(e.publicStatus) : WORD.none}
+                            </span>
                             <small>
                               {e?.verifiedAt ? fmtDay(e.verifiedAt, false) : 'Not checked'}
                             </small>

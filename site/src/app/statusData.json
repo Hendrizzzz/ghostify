@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.0.10",
-  "generatedAt": "2026-10-09T06:03:18Z",
+  "generatedAt": "2026-10-15T00:00:00Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
@@ -15,9 +15,9 @@
   "statusUrl": "https://ghostify-extension.vercel.app/status",
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
-    "publicStatus": "maintainer_verified",
-    "label": "All supported controls operational",
-    "message": "All supported controls were checked on October 9, 2026 and are working normally."
+    "publicStatus": "work_in_progress",
+    "label": "Working on it",
+    "message": "We’re working on a fix for Facebook Hide Seen. While it is on, messages in some Facebook group chats may not send. Until the fix is released, use messenger.com for group chats, or turn Hide Seen off and refresh the page."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -126,15 +126,15 @@
       "id": "facebook-hide-seen",
       "platform": "Facebook",
       "feature": "Hide Seen",
-      "publicStatus": "maintainer_verified",
-      "localEvidenceStatus": "verified",
+      "publicStatus": "work_in_progress",
+      "localEvidenceStatus": "manual_pending",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-SEEN-001 approved in the 2026-10-09 verification PR for v2.0.10",
+      "reviewer": "Hendrizzzz maintainer update",
+      "reviewRecord": "Work in progress recorded on 2026-10-15 for v2.0.10",
       "verifiedAt": "2026-10-09T00:00:00Z",
-      "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Facebook Hide Seen on October 9, 2026."
+      "relatedIssueUrl": "https://github.com/Hendrizzzz/Ghostify/issues/145",
+      "notes": "We’re working on a fix for Facebook Hide Seen. While it is on, messages in some Facebook group chats may not send. Until the fix is released, use messenger.com for group chats, or turn Hide Seen off and refresh the page."
     },
     {
       "id": "facebook-hide-typing",
@@ -166,6 +166,20 @@
     }
   ],
   "history": [
+    {
+      "date": "2026-10-15",
+      "publicStatus": "work_in_progress",
+      "eventType": "investigation",
+      "title": "Facebook Hide Seen fix in progress",
+      "summary": "We’re working on a fix for Facebook Hide Seen. While it is on, messages in some Facebook group chats may not send. Until the fix is released, use messenger.com for group chats, or turn Hide Seen off and refresh the page."
+    },
+    {
+      "date": "2026-10-10",
+      "publicStatus": "under_review",
+      "eventType": "investigation",
+      "title": "Hide Seen report received",
+      "summary": "We received a report that Hide Seen was not working. The report did not name a platform. Instagram Hide Seen continues to pass maintainer checks, and Facebook Hide Seen is under review."
+    },
     {
       "date": "2026-10-09",
       "publicStatus": "maintainer_verified",
