@@ -845,9 +845,9 @@
     }
     function isCurrentMessageRequestSurface() {
       var _a, _b, _c;
-      let pathname = "";
-      let search = "";
-      let hash = "";
+      let pathname;
+      let search;
+      let hash;
       try {
         pathname = String(((_a = window.location) == null ? void 0 : _a.pathname) || "").toLowerCase();
         search = String(((_b = window.location) == null ? void 0 : _b.search) || "").toLowerCase();
