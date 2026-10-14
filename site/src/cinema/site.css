@@ -1,0 +1,2573 @@
+/* Rebuilt site. One typeface (the system UI face, the same one the extension
+   popup uses), one weight scale, no decorative labels. The landing film steps
+   one shot per gesture and hands the page back to native scroll before and
+   after it; everything animates on transforms, opacity and clip-path. */
+
+:root {
+  --bg: #0c0b0a;
+  --fg: #f4f1ea;
+  --muted: rgba(244, 241, 234, 0.64);
+  --soft: rgba(244, 241, 234, 0.56);
+  --line: rgba(244, 241, 234, 0.12);
+  --violet: #aa98ee;
+  --ok: #4fb487;
+  --review: #e0a63a;
+  --issue: #e2725b;
+  --edge: clamp(20px, 4.5vw, 72px);
+  --max: 1200px;
+  --sys:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display',
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.is-site,
+html.is-site body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.site {
+  font-family: var(--sys);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.site h1,
+.site h2,
+.site h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.site p {
+  margin: 0;
+}
+
+.site a {
+  color: inherit;
+}
+
+.site a:focus-visible,
+.site button:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.site .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Ghost ---------- */
+
+.ghost {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.ghost-body {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ghost-float 5s ease-in-out infinite;
+}
+
+.ghost-floor {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ghost-floor 5s ease-in-out infinite;
+}
+
+.ghost-eyes {
+  transform: translate(calc(var(--gx, 0) * 5px), calc(var(--gy, 0) * 4px));
+  transition: transform 260ms ease-out;
+}
+
+.ghost-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ghost-blink 5.4s infinite;
+}
+
+.ghost-eye + .ghost-eye {
+  animation-delay: 0.02s;
+}
+
+@keyframes ghost-float {
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes ghost-floor {
+  50% {
+    transform: scale(0.84);
+    opacity: 0.65;
+  }
+}
+
+@keyframes ghost-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.08);
+  }
+}
+
+.ghost.is-still *,
+.ghost.is-still {
+  animation: none;
+}
+
+/* ---------- Header & footer ---------- */
+
+.bar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  padding: 0 var(--edge);
+  background: linear-gradient(rgba(12, 11, 10, 0.94) 55%, rgba(12, 11, 10, 0));
+}
+
+.wordmark {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.wordmark img {
+  border-radius: 6px;
+}
+
+.bar nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.6vw, 32px);
+}
+
+.bar nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 15px;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.bar nav a:hover {
+  color: var(--fg);
+}
+
+.bar nav .bar-cta {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.bar nav .bar-cta:hover {
+  color: var(--bg);
+  background: #fff;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 40px var(--edge) 48px;
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+  font-size: 15px;
+}
+
+.foot .wordmark {
+  color: var(--fg);
+  font-size: 16px;
+}
+
+.foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
+.foot nav a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.foot nav a:hover {
+  color: var(--fg);
+}
+
+.foot p {
+  margin-left: auto;
+}
+
+/* ---------- Store buttons ---------- */
+
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.store {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.store:hover {
+  border-color: rgba(244, 241, 234, 0.4);
+}
+
+.store.is-primary {
+  border-color: transparent;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.store.is-primary:hover {
+  background: #fff;
+}
+
+.store img {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- End credits ----------
+   After the film: one centered column, questions bright, answers dim. The
+   footer runs on as the last credit lines in the same column. */
+
+.credits {
+  max-width: calc(620px + 2 * var(--edge));
+  margin: 0 auto;
+  padding: clamp(120px, 16vw, 200px) var(--edge) 0;
+  text-align: center;
+}
+
+.credits h2 {
+  font-size: clamp(26px, 2.6vw, 34px);
+  letter-spacing: -0.03em;
+}
+
+.credits dl {
+  display: grid;
+  gap: clamp(56px, 7vw, 88px);
+  margin: clamp(56px, 7vw, 88px) 0 0;
+}
+
+.credits dl > div {
+  display: grid;
+  gap: 12px;
+}
+
+.credits dt {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.credits dd {
+  margin: 0;
+  color: var(--muted);
+  text-wrap: balance;
+}
+
+.foot.is-credits {
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  max-width: calc(620px + 2 * var(--edge));
+  margin-top: clamp(120px, 16vw, 200px);
+  padding-top: 56px;
+  padding-bottom: 72px;
+  border-top: 0;
+  text-align: center;
+}
+
+.foot.is-credits::before {
+  content: '';
+  width: 48px;
+  height: 1px;
+  margin-bottom: 24px;
+  background: var(--line);
+}
+
+.foot.is-credits nav {
+  justify-content: center;
+}
+
+.foot.is-credits p {
+  margin-left: 0;
+}
+
+/* Each credit fades up as it scrolls in; without scroll-driven animations
+   the credits simply stand still. */
+@supports (animation-timeline: view()) {
+  .credits h2,
+  .credits dl > div,
+  .foot.is-credits > * {
+    animation: credit-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 100%;
+  }
+}
+
+@keyframes credit-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.st {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 128px var(--edge) 96px;
+}
+
+.st-now {
+  display: grid;
+  gap: 14px;
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(244, 241, 234, 0.025);
+}
+
+.st-now h1,
+.st-title {
+  margin-top: 6px;
+  font-size: clamp(34px, 4.6vw, 56px);
+  letter-spacing: -0.04em;
+}
+
+.st-now > p,
+.st-lede {
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.st-lede {
+  margin-top: 14px;
+}
+
+.st-lede + .st-months {
+  margin-top: clamp(48px, 6vw, 72px);
+}
+
+.st-back {
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+.st-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 14px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.st-facts dt {
+  color: var(--soft);
+  font-size: 14px;
+}
+
+.st-facts dd {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.st-warn {
+  color: var(--review);
+}
+
+.st-block {
+  margin-top: 64px;
+}
+
+.st-block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-bottom: 20px;
+}
+
+.st-block-head h2,
+.st-how h2 {
+  font-size: 26px;
+  letter-spacing: -0.025em;
+}
+
+.st-block-head p {
+  color: var(--soft);
+  font-size: 15px;
+}
+
+.st-block-head a,
+.st-back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 5px;
+}
+
+.st-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.st-chip.is-ok {
+  color: var(--ok);
+}
+
+.st-chip.is-review {
+  color: var(--review);
+}
+
+.st-chip.is-issue {
+  color: var(--issue);
+}
+
+.st-chip.is-none {
+  color: var(--soft);
+}
+
+.st-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.st-grid th,
+.st-grid td {
+  padding: 16px 12px 16px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.st-grid thead th {
+  color: var(--soft);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.st-grid tbody th {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.st-grid td {
+  display: table-cell;
+}
+
+.st-grid td small {
+  display: block;
+  margin-top: 4px;
+  color: var(--soft);
+  font-size: 14px;
+}
+
+.st-days {
+  display: grid;
+  grid-template-columns: repeat(90, minmax(0, 1fr));
+  gap: 3px;
+  height: 44px;
+}
+
+.st-days:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+
+.st-day {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--soft);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.st-day.is-ok {
+  background: var(--ok);
+}
+
+.st-day.is-review {
+  background: var(--review);
+}
+
+.st-day.is-issue {
+  background: var(--issue);
+}
+
+.st-day.is-none {
+  background: rgba(244, 241, 234, 0.12);
+}
+
+.st-day.is-fresh {
+  opacity: 1;
+}
+
+.st-day.is-active {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.st-day-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  min-height: 28px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.st-day-detail strong {
+  color: var(--fg);
+}
+
+.st-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 18px 0 0;
+  padding: 0;
+  color: var(--soft);
+  font-size: 14px;
+  list-style: none;
+}
+
+.st-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-legend li::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.st-legend .is-ok::before {
+  background: var(--ok);
+}
+
+.st-legend .is-review::before {
+  background: var(--review);
+}
+
+.st-legend .is-issue::before {
+  background: var(--issue);
+}
+
+.st-legend .is-carry::before {
+  background: var(--ok);
+  opacity: 0.4;
+}
+
+.st-months {
+  display: grid;
+  gap: 36px;
+}
+
+.st-month :is(h2, h3) {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.st-month ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st-event {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.st-event time {
+  color: var(--soft);
+  font-size: 15px;
+}
+
+.st-event p {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.st-event .st-event-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-bottom: 4px;
+  color: var(--fg);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.st-tag {
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.st-event.is-issue .st-tag {
+  border-color: rgba(226, 114, 91, 0.5);
+  color: var(--issue);
+}
+
+.st-event.is-review .st-tag {
+  border-color: rgba(224, 166, 58, 0.5);
+  color: var(--review);
+}
+
+.st-how ul {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.st-report {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  margin-top: 24px;
+  padding: 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.st-report:hover {
+  border-color: rgba(244, 241, 234, 0.4);
+}
+
+/* ---------- Large displays ---------- */
+
+@media (min-width: 1800px) {
+  :root {
+    --max: 1560px;
+  }
+
+  .site {
+    font-size: 19px;
+  }
+
+  .bar {
+    height: 80px;
+  }
+
+  .store {
+    min-height: 58px;
+    font-size: 18px;
+  }
+
+  .credits,
+  .foot.is-credits {
+    max-width: calc(700px + 2 * var(--edge));
+  }
+
+  .credits dt {
+    font-size: 21px;
+  }
+
+  .st {
+    max-width: 1080px;
+  }
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 640px) {
+  .site {
+    font-size: 16px;
+  }
+
+  .bar nav a:not(.bar-cta) {
+    display: none;
+  }
+
+  .stores {
+    display: grid;
+    width: 100%;
+  }
+
+  .store {
+    justify-content: center;
+  }
+
+  .foot p {
+    margin-left: 0;
+  }
+
+  .st-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .st-grid thead {
+    display: none;
+  }
+
+  .st-grid,
+  .st-grid tbody,
+  .st-grid tr,
+  .st-grid th,
+  .st-grid td {
+    display: block;
+  }
+
+  .st-grid tr {
+    padding: 14px 0 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .st-grid th,
+  .st-grid td {
+    padding: 0;
+    border: 0;
+  }
+
+  .st-grid tbody th {
+    margin-bottom: 8px;
+  }
+
+  .st-grid td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .st-grid td::before {
+    content: attr(data-label);
+    margin-right: auto;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .st-grid td small {
+    margin: 0;
+  }
+
+  .st-days {
+    gap: 2px;
+    height: 36px;
+  }
+
+  .st-event {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site *,
+  .site *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Sound toggle ---------- */
+
+.sound {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.sound:hover,
+.sound.is-on {
+  color: var(--fg);
+  border-color: rgba(244, 241, 234, 0.32);
+}
+
+.sound-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.sound-bars i {
+  width: 2px;
+  height: 4px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.sound.is-on .sound-bars i {
+  animation: eq 900ms ease-in-out infinite;
+}
+
+.sound.is-on .sound-bars i:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.sound.is-on .sound-bars i:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+.sound.is-on .sound-bars i:nth-child(4) {
+  animation-delay: 450ms;
+}
+
+.sound.is-on {
+  border-color: rgba(185, 168, 255, 0.45);
+}
+
+.sound.is-on .sound-bars i {
+  background: #b9a8ff;
+}
+
+.sound-glyph {
+  flex: none;
+}
+
+@keyframes eq {
+  50% {
+    height: 12px;
+  }
+}
+
+/* ---------- The film ----------
+   Every shot is composed on a fixed canvas (1280 × 720 widescreen, 390 × 844
+   vertical) and scaled into the screen by --u. `.at` places an element at
+   canvas coordinates; the vertical cut has its own coordinates. Which cut
+   plays depends on the screen's shape alone. */
+
+.film {
+  --u: min(calc(100vw / 1280), calc(100svh / 720));
+  --cx: 640;
+  --cy: 360;
+  --bar: clamp(36px, calc((100svh - 41.84vw) / 2), 13svh);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  position: relative;
+  height: 100svh;
+  min-height: 320px;
+}
+
+.film-stage {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #050506;
+}
+
+/* While the film holds the screen, a swipe on it never pans the page. */
+.film.is-locked .film-stage {
+  touch-action: pinch-zoom;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.s1,
+.s2,
+.s3,
+.s4,
+.s5,
+.s6,
+.s7 {
+  visibility: hidden;
+  opacity: 0;
+  /* Until the film shows a layer, the browser does no work on it. */
+  content-visibility: hidden;
+}
+
+.at {
+  --X: var(--x);
+  --Y: var(--y);
+  --W: var(--w);
+  position: absolute;
+  left: calc(50% + (var(--X) - var(--cx)) * var(--u));
+  top: calc(50% + (var(--Y) - var(--cy)) * var(--u));
+  width: calc(var(--W) * var(--u));
+}
+
+.mover {
+  transform-origin: 0 0;
+}
+
+.screen {
+  display: block;
+  /* Real footage is a white app; held down a touch so it sits in the dark. */
+  filter: brightness(0.86);
+  border-radius: calc(4 * var(--u));
+  box-shadow: 0 0 calc(80 * var(--u)) rgba(225, 220, 255, 0.24);
+}
+
+.clip {
+  overflow: hidden;
+  background-color: #101012;
+  background-size: cover;
+}
+
+.clip:not(.at) {
+  position: relative;
+}
+
+.clip video {
+  position: absolute;
+  max-width: none;
+  opacity: 0;
+}
+
+.clip video.is-playing {
+  opacity: 1;
+}
+
+/* Light thrown by a screen: its own picture, tiny and soft, blown up. */
+.spill,
+.glow {
+  display: block;
+  aspect-ratio: 1;
+  height: auto;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent);
+  mask-image: radial-gradient(closest-side, #000 30%, transparent);
+  pointer-events: none;
+}
+
+.glow {
+  background-size: 100% 100%;
+  opacity: 0.4;
+}
+
+/* Subtitles sit on a dark scrim at the foot of the picture. */
+.scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--bar);
+  height: calc(210 * var(--u));
+  min-height: 120px;
+  background: linear-gradient(rgba(5, 5, 6, 0), rgba(5, 5, 6, 0.92));
+  pointer-events: none;
+}
+
+.sub {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: calc(var(--bar) + 28 * var(--u));
+  margin: 0;
+  color: #fff;
+  font-size: max(17px, calc(28 * var(--u)));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+}
+
+/* A line that rises out of a mask: the mask is the line's own box, open
+   above and at the sides so shadows and ascenders are never cut. */
+.rise {
+  display: block;
+  margin-bottom: -0.14em;
+  padding-bottom: 0.14em;
+  clip-path: inset(-1em -2em 0 -2em);
+}
+
+.rise > span {
+  display: block;
+}
+
+/* F0 · The wall */
+
+.s0 {
+  background: #070607;
+}
+
+.wall {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(4 * var(--u));
+  overflow: hidden;
+  color: rgba(244, 241, 234, 0.1);
+  font-size: calc(104 * var(--u));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.wall-row {
+  flex: none;
+  margin-left: calc(50% + (var(--o) - 780) * var(--u));
+}
+
+/* The pointer or finger wipes receipts away: one soft dark disc that
+   follows it, moved by transform only. */
+.wipe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(380 * var(--u));
+  height: calc(380 * var(--u));
+  margin: calc(-190 * var(--u)) 0 0 calc(-190 * var(--u));
+  border-radius: 50%;
+  background: radial-gradient(circle, #070607 34%, rgba(7, 6, 7, 0) 70%);
+  transform: translate3d(-9999px, 0, 0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.clear {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #070607 0%, #070607 42%, rgba(7, 6, 7, 0) 68%);
+  pointer-events: none;
+}
+
+.hero {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  top: calc(50% + (300 - 360) * var(--u));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(18px, calc(22 * var(--u)));
+  text-align: center;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(12px, calc(18 * var(--u)));
+}
+
+.hero h1 {
+  font-size: max(34px, calc(72 * var(--u)));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.hero p {
+  max-width: max(300px, calc(600 * var(--u)));
+  color: rgba(244, 241, 234, 0.7);
+  font-size: max(15px, calc(19 * var(--u)));
+  line-height: 1.45;
+}
+
+.film .stores {
+  justify-content: center;
+}
+
+/* The invitation under the opener: one press begins the film and its sound. */
+.begin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: max(12px, calc(34 * var(--u)));
+}
+
+.begin::before {
+  content: '';
+  width: 1px;
+  height: max(18px, calc(28 * var(--u)));
+  background: linear-gradient(rgba(185, 168, 255, 0), rgba(185, 168, 255, 0.8));
+}
+
+.begin-press {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  animation: breathe 3.2s ease-in-out infinite;
+}
+
+.begin-glyph {
+  display: inline-flex;
+  color: #c9bcff;
+}
+
+.begin-keys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(244, 241, 234, 0.46);
+  font-size: 13px;
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.kbd {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 0 7px;
+  border: 1px solid rgba(244, 241, 234, 0.26);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: rgba(244, 241, 234, 0.55);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.on-touch {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .on-mouse {
+    display: none !important;
+  }
+
+  .on-touch {
+    display: inline;
+  }
+}
+
+.film.is-started .begin {
+  display: none;
+}
+
+.film .store {
+  min-height: max(48px, calc(52 * var(--u)));
+  font-size: max(15px, calc(16 * var(--u)));
+}
+
+.film .store:not(.is-primary) {
+  background: rgba(7, 6, 7, 0.6);
+}
+
+/* F1 + F2 · Cold open, the receipt */
+
+.chat-glow {
+  will-change: opacity;
+}
+
+.reflect {
+  display: block;
+  opacity: 0.18;
+  transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+  mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+}
+
+.step {
+  position: relative;
+  aspect-ratio: 200 / 250;
+}
+
+.step svg,
+.lean svg,
+.w-ghost svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lean,
+.w-ghost {
+  aspect-ratio: 200 / 250;
+}
+
+.haze {
+  aspect-ratio: 2 / 1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse closest-side, rgba(200, 195, 230, 0.1), rgba(5, 5, 6, 0));
+  pointer-events: none;
+}
+
+.seen {
+  width: max-content;
+  transform-origin: 0 0;
+  color: #f4f1ea;
+  font-size: calc(168 * var(--u));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 0 calc(40 * var(--u)) rgba(220, 210, 255, 0.45);
+  pointer-events: none;
+}
+
+.seen i {
+  display: inline-block;
+  font-style: normal;
+}
+
+/* The stroke through the word: drawn from the left, in the ghost's light. */
+.seen-strike {
+  position: absolute;
+  left: -0.06em;
+  right: -0.02em;
+  top: 0.58em;
+  height: max(3px, 0.045em);
+  border-radius: 999px;
+  background: #c9bcff;
+  box-shadow: 0 0 calc(24 * var(--u)) rgba(185, 168, 255, 0.55);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.title {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: calc(var(--bar) + 30 * var(--u));
+  margin: 0;
+  font-size: max(28px, calc(54 * var(--u)));
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.8);
+}
+
+/* F3 · The dots */
+
+.typing {
+  height: auto;
+  border-radius: calc(6 * var(--u));
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: calc(26 * var(--u));
+  pointer-events: none;
+}
+
+.dot {
+  display: block;
+  flex: none;
+  width: calc(34 * var(--u));
+  height: calc(34 * var(--u));
+  border-radius: 50%;
+  background: #f4f1ea;
+}
+
+.dot:first-child {
+  box-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.6);
+}
+
+.lean {
+  transform-origin: 50% 100%;
+}
+
+/* F4 · The story */
+
+.fb {
+  height: auto;
+  opacity: 0.5;
+}
+
+.peek {
+  transform-origin: 50% 90%;
+}
+
+.ig {
+  box-shadow: 0 0 calc(110 * var(--u)) rgba(190, 215, 255, 0.28);
+}
+
+/* F5 · The switches */
+
+.glow4 {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle closest-side,
+    rgba(136, 115, 207, 0.22),
+    rgba(136, 115, 207, 0)
+  );
+}
+
+.peek4 {
+  transform-origin: 50% 90%;
+}
+
+.popup-slot {
+  perspective: calc(1800 * var(--u));
+}
+
+.tilt {
+  transform: rotateY(calc(-12deg + var(--lx, 0) * 6deg)) rotateX(calc(4deg - var(--ly, 0) * 4deg));
+  transform-style: preserve-3d;
+  transition: transform 600ms var(--ease);
+}
+
+.popup-in {
+  overflow: hidden;
+  border-radius: calc(16 * var(--u));
+  box-shadow:
+    0 calc(60 * var(--u)) calc(140 * var(--u)) rgba(0, 0, 0, 0.7),
+    0 0 calc(60 * var(--u)) rgba(185, 168, 255, 0.12);
+}
+
+.popup {
+  width: 320px;
+  zoom: calc(var(--uk, 1) * 390 / 320);
+}
+
+.copy {
+  position: absolute;
+  left: calc(50% + (96 - 640) * var(--u));
+  top: calc(50% + (250 - 360) * var(--u));
+  width: max(280px, calc(520 * var(--u)));
+}
+
+.copy h2 {
+  max-width: 5.4em;
+  font-size: max(36px, calc(76 * var(--u)));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+
+.copy p {
+  max-width: max(260px, calc(380 * var(--u)));
+  margin-top: max(12px, calc(18 * var(--u)));
+  color: rgba(244, 241, 234, 0.7);
+  font-size: max(15px, calc(20 * var(--u)));
+  line-height: 1.45;
+}
+
+/* F6 · The wide */
+
+.world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 60%;
+  perspective: calc(1300 * var(--u));
+}
+
+/* Each screen carries a real mirrored copy as its floor reflection, so every
+   browser (Firefox included) shows the same picture. */
+.far > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(4 * var(--u));
+}
+
+.far > .far-reflect {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 3px);
+  opacity: 0.16;
+  transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+  mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+  pointer-events: none;
+}
+
+.w0 {
+  transform: rotateY(26deg);
+  transform-origin: right center;
+}
+
+.w1 {
+  box-shadow: 0 0 calc(60 * var(--u)) rgba(225, 220, 255, 0.2);
+}
+
+.w2 {
+  transform: rotateY(-26deg);
+  transform-origin: left center;
+}
+
+.floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + (380 - 360) * var(--u));
+  height: calc(160 * var(--u));
+  background: linear-gradient(rgba(5, 5, 6, 0), rgba(30, 28, 44, 0.35), rgba(5, 5, 6, 0));
+  pointer-events: none;
+}
+
+/* The platform marks, each centred under its own screen on the floor. */
+.marks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--bar) + 18 * var(--u));
+  height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mark {
+  --MX: var(--mx);
+  position: absolute;
+  bottom: 0;
+  left: calc(50% + (var(--MX) - var(--cx)) * var(--u));
+  transform: translateX(-50%);
+}
+
+.mark .rise > span {
+  display: flex;
+  align-items: center;
+  gap: max(8px, calc(10 * var(--u)));
+}
+
+.mark-logo {
+  flex: none;
+  width: clamp(28px, calc(36 * var(--u)), 44px);
+  height: auto;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.6));
+}
+
+.mark-name {
+  color: rgba(244, 241, 234, 0.78);
+  font-size: max(13px, calc(15 * var(--u)));
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+
+/* F6b · In your browser. The wide, pulled back into one browser window:
+   a thin rounded outline and a top bar line, nothing else. */
+
+.frame {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.pane,
+.window {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--bar);
+  bottom: var(--bar);
+  border-radius: calc(20 * var(--u));
+}
+
+.pane {
+  overflow: hidden;
+}
+
+.window {
+  border: 1.75px solid rgba(244, 241, 234, 0.3);
+  box-shadow: 0 0 calc(140 * var(--u)) rgba(170, 152, 238, 0.1);
+  pointer-events: none;
+}
+
+.window::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(46 * var(--u));
+  border-bottom: 1.75px solid rgba(244, 241, 234, 0.18);
+  border-radius: calc(18 * var(--u)) calc(18 * var(--u)) 0 0;
+  background: rgba(10, 10, 12, 0.9);
+}
+
+/* The lines, set like subtitles. Only the links take the pointer. */
+.local {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: max(calc(var(--bar) + 24 * var(--u)), 60px);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(6px, calc(10 * var(--u)));
+  text-align: center;
+  pointer-events: none;
+}
+
+.local-lines {
+  color: #fff;
+  font-size: max(17px, calc(28 * var(--u)));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+}
+
+.local-line {
+  display: inline-block;
+  margin: 0 0.28em;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.local a {
+  pointer-events: auto;
+}
+
+.site .local-lines a {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.34);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.site .local-lines a:hover {
+  text-decoration-color: #fff;
+}
+
+.film .local-credit {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.68);
+  font-size: max(14px, calc(16 * var(--u)));
+  font-weight: 500;
+  text-decoration: none;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
+  visibility: hidden;
+  opacity: 0;
+}
+
+.film .local-credit:hover {
+  color: var(--fg);
+}
+
+@media (pointer: coarse) {
+  .local-credit {
+    min-height: 44px;
+  }
+}
+
+/* F7 · End card */
+
+.s6 {
+  background: #070607;
+}
+
+.glow6 {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, rgba(200, 190, 255, 0.14), rgba(7, 6, 7, 0));
+}
+
+.end {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: max(28px, calc(40 * var(--u)));
+  padding: calc(24 * var(--u)) var(--edge) 0;
+  text-align: center;
+}
+
+.end-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(16px, calc(26 * var(--u)));
+}
+
+.g6 {
+  width: max(88px, calc(176 * var(--u)));
+}
+
+.end h2 {
+  font-size: max(34px, calc(76 * var(--u)));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+/* Grain, letterbox, progress */
+
+.grain {
+  position: absolute;
+  inset: -50%;
+  z-index: 3;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='220' height='220' filter='url(%23n)'/></svg>");
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  animation: grain 700ms steps(4) infinite;
+}
+
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-4%, 3%);
+  }
+  50% {
+    transform: translate(3%, -4%);
+  }
+  75% {
+    transform: translate(-2%, -5%);
+  }
+  100% {
+    transform: translate(5%, 3%);
+  }
+}
+
+.bar-top,
+.bar-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  height: var(--bar);
+  background: #000;
+}
+
+.bar-top {
+  top: 0;
+}
+
+.bar-bottom {
+  bottom: 0;
+}
+
+/* Until the film is running the bars wait off screen; GSAP takes over. */
+.film:not(.is-live) .bar-top {
+  transform: translateY(-100%);
+}
+
+.film:not(.is-live) .bar-bottom {
+  transform: translateY(100%);
+}
+
+/* Planes that drift as one: full-size so their children keep the stage
+   as their frame of reference. */
+.drift-screen,
+.drift-ghost {
+  position: absolute;
+  inset: 0;
+}
+
+/* The match cut's rim: the ghost's outline in the accent, riding the mask. */
+.cut-rim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 200px;
+  height: 250px;
+  overflow: visible;
+  opacity: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.cut-rim path {
+  fill: none;
+  stroke: #c9bcff;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The film's controls: key hint, one tick per shot, Skip. They sit in the
+   bottom letterbox once the film has begun. */
+.film-ui {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: max(var(--bar), 64px);
+  padding: 0 var(--edge);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 600ms var(--ease),
+    visibility 0s linear 600ms;
+}
+
+.film.is-started .film-ui {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 600ms var(--ease) 300ms;
+}
+
+/* Once the page scrolls on past the film, its controls stay out from under
+   the header. */
+.film.is-started:not(.is-locked) .film-ui {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.keys {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: rgba(244, 241, 234, 0.46);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: opacity 800ms var(--ease);
+}
+
+.keys > span {
+  margin: 0 3px;
+}
+
+.film.has-keyed .keys {
+  opacity: 0;
+}
+
+.ticks {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.site .tick {
+  position: relative;
+  display: inline-flex;
+  width: 30px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: width 400ms var(--ease);
+}
+
+.tick i {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(244, 241, 234, 0.2);
+  transition:
+    width 400ms var(--ease),
+    background-color 300ms ease;
+}
+
+.tick b {
+  position: absolute;
+  inset: 0;
+  background: #f4f1ea;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.tick.is-past i {
+  background: rgba(244, 241, 234, 0.5);
+}
+
+.site .tick.is-current {
+  width: 52px;
+}
+
+.tick.is-current i {
+  width: 40px;
+  background: rgba(244, 241, 234, 0.22);
+}
+
+.tick:not(.is-current) b {
+  transform: scaleX(0) !important;
+}
+
+.tick:hover i {
+  background: rgba(244, 241, 234, 0.7);
+}
+
+.tick-tip {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  padding: 6px 11px;
+  border: 1px solid rgba(244, 241, 234, 0.12);
+  border-radius: 8px;
+  background: #141317;
+  color: rgba(244, 241, 234, 0.85);
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  pointer-events: none;
+}
+
+.tick:hover .tick-tip,
+.tick:focus-visible .tick-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.film-ui .skip {
+  display: inline-flex;
+  flex: 1 1 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.66);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.film-ui .skip:hover {
+  color: var(--fg);
+}
+
+.film-ui .skip .kbd {
+  color: rgba(244, 241, 234, 0.45);
+}
+
+.film[data-shot='8'] .skip {
+  visibility: hidden;
+}
+
+.skip-short {
+  display: none;
+}
+
+/* Phones: one line, on the first shot only, gone after the first swipe. */
+.swipe-hint {
+  display: none;
+}
+
+/* The vertical cut darkens the top for the header and the foot of a
+   full-height screen, so titles never sit on bright footage. */
+.fade {
+  display: none;
+}
+
+.copy h2 .rise {
+  white-space: nowrap;
+}
+
+/* ---------- The vertical cut: phones and portrait tablets ---------- */
+
+@media not all and (min-aspect-ratio: 1/1) {
+  .film {
+    --u: min(calc(100vw / 390), calc(100svh / 844));
+    --cx: 195;
+    --cy: 422;
+    --bar: 0px;
+    /* Text lines up with the composed canvas, not the screen edge, so a
+       portrait tablet keeps one column with the picture. */
+    --gut: max(24px, calc(50vw - 171 * var(--u)));
+  }
+
+  .at {
+    --X: var(--px);
+    --Y: var(--py);
+    --W: var(--pw);
+  }
+
+  .bar-top,
+  .bar-bottom {
+    display: none;
+  }
+
+  /* The ticks become a thin segmented bar at the foot of the screen. */
+  .film-ui {
+    bottom: calc(10px + var(--safe-b));
+    height: 56px;
+    padding: 0 max(12px, calc(var(--gut) - 12px)) 0 var(--gut);
+    gap: 14px;
+  }
+
+  .keys {
+    display: none;
+  }
+
+  .ticks {
+    flex: 1;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .site .tick,
+  .site .tick.is-current {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  .site .tick.is-current {
+    flex: 1.8;
+  }
+
+  .tick i,
+  .tick.is-current i {
+    width: 100%;
+    height: 3px;
+    background: rgba(244, 241, 234, 0.18);
+  }
+
+  .tick.is-past i {
+    background: rgba(244, 241, 234, 0.55);
+  }
+
+  .tick-tip {
+    display: none;
+  }
+
+  .film-ui .skip {
+    flex: none;
+    min-width: 52px;
+    justify-content: center;
+  }
+
+  .film-ui .skip .kbd,
+  .skip-long {
+    display: none;
+  }
+
+  .skip-short {
+    display: inline;
+  }
+
+  .swipe-hint {
+    position: absolute;
+    left: var(--gut);
+    bottom: calc(70px + var(--safe-b));
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(244, 241, 234, 0.5);
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 500ms var(--ease);
+    pointer-events: none;
+  }
+
+  .film.is-started[data-shot='1']:not(.has-swiped) .swipe-hint {
+    opacity: 1;
+    transition-delay: 1.2s;
+  }
+
+  .scrim {
+    bottom: 0;
+    height: max(260px, 34%);
+    background: linear-gradient(rgba(5, 5, 6, 0), rgba(5, 5, 6, 0.95) 55%);
+  }
+
+  .sub {
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(100px + var(--safe-b));
+    font-size: max(19px, calc(22 * var(--u)));
+    text-align: left;
+  }
+
+  .wall {
+    gap: calc(2 * var(--u));
+    font-size: calc(64 * var(--u));
+    line-height: 1.02;
+  }
+
+  .wall-row {
+    margin-left: calc(50% + (var(--o) * 0.6 - 395) * var(--u));
+  }
+
+  /* The phone opener: the line, then the stores, and the invitation at the
+     foot of the screen. */
+  .hero {
+    left: var(--gut);
+    right: var(--gut);
+    top: calc(50% + (236 - 422) * var(--u));
+    bottom: calc(20px + var(--safe-b));
+    gap: 16px;
+  }
+
+  .hero .begin {
+    margin-top: auto;
+  }
+
+  .hero h1 {
+    font-size: max(34px, calc(50 * var(--u)));
+  }
+
+  .hero p {
+    font-size: max(15px, calc(17 * var(--u)));
+  }
+
+  .fade {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0) 120px),
+      linear-gradient(rgba(5, 5, 6, 0) 38%, rgba(5, 5, 6, 0.9) 58%, #050506 68%);
+    pointer-events: none;
+  }
+
+  .s3 .fade {
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0) 120px),
+      linear-gradient(rgba(5, 5, 6, 0) 56%, #050506 82%);
+  }
+
+  .s3 .sub {
+    z-index: 3;
+  }
+
+  /* On the phone the ghost peeks in from the right, looking back at the
+     story. */
+  .peek .ghost.eyes-right .ghost-eyes {
+    transform: translate(-15px, -4px);
+  }
+
+  .film .stores {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .film .store {
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    padding: 0 8px;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .film .store.is-primary {
+    grid-column: 1 / -1;
+    min-height: 54px;
+    font-size: 17px;
+  }
+
+  .title {
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(108px + var(--safe-b));
+    font-size: max(32px, calc(40 * var(--u)));
+    text-align: left;
+  }
+
+  .seen {
+    font-size: calc(96 * var(--u));
+    text-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.45);
+  }
+
+  .dot {
+    width: calc(30 * var(--u));
+    height: calc(30 * var(--u));
+  }
+
+  .dots {
+    gap: calc(22 * var(--u));
+  }
+
+  .fb {
+    display: none;
+  }
+
+  .peek {
+    z-index: 2;
+  }
+
+  .ig {
+    border-radius: 0;
+  }
+
+  .copy {
+    left: var(--gut);
+    right: var(--gut);
+    top: max(76px, calc(50% + (92 - 422) * var(--u)));
+    width: auto;
+  }
+
+  .copy h2 {
+    max-width: none;
+    font-size: max(36px, calc(48 * var(--u)));
+  }
+
+  .copy p {
+    font-size: max(15px, calc(16 * var(--u)));
+  }
+
+  .popup {
+    zoom: calc(var(--uk, 1) * 280 / 320);
+  }
+
+  .tilt {
+    transform: rotateY(calc(-10deg + var(--lx, 0) * 4deg)) rotateX(calc(3deg - var(--ly, 0) * 3deg));
+  }
+
+  .w0 {
+    transform: rotateY(22deg);
+  }
+
+  .w2 {
+    transform: rotateY(-22deg);
+  }
+
+  .floor {
+    top: calc(50% + (430 - 422) * var(--u));
+  }
+
+  .marks {
+    bottom: calc(100px + var(--safe-b));
+  }
+
+  .mark {
+    --MX: var(--pmx);
+  }
+
+  .mark .rise > span {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .local {
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(96px + var(--safe-b));
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .local-lines {
+    font-size: max(19px, calc(22 * var(--u)));
+  }
+
+  .local-line {
+    display: block;
+    width: fit-content;
+    margin: 0;
+  }
+
+  .end {
+    display: block;
+    padding: 0;
+  }
+
+  .end-text {
+    position: absolute;
+    left: var(--gut);
+    right: var(--gut);
+    top: calc(50% + (140 - 422) * var(--u));
+  }
+
+  .g6 {
+    width: max(96px, calc(144 * var(--u)));
+  }
+
+  .end h2 {
+    font-size: max(34px, calc(46 * var(--u)));
+  }
+
+  .s6 .stores {
+    position: absolute;
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(84px + var(--safe-b));
+    width: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .s6 .store {
+    min-height: 54px;
+    font-size: 17px;
+  }
+}
+
+/* Phones: a compact header with 44px targets. */
+@media (max-width: 640px) {
+  .bar {
+    height: 64px;
+    padding: 0 16px;
+  }
+
+  .bar nav {
+    gap: 8px;
+  }
+
+  .bar nav .sound {
+    width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .bar nav .bar-cta {
+    min-height: 44px;
+  }
+}
+
+@media (pointer: coarse) {
+  .bar nav .bar-cta,
+  .sound {
+    min-height: 44px;
+  }
+}
+
+/* Short landscape screens: a slimmer header over the letterbox. */
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  .bar {
+    height: 52px;
+  }
+
+  .film-ui {
+    height: max(var(--bar), 48px);
+  }
+
+  /* The opener packs tighter under the slim header. */
+  .hero {
+    top: 112px;
+    gap: 12px;
+  }
+
+  .hero-text {
+    gap: 8px;
+  }
+
+  .hero p {
+    max-width: 560px;
+  }
+
+  .begin {
+    flex-direction: row;
+    margin-top: 0;
+  }
+
+  .begin::before,
+  .begin-keys {
+    display: none;
+  }
+
+  .g0 {
+    top: 54px;
+    left: calc(50% - 22px);
+    width: 44px;
+  }
+}
+
+/* Touch screens have no keys to hint at; the hint keeps its place so the
+   ticks stay centred. */
+@media (min-aspect-ratio: 1/1) and (hover: none) and (pointer: coarse) {
+  .keys {
+    visibility: hidden;
+  }
+}
+
+/* ---------- Reduced motion: the film as still frames ---------- */
+
+.stills {
+  max-width: calc(560px + 2 * var(--edge));
+  margin: 0 auto;
+  padding: 120px var(--edge) 0;
+  text-align: center;
+}
+
+.stills-hero,
+.stills-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.stills-ghost {
+  width: 88px;
+}
+
+.stills h1 {
+  font-size: clamp(40px, 7vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+}
+
+.stills-hero > p {
+  color: rgba(244, 241, 234, 0.7);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.stills .stores {
+  justify-content: center;
+}
+
+.stills-frames {
+  display: grid;
+  gap: 72px;
+  margin-top: 96px;
+}
+
+.stills figure {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  margin: 0;
+}
+
+.stills figure img {
+  display: block;
+  width: min(100%, 340px);
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 60px rgba(225, 220, 255, 0.16);
+}
+
+.stills-popup {
+  width: 320px;
+  max-width: 100%;
+}
+
+.stills figcaption {
+  display: grid;
+  gap: 6px;
+}
+
+.stills figcaption span:first-child {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.stills figcaption span + span {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.stills-local {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 96px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.stills-marks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 32px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.stills-marks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.78);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.stills-marks svg {
+  flex: none;
+}
+
+.stills-local a:not(.local-credit) {
+  text-decoration-color: rgba(255, 255, 255, 0.34);
+  text-underline-offset: 0.2em;
+}
+
+.stills .local-credit {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.68);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.stills-end {
+  margin-top: 120px;
+}
+
+.stills-end h2 {
+  font-size: clamp(34px, 6vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+@media (max-width: 640px) {
+  .stills {
+    padding-top: 96px;
+  }
+
+  .stills-marks {
+    gap: 28px;
+  }
+
+  .stills-marks li {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .stills-marks svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .stills .stores {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stills .store.is-primary {
+    grid-column: 1 / -1;
+  }
+
+  .stills .store {
+    padding: 0 8px;
+    font-size: 15px;
+  }
+}
+
+/* Ghost eye poses. */
+.ghost.eyes-right .ghost-eyes {
+  transform: translate(17px, -4px);
+}
+
+.ghost.eyes-left .ghost-eyes {
+  transform: translate(-13px, -4px);
+}
