@@ -252,8 +252,8 @@ assert(
     "daily verification must remain a manual maintainer attestation",
 );
 assert.deepStrictEqual(
-    packageJson.overrides["fx-runner@1.5.0"],
-    { "shell-quote": "1.9.0" },
+    packageJson.overrides["fx-runner@1.6.0"],
+    { "shell-quote": "1.12.0" },
     "the shell-quote remediation must stay scoped to the affected fx-runner path",
 );
 
