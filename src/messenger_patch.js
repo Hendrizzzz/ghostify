@@ -530,9 +530,9 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
     }
 
     function isCurrentMessageRequestSurface() {
-        let pathname = "";
-        let search = "";
-        let hash = "";
+        let pathname;
+        let search;
+        let hash;
 
         try {
             pathname = String(window.location?.pathname || "").toLowerCase();
