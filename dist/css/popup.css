@@ -830,9 +830,9 @@ html[data-theme="halloween"] {
     --ghost-line-strong: rgba(240, 225, 205, 0.18);
     --ghost-text: #f1e8dc;
     --ghost-muted: #b3a493;
-    --ghost-soft: #f0953f;
-    --ghost-soft-deep: #d9741d;
-    --ghost-soft-light: #ffb878;
+    --ghost-soft: #e58a3a;
+    --ghost-soft-deep: #c46a1c;
+    --ghost-soft-light: #f2b27a;
     --ghost-ink: #1a0e04;
     --ghost-off: #4a3d31;
     --ghost-knob: #f6efe4;
@@ -1508,8 +1508,8 @@ html[data-theme="halloween"] .row:has(input:checked) {
 }
 
 html[data-theme="halloween"] .row:has(input:checked) .feature-chip {
-    color: var(--ghost-ink);
-    background: var(--ghost-soft);
+    color: var(--ghost-soft-light);
+    background: color-mix(in srgb, var(--ghost-soft) 22%, transparent);
     animation: candle 3.6s steps(1) infinite;
 }
 
