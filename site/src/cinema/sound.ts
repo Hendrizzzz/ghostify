@@ -1,7 +1,7 @@
 /* The film's sound, synthesized live with Web Audio: no audio files.
    A low drone whose filter opens as the camera moves in, a faint room tone,
-   a hum as the first screen wakes, a rising tone cut to silence when the Seen
-   breaks, three soft taps for the dots, a breath of air on cuts, a tick for
+   a hum as the first screen wakes, a rising tone that ends on a soft, low
+   thud when the Seen is stopped, three soft taps for the dots, a breath of air on cuts, a tick for
    each switch, one phrase on the wide and a chord on the end card. Sound is
    on by default, but browsers only allow audio after a click, tap, or key
    press, so it starts inside the press that begins the film, unless the
@@ -32,6 +32,8 @@ export class FilmSound {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private filter: BiquadFilterNode | null = null;
+  /* The drone and room tone, so they can dip under a sound effect. */
+  private bed: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   private riser: { o: OscillatorNode; g: GainNode } | null = null;
   on = false;
@@ -51,6 +53,8 @@ export class FilmSound {
     const master = ctx.createGain();
     master.gain.value = 0;
     master.connect(ctx.destination);
+    const bed = ctx.createGain();
+    bed.connect(master);
 
     // Drone: three detuned voices through a slowly breathing low-pass.
     const filter = ctx.createBiquadFilter();
@@ -59,7 +63,7 @@ export class FilmSound {
     filter.Q.value = 0.7;
     const droneGain = ctx.createGain();
     droneGain.gain.value = 0.16;
-    filter.connect(droneGain).connect(master);
+    filter.connect(droneGain).connect(bed);
     [
       [55, 'triangle', 0],
       [82.41, 'sine', 4],
@@ -95,12 +99,13 @@ export class FilmSound {
     roomFilter.Q.value = 0.4;
     const roomGain = ctx.createGain();
     roomGain.gain.value = 0.012;
-    room.connect(roomFilter).connect(roomGain).connect(master);
+    room.connect(roomFilter).connect(roomGain).connect(bed);
     room.start();
 
     this.ctx = ctx;
     this.master = master;
     this.filter = filter;
+    this.bed = bed;
     this.noise = noise;
 
     // Duck while the tab is hidden; come back when it returns, if still on.
@@ -245,20 +250,82 @@ export class FilmSound {
     };
   }
 
-  /* Hard cut to silence: the riser stops and the room drops out for a beat. */
-  cut() {
-    if (!this.ctx || !this.master) return;
+  /* The Seen is stopped: the rising tone ends on a soft, low thud with a
+     short echo, and the drone dips under it for a beat, never to silence. */
+  impact() {
+    if (!this.ctx) return;
     const ctx = this.ctx;
     const t = ctx.currentTime;
     if (this.riser) {
-      this.riser.g.gain.cancelScheduledValues(t);
-      this.riser.g.gain.setTargetAtTime(0, t, 0.008);
+      const { o, g } = this.riser;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o.stop(t + 0.15);
       this.riser = null;
     }
-    if (!this.on) return;
-    this.master.gain.cancelScheduledValues(t);
-    this.master.gain.setTargetAtTime(0, t, 0.01);
-    this.master.gain.setTargetAtTime(LEVEL, t + 0.7, 0.5);
+    if (!this.on || !this.master || !this.bed || !this.noise) return;
+
+    const bed = this.bed.gain;
+    bed.cancelScheduledValues(t);
+    bed.setValueAtTime(bed.value, t);
+    bed.linearRampToValueAtTime(0.35, t + 0.04);
+    bed.setTargetAtTime(1, t + 0.35, 0.25);
+
+    // Everything below feeds a dry path and a short, darkening echo.
+    const dry = ctx.createGain();
+    dry.connect(this.master);
+    const delay = ctx.createDelay(1);
+    delay.delayTime.value = 0.21;
+    const tone = ctx.createBiquadFilter();
+    tone.type = 'lowpass';
+    tone.frequency.value = 700;
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.32;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.45;
+    dry.connect(delay).connect(tone).connect(feedback).connect(delay);
+    tone.connect(wet).connect(this.master);
+
+    // The thud: a falling sine, with an octave above so small speakers carry it.
+    [
+      [140, 55, 0.5, 'sine'],
+      [280, 110, 0.12, 'triangle'],
+    ].forEach(([from, to, level, type]) => {
+      const o = ctx.createOscillator();
+      o.type = type as OscillatorType;
+      o.frequency.setValueAtTime(from as number, t);
+      o.frequency.exponentialRampToValueAtTime(to as number, t + 0.4);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(level as number, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(g).connect(dry);
+      o.start(t);
+      o.stop(t + 1);
+    });
+
+    // A little low noise for the body of the hit.
+    const n = ctx.createBufferSource();
+    n.buffer = this.noise;
+    const nf = ctx.createBiquadFilter();
+    nf.type = 'lowpass';
+    nf.frequency.value = 380;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.0001, t);
+    ng.gain.exponentialRampToValueAtTime(0.14, t + 0.005);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    n.connect(nf).connect(ng).connect(dry);
+    n.start(t);
+    n.stop(t + 0.3);
+
+    // The echo has died away by now; release its loop.
+    window.setTimeout(() => {
+      dry.disconnect();
+      delay.disconnect();
+      feedback.disconnect();
+      wet.disconnect();
+    }, 3000);
   }
 
   /* One soft tap for a typing dot; the last one is swallowed. */
