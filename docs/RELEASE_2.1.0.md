@@ -1,7 +1,9 @@
 # Ghostify 2.1.0 store submission
 
-Prepared on October 15, 2026. Version 2.1.0 is ready for store submission;
-store approval and publication are separate steps.
+Prepared on October 15, 2026. The maintainer reported submitting version 2.1.0
+to Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons on the same
+date. All three submissions are awaiting review; approval and publication
+remain separate steps.
 
 ## Scope
 
@@ -73,13 +75,14 @@ fields and reviewer notes. Supply any required dedicated test credentials
 privately through AMO, never in source files or public release notes.
 
 Record each store's upload time, submitted filename, checksum, review status,
-and eventual approval separately. No store submission or approval is recorded
-by this preparation document.
+and eventual approval separately. Submission to all three stores has been
+reported by the maintainer; no store approval has been recorded.
 
 ## Status and publication
 
-The public status says the Facebook sending fix is ready in 2.1.0 and explains
-the workaround for users still on 2.0.10. `release.publishedVersion` and
+The public status says 2.1.0 has been submitted to all three stores and is
+awaiting review, and explains the workaround for users still on 2.0.10.
+`release.publishedVersion` and
 `verificationVersion` remain 2.0.10 until the new Store build is actually live
 and its checks are recorded. This preparation does not mark all privacy
 controls newly verified.

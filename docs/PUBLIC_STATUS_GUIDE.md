@@ -45,6 +45,10 @@ uses this field so a fix or release never looks identical to a routine check.
 
 1. Add a dated entry to `history` using the user-facing rules above.
 2. Update `summary` to describe the current user impact.
+   `summary.label` is the current-status page headline; write it as a public
+   headline and update it together with `summary.message`. Store submission
+   and approval updates must describe the rollout rather than imply a new
+   check of the privacy controls.
 3. Update platform entries and structured evidence fields when checks change.
 4. Keep `release.publishedAt` as the original Store launch date.
 5. Run the site build and inspect `/status` and `/status/history` at desktop,
