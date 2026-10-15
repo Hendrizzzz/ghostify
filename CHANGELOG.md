@@ -9,6 +9,37 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
+## [2.1.0] - 2026-10-15
+
+### Added
+
+- Added seasonal popup looks that switch automatically by the user's local date:
+  Halloween (Sep 29 - Nov 4), Christmas (Nov 29 - Dec 27), New Year (Dec 28 -
+  Jan 31), and Valentine's Day (Feb 8 - Feb 15). Each starts two days early so
+  store-review lag does not shorten it. Outside those dates the popup keeps the
+  default look. Each look has its own small story tied to the six switches and
+  its own quiet sound, adds no popup height, and stops all motion when the
+  system asks for reduced motion.
+- Added optional popup sound effects, off by default, with a speaker toggle in
+  the footer. The preference is stored locally in the browser.
+- Added a Help & feedback menu with the guided GitHub form and an email option
+  that can copy the address, for people without a GitHub account.
+
+### Changed
+
+- Refreshed the default popup look: calmer palette, tinted icon chips, redrawn
+  feature icons, a per-platform tally, and quieter hover behavior.
+
+### Fixed
+
+- Fixed the pointer cursor and click area on the Facebook/Messenger Hide Seen
+  row so it behaves like the other rows.
+
+### Removed
+
+- Removed the Facebook/Messenger Hide Seen group-chat warning badge from the
+  popup.
+
 ## [2.0.10] - 2026-08-29
 
 ### Added
