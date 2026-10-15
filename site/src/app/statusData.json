@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.1.0",
-  "generatedAt": "2026-10-15T15:06:34Z",
+  "generatedAt": "2026-10-15T15:41:24Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
@@ -16,8 +16,8 @@
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
     "publicStatus": "under_review",
-    "label": "Update ready",
-    "message": "The Facebook group-chat sending fix is ready in Ghostify 2.1.0. The update will become available as each store approves it. Until then, use messenger.com for group chats, or turn Hide Seen off and refresh Facebook."
+    "label": "Ghostify 2.1.0 is awaiting store review.",
+    "message": "Ghostify 2.1.0 has been submitted to the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons and is awaiting review. It includes the Facebook group-chat sending fix. The update will become available as each store approves it. Until then, use messenger.com for group chats, or turn Hide Seen off and refresh Facebook."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -131,10 +131,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Maintainer confirmed the group-send fix on 2026-10-15. PR #246 passed two reload rounds across six authorized group chats with Hide Seen enabled; included in the 2.1.0 submission build. Published build remains 2.0.10; recipient-side Seen privacy and the #197 account-switch sequence were not re-verified.",
+      "reviewRecord": "Maintainer confirmed the group-send fix and reported submission of 2.1.0 to all three stores on 2026-10-15. PR #246 passed two reload rounds across six authorized group chats with Hide Seen enabled. Store approval is pending; the recorded published build remains 2.0.10. Recipient-side Seen privacy and the #197 account-switch sequence were not re-verified.",
       "verifiedAt": "2026-10-09T00:00:00Z",
       "relatedIssueUrl": "https://github.com/Hendrizzzz/Ghostify/issues/145",
-      "notes": "The Facebook group-chat sending fix is ready in Ghostify 2.1.0. The update will become available as each store approves it. Until then, use messenger.com for group chats, or turn Hide Seen off and refresh Facebook."
+      "notes": "The Facebook group-chat sending fix is included in Ghostify 2.1.0, submitted to all three stores and awaiting review. Until the update becomes available, use messenger.com for group chats, or turn Hide Seen off and refresh Facebook."
     },
     {
       "id": "facebook-hide-typing",
@@ -166,6 +166,13 @@
     }
   ],
   "history": [
+    {
+      "date": "2026-10-15",
+      "publicStatus": "under_review",
+      "eventType": "investigation",
+      "title": "Ghostify 2.1.0 submitted for store review",
+      "summary": "Ghostify 2.1.0 has been submitted to the Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons and is awaiting review. It includes the Facebook group-chat sending fix. The update will become available as each store approves it. Until then, use messenger.com for group chats, or turn Hide Seen off and refresh Facebook."
+    },
     {
       "date": "2026-10-15",
       "publicStatus": "under_review",

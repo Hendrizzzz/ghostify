@@ -250,14 +250,7 @@ function Events({
 export default function Status({ base, view }: { base: string; view: 'current' | 'history' }) {
   const [stores] = useState(orderedStores);
   const overall = worst(entries.map((e) => tone(e.publicStatus)));
-  const headline =
-    overall === 'ok'
-      ? 'Everything is working.'
-      : overall === 'issue'
-        ? 'Some switches have a known issue.'
-        : entries.some((e) => e.publicStatus === 'work_in_progress')
-          ? 'A fix is in progress.'
-          : 'Some switches are being checked.';
+  const headline = STATUS_DATA.summary.label;
   const lastChecked = formatStatusDate(getLastVerifiedAt());
   const release = STATUS_DATA.release;
   const notable = history.filter((e) => e.eventType !== 'verification').slice(0, 8);
