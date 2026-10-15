@@ -44,7 +44,9 @@ The Extension uses configuration files bundled with the installed extension pack
 *   **Data transmitted:** No blocking-pattern configuration fetch is made to a third-party server. The separate public status feed described above is display-only and does not configure privacy blocking behavior.
 
 ## 4. Voluntary Feedback and Verification Reports
-The extension may link to GitHub issue forms for optional feedback, bug reports, and public verification reports. Those pages open outside the extension runtime and are governed by GitHub's privacy practices. The popup also offers an email address for feedback; choosing it opens your own mail app, so Ghostify sends nothing itself and the message is governed by your email provider. Do not submit private messages, credentials, or account-sensitive details in feedback forms or emails.
+The extension may link to GitHub issue forms for optional feedback, bug reports, and public verification reports. Those pages open outside the extension runtime and are governed by GitHub's privacy practices. The popup also displays a copyable email address for feedback. Displaying or copying the address does not open a mail app or send a message. If you contact us separately by email, that message is governed by your email provider. Do not submit private messages, credentials, or account-sensitive details in feedback forms or emails.
+
+Popup sounds are optional and off by default. They are synthesized locally with Web Audio; no audio files are downloaded. The sound preference and the local date used to limit the seasonal opening animation to once per day are stored locally in your browser and are not transmitted to Ghostify.
 
 Verification evidence is reviewed before it can affect public green status. Screenshots or recordings should be redacted before submission, and public contributor credit is used only when the reporter explicitly opts in.
 

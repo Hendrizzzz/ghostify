@@ -41,6 +41,8 @@ Controls include:
 • Hide typing indicators
 • Hide supported story-view signals
 
+The popup includes automatic seasonal looks, an optional quiet sound toggle that is off by default, and a Help & feedback menu with GitHub and copyable email options. The opening seasonal animation plays at most once per local day and respects reduced motion.
+
 Ghostify runs inside Firefox and stores preferences locally. It does not require a Ghostify account or ask for your social-media passwords. Privacy patterns ship with the extension; no remote code or remote blocking configuration is loaded.
 
 The Firefox popup reads Ghostify's public verification-status JSON so its date, green or yellow state, and update title stay aligned with the public status page. The privileged request uses no credentials, custom headers, query parameters, or body and does not include extension settings, tab URLs, messages, or social-media activity. Meta changes its web applications frequently, so use the latest release and report regressions through the support link.
@@ -53,8 +55,7 @@ Ghostify is an independent open-source project. It is not affiliated with, endor
 - Homepage: `https://ghostify-extension.vercel.app/`
 - Support website: `https://github.com/Hendrizzzz/Ghostify/issues/new?template=help_feedback.yml`
 - Privacy policy: `https://github.com/Hendrizzzz/Ghostify/blob/main/PRIVACY.md`
-- Support email: **OWNER ACTION — enter a monitored email address in AMO; do
-  not use the Gecko add-on ID as an email address unless that mailbox exists.**
+- Support email: `hendrizzzz.dev@gmail.com`
 
 ## Permission And Data Answers
 
@@ -110,6 +111,8 @@ Ghostify is a Manifest V3 extension for Firefox desktop 140 or later and Firefox
 Third-party build library:
 Source: https://github.com/evanw/esbuild
 npm package: https://www.npmjs.com/package/esbuild
+
+Version 2.1.0 fixes Facebook group-chat sends getting stuck while Hide Seen is enabled by suppressing read-receipt tasks before they enter the local send queue. It also adds date-driven popup themes, an opening animation limited to once per local day, optional synthesized Web Audio sound (off by default), and a Help & feedback menu with a copyable email address. These popup features use local preferences and add no permissions, remote code, analytics, or downloaded audio.
 
 The extension requests storage, declarativeNetRequest, host access for supported Instagram, Facebook, Messenger, and Facebook Messenger proxy surfaces, and ghostify-extension.vercel.app access for the display-only public status JSON. Privacy matching and settings remain local. The privileged status request uses no credentials, custom headers, query parameters, or body and sends no extension settings, tab URLs, messages, or social-media activity. It does not load remote code or remote privacy configuration. External status, homepage, and GitHub links open only after a user activates them.
 

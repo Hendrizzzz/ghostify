@@ -22,6 +22,8 @@ grouped by version, with the most recent changes first.
   system asks for reduced motion.
 - Added optional popup sound effects, off by default, with a speaker toggle in
   the footer. The preference is stored locally in the browser.
+- Added a seasonal opening animation that plays at most once per local day
+  and respects the system's reduced-motion preference.
 - Added a Help & feedback menu with the guided GitHub form and an email option
   that can copy the address, for people without a GitHub account.
 
@@ -32,6 +34,9 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
+- Fixed Facebook group-chat messages getting stuck in Sending with Hide Seen
+  enabled, including after reloading Facebook. Read-receipt tasks are now
+  suppressed before they enter the chat's persistent send queue.
 - Fixed the pointer cursor and click area on the Facebook/Messenger Hide Seen
   row so it behaves like the other rows.
 
