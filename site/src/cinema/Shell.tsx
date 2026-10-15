@@ -54,7 +54,7 @@ export function Header({ store, base, extra }: { store: Store; base: string; ext
     <header className="bar">
       <a className="wordmark" href={base || '/'}>
         <img src={mark} alt="" width={24} height={24} />
-        Ghostify
+        <span className="wordmark-name">Ghostify</span>
       </a>
       <nav aria-label="Primary">
         <a href={`${base}/status`}>Status</a>

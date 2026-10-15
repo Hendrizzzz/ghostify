@@ -13,7 +13,10 @@
   --ok: #4fb487;
   --review: #e0a63a;
   --issue: #e2725b;
-  --edge: clamp(20px, 4.5vw, 72px);
+  /* The page runs edge to edge on notched phones (viewport-fit=cover); text
+     keeps clear of the notch and rounded corners. */
+  --safe-x: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --edge: max(clamp(20px, 4.5vw, 72px), calc(var(--safe-x) + 8px));
   --max: 1200px;
   --sys:
     ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display',
@@ -195,6 +198,7 @@ html.is-film-page::-webkit-scrollbar {
 .bar nav .bar-cta {
   min-height: 38px;
   padding: 0 16px;
+  white-space: nowrap;
   border-radius: 999px;
   background: var(--fg);
   color: var(--bg);
@@ -849,6 +853,12 @@ html.is-film-page::-webkit-scrollbar {
     gap: 2px;
     height: 36px;
   }
+}
+
+@media (max-width: 360px) {
+  .st-days {
+    gap: 1px;
+  }
 
   .st-event {
     grid-template-columns: 1fr;
@@ -939,16 +949,25 @@ html.is-film-page::-webkit-scrollbar {
 }
 
 /* ---------- The film ----------
-   Every shot is composed on a fixed canvas (1280 × 720 widescreen, 390 × 844
+   Every shot is composed on a fixed canvas (1280 × 720 widescreen, 390 wide
    vertical) and scaled into the screen by --u. `.at` places an element at
    canvas coordinates; the vertical cut has its own coordinates. Which cut
-   plays depends on the screen's shape alone. */
+   plays depends on the screen's shape alone. A near-square landscape screen
+   (4:3, 5:4) may lose up to 60 units of empty margin at each side so the
+   picture is not left small in the middle; 16:10 and wider are untouched.
+   The widescreen unit stops at 2.5px so a 4K screen is not blown up. The bars frame the picture the same
+   way on every screen: a 2.39:1 scope frame of the canvas, never thinner
+   than 36px nor thicker than 13% of the height. */
 
 .film {
-  --u: min(calc(100vw / 1280), calc(100svh / 720));
+  --u: min(
+    calc(100svh / 720),
+    max(calc(100vw / 1280), min(calc(100vw / 1160), calc(100svh / 830))),
+    2.5px
+  );
   --cx: 640;
   --cy: 360;
-  --bar: clamp(36px, calc((100svh - 41.84vw) / 2), 13svh);
+  --bar: clamp(36px, calc((100svh - 535.6 * var(--u)) / 2), 13svh);
   --safe-b: env(safe-area-inset-bottom, 0px);
   position: relative;
   height: 100svh;
@@ -991,9 +1010,9 @@ html.is-film-page::-webkit-scrollbar {
   --Y: var(--y);
   --W: var(--w);
   position: absolute;
-  left: calc(50% + (var(--X) - var(--cx)) * var(--u));
-  top: calc(50% + (var(--Y) - var(--cy)) * var(--u));
-  width: calc(var(--W) * var(--u));
+  left: var(--at-x, calc(50% + (var(--X) - var(--cx)) * var(--u)));
+  top: var(--at-y, calc(50% + (var(--Y) - var(--cy)) * var(--u)));
+  width: var(--at-w, calc(var(--W) * var(--u)));
 }
 
 .mover {
@@ -1438,7 +1457,8 @@ html.is-film-page::-webkit-scrollbar {
 
 .popup {
   width: 320px;
-  zoom: calc(var(--uk, 1) * 390 / 320);
+  /* The popup's own 320px, scaled to fill its slot (set by the film). */
+  zoom: var(--pz, calc(var(--uk, 1) * 390 / 320));
 }
 
 .copy {
@@ -1664,10 +1684,10 @@ html.is-film-page::-webkit-scrollbar {
   color: var(--fg);
 }
 
-@media (pointer: coarse) {
-  .local-credit {
-    min-height: 44px;
-  }
+/* A full 44px target that takes no more room than the line it sits on. */
+.film .local-credit {
+  min-height: 44px;
+  margin: -4px 0;
 }
 
 /* F7 · End card */
@@ -1812,7 +1832,7 @@ html.is-film-page::-webkit-scrollbar {
   justify-content: space-between;
   gap: 16px;
   height: max(var(--bar), 64px);
-  padding: 0 var(--edge);
+  padding: 0 var(--edge) var(--safe-b);
   visibility: hidden;
   opacity: 0;
   transition:
@@ -1986,20 +2006,27 @@ html.is-film-page::-webkit-scrollbar {
 /* ---------- The vertical cut: phones and portrait tablets ---------- */
 
 @media not all and (min-aspect-ratio: 1/1) {
+  /* The canvas is 390 wide. A full-height phone shows 844 units of it, a
+     phone with its browser bars showing about 660; anything shorter, or
+     wider (a portrait tablet), is fitted by height to the 660 take. --k is
+     how far the screen is from the 660 take towards the 844 one (0 to 184
+     units, in px); --c centres anything taller than 844. */
   .film {
-    --u: min(calc(100vw / 390), calc(100svh / 844));
+    --u: min(calc(100vw / 390), calc(100svh / 660));
     --cx: 195;
     --cy: 422;
     --bar: 0px;
+    --k: clamp(0px, 100svh - 660 * var(--u), 184 * var(--u));
+    --c: max(0px, (100svh - 844 * var(--u)) / 2);
     /* Text lines up with the composed canvas, not the screen edge, so a
        portrait tablet keeps one column with the picture. */
     --gut: max(24px, calc(50vw - 171 * var(--u)));
   }
 
   .at {
-    --X: var(--px);
-    --Y: var(--py);
-    --W: var(--pw);
+    --at-x: calc(50% + (var(--qx) - 195) * var(--u) + (var(--px) - var(--qx)) / 184 * var(--k));
+    --at-y: calc(var(--qy) * var(--u) + (var(--py) - var(--qy)) / 184 * var(--k) + var(--c));
+    --at-w: calc(var(--qw) * var(--u) + (var(--pw) - var(--qw)) / 184 * var(--k));
   }
 
   .bar-top,
@@ -2115,7 +2142,7 @@ html.is-film-page::-webkit-scrollbar {
   .hero {
     left: var(--gut);
     right: var(--gut);
-    top: calc(50% + (236 - 422) * var(--u));
+    top: calc(156 * var(--u) + 80 / 184 * var(--k) + var(--c));
     bottom: calc(20px + var(--safe-b));
     gap: 16px;
   }
@@ -2167,19 +2194,33 @@ html.is-film-page::-webkit-scrollbar {
     margin: 0 auto;
   }
 
+  /* The stores grow with the picture on a portrait tablet. */
+  .film .stores {
+    max-width: max(520px, calc(342 * var(--u)));
+  }
+
   .film .store {
     justify-content: center;
     gap: 8px;
-    min-height: 50px;
+    min-height: max(50px, calc(46 * var(--u)));
     padding: 0 8px;
-    font-size: 15px;
+    font-size: max(15px, calc(14 * var(--u)));
     white-space: nowrap;
   }
 
   .film .store.is-primary {
     grid-column: 1 / -1;
-    min-height: 54px;
-    font-size: 17px;
+    min-height: max(54px, calc(50 * var(--u)));
+    font-size: max(17px, calc(16 * var(--u)));
+  }
+
+  .film .store img {
+    width: max(22px, calc(20 * var(--u)));
+    height: auto;
+  }
+
+  .begin-press {
+    font-size: max(17px, calc(15 * var(--u)));
   }
 
   .title {
@@ -2219,7 +2260,7 @@ html.is-film-page::-webkit-scrollbar {
   .copy {
     left: var(--gut);
     right: var(--gut);
-    top: max(76px, calc(50% + (92 - 422) * var(--u)));
+    top: max(76px, calc(80 * var(--u) + 12 / 184 * var(--k) + var(--c)));
     width: auto;
   }
 
@@ -2230,10 +2271,6 @@ html.is-film-page::-webkit-scrollbar {
 
   .copy p {
     font-size: max(15px, calc(16 * var(--u)));
-  }
-
-  .popup {
-    zoom: calc(var(--uk, 1) * 280 / 320);
   }
 
   .tilt {
@@ -2249,7 +2286,7 @@ html.is-film-page::-webkit-scrollbar {
   }
 
   .floor {
-    top: calc(50% + (430 - 422) * var(--u));
+    top: calc(400 * var(--u) + 30 / 184 * var(--k) + var(--c));
   }
 
   .marks {
@@ -2283,38 +2320,37 @@ html.is-film-page::-webkit-scrollbar {
     margin: 0;
   }
 
+  /* The end card is one column between the header and the controls: the
+     ghost and the line centred in the space the stores leave. */
   .end {
-    display: block;
-    padding: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 20px;
+    padding: 76px var(--gut) calc(84px + var(--safe-b));
   }
 
   .end-text {
-    position: absolute;
-    left: var(--gut);
-    right: var(--gut);
-    top: calc(50% + (140 - 422) * var(--u));
+    margin: auto 0;
   }
 
   .g6 {
-    width: max(96px, calc(144 * var(--u)));
+    width: min(max(96px, calc(144 * var(--u))), 17svh);
   }
 
   .end h2 {
     font-size: max(34px, calc(46 * var(--u)));
   }
+}
 
+/* A full-height phone has room to stack the end card's stores. */
+@media (max-aspect-ratio: 39/76) {
   .s6 .stores {
-    position: absolute;
-    left: var(--gut);
-    right: var(--gut);
-    bottom: calc(84px + var(--safe-b));
-    width: auto;
     grid-template-columns: 1fr;
   }
 
   .s6 .store {
-    min-height: 54px;
-    font-size: 17px;
+    min-height: max(54px, calc(50 * var(--u)));
+    font-size: max(17px, calc(16 * var(--u)));
   }
 }
 
@@ -2322,7 +2358,7 @@ html.is-film-page::-webkit-scrollbar {
 @media (max-width: 640px) {
   .bar {
     height: 64px;
-    padding: 0 16px;
+    padding: 0 max(16px, calc(var(--safe-x) + 8px));
   }
 
   .bar nav {
@@ -2343,6 +2379,30 @@ html.is-film-page::-webkit-scrollbar {
   }
 }
 
+/* A folded phone's cover screen keeps the mark and drops the name. */
+@media (max-width: 300px) {
+  .bar .wordmark-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* The narrowest phones keep the header on one line. */
+@media (max-width: 360px) {
+  .bar {
+    padding: 0 12px;
+  }
+
+  .bar nav .bar-cta {
+    padding: 0 13px;
+    font-size: 14px;
+  }
+}
+
 @media (pointer: coarse) {
   .bar nav .bar-cta,
   .sound {
@@ -2360,18 +2420,41 @@ html.is-film-page::-webkit-scrollbar {
     height: max(var(--bar), 48px);
   }
 
-  /* The opener packs tighter under the slim header. */
+  /* The opener packs into the space under the slim header: the ghost, the
+     line, the stores on one row, the invitation. */
   .hero {
     top: 112px;
-    gap: 12px;
+    bottom: 8px;
+    justify-content: center;
+    gap: 10px;
   }
 
   .hero-text {
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .hero h1 {
+    font-size: max(28px, calc(72 * var(--u)));
   }
 
   .hero p {
     max-width: 560px;
+    font-size: max(14px, calc(19 * var(--u)));
+    line-height: 1.4;
+  }
+
+  .film .stores {
+    display: flex;
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .film .store {
+    min-height: 44px;
+    gap: 8px;
+    padding: 0 16px 0 12px;
+    font-size: 15px;
+    white-space: nowrap;
   }
 
   .begin {
@@ -2385,9 +2468,49 @@ html.is-film-page::-webkit-scrollbar {
   }
 
   .g0 {
-    top: 54px;
+    top: 56px;
     left: calc(50% - 22px);
     width: 44px;
+  }
+
+  /* The end card sits between the header and the controls. */
+  .end {
+    gap: 14px;
+    padding: 56px var(--edge) calc(max(var(--bar), 48px) + 6px);
+  }
+
+  .end-text {
+    gap: 10px;
+  }
+
+  .g6 {
+    width: min(max(64px, calc(176 * var(--u))), 18svh);
+  }
+
+  .end h2 {
+    font-size: max(28px, calc(76 * var(--u)));
+  }
+}
+
+/* Large, high screens (a 27" 1440p, 4K) see the same picture as a 1080p one,
+   only larger: the header and the film's controls grow with it. */
+@media (min-width: 2400px) and (min-height: 1300px) and (min-aspect-ratio: 1/1) {
+  .is-film-page .bar,
+  .film-ui > *,
+  .begin,
+  .credits,
+  .foot.is-credits {
+    zoom: 1.3333;
+  }
+}
+
+@media (min-width: 3200px) and (min-height: 1800px) and (min-aspect-ratio: 1/1) {
+  .is-film-page .bar,
+  .film-ui > *,
+  .begin,
+  .credits,
+  .foot.is-credits {
+    zoom: 1.6667;
   }
 }
 
