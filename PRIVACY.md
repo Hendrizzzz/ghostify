@@ -21,7 +21,7 @@ To function correctly, the Extension requires specific permissions:
 *   **Facebook host permission (`https://*.facebook.com/*`):** Required to inject local privacy controls on Facebook pages, including Messenger surfaces inside Facebook.
 *   **Facebook Messenger proxy frame host permission (`https://www.fbsbx.com/*`):** Required for Messenger proxy frames used by Facebook. The host permission is broader than the proxy path, so Ghostify limits Messenger-specific runtime behavior to supported Messenger proxy pages.
 *   **Ghostify status host permission (`https://ghostify-extension.vercel.app/*`):** Used only by the Chrome, Edge, and Firefox popup to fetch the display-only public status JSON. It does not grant Ghostify access to other tabs or send extension settings, tab URLs, messages, or social media activity.
-*   **Storage permission (`storage`):** Used to save your preferences (e.g., "Hide Seen: ON") locally in your browser's `chrome.storage.local`.
+*   **Storage permission (`storage`):** Used to save your preferences (e.g., "Hide Seen: ON") and the optional popup sound setting locally in your browser's `chrome.storage.local`.
 *   **Declarative Net Request permission (`declarativeNetRequest`):** Used to register local browser rules that block supported privacy signals without sending your data to a Ghostify server.
 
 ### 2.2. Chrome Web Store Limited Use
@@ -44,7 +44,7 @@ The Extension uses configuration files bundled with the installed extension pack
 *   **Data transmitted:** No blocking-pattern configuration fetch is made to a third-party server. The separate public status feed described above is display-only and does not configure privacy blocking behavior.
 
 ## 4. Voluntary Feedback and Verification Reports
-The extension may link to GitHub issue forms for optional feedback, bug reports, and public verification reports. Those pages open outside the extension runtime and are governed by GitHub's privacy practices. Do not submit private messages, credentials, or account-sensitive details in feedback forms.
+The extension may link to GitHub issue forms for optional feedback, bug reports, and public verification reports. Those pages open outside the extension runtime and are governed by GitHub's privacy practices. The popup also offers an email address for feedback; choosing it opens your own mail app, so Ghostify sends nothing itself and the message is governed by your email provider. Do not submit private messages, credentials, or account-sensitive details in feedback forms or emails.
 
 Verification evidence is reviewed before it can affect public green status. Screenshots or recordings should be redacted before submission, and public contributor credit is used only when the reporter explicitly opts in.
 
