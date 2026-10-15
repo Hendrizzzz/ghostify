@@ -4226,29 +4226,47 @@ function registerFacebookOptimisticMarkThreadReadFixture(
     context,
     options = {},
 ) {
-    const dependencyName = options.dependencyName || "LSMarkThreadRead";
+    const dependencyName = options.dependencyName || "LSIssueNewTask";
     const consumerName = options.consumerName || "LSOptimisticMarkThreadReadV2";
     const nativeThis = Object.freeze({ contract: "native-leaf-this" });
     const nativeResult = Object.freeze({ contract: "native-leaf-result" });
     const nativeCalls = [];
+    const localReadCalls = [];
+    const parentReadCalls = [];
+    const pendingTasks = [];
+    const forwardedSends = [];
+    const zero = Object.freeze([0, 0]);
+    let taskArgs;
     const nativeLeaf = function () {
-        nativeCalls.push({ args: Array.from(arguments), thisArg: this });
-        return nativeResult;
+        const args = Array.from(arguments);
+        nativeCalls.push({ args, thisArg: this });
+        if (options.taskError) throw options.taskError;
+        pendingTasks.push({ queue: args[0], label: args[1], payload: args[2] });
+        const runtime = args.at(-1);
+        return typeof runtime?.resolve === "function"
+            ? runtime.resolve([])
+            : nativeResult;
     };
-    const tables = Object.freeze(["threads"]);
+    const localRead = function (watermark, threadKey, runtime) {
+        localReadCalls.push({
+            args: [watermark, threadKey, runtime],
+            thisArg: this,
+            lastReadWatermarkTimestampMs: watermark,
+            unreadMessageCount: 0,
+        });
+        return runtime.resolve([]);
+    };
+    const tables = Object.freeze(["tasks"]);
     Object.defineProperties(nativeLeaf, {
         __sproc_name__: {
             configurable: true,
-            value: "LSMailboxMarkThreadReadStoredProcedure",
+            value: "LSIssueNewTaskStoredProcedure",
         },
         __tables__: {
             configurable: true,
             value: tables,
         },
     });
-    const issueNewTask = function () {
-        return "native-issue-task";
-    };
     let requiredLeaf;
     let requiredSibling;
     let secondaryRequire;
@@ -4257,9 +4275,9 @@ function registerFacebookOptimisticMarkThreadReadFixture(
     const module = registerMessengerModuleWithDependencies(
         context,
         consumerName,
-        ["LSIssueNewTask", dependencyName],
+        ["LSMarkThreadRead", dependencyName],
         {
-            LSIssueNewTask: issueNewTask,
+            LSMarkThreadRead: localRead,
             [dependencyName]: nativeLeaf,
         },
         function (
@@ -4277,37 +4295,65 @@ function registerFacebookOptimisticMarkThreadReadFixture(
                 runtime,
                 leafRuntime = runtime,
             ) {
+                // The live consumer first updates local read state, then creates
+                // a label-21 task. Merely requiring the task leaf misses the
+                // queue-blocking behavior that originally escaped this fixture.
                 requiredLeaf = require(dependencyName);
-                requiredSibling = require("LSIssueNewTask");
-                return runtime.storedProcedure(
-                    requiredLeaf,
-                    watermark,
-                    threadKey,
+                requiredSibling = require("LSMarkThreadRead");
+                taskArgs = [
+                    options.queueName ?? threadKey.join(":"),
+                    options.taskLabel ?? Object.freeze([0, 21]),
+                    JSON.stringify({
+                        thread_id: threadKey,
+                        last_read_watermark_ts: watermark,
+                        sync_group: 104,
+                    }),
+                    undefined,
+                    undefined,
+                    zero,
+                    zero,
+                    undefined,
+                    undefined,
+                    zero,
+                    zero,
                     leafRuntime,
-                );
+                ];
+                return runtime.seq([
+                    () =>
+                        runtime.storedProcedure(
+                            requiredSibling,
+                            watermark,
+                            threadKey,
+                            runtime,
+                        ),
+                    () => parentReadCalls.push({ threadKey, watermark }),
+                    () => runtime.storedProcedure(requiredLeaf, ...taskArgs),
+                    () => runtime.resolve([]),
+                ]);
             };
         },
     );
 
     const createRuntime = (leafRuntime = undefined) => {
         const resolveCalls = [];
-        const runtimeResult = Object.freeze({
-            contract: "lightspeed-runtime-result",
-        });
+        const runtimeResult = nativeResult;
         const runtime = {
             resolve(value) {
                 resolveCalls.push(value);
                 return runtimeResult;
             },
-            storedProcedure(leaf, watermark, threadKey, explicitLeafRuntime) {
-                storedProcedureLeaf = leaf;
-                return Reflect.apply(leaf, nativeThis, [
-                    watermark,
-                    threadKey,
-                    leafRuntime === undefined
-                        ? explicitLeafRuntime
-                        : leafRuntime,
-                ]);
+            seq(steps) {
+                let result;
+                for (const step of steps) result = step();
+                return result;
+            },
+            storedProcedure(leaf, ...args) {
+                if (leaf === requiredLeaf) {
+                    storedProcedureLeaf = leaf;
+                    if (leafRuntime !== undefined)
+                        args[args.length - 1] = leafRuntime;
+                }
+                return Reflect.apply(leaf, nativeThis, args);
             },
         };
         return { resolveCalls, runtime, runtimeResult };
@@ -4321,7 +4367,36 @@ function registerFacebookOptimisticMarkThreadReadFixture(
         get requiredSibling() {
             return requiredSibling;
         },
-        issueNewTask,
+        localRead,
+        localReadCalls,
+        parentReadCalls,
+        pendingTasks,
+        forwardedSends,
+        enqueueSend(threadKey) {
+            pendingTasks.push({
+                queue: threadKey.join(":"),
+                label: [0, 46],
+                payload: "fixture-send",
+            });
+        },
+        flushQueue(threadKey) {
+            // A dropped receipt receives no server acknowledgement. Later tasks
+            // in its queue therefore remain pending; other queues can progress.
+            const queue = threadKey.join(":");
+            while (true) {
+                const index = pendingTasks.findIndex(
+                    (task) => task.queue === queue,
+                );
+                if (index < 0) return;
+                const task = pendingTasks[index];
+                if (task.label[1] === 21) return;
+                pendingTasks.splice(index, 1);
+                if (task.label[1] === 46) forwardedSends.push(task);
+            }
+        },
+        get taskArgs() {
+            return taskArgs;
+        },
         module,
         nativeCalls,
         nativeLeaf,
@@ -4340,7 +4415,7 @@ function registerFacebookOptimisticMarkThreadReadFixture(
     };
 }
 
-function testFacebookOptimisticMarkThreadReadShadowsOnlyNativeLeaf() {
+async function testFacebookOptimisticReadReceiptEnqueueDoesNotStallSend() {
     const context = makeMessengerPatchPage(
         {},
         {
@@ -4356,16 +4431,25 @@ function testFacebookOptimisticMarkThreadReadShadowsOnlyNativeLeaf() {
     const { resolveCalls, runtime, runtimeResult } = fixture.createRuntime();
 
     const result = fixture.module.exports(threadKey, watermark, runtime);
+    fixture.enqueueSend(threadKey);
+    fixture.flushQueue(threadKey);
+
+    assert.strictEqual(
+        fixture.forwardedSends.length,
+        1,
+        "a suppressed receipt must never occupy the local task queue ahead of a send",
+    );
+    assert.strictEqual(fixture.pendingTasks.length, 0);
 
     assert.strictEqual(
         result,
         runtimeResult,
-        "the neutral leaf must preserve the Lightspeed runtime return contract",
+        "the consumer must preserve the Lightspeed runtime return contract",
     );
     assert.strictEqual(
         resolveCalls.length,
-        1,
-        "the neutral leaf must resolve exactly once",
+        3,
+        "local mutation, suppressed enqueue, and consumer completion must resolve",
     );
     assert.ok(
         Array.isArray(resolveCalls[0]),
@@ -4375,12 +4459,25 @@ function testFacebookOptimisticMarkThreadReadShadowsOnlyNativeLeaf() {
     assert.strictEqual(
         fixture.nativeCalls.length,
         0,
-        "the native local watermark mutation must not execute",
+        "the receipt must be suppressed before native task creation",
     );
+    assert.strictEqual(fixture.localReadCalls.length, 1);
+    assert.strictEqual(fixture.parentReadCalls.length, 1);
+    assert.strictEqual(fixture.localReadCalls[0].unreadMessageCount, 0);
+    assert.strictEqual(
+        fixture.localReadCalls[0].lastReadWatermarkTimestampMs,
+        watermark,
+    );
+    assert.strictEqual(fixture.localReadCalls[0].thisArg, fixture.nativeThis);
+    assert.deepStrictEqual(fixture.localReadCalls[0].args, [
+        watermark,
+        threadKey,
+        runtime,
+    ]);
     assert.notStrictEqual(
         fixture.storedProcedureLeaf,
         fixture.nativeLeaf,
-        "only the exact consumer must receive a leaf shadow",
+        "only the exact consumer must receive a task enqueue shadow",
     );
     assert.strictEqual(
         fixture.storedProcedureLeaf.name,
@@ -4397,8 +4494,8 @@ function testFacebookOptimisticMarkThreadReadShadowsOnlyNativeLeaf() {
     assert.strictEqual(fixture.storedProcedureLeaf.__tables__, fixture.tables);
     assert.strictEqual(
         fixture.requiredSibling,
-        fixture.issueNewTask,
-        "LSIssueNewTask must remain completely native",
+        fixture.localRead,
+        "LSMarkThreadRead must retain its native local state effects",
     );
     assert.strictEqual(
         fixture.secondaryRequire,
@@ -4406,9 +4503,45 @@ function testFacebookOptimisticMarkThreadReadShadowsOnlyNativeLeaf() {
         "the exact consumer must leave unrelated require slots untouched",
     );
     assert.strictEqual(
-        context.window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0,
+        fixture.secondaryRequire("LSIssueNewTask"),
+        fixture.nativeLeaf,
+        "unrelated require slots must retain the native task export",
+    );
+    assert.strictEqual(
+        context.window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ || 0,
         1,
     );
+    assert.strictEqual(
+        context.window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0,
+        0,
+    );
+
+    const asyncFixture = registerFacebookOptimisticMarkThreadReadFixture(
+        makeMessengerPatchPage(
+            {},
+            {
+                hostname: "www.facebook.com",
+                pathname: "/messages/t/fixture-thread",
+                href: "https://www.facebook.com/messages/t/fixture-thread",
+            },
+        ),
+    );
+    const asyncRuntime = asyncFixture.createRuntime().runtime;
+    asyncRuntime.resolve = (value) => Promise.resolve(value);
+    asyncRuntime.seq = async (steps) => {
+        let value;
+        for (const step of steps) value = await step();
+        return value;
+    };
+    const asyncResult = asyncFixture.module.exports(
+        threadKey,
+        watermark,
+        asyncRuntime,
+    );
+    assert.strictEqual(typeof asyncResult.then, "function");
+    assert.deepStrictEqual(await asyncResult, []);
+    assert.strictEqual(asyncFixture.localReadCalls.length, 1);
+    assert.strictEqual(asyncFixture.nativeCalls.length, 0);
 }
 
 function testFacebookTopFrameModuleInterceptorIsExactScopedForLoaderSafety() {
@@ -4508,9 +4641,11 @@ function testFacebookOptimisticMarkThreadReadPreservesNativeBypasses() {
         );
         assert.deepStrictEqual(
             fixture.nativeCalls[0].args,
-            [watermark, threadKey, runtime],
-            `${label} must preserve the live leaf argument order`,
+            fixture.taskArgs,
+            `${label} must preserve the native enqueue argument order`,
         );
+        assert.strictEqual(fixture.localReadCalls.length, 1);
+        assert.strictEqual(fixture.parentReadCalls.length, 1);
     };
 
     const settingsOffContext = makeMessengerPatchPage(
@@ -4523,6 +4658,18 @@ function testFacebookOptimisticMarkThreadReadPreservesNativeBypasses() {
         settingsOff,
         settingsOff.createRuntime().runtime,
         "settings-off behavior",
+    );
+    settingsOff.enqueueSend(threadKey);
+    settingsOff.flushQueue(threadKey);
+    assert.strictEqual(settingsOff.forwardedSends.length, 0);
+    assert.strictEqual(settingsOff.pendingTasks.length, 2);
+    const otherThreadKey = [246802468, 135791357];
+    settingsOff.enqueueSend(otherThreadKey);
+    settingsOff.flushQueue(otherThreadKey);
+    assert.strictEqual(
+        settingsOff.forwardedSends.length,
+        1,
+        "an unacknowledged receipt must stall only its own task queue",
     );
 
     const killedContext = makeMessengerPatchPage({}, page());
@@ -4583,6 +4730,44 @@ function testFacebookOptimisticMarkThreadReadPreservesNativeBypasses() {
         "an invalid injected runtime must fall back to the native leaf",
     );
     assert.strictEqual(invalidRuntime.nativeCalls.length, 1);
+    assert.strictEqual(invalidRuntime.localReadCalls.length, 1);
+    assert.strictEqual(
+        invalidRuntime.nativeCalls[0].args.at(-1).contract,
+        "invalid-leaf-runtime",
+    );
+
+    for (const taskLabel of [[0, 46], [1, 21], [21, 0], [0, 21, 0], 21, "21"]) {
+        const fixture = registerFacebookOptimisticMarkThreadReadFixture(
+            makeMessengerPatchPage({}, page()),
+            { taskLabel },
+        );
+        assertNative(
+            fixture,
+            fixture.createRuntime().runtime,
+            `non-receipt or unrecognized label ${JSON.stringify(taskLabel)}`,
+        );
+    }
+    const emptyQueue = registerFacebookOptimisticMarkThreadReadFixture(
+        makeMessengerPatchPage({}, page()),
+        { queueName: "" },
+    );
+    assertNative(emptyQueue, emptyQueue.createRuntime().runtime, "empty queue");
+
+    const nativeError = new Error("native enqueue failure");
+    const throwing = registerFacebookOptimisticMarkThreadReadFixture(
+        makeMessengerPatchPage({ msgSeen: false }, page()),
+        { taskError: nativeError },
+    );
+    assert.throws(
+        () =>
+            throwing.module.exports(
+                threadKey,
+                watermark,
+                throwing.createRuntime().runtime,
+            ),
+        (error) => error === nativeError,
+        "native enqueue errors must retain their original identity",
+    );
 }
 
 function testFacebookOptimisticMarkThreadReadShadowIsConsumerAndHostScoped() {
@@ -4607,7 +4792,7 @@ function testFacebookOptimisticMarkThreadReadShadowIsConsumerAndHostScoped() {
         label: "suffix dependency",
         fixture: registerFacebookOptimisticMarkThreadReadFixture(
             makeMessengerPatchPage({}, facebookPage()),
-            { dependencyName: "LSMarkThreadRead.bs" },
+            { dependencyName: "LSIssueNewTask.bs" },
         ),
     });
     fixtures.push({
@@ -4661,6 +4846,8 @@ function testFacebookOptimisticMarkThreadReadShadowIsConsumerAndHostScoped() {
             fixture.nativeLeaf,
             `${label} must not receive a shadow`,
         );
+        assert.strictEqual(fixture.requiredSibling, fixture.localRead);
+        assert.strictEqual(fixture.localReadCalls.length, 1);
     }
 }
 
@@ -12961,7 +13148,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMessengerPatchRequestRouteModulesHydrateUntouched();
     testMessengerPatchLocalReadModulesStayUntouchedAfterRequestSpaNavigation();
     testFacebookTopFrameModuleInterceptorIsExactScopedForLoaderSafety();
-    testFacebookOptimisticMarkThreadReadShadowsOnlyNativeLeaf();
+    await testFacebookOptimisticReadReceiptEnqueueDoesNotStallSend();
     testFacebookOptimisticMarkThreadReadPreservesNativeBypasses();
     testFacebookOptimisticMarkThreadReadShadowIsConsumerAndHostScoped();
     await testFacebookOptimisticMarkThreadReadAdapterRemainsNative();
