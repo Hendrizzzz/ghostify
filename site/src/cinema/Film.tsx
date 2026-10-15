@@ -593,7 +593,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           { keyframes: { x: [0, px(tall ? 0 : 10), 0] }, duration: 0.5, ease: 'power2.out' },
           1.62,
         );
-        cue(tl, () => sound.cut(), 1.8);
+        cue(tl, () => sound.impact(), 1.8);
         // One clean stroke through it, then it sinks back, still readable.
         tl.fromTo(
           q('.seen-strike'),
