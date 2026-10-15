@@ -34,9 +34,25 @@ Dark-first, low-glare, fixed 320px shell.
 - Look: flat and quiet. Solid surfaces, hairline borders, no gradients, glows
   or tinted shadows. Feature icons are 18px line glyphs on 28px chips that
   take a flat accent tint when their switch is on.
-- Seasonal themes: `popup.js` sets `html[data-theme]` from the local date
-  (Valentine's Feb 10–15, Halloween Oct 1–Nov 1, Christmas Dec 15–26, New Year
-  Dec 27–Jan 3); `popup.html?theme=<name>` previews one. A theme swaps surface
+- Seasonal themes: `popup.js` sets `html[data-theme]` from the user's local
+  date every time the popup opens, so the switchover is automatic and nothing
+  is changed by hand. The calendar lives in `getSeasonalTheme()` (and is
+  pinned by `test/popup-theme.test.js`):
+
+  | Dates (inclusive) | Look |
+  | --- | --- |
+  | Sep 29 – Nov 4 | Halloween |
+  | Nov 5 – Nov 28 | default |
+  | Nov 29 – Dec 27 | Christmas |
+  | Dec 28 – Jan 31 | New Year |
+  | Feb 1 – Feb 7 | default |
+  | Feb 8 – Feb 15 | Valentine's |
+  | Feb 16 – Sep 28 | default |
+
+  Each season starts two days before its calendar date so store-review lag does
+  not eat into it.
+
+  `popup.html?theme=<name>` previews any of them. A theme swaps surface
   and accent tokens, adds one small line mark in the header and a few flat
   effects. It never touches `--status-*` or layout. Every animated piece stops
   under `prefers-reduced-motion`.
@@ -47,6 +63,27 @@ Dark-first, low-glare, fixed 320px shell.
   room darkens, the moon brightens and rows light up like candles
   (`--on-ratio` on `<html>`). Hovering the logo shows the ghost. Idle motion
   is deliberately rare (bats every ~34s, spider ~52s).
+- Each season is built on the ghost, so it reads at first glance:
+  - Christmas: deep pine green with red and gold; a Santa hat on the ghost, a
+    pine garland with berries and baubles across the top, snow on the cards and
+    snow drifting behind the UI. Story: a small tree gets one ornament per
+    switch that is on and its star at all six. Sound: music-box notes climbing a
+    pentatonic line, then a soft chord.
+  - New Year: midnight navy with gold; a party hat on the ghost, pennant
+    bunting across the top, the coming year in gold beside the wordmark and
+    confetti drifting behind the UI. Story: a clock creeps toward 12 as more
+    switches are on and strikes midnight at all six. Sound: glass clinks that
+    rise, then a low bell and a few clinks.
+  - Valentine's: wine and rose; the ghost blushes, hearts hang from the top and
+    rise behind the UI. Story: six hearts fill as you hide more and the ghost
+    gets heart-eyes at all six. Sound: warm plucked notes, then a soft
+    heartbeat and a shimmer.
+- Opening shower: the first time the popup opens each day in Christmas, New
+  Year or Valentine's, a short shower (snow and stars, confetti, rising hearts)
+  crosses the popup. After that it stays calm. `?flourish=always` forces it for
+  previews; stored under `ghostifyFlourishDay`.
+- Like Halloween, neither theme adds popup height (decor sits in the footer
+  gap) and all motion stops under `prefers-reduced-motion`.
 - Sound (opt-in, footer speaker): the default theme is a soft sine tick.
   Halloween uses breath, a low hollow note and a synthesized room, never above
   a whisper (a test caps voice level), plus one distant bell when the last

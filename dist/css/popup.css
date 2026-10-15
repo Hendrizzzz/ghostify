@@ -17,6 +17,7 @@
     --ghost-knob: #f4f1ea;
     --ghost-soft-light: #c7b9ff;
     --ghost-ink: #17141f;
+    --ghost-gold: var(--ghost-soft-light);
     --status-green: #27835f;
     --status-yellow: #c98b20;
     --ghost-off: #46423b;
@@ -838,54 +839,60 @@ html[data-theme="halloween"] {
 }
 
 html[data-theme="christmas"] {
-    --ghost-bg: #0e1210;
-    --ghost-surface: #131a16;
-    --ghost-panel: #19221d;
-    --ghost-panel-high: #1f2a24;
-    --ghost-line: rgba(225, 238, 228, 0.1);
-    --ghost-line-strong: rgba(225, 238, 228, 0.18);
-    --ghost-text: #eef0e8;
-    --ghost-muted: #a3b0a6;
-    --ghost-soft: #e0707b;
-    --ghost-soft-deep: #c04a58;
-    --ghost-soft-light: #f4a3aa;
-    --ghost-ink: #1c0a0d;
-    --ghost-off: #3b4a41;
-    --ghost-knob: #f4f1ea;
+    --ghost-bg: #0c1812;
+    --ghost-surface: #101f17;
+    --ghost-panel: #15281d;
+    --ghost-panel-high: #1b3125;
+    --ghost-line: rgba(235, 238, 222, 0.1);
+    --ghost-line-strong: rgba(235, 238, 222, 0.18);
+    --ghost-text: #efe9d8;
+    --ghost-muted: #9cb0a2;
+    --ghost-soft: #c0262d;
+    --ghost-soft-deep: #a31f27;
+    --ghost-soft-light: #e58a8f;
+    --ghost-gold: #c9a24a;
+    --ghost-pine: #3f8a5c;
+    --ghost-ink: #ffffff;
+    --ghost-off: #34503f;
+    --ghost-knob: #f1ead9;
 }
 
 html[data-theme="newyear"] {
-    --ghost-bg: #0d0e12;
-    --ghost-surface: #13151b;
-    --ghost-panel: #1a1c24;
-    --ghost-panel-high: #21242d;
+    --ghost-bg: #05070f;
+    --ghost-surface: #0a0e1b;
+    --ghost-panel: #101524;
+    --ghost-panel-high: #171d30;
     --ghost-line: rgba(225, 230, 245, 0.1);
     --ghost-line-strong: rgba(225, 230, 245, 0.18);
-    --ghost-text: #eeeae0;
-    --ghost-muted: #a6a9b3;
-    --ghost-soft: #d8b765;
-    --ghost-soft-deep: #b8943f;
-    --ghost-soft-light: #ecd18f;
-    --ghost-ink: #1a1405;
-    --ghost-off: #3f424d;
-    --ghost-knob: #f5f1e6;
+    --ghost-text: #f1ecdd;
+    --ghost-muted: #8d97b3;
+    --ghost-soft: #d4a62a;
+    --ghost-soft-deep: #a8801f;
+    --ghost-soft-light: #ecd28a;
+    --ghost-gold: #e2bf6a;
+    --ghost-silver: #c9d0e0;
+    --ny-rose: #d96b8e;
+    --ny-sky: #5b9ad9;
+    --ghost-ink: #1b1403;
+    --ghost-off: #2d3450;
+    --ghost-knob: #f1ecdd;
 }
 
 html[data-theme="valentine"] {
-    --ghost-bg: #130d10;
-    --ghost-surface: #1a1115;
-    --ghost-panel: #231820;
-    --ghost-panel-high: #2b1e27;
-    --ghost-line: rgba(245, 225, 232, 0.1);
-    --ghost-line-strong: rgba(245, 225, 232, 0.18);
-    --ghost-text: #f3e9ec;
-    --ghost-muted: #b6a2aa;
-    --ghost-soft: #e58bad;
-    --ghost-soft-deep: #c8628a;
-    --ghost-soft-light: #f5b3cb;
-    --ghost-ink: #1f0a14;
-    --ghost-off: #4a3a42;
-    --ghost-knob: #f7eef1;
+    --ghost-bg: #1c0a12;
+    --ghost-surface: #25101a;
+    --ghost-panel: #301522;
+    --ghost-panel-high: #3a1a2b;
+    --ghost-line: rgba(250, 225, 232, 0.1);
+    --ghost-line-strong: rgba(250, 225, 232, 0.18);
+    --ghost-text: #f7e9ec;
+    --ghost-muted: #bb9aa6;
+    --ghost-soft: #c5203f;
+    --ghost-soft-deep: #a3152f;
+    --ghost-soft-light: #e9a1b1;
+    --ghost-ink: #ffffff;
+    --ghost-off: #5a3445;
+    --ghost-knob: #f6e9ec;
 }
 
 /* ── Feedback motion and sound toggle ─────────── */
@@ -1015,7 +1022,7 @@ html[data-theme="halloween"] .ambient-fx {
 html[data-theme="christmas"] .ambient-fx {
     left: 236px;
     color: var(--ghost-text);
-    animation: ambient-snow 9s ease-in-out 1.5s infinite;
+    animation: ambient-snow 28s ease-in-out 5s infinite;
 }
 
 html[data-theme="newyear"] .ambient-fx {
@@ -1064,14 +1071,14 @@ html[data-theme="valentine"] .ambient-fx {
         opacity: 0;
         transform: translate(0, -10px) rotate(0deg);
     }
-    15% {
+    4.8% {
         opacity: 0.8;
     }
-    60% {
+    19.3% {
         opacity: 0.7;
         transform: translate(-22px, 38px) rotate(120deg);
     }
-    80%,
+    25.7%,
     100% {
         opacity: 0;
         transform: translate(-30px, 56px) rotate(200deg);
@@ -1395,13 +1402,13 @@ html[data-theme="halloween"] .card {
     display: none;
 }
 
-html[data-theme] .platform-count .count-glyphs {
+html[data-theme="halloween"] .platform-count .count-glyphs {
     display: inline-flex;
     align-items: center;
     gap: 3px;
 }
 
-html[data-theme] .platform-count .count-text {
+html[data-theme="halloween"] .platform-count .count-text {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1548,4 +1555,863 @@ html[data-theme="halloween"] .row:nth-child(3):has(input:checked) .feature-chip 
     html[data-theme="halloween"] .hw-moon {
         transition-duration: 0.01ms;
     }
+}
+
+/* ── Christmas and New Year ───────────────────────
+   Same standard as Halloween: a scene, a story tied to the six switches, and
+   nothing that adds height. Christmas: the tree lights up one ornament per
+   switch that is on, the star at all six. New Year: a countdown clock creeps
+   toward midnight as more switches turn on, and strikes it at all six.
+   popup.js sets --on-ratio and html[data-complete]. Every animated piece
+   stops under prefers-reduced-motion. */
+
+.xm-tree,
+.xm-cap,
+.xm-gifts,
+.ny-clock,
+.ny-burst,
+.ny-glint,
+.ny-year {
+    display: none;
+}
+
+html[data-theme="christmas"] .xm-tree,
+html[data-theme="christmas"] .xm-cap,
+html[data-theme="christmas"] .xm-gifts,
+html[data-theme="newyear"] .ny-clock,
+html[data-theme="newyear"] .ny-burst,
+html[data-theme="newyear"] .ny-glint,
+html[data-theme="newyear"] .ny-year {
+    display: block;
+}
+
+html[data-theme="christmas"] .season-mark,
+html[data-theme="newyear"] .season-mark,
+html[data-theme="valentine"] .season-mark,
+html[data-theme="newyear"] .ambient-fx {
+    display: none;
+}
+
+html[data-theme="christmas"] .platform,
+html[data-theme="newyear"] .platform {
+    position: relative;
+}
+
+html[data-theme="christmas"] .card,
+html[data-theme="newyear"] .card {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* Christmas: the tree. One ornament per switch that is on. */
+.xm-tree {
+    position: absolute;
+    top: 14px;
+    left: 174px;
+    width: 32px;
+    height: 42px;
+    fill: var(--ghost-panel);
+    stroke: var(--ghost-muted);
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.xm-orn {
+    fill: var(--ghost-off);
+    stroke: none;
+    transition: fill 250ms var(--ease-out);
+}
+
+.xm-orn.is-lit {
+    fill: var(--ghost-soft-light);
+}
+
+.xm-orn:nth-of-type(even).is-lit {
+    fill: var(--ghost-text);
+}
+
+.xm-star {
+    fill: var(--ghost-soft-light);
+    stroke: none;
+    opacity: 0.25;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: opacity 300ms var(--ease-out);
+}
+
+html[data-complete="true"] .xm-star {
+    opacity: 1;
+    animation: star-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes star-pulse {
+    50% {
+        transform: scale(1.18);
+    }
+}
+
+/* Christmas: snow settled on the top edge of each card */
+.xm-cap {
+    position: absolute;
+    z-index: 2;
+    top: 24px;
+    left: 12px;
+    width: 296px;
+    height: 9px;
+    fill: var(--ghost-text);
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+/* Christmas: gifts tucked into the footer row */
+.xm-gifts {
+    position: absolute;
+    left: 90px;
+    bottom: 11px;
+    z-index: 2;
+    width: 44px;
+    height: 13px;
+    pointer-events: none;
+}
+
+.xm-gift-a {
+    fill: var(--ghost-soft);
+}
+
+.xm-gift-b {
+    fill: var(--ghost-soft-light);
+}
+
+.xm-gift-c {
+    fill: var(--ghost-text);
+    opacity: 0.85;
+}
+
+.xm-ribbon {
+    fill: var(--ghost-text);
+}
+
+.xm-ribbon--dark {
+    fill: var(--ghost-soft-deep);
+}
+
+.xm-ribbon--soft {
+    fill: var(--ghost-soft);
+}
+
+.xm-gift-star {
+    fill: var(--ghost-soft-light);
+}
+
+/* New Year: the countdown clock. Midnight when every switch is on. */
+.ny-clock {
+    position: absolute;
+    top: 16px;
+    left: 190px;
+    width: 28px;
+    height: 28px;
+    color: var(--ghost-muted);
+    pointer-events: none;
+}
+
+.ny-face {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    opacity: 0.7;
+    transition:
+        stroke 450ms var(--ease-out),
+        opacity 450ms var(--ease-out);
+}
+
+.ny-ticks {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    opacity: 0.7;
+}
+
+.ny-hand {
+    fill: none;
+    stroke: var(--ghost-text);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    transform-origin: 14px 14px;
+    transition:
+        transform 600ms var(--ease-out),
+        stroke 450ms var(--ease-out);
+}
+
+.ny-hand--h {
+    transform: rotate(calc((var(--on-ratio, 0) - 1) * 5deg));
+}
+
+.ny-hand--m {
+    transform: rotate(calc((var(--on-ratio, 0) - 1) * 60deg));
+}
+
+.ny-pin {
+    fill: var(--ghost-text);
+}
+
+html[data-complete="true"] .ny-face {
+    stroke: var(--ghost-soft-light);
+    opacity: 1;
+}
+
+html[data-complete="true"] .ny-hand {
+    stroke: var(--ghost-soft-light);
+}
+
+/* New Year: rare fireworks in the header */
+.ny-burst {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    opacity: 0;
+    pointer-events: none;
+    animation: ny-burst 44s ease-out infinite;
+}
+
+.ny-burst--a {
+    top: 6px;
+    left: 112px;
+    color: var(--ghost-soft-light);
+    animation-delay: 16s;
+}
+
+.ny-burst--b {
+    top: 4px;
+    left: 214px;
+    color: var(--ghost-text);
+    animation-delay: 38s;
+}
+
+@keyframes ny-burst {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    0.6% {
+        opacity: 1;
+    }
+    3%,
+    100% {
+        opacity: 0;
+        transform: scale(1.1);
+    }
+}
+
+/* New Year: glints catching the light on the cards */
+.ny-glint {
+    position: absolute;
+    z-index: 2;
+    width: 8px;
+    height: 8px;
+    fill: var(--ghost-soft-light);
+    opacity: 0;
+    pointer-events: none;
+    animation: ny-glint 11s ease-in-out infinite;
+}
+
+.ny-glint--a {
+    top: 26px;
+    left: 40px;
+    animation-delay: 2s;
+}
+
+.ny-glint--b {
+    top: 28px;
+    left: 270px;
+    animation-delay: 7s;
+}
+
+.ny-glint--c {
+    top: 26px;
+    left: 150px;
+    animation-delay: 4.5s;
+}
+
+.ny-glint--d {
+    top: 28px;
+    left: 296px;
+    animation-delay: 9s;
+}
+
+@keyframes ny-glint {
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(0.4) rotate(0deg);
+    }
+    5% {
+        opacity: 0.95;
+        transform: scale(1) rotate(45deg);
+    }
+    10% {
+        opacity: 0;
+        transform: scale(0.5) rotate(90deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html[data-complete="true"] .xm-star,
+    .ny-burst,
+    .ny-glint {
+        animation: none;
+    }
+
+    .ny-burst,
+    .ny-glint {
+        display: none !important;
+    }
+
+    .ny-hand,
+    .ny-face,
+    .xm-orn,
+    .xm-star {
+        transition-duration: 0.01ms;
+    }
+}
+
+/* ── Seasonal identity ────────────────────────────
+   Each season has one thesis built on the ghost: Christmas puts a Santa hat on
+   it under a pine garland and snowfall; New Year a party hat under bunting with
+   a big gold year and confetti; Valentine's makes it blush, hangs hearts, fills
+   a row of six as you hide more and gives it heart-eyes at all six. Flat
+   geometry only. Nothing adds popup height. Motion stops under
+   prefers-reduced-motion. */
+
+.xm-garland,
+.xm-hat,
+.ny-bunting,
+.ny-hat,
+.ny-glasses,
+.vl-bunting,
+.vl-hearts,
+.vl-face,
+.vl-envelope {
+    display: none;
+}
+
+html[data-theme="christmas"] .xm-garland,
+html[data-theme="christmas"] .xm-hat,
+html[data-theme="newyear"] .ny-bunting,
+html[data-theme="newyear"] .ny-hat,
+html[data-theme="newyear"] .ny-glasses,
+html[data-theme="valentine"] .vl-bunting,
+html[data-theme="valentine"] .vl-hearts,
+html[data-theme="valentine"] .vl-face,
+html[data-theme="valentine"] .vl-envelope {
+    display: block;
+}
+
+html[data-theme="christmas"] .ambient-fx,
+html[data-theme="newyear"] .ambient-fx,
+html[data-theme="valentine"] .ambient-fx {
+    display: none;
+}
+
+html[data-theme="valentine"] .platform {
+    position: relative;
+}
+
+html[data-theme="christmas"] .brand-link,
+html[data-theme="newyear"] .brand-link,
+html[data-theme="valentine"] .brand-link {
+    position: relative;
+}
+
+.popup-shell {
+    position: relative;
+}
+
+.xm-garland,
+.ny-bunting,
+.vl-bunting {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 320px;
+    height: 22px;
+    pointer-events: none;
+}
+
+/* Christmas: pine garland with berries and baubles */
+.xm-rope {
+    fill: none;
+    stroke: var(--ghost-pine);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+}
+
+.xm-needles {
+    fill: none;
+    stroke: var(--ghost-pine);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+}
+
+.xm-berries circle {
+    fill: var(--ghost-soft);
+}
+
+.xm-baubles circle {
+    fill: var(--ghost-gold);
+}
+
+.xm-baubles circle:nth-of-type(even) {
+    fill: var(--ghost-soft-light);
+}
+
+.xm-baubles path {
+    fill: none;
+    stroke: var(--ghost-muted);
+    stroke-width: 0.8;
+}
+
+.xm-hat {
+    position: absolute;
+    top: -13px;
+    left: -4px;
+    width: 34px;
+    height: 24px;
+    pointer-events: none;
+}
+
+.xm-hat-body {
+    fill: var(--ghost-soft);
+}
+
+.xm-hat-fur {
+    fill: var(--ghost-text);
+}
+
+/* New Year: bunting, party hat, the year, glasses */
+.ny-string,
+.vl-string {
+    fill: none;
+    stroke: var(--ghost-muted);
+    stroke-width: 0.9;
+    opacity: 0.7;
+}
+
+.ny-flag--0 {
+    fill: var(--ghost-gold);
+}
+
+.ny-flag--1 {
+    fill: var(--ghost-silver);
+}
+
+.ny-flag--2 {
+    fill: var(--ny-rose);
+}
+
+.ny-flag--3 {
+    fill: var(--ny-sky);
+}
+
+.ny-hat {
+    position: absolute;
+    top: -13px;
+    left: -2px;
+    width: 34px;
+    height: 26px;
+    pointer-events: none;
+}
+
+.ny-hat-cone {
+    fill: var(--ghost-gold);
+}
+
+.ny-hat-stripe {
+    fill: none;
+    stroke: var(--ny-rose);
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.ny-hat-band {
+    fill: var(--ghost-soft-deep);
+}
+
+.ny-hat-pom {
+    fill: var(--ghost-text);
+}
+
+.ny-year {
+    position: absolute;
+    top: 19px;
+    left: 124px;
+    color: var(--ghost-gold);
+    font-size: 21px;
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.ny-glasses {
+    position: absolute;
+    bottom: 11px;
+    left: 90px;
+    z-index: 2;
+    width: 44px;
+    height: 14px;
+    pointer-events: none;
+}
+
+.ny-glass {
+    fill: var(--ghost-silver);
+}
+
+.ny-glass-spark {
+    fill: none;
+    stroke: var(--ghost-gold);
+    stroke-width: 1;
+    stroke-linecap: round;
+}
+
+/* Valentine's: hearts, blush, a row of six that fills, heart-eyes at all six */
+.vl-b {
+    color: var(--ghost-soft);
+}
+
+.vl-b--1 {
+    color: var(--ghost-soft-light);
+}
+
+.vl-b--2 {
+    color: var(--ghost-soft-deep);
+}
+
+.vl-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+}
+
+.vl-cheek {
+    fill: var(--ghost-soft);
+    opacity: 0.65;
+}
+
+.vl-eyes {
+    color: var(--ghost-soft);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: opacity 300ms var(--ease-out);
+}
+
+html[data-complete="true"] .vl-eyes {
+    opacity: 1;
+    animation: vl-beat 1.3s ease-in-out infinite;
+}
+
+.vl-hearts {
+    position: absolute;
+    top: 24px;
+    left: 126px;
+    width: 92px;
+    height: 12px;
+    pointer-events: none;
+}
+
+.vl-h {
+    color: var(--ghost-off);
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: color 250ms var(--ease-out);
+}
+
+.vl-h.is-lit {
+    color: var(--ghost-soft);
+}
+
+html[data-complete="true"] .vl-h {
+    animation: vl-beat 1.3s ease-in-out infinite;
+}
+
+html[data-complete="true"] .vl-h:nth-of-type(2n) {
+    animation-delay: -0.35s;
+}
+
+@keyframes vl-beat {
+    0%,
+    60%,
+    100% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(1.18);
+    }
+    40% {
+        transform: scale(0.96);
+    }
+}
+
+.vl-envelope {
+    position: absolute;
+    bottom: 11px;
+    left: 90px;
+    z-index: 2;
+    width: 44px;
+    height: 14px;
+    pointer-events: none;
+}
+
+.vl-env-body {
+    fill: var(--ghost-soft-light);
+}
+
+.vl-env-flap {
+    fill: none;
+    stroke: var(--ghost-soft-deep);
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+}
+
+.vl-seal {
+    color: var(--ghost-soft-deep);
+}
+
+.vl-float {
+    color: var(--ghost-soft);
+    animation: vl-float 3.6s ease-in-out infinite;
+}
+
+.vl-float--b {
+    animation-delay: -1.4s;
+}
+
+@keyframes vl-float {
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Counters light in the season's second colour */
+html[data-theme="christmas"] .count-glyph.is-lit {
+    color: var(--ghost-gold);
+}
+
+/* Ambient layer behind the UI: snow, confetti, rising hearts. It is built by
+   popup.js and only ever shows in the gaps, because the cards sit above it. */
+.season-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.season-layer > * {
+    position: absolute;
+    left: var(--x);
+    opacity: 0;
+    animation-duration: var(--t);
+    animation-delay: var(--d);
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+html[data-theme="christmas"] .season-layer > * {
+    top: -10px;
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: var(--ghost-text);
+    animation-name: snow-fall;
+}
+
+html[data-theme="newyear"] .season-layer > * {
+    top: -10px;
+    width: var(--s);
+    height: calc(var(--s) * 0.55);
+    background: var(--ghost-gold);
+    animation-name: confetti-fall;
+}
+
+html[data-theme="newyear"] .season-layer > :nth-child(4n + 2) {
+    background: var(--ghost-silver);
+}
+
+html[data-theme="newyear"] .season-layer > :nth-child(4n + 3) {
+    background: var(--ny-rose);
+}
+
+html[data-theme="newyear"] .season-layer > :nth-child(4n) {
+    background: var(--ny-sky);
+}
+
+html[data-theme="valentine"] .season-layer > * {
+    bottom: -14px;
+    width: var(--s);
+    height: var(--s);
+    color: var(--ghost-soft);
+    animation-name: heart-rise;
+    animation-timing-function: ease-in;
+}
+
+html[data-theme="valentine"] .season-layer > :nth-child(3n) {
+    color: var(--ghost-soft-light);
+}
+
+@keyframes snow-fall {
+    0% {
+        opacity: 0;
+        transform: translate(0, -10px);
+    }
+    8% {
+        opacity: 0.4;
+    }
+    92% {
+        opacity: 0.28;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--drift), 460px);
+    }
+}
+
+@keyframes confetti-fall {
+    0% {
+        opacity: 0;
+        transform: translate(0, -10px) rotate(0deg);
+    }
+    8% {
+        opacity: 0.5;
+    }
+    92% {
+        opacity: 0.35;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--drift), 460px) rotate(var(--spin));
+    }
+}
+
+@keyframes heart-rise {
+    0% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0.7);
+    }
+    12% {
+        opacity: 0.35;
+    }
+    85% {
+        opacity: 0.25;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--drift), -470px) scale(1);
+    }
+}
+
+/* Opening flourish: once per day, a short shower over the whole popup */
+.fl-piece {
+    position: absolute;
+    z-index: 80;
+    pointer-events: none;
+}
+
+.fl-snow {
+    border-radius: 50%;
+    background: var(--ghost-text);
+}
+
+.fl-conf--0 {
+    background: var(--ghost-gold);
+}
+
+.fl-conf--1 {
+    background: var(--ghost-silver);
+}
+
+.fl-conf--2 {
+    background: var(--ny-rose);
+}
+
+.fl-conf--3 {
+    background: var(--ny-sky);
+}
+
+.fl-gold {
+    color: var(--ghost-gold);
+}
+
+.fl-heart {
+    color: var(--ghost-soft);
+}
+
+.fl-heart--light {
+    color: var(--ghost-soft-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .season-layer,
+    .fl-piece {
+        display: none !important;
+    }
+
+    html[data-complete="true"] .vl-eyes,
+    html[data-complete="true"] .vl-h,
+    .vl-float {
+        animation: none;
+    }
+}
+
+/* Quiet pass: seasonal "on" chips are a soft tint with a light icon. */
+html[data-theme="christmas"] .row:has(input:checked) .feature-chip {
+    color: var(--ghost-gold);
+    background: color-mix(in srgb, var(--ghost-gold) 18%, transparent);
+}
+
+html[data-theme="valentine"] .row:has(input:checked) .feature-chip {
+    color: var(--ghost-soft-light);
+    background: color-mix(in srgb, var(--ghost-soft-light) 16%, transparent);
+}
+
+html[data-theme="newyear"] .row:has(input:checked) .feature-chip {
+    color: var(--ghost-soft-light);
+    background: color-mix(in srgb, var(--ghost-soft) 18%, transparent);
+}
+
+/* Softer decoration: bunting and garland a touch quieter, snow caps dimmer. */
+.xm-garland,
+.ny-bunting,
+.vl-bunting {
+    opacity: 0.85;
+}
+
+.xm-cap {
+    opacity: 0.55;
+}
+
+.vl-cheek {
+    opacity: 0.5;
+}
+
+.ny-year {
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.xm-gifts,
+.ny-glasses,
+.vl-envelope {
+    opacity: 0.7;
 }

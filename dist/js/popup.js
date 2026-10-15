@@ -40,8 +40,15 @@ function playTone(kind, mood = {}) {
         audioContext = audioContext || new AudioCtor();
         if (audioContext.state === 'suspended') audioContext.resume();
 
-        if (document.documentElement.dataset.theme === 'halloween') {
+        const theme = document.documentElement.dataset.theme;
+        if (theme === 'halloween') {
             playSpookySound(kind, mood);
+        } else if (theme === 'christmas') {
+            playChristmasSound(kind, mood);
+        } else if (theme === 'newyear') {
+            playNewYearSound(kind, mood);
+        } else if (theme === 'valentine') {
+            playValentineSound(kind, mood);
         } else {
             playSoftTick(kind);
         }
@@ -178,6 +185,108 @@ function playSpookySound(kind, mood = {}) {
     }
 }
 
+// Christmas: music-box notes. Each switch you turn on plays the next note of a
+// rising pentatonic line, and the sixth resolves into a soft chord as the star
+// lights. Turning one off steps back down. Taps are a tiny bell tick.
+function bellNote(ctx, start, freq, peak, decay, wetAmount) {
+    // Harmonic partials of decreasing level and shorter life: a music box.
+    [[1, 1, 1], [2, 0.4, 0.6], [3, 0.18, 0.4], [4.2, 0.07, 0.3]].forEach(([multiple, level, life]) => {
+        hollowTone(ctx, start, freq * multiple, peak * level, decay * life, wetAmount);
+    });
+}
+
+const CHRISTMAS_SCALE = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+
+function playChristmasSound(kind, mood = {}) {
+    const ctx = audioContext;
+    const now = ctx.currentTime;
+    const index = Math.min(CHRISTMAS_SCALE.length - 1, Math.max(0, (mood.count || 1) - 1));
+
+    if (kind === 'on' && mood.vanished) {
+        // The star lights: a soft major chord, notes arriving a breath apart.
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+            bellNote(ctx, now + i * 0.06, freq, 0.035, 1.6, 0.8);
+        });
+    } else if (kind === 'off' && mood.reappeared) {
+        bellNote(ctx, now, 392, 0.03, 0.9, 0.7);
+    } else if (kind === 'on') {
+        bellNote(ctx, now, CHRISTMAS_SCALE[index], 0.05, 0.9, 0.7);
+    } else if (kind === 'off') {
+        const freq = CHRISTMAS_SCALE[Math.min(CHRISTMAS_SCALE.length - 1, (mood.count || 0))];
+        bellNote(ctx, now, freq, 0.035, 0.6, 0.6);
+        bellNote(ctx, now + 0.09, freq * 0.75, 0.022, 0.6, 0.6);
+    } else {
+        hollowTone(ctx, now, 1568, 0.02, 0.12, 0.6);
+    }
+}
+
+// New Year: clear glass clinks that rise a little with every switch. The sixth
+// strikes midnight: one low bell stroke, then a few clinks of glasses.
+function glassClink(ctx, start, freq, peak, decay, wetAmount) {
+    hollowTone(ctx, start, freq, peak, decay, wetAmount);
+    hollowTone(ctx, start, freq * 2.76, peak * 0.4, decay * 0.55, wetAmount);
+    hollowTone(ctx, start, freq * 5.4, peak * 0.15, decay * 0.3, wetAmount);
+}
+
+function playNewYearSound(kind, mood = {}) {
+    const ctx = audioContext;
+    const now = ctx.currentTime;
+
+    if (kind === 'on' && mood.vanished) {
+        [[196, 0.07], [540, 0.03], [1050, 0.014]].forEach(([freq, level]) => {
+            hollowTone(ctx, now, freq, level, 1.8, 0.8);
+        });
+        [0.55, 0.7, 0.9, 1.05, 1.3].forEach((offset, i) => {
+            glassClink(ctx, now + offset, 1250 + i * 230 + (i % 2) * 140, 0.02, 0.7, 0.7);
+        });
+    } else if (kind === 'off' && mood.reappeared) {
+        // Tick, tock: the clock starts running again.
+        hollowTone(ctx, now, 900, 0.03, 0.06, 0.3, 600);
+        hollowTone(ctx, now + 0.22, 720, 0.026, 0.06, 0.3, 480);
+    } else if (kind === 'on') {
+        glassClink(ctx, now, 880 * (1 + 0.07 * ((mood.count || 1) - 1)), 0.04, 0.6, 0.6);
+    } else if (kind === 'off') {
+        hollowTone(ctx, now, 523, 0.03, 0.4, 0.5, 392);
+    } else {
+        hollowTone(ctx, now, 1760, 0.016, 0.1, 0.5);
+    }
+}
+
+// Valentine's: warm plucked notes. Each switch adds the next note of a rising
+// line; the sixth is a soft heartbeat, lub-dub, then a little shimmer. Turning
+// one off steps down; taps are a tiny pluck.
+function pluck(ctx, start, freq, peak, decay, wetAmount) {
+    [[1, 1, 1], [2, 0.3, 0.5], [3, 0.1, 0.3]].forEach(([multiple, level, life]) => {
+        hollowTone(ctx, start, freq * multiple, peak * level, decay * life, wetAmount);
+    });
+}
+
+const VALENTINE_SCALE = [392, 493.88, 587.33, 659.25, 783.99, 987.77];
+
+function playValentineSound(kind, mood = {}) {
+    const ctx = audioContext;
+    const now = ctx.currentTime;
+    const index = Math.min(VALENTINE_SCALE.length - 1, Math.max(0, (mood.count || 1) - 1));
+
+    if (kind === 'on' && mood.vanished) {
+        hollowTone(ctx, now, 72, 0.075, 0.18, 0.3, 50);
+        hollowTone(ctx, now + 0.19, 64, 0.06, 0.2, 0.3, 46);
+        [587.33, 783.99, 987.77, 1174.66].forEach((freq, i) => {
+            pluck(ctx, now + 0.5 + i * 0.09, freq, 0.03, 1.2, 0.8);
+        });
+    } else if (kind === 'off' && mood.reappeared) {
+        pluck(ctx, now, 293.66, 0.035, 0.8, 0.7);
+    } else if (kind === 'on') {
+        pluck(ctx, now, VALENTINE_SCALE[index], 0.05, 0.8, 0.65);
+    } else if (kind === 'off') {
+        const freq = VALENTINE_SCALE[Math.min(VALENTINE_SCALE.length - 1, mood.count || 0)];
+        pluck(ctx, now, freq, 0.034, 0.5, 0.6);
+        pluck(ctx, now + 0.1, freq * 0.8, 0.022, 0.5, 0.6);
+    } else {
+        hollowTone(ctx, now, 1174.66, 0.02, 0.1, 0.5);
+    }
+}
+
 function setupSoundToggle() {
     const button = document.getElementById('sound-toggle');
     if (!button) return;
@@ -230,10 +339,7 @@ const FX_COLORS = {
 
 // Symbol used for the lit/unlit counter on each platform heading.
 const THEME_GLYPH = {
-    halloween: 'fx-pumpkin',
-    christmas: 'fx-star',
-    newyear: 'fx-spark',
-    valentine: 'fx-heart'
+    halloween: 'fx-pumpkin'
 };
 
 function getThemeFxSymbols(theme) {
@@ -287,28 +393,145 @@ function spawnParticles(row, originSelector, count) {
     }
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const SEASON_LAYER_COUNT = { christmas: 8, newyear: 8, valentine: 6 };
+const FLOURISH_STORAGE_KEY = 'ghostifyFlourishDay';
+
+function makeHeart(extraClass) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    const use = document.createElementNS(SVG_NS, 'use');
+    use.setAttribute('href', '#fx-heart');
+    svg.appendChild(use);
+    if (extraClass) svg.setAttribute('class', extraClass);
+    return svg;
+}
+
+// Snow, confetti or rising hearts drifting behind the UI. It only shows in the
+// gaps because the cards sit above it. Negative delays mean it is already
+// mid-air the moment the popup opens.
+function buildSeasonLayer(theme) {
+    const count = SEASON_LAYER_COUNT[theme];
+    const shell = document.querySelector('.popup-shell');
+    if (!count || !shell || prefersReducedMotion()) return;
+    const layer = document.createElement('div');
+    layer.className = 'season-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < count; i++) {
+        const piece = theme === 'valentine' ? makeHeart() : document.createElement('span');
+        const size = theme === 'newyear' ? 5 + Math.random() * 4 : theme === 'valentine' ? 9 + Math.random() * 9 : 2.5 + Math.random() * 3;
+        piece.style.setProperty('--x', (3 + Math.random() * 94) + '%');
+        piece.style.setProperty('--s', size + 'px');
+        piece.style.setProperty('--t', (9 + Math.random() * 9) + 's');
+        piece.style.setProperty('--d', (-Math.random() * 18) + 's');
+        piece.style.setProperty('--drift', ((Math.random() - 0.5) * 50) + 'px');
+        piece.style.setProperty('--spin', (360 + Math.random() * 540) + 'deg');
+        layer.appendChild(piece);
+    }
+    shell.insertBefore(layer, shell.firstChild);
+}
+
+// The first time the popup opens each day: a short shower over the whole popup
+// (snow and stars, confetti, or rising hearts). After that the popup stays calm.
+// ?flourish=always forces it for previews.
+function seasonFlourish(theme) {
+    if (!SEASON_LAYER_COUNT[theme] || prefersReducedMotion()) return;
+    const forced = new URLSearchParams(window.location.search).get('flourish') === 'always';
+    if (forced) {
+        runFlourish(theme);
+        return;
+    }
+    const now = new Date();
+    const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    chrome.storage.local.get([FLOURISH_STORAGE_KEY], (result) => {
+        if (result[FLOURISH_STORAGE_KEY] === today) return;
+        chrome.storage.local.set({ [FLOURISH_STORAGE_KEY]: today });
+        runFlourish(theme);
+    });
+}
+
+function runFlourish(theme) {
+    try {
+        const shell = document.querySelector('.popup-shell');
+        if (!shell || !shell.animate) return;
+        const height = shell.offsetHeight || 420;
+        const total = theme === 'newyear' ? 28 : theme === 'christmas' ? 20 : 14;
+        for (let i = 0; i < total; i++) {
+            let piece;
+            if (theme === 'valentine') {
+                piece = makeHeart('fl-piece ' + (i % 3 === 0 ? 'fl-heart--light' : 'fl-heart'));
+            } else if (theme === 'christmas' && i % 5 === 0) {
+                piece = makeHeart('fl-piece fl-gold');
+                piece.firstChild.setAttribute('href', '#fx-star');
+            } else {
+                piece = document.createElement('span');
+                piece.className = theme === 'newyear' ? 'fl-piece fl-conf--' + (i % 4) : 'fl-piece fl-snow';
+            }
+            const size = theme === 'newyear' ? 6 + Math.random() * 5 : theme === 'valentine' ? 11 + Math.random() * 10 : 3 + Math.random() * 4;
+            piece.style.left = (2 + Math.random() * 96) + '%';
+            piece.style.width = size + 'px';
+            piece.style.height = (theme === 'newyear' ? size * 0.55 : size) + 'px';
+            piece.style.opacity = '0';
+            const rising = theme === 'valentine';
+            if (rising) piece.style.bottom = '-16px';
+            else piece.style.top = '-14px';
+            const drift = (Math.random() - 0.5) * 70;
+            const travel = (rising ? -1 : 1) * (height + 30);
+            const spin = rising ? 0 : 200 + Math.random() * 520;
+            shell.appendChild(piece);
+            const animation = piece.animate([
+                { opacity: 0, transform: 'translate(0, 0) rotate(0deg)' },
+                { opacity: 1, offset: 0.12 },
+                { opacity: 1, offset: 0.8 },
+                { opacity: 0, transform: 'translate(' + drift + 'px, ' + travel + 'px) rotate(' + spin + 'deg)' }
+            ], { duration: 1700 + Math.random() * 1300, delay: Math.random() * 800, easing: 'cubic-bezier(0.3, 0.55, 0.4, 1)', fill: 'both' });
+            animation.onfinish = () => piece.remove();
+        }
+    } catch (e) {
+        // Decoration only.
+    }
+}
+
+// All six switches on: Christmas lights the star, New Year strikes midnight.
+function celebrate() {
+    const theme = document.documentElement.dataset.theme;
+    const header = document.querySelector('.header');
+    if (!header) return;
+    if (theme === 'christmas') spawnParticles(header, '.xm-tree', 9);
+    if (theme === 'newyear') spawnParticles(header, '.ny-clock', 12);
+    if (theme === 'valentine') spawnParticles(header, '.vl-hearts', 10);
+}
+
 const SEASONAL_THEMES = ['halloween', 'christmas', 'newyear', 'valentine'];
 
-// Date windows are local time and inclusive: Valentine's Feb 10-15,
-// Halloween Oct 1-Nov 1, Christmas Dec 15-26, New Year Dec 27-Jan 3.
+// Date windows are local time and inclusive; each season starts two days early
+// to absorb store review lag. Outside them the popup keeps the default look:
+// Halloween Sep 29-Nov 4, Christmas Nov 29-Dec 27, New Year Dec 28-Jan 31,
+// Valentine's Feb 8-15.
 function getSeasonalTheme(date = new Date()) {
     const month = date.getMonth() + 1;
     const day = date.getDate();
-    if (month === 2 && day >= 10 && day <= 15) return 'valentine';
-    if (month === 10 || (month === 11 && day === 1)) return 'halloween';
-    if (month === 12 && day >= 15 && day <= 26) return 'christmas';
-    if ((month === 12 && day >= 27) || (month === 1 && day <= 3)) return 'newyear';
+    if (month === 2 && day >= 8 && day <= 15) return 'valentine';
+    if ((month === 9 && day >= 29) || month === 10 || (month === 11 && day <= 4)) return 'halloween';
+    if ((month === 11 && day >= 29) || (month === 12 && day <= 27)) return 'christmas';
+    if ((month === 12 && day >= 28) || month === 1) return 'newyear';
     return 'default';
 }
 
-function applyTheme() {
+function applyTheme(forced) {
     try {
-        const requested = new URLSearchParams(window.location.search).get('theme');
+        const requested = forced || new URLSearchParams(window.location.search).get('theme');
         const theme = SEASONAL_THEMES.includes(requested) || requested === 'default'
             ? requested
             : getSeasonalTheme();
         if (theme !== 'default') {
             document.documentElement.dataset.theme = theme;
+            buildSeasonLayer(theme);
+            seasonFlourish(theme);
+            const year = document.querySelector('.ny-year');
+            if (year) {
+                const now = new Date();
+                year.textContent = String(now.getFullYear() + (now.getMonth() === 11 ? 1 : 0));
+            }
             const symbols = getThemeFxSymbols(theme);
             const ambientSymbol = theme === 'halloween' ? 'fx-bat' : symbols[symbols.length - 1];
             document.querySelectorAll('.ambient-fx use').forEach(use => {
@@ -447,6 +670,13 @@ function updatePlatformCounts() {
 
     const { enabled, total } = countEnabled();
     document.documentElement.style.setProperty('--on-ratio', String(total ? enabled / total : 0));
+    document.documentElement.dataset.complete = total && enabled === total ? 'true' : 'false';
+    document.querySelectorAll('.xm-orn').forEach((ornament, index) => {
+        ornament.classList.toggle('is-lit', index < enabled);
+    });
+    document.querySelectorAll('.vl-h').forEach((heart, index) => {
+        heart.classList.toggle('is-lit', index < enabled);
+    });
 }
 
 function countEnabled() {
@@ -487,9 +717,11 @@ function attachEventListeners() {
             const { enabled, total } = countEnabled();
             playTone(input.checked ? 'on' : 'off', {
                 ratio: total ? enabled / total : 0,
+                count: enabled,
                 vanished: input.checked && enabled === total,
                 reappeared: !input.checked && enabled === total - 1
             });
+            if (input.checked && enabled === total) celebrate();
         });
     });
 }
