@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "npm run build && npm run test:modules && node test/messenger-send-stability.test.js && npm run test:status && npm run test:dependency-audit && npm run test:release-notes && npm run test:tag-integrity && npm run test:validator && npm run test:package",
-    "test:modules": "npm run test:modules:shared && node test/firefox-popup.test.js",
+    "test:modules": "npm run test:modules:shared && node test/firefox-popup.test.js && node test/popup-theme.test.js",
     "test:modules:shared": "node test/settings-defaults.test.js && node test/runtime-config.test.js && node test/module-registry.test.js && node test/module-flags.test.js",
     "test:popup:chromium": "node test/firefox-popup.test.js chromium",
     "test:popup:firefox": "node test/firefox-popup.test.js firefox",

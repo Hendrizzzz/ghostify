@@ -31,6 +31,26 @@ Dark-first, low-glare, fixed 320px shell.
   (test-pinned).
 - Tooltips: DOM tooltip pattern for the status pill; CSS `::after/data-tooltip`
   for footer links. No native `title=` attributes (test-pinned).
+- Look: flat and quiet. Solid surfaces, hairline borders, no gradients, glows
+  or tinted shadows. Feature icons are 18px line glyphs on 28px chips that
+  take a flat accent tint when their switch is on.
+- Seasonal themes: `popup.js` sets `html[data-theme]` from the local date
+  (Valentine's Feb 10–15, Halloween Oct 1–Nov 1, Christmas Dec 15–26, New Year
+  Dec 27–Jan 3); `popup.html?theme=<name>` previews one. A theme swaps surface
+  and accent tokens, adds one small line mark in the header and a few flat
+  effects. It never touches `--status-*` or layout. Every animated piece stops
+  under `prefers-reduced-motion`.
+- Halloween is the festive one, by choice: bats cross the header, a spider
+  drops on a thread, ghosts peek over the cards, a pumpkin patch sits on the
+  footer line and the tally is three pumpkins. Its story: ghost visible means
+  you are still visible. As more switches are on the header ghost fades, the
+  room darkens, the moon brightens and rows light up like candles
+  (`--on-ratio` on `<html>`). Hovering the logo shows the ghost. Idle motion
+  is deliberately rare (bats every ~34s, spider ~52s).
+- Sound (opt-in, footer speaker): the default theme is a soft sine tick.
+  Halloween uses breath, a low hollow note and a synthesized room, never above
+  a whisper (a test caps voice level), plus one distant bell when the last
+  switch hides the ghost. Synthesized only, no audio files.
 - Motion: micro-lifts use 140–160ms cubic-bezier(0.2, 0.8, 0.2, 1); a few plain
   `ease` transitions remain for color fades.
   `prefers-reduced-motion` resets all of them.
