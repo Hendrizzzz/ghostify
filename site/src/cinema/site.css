@@ -27,6 +27,16 @@ html.is-site body {
   color: var(--fg);
 }
 
+/* The homepage hides its scrollbar; scrolling itself is unchanged. The
+   status pages keep theirs, since they are long reading pages. */
+html.is-film-page {
+  scrollbar-width: none;
+}
+
+html.is-film-page::-webkit-scrollbar {
+  display: none;
+}
+
 .site {
   font-family: var(--sys);
   font-size: 17px;
