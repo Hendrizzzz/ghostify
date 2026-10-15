@@ -23,140 +23,174 @@ gsap.registerPlugin(ScrollTrigger, Observer);
 /* The landing film, cut into shots. One gesture plays exactly one shot: a
    fixed-length timeline that runs on its own clock (enter, action, beat,
    hold), never scrubbed to the wheel. Each shot is composed on a fixed canvas,
-   1280 × 720 for the widescreen cut and 390 × 844 for the vertical cut, and
-   scaled into the screen by one unit, --u. The cut is picked by the screen's
-   shape, not by device. Only transforms, opacity and clip-path animate. */
+   1280 × 720 for the widescreen cut and 390 wide for the vertical cut, and
+   scaled into the screen by one unit, --u. The vertical cut is composed twice,
+   for a full-height phone (844 tall) and for a phone with its browser bars
+   showing (660 tall); screens in between get a blend of the two, and taller
+   ones (portrait tablets) get the short take, larger. The cut is picked by the
+   screen's shape, not by device. Only transforms, opacity and clip-path
+   animate. */
 
 type R = readonly [x: number, y: number, w: number];
 
-/* Where things sit, in canvas units. [widescreen, vertical]. */
+/* Where things sit, in canvas units: [widescreen, vertical, short vertical]. */
 const AT = {
   g0: [
     [576, 118, 128],
     [159, 128, 72],
+    [167, 84, 56],
   ],
   clear: [
     [140, -150, 1000],
     [-185, -60, 760],
+    [-185, -110, 760],
   ],
   spill1: [
     [560, -110, 880],
     [-160, 40, 710],
+    [-160, -20, 710],
   ],
   chat: [
     [900, 104, 300],
+    [0, 0, 390],
     [0, 0, 390],
   ],
   chatFar: [
     [720, 166, 210],
     [120, 190, 170],
+    [140, 100, 150],
   ],
   reflect: [
     [720, 488, 210],
     [120, 451, 170],
+    [140, 331, 150],
   ],
   ghost: [
     [96, 172, 300],
     [246, 514, 120],
+    [250, 330, 110],
   ],
   ghostFar: [
     [262, 262, 236],
     [24, 446, 140],
+    [36, 300, 120],
   ],
   haze: [
     [-200, 380, 640],
     [-160, 560, 460],
+    [-160, 400, 460],
   ],
   seen: [
     [470, 236, 0],
     [24, 542, 0],
+    [24, 372, 0],
   ],
   seenFrom: [
     [930, 400, 0],
     [190, 450, 0],
+    [190, 300, 0],
   ],
   glow2: [
     [20, -60, 840],
     [-150, 20, 690],
+    [-150, -10, 690],
   ],
   typing: [
     [150, 110, 500],
     [16, 132, 358],
+    [16, 92, 358],
   ],
   dots: [
     [720, 330, 0],
     [118, 486, 0],
+    [118, 412, 0],
   ],
   lean: [
     [1010, 230, 340],
     [226, 556, 220],
+    [236, 392, 200],
   ],
   glow3: [
     [230, -130, 960],
     [-160, -40, 710],
+    [-160, -60, 710],
   ],
   fb: [
     [900, 160, 222],
     [250, 140, 150],
+    [250, 100, 150],
   ],
   ig: [
     [580, 96, 262],
     [0, 0, 390],
+    [0, -16, 390],
   ],
   peek: [
     [434, 244, 220],
     [262, 466, 160],
+    [266, 318, 140],
   ],
   glow4: [
     [560, 60, 640],
     [-40, 250, 470],
+    [-40, 180, 470],
   ],
   popup: [
     [730, 100, 390],
     [88, 270, 280],
+    [120, 254, 230],
   ],
   peek4: [
     [600, 230, 190],
     [4, 370, 130],
+    [8, 300, 112],
   ],
   w0: [
     [250, 178, 169],
     [20, 300, 104],
+    [20, 268, 104],
   ],
   w1: [
     [528, 150, 224],
     [133, 268, 124],
+    [133, 236, 124],
   ],
   w2: [
     [862, 180, 168],
     [266, 300, 104],
+    [266, 268, 104],
   ],
   wGlow0: [
     [120, 100, 440],
     [-80, 200, 300],
+    [-80, 168, 300],
   ],
   wGlow1: [
     [430, 60, 420],
     [40, 170, 310],
+    [40, 138, 310],
   ],
   wGlow2: [
     [740, 100, 440],
     [170, 200, 300],
+    [170, 168, 300],
   ],
   wGhost: [
     [612, 444, 56],
     [175, 418, 40],
+    [175, 386, 40],
   ],
   glow6: [
     [340, 0, 600],
     [-60, 80, 510],
+    [-60, 40, 510],
   ],
-} as const satisfies Record<string, readonly [R, R]>;
+} as const satisfies Record<string, readonly [R, R, R]>;
 
 type Key = keyof typeof AT;
 
 function at(key: Key, extra?: CSSProperties): CSSProperties {
-  const [w, t] = AT[key];
+  const [w, t, s] = AT[key];
   return {
     ...extra,
     '--x': w[0],
@@ -165,8 +199,17 @@ function at(key: Key, extra?: CSSProperties): CSSProperties {
     '--px': t[0],
     '--py': t[1],
     '--pw': t[2],
+    '--qx': s[0],
+    '--qy': s[1],
+    '--qw': s[2],
   } as CSSProperties;
 }
+
+/* The vertical cut's two takes: a phone 844 units tall and one 660 tall. */
+const TALL = 844;
+const SHORT = 660;
+/* The widescreen cut stops growing here, so a 4K screen is not blown up. */
+const MAX_U = 2.5;
 
 const WALL_ROWS = [
   'Seen 21:04 · typing… · Seen · viewed your story · ',
@@ -336,13 +379,41 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
     const ticks = q('.tick') as HTMLAnchorElement[];
     let U = 1;
     let tall = false;
+    let W = 0;
+    let H = 0;
 
+    /* Mirrors the CSS: the unit, and in the vertical cut how far the screen
+       is from the short take towards the full-height one (0 to 1, in px per
+       canvas unit of difference) plus any extra height, split above and
+       below. */
+    let blend = 0;
+    let extra = 0;
     const measure = () => {
       tall = !matchMedia('(min-aspect-ratio: 1/1)').matches;
-      const w = stage.clientWidth;
-      const h = stage.clientHeight;
-      U = tall ? Math.min(w / 390, h / 844) : Math.min(w / 1280, h / 720);
+      W = stage.clientWidth;
+      H = stage.clientHeight;
+      U = tall
+        ? Math.min(W / 390, H / SHORT)
+        : Math.min(H / 720, Math.max(W / 1280, Math.min(W / 1160, H / 830)), MAX_U);
+      blend = tall ? Math.min(Math.max(H - SHORT * U, 0), (TALL - SHORT) * U) / (TALL - SHORT) : 0;
+      extra = tall ? Math.max(0, (H - TALL * U) / 2) : 0;
       el.style.setProperty('--uk', String(U));
+      el.style.setProperty('--pz', (place('popup').w / 320).toFixed(4));
+    };
+
+    /* Where a resting place sits on screen, in px, as `.at` lays it out. */
+    const place = (key: Key) => {
+      if (!tall) {
+        const [x, y, w] = AT[key][0];
+        return { x: W / 2 + (x - 640) * U, y: H / 2 + (y - 360) * U, w: w * U };
+      }
+      const [px, py, pw] = AT[key][1];
+      const [qx, qy, qw] = AT[key][2];
+      return {
+        x: W / 2 + (qx - 195) * U + (px - qx) * blend,
+        y: qy * U + (py - qy) * blend + extra,
+        w: qw * U + (pw - qw) * blend,
+      };
     };
 
     // Start each light spill from a still of its footage.
@@ -400,13 +471,12 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
 
     /* ---------- The shots ---------- */
 
-    const T = (k: Key) => AT[k][tall ? 1 : 0];
     /* A resting place expressed as a transform away from another one. */
-    const from = (rest: Key, there: Key) => ({
-      x: (T(there)[0] - T(rest)[0]) * U,
-      y: (T(there)[1] - T(rest)[1]) * U,
-      scale: T(rest)[2] ? T(there)[2] / T(rest)[2] : 0.3,
-    });
+    const from = (rest: Key, there: Key) => {
+      const a = place(rest);
+      const b = place(there);
+      return { x: b.x - a.x, y: b.y - a.y, scale: a.w ? b.w / a.w : 0.3 };
+    };
     const px = (n: number) => n * U;
     type TL = gsap.core.Timeline;
 
@@ -666,6 +736,15 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         bars(tl, true);
         popup.current?.setSwitches(Array(SWITCH_COUNT).fill(false));
         popup.current?.focusRow(-1);
+        // On a narrow phone the copy can run longer than composed: the popup
+        // keeps clear of it.
+        const slot = q('.s4 .popup-slot')[0] as HTMLElement | undefined;
+        if (slot) {
+          slot.style.marginTop = '';
+          const copy = q('.s4 .copy')[0]?.getBoundingClientRect();
+          const push = tall && copy ? copy.bottom + 14 - slot.getBoundingClientRect().top : 0;
+          if (push > 0) slot.style.marginTop = `${push}px`;
+        }
         tl.fromTo(q('.s4 .glow4'), { opacity: 0 }, { opacity: 1, duration: 1 }, 0);
         tl.fromTo(
           q('.s4 .popup-in'),
@@ -718,14 +797,23 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
          browser window. Three lines, then the credit. */
       (tl) => {
         bars(tl, false);
-        const H = stage.clientHeight;
+        let scale = H < 560 ? 0.5 : 0.58;
+        let y = -40 * U;
+        if (tall) {
+          // The window fits between the header and the lines, whatever the
+          // screen's height.
+          const top = (document.querySelector('.bar')?.getBoundingClientRect().bottom ?? 64) + 8;
+          const lines = q('.s7 .local')[0]?.getBoundingClientRect().top ?? H * 0.7;
+          scale = Math.min(0.6, Math.max(0.3, (lines - 16 - top) / H));
+          y = top - (H * (1 - scale)) / 2;
+        }
         tl.fromTo(
           q('.s7 .frame'),
           { scale: 1, y: 0 },
           {
             // Short landscape screens pull back further to clear the lines.
-            scale: tall ? 0.6 : H < 560 ? 0.5 : 0.58,
-            y: (tall ? -84 : -40) * U,
+            scale,
+            y,
             duration: 1.4,
             ease: 'power2.inOut',
           },
@@ -960,7 +1048,10 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
       unlock();
       const credits = document.querySelector<HTMLElement>('.credits');
       const top = credits ? credits.getBoundingClientRect().top + scrollY - 72 : innerHeight;
-      window.scrollTo({ top: Math.min(top, innerHeight * 0.9), behavior: 'smooth' });
+      // A short landscape screen scrolls the film fully away, so nothing of
+      // the end card is left under the header.
+      const to = innerHeight < 520 ? innerHeight : Math.min(top, innerHeight * 0.9);
+      window.scrollTo({ top: to, behavior: 'smooth' });
     };
 
     /* Sound starts inside the visitor's first press, in the same event. */
@@ -1159,13 +1250,24 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
       else paint(chatVideo.current, spill1.current, FOOTAGE.messenger);
     };
 
-    // Resizing re-lays the shot on screen at its hold frame.
+    /* Resizing or rotating re-lays the shot on screen at its hold frame;
+       a shot still playing is re-laid once it has played. A phone's browser
+       bars coming and going leave the stage (100svh) as it was, so nothing
+       restarts. */
     let resizeTimer = 0;
     const onResize = () => {
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
-        if (performance.now() >= busyUntil && shot >= 0) go(shot, { instant: true, push: false });
-        else measure();
+        const was = [W, H, tall];
+        measure();
+        if (was[0] === W && was[1] === H && was[2] === tall) return;
+        if (shot < 0) return;
+        const wait = busyUntil - performance.now();
+        if (wait <= 0) go(shot, { instant: true, push: false });
+        else
+          resizeTimer = window.setTimeout(() => {
+            if (performance.now() >= busyUntil) go(shot, { instant: true, push: false });
+          }, wait + 60);
       }, 160);
     };
 
