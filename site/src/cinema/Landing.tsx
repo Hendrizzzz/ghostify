@@ -115,6 +115,12 @@ export default function Landing({ base }: { base: string }) {
 
   useEffect(() => () => sound.stop(), [sound]);
 
+  // The film moves one shot per gesture, so a scrollbar only jumps around.
+  useEffect(() => {
+    document.documentElement.classList.add('is-film-page');
+    return () => document.documentElement.classList.remove('is-film-page');
+  }, []);
+
   return (
     <>
       <Header store={stores[0]} base={base} extra={<SoundToggle sound={sound} />} />
