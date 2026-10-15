@@ -579,7 +579,7 @@
     const markThreadAsReadCallbackWrappers = /* @__PURE__ */ new WeakMap();
     const readReceiptWrapperMetadata = /* @__PURE__ */ new WeakMap();
     const readReceiptWrapperCache = /* @__PURE__ */ new WeakMap();
-    const optimisticMarkThreadReadLeafWrappers = /* @__PURE__ */ new WeakMap();
+    const optimisticReadTaskWrappers = /* @__PURE__ */ new WeakMap();
     window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(
       window.__GHOSTIFY_SETTINGS__
     );
@@ -1123,6 +1123,7 @@
           window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
           window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
           window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
+          window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ = 0;
           window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
           window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ = 0;
           window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = 0;
@@ -1159,6 +1160,7 @@
               unsafeTransferBlocksSkipped: window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ || 0,
               blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
               blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
+              blockedReadTaskEnqueues: window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ || 0,
               sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
               wrappedMarkThreadAsReadCallbacks: window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ || 0,
               blockedMarkThreadAsReadCalls: window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0,
@@ -3036,12 +3038,12 @@
       const isTopFrame = window.top == null || window.top === window;
       return isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy && isTopFrame && normalizeReadOperationIdentity(moduleName) === "lsoptimisticmarkthreadreadv2";
     }
-    function isOptimisticMarkThreadReadLeafIdentity(value) {
-      return normalizeReadOperationIdentity(value) === "lsmarkthreadread";
+    function isOptimisticReadTaskDependency(value) {
+      return normalizeReadOperationIdentity(value) === "lsissuenewtask";
     }
-    function wrapOptimisticMarkThreadReadLeaf(fn) {
+    function wrapOptimisticReadTask(fn) {
       if (typeof fn !== "function") return fn;
-      const cached = optimisticMarkThreadReadLeafWrappers.get(fn);
+      const cached = optimisticReadTaskWrappers.get(fn);
       if (cached) return cached;
       const wrapped = new Proxy(fn, {
         apply(target, thisArg, args) {
@@ -3049,15 +3051,16 @@
             return Reflect.apply(target, thisArg, args);
           }
           const runtime = args[args.length - 1];
-          if (!runtime || typeof runtime.resolve !== "function") {
+          const label = args[1];
+          if (typeof args[0] !== "string" || args[0].length === 0 || !isI64Pair(label) || label[0] !== 0 || label[1] !== 21 || !runtime || typeof runtime.resolve !== "function") {
             return Reflect.apply(target, thisArg, args);
           }
           window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
-          window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0) + 1;
+          window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ = (window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ || 0) + 1;
           return Reflect.apply(runtime.resolve, runtime, [[]]);
         }
       });
-      optimisticMarkThreadReadLeafWrappers.set(fn, wrapped);
+      optimisticReadTaskWrappers.set(fn, wrapped);
       return wrapped;
     }
     function wrapOptimisticMarkThreadReadRequire(factoryArgs, moduleName) {
@@ -3067,7 +3070,7 @@
         return;
       const wrappedRequire = function(requestedName) {
         const required = originalRequire.apply(this, arguments);
-        return isOptimisticMarkThreadReadLeafIdentity(requestedName) && typeof required === "function" ? wrapOptimisticMarkThreadReadLeaf(required) : required;
+        return isOptimisticReadTaskDependency(requestedName) && typeof required === "function" ? wrapOptimisticReadTask(required) : required;
       };
       try {
         Object.defineProperty(

@@ -121,7 +121,7 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
     const markThreadAsReadCallbackWrappers = new WeakMap();
     const readReceiptWrapperMetadata = new WeakMap();
     const readReceiptWrapperCache = new WeakMap();
-    const optimisticMarkThreadReadLeafWrappers = new WeakMap();
+    const optimisticReadTaskWrappers = new WeakMap();
 
     window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(
         window.__GHOSTIFY_SETTINGS__,
@@ -1108,6 +1108,7 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
                 window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
                 window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
                 window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
+                window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ = 0;
                 window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
                 window.__GHOSTIFY_WRAPPED_MARK_THREAD_AS_READ_CALLBACKS__ = 0;
                 window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = 0;
@@ -1162,6 +1163,8 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
                             0,
                         blockedReadExportCalls:
                             window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
+                        blockedReadTaskEnqueues:
+                            window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ || 0,
                         sanitizedReadExportCalls:
                             window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ ||
                             0,
@@ -3768,13 +3771,13 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
         );
     }
 
-    function isOptimisticMarkThreadReadLeafIdentity(value) {
-        return normalizeReadOperationIdentity(value) === "lsmarkthreadread";
+    function isOptimisticReadTaskDependency(value) {
+        return normalizeReadOperationIdentity(value) === "lsissuenewtask";
     }
 
-    function wrapOptimisticMarkThreadReadLeaf(fn) {
+    function wrapOptimisticReadTask(fn) {
         if (typeof fn !== "function") return fn;
-        const cached = optimisticMarkThreadReadLeafWrappers.get(fn);
+        const cached = optimisticReadTaskWrappers.get(fn);
         if (cached) return cached;
 
         const wrapped = new Proxy(fn, {
@@ -3788,19 +3791,33 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
                 }
 
                 const runtime = args[args.length - 1];
-                if (!runtime || typeof runtime.resolve !== "function") {
+                const label = args[1];
+                if (
+                    typeof args[0] !== "string" ||
+                    args[0].length === 0 ||
+                    !isI64Pair(label) ||
+                    label[0] !== 0 ||
+                    label[1] !== 21 ||
+                    !runtime ||
+                    typeof runtime.resolve !== "function"
+                ) {
                     return Reflect.apply(target, thisArg, args);
                 }
 
+                // This consumer updates local unread state, then enqueues task
+                // 21. Keep the local work native and stop only that enqueue:
+                // dropping it after serialization leaves the task awaiting an
+                // acknowledgement and can stall later sends on the same queue.
+                // The native enqueue resolves an empty array. Use its own
+                // runtime so the surrounding transaction still completes.
                 window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
                     (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
-                window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ =
-                    (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
-                        0) + 1;
+                window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ =
+                    (window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ || 0) + 1;
                 return Reflect.apply(runtime.resolve, runtime, [[]]);
             },
         });
-        optimisticMarkThreadReadLeafWrappers.set(fn, wrapped);
+        optimisticReadTaskWrappers.set(fn, wrapped);
         return wrapped;
     }
 
@@ -3815,9 +3832,9 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
 
         const wrappedRequire = function (requestedName) {
             const required = originalRequire.apply(this, arguments);
-            return isOptimisticMarkThreadReadLeafIdentity(requestedName) &&
+            return isOptimisticReadTaskDependency(requestedName) &&
                 typeof required === "function"
-                ? wrapOptimisticMarkThreadReadLeaf(required)
+                ? wrapOptimisticReadTask(required)
                 : required;
         };
         try {

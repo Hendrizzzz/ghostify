@@ -3039,6 +3039,7 @@
         window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ = 0;
         window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ = 0;
         window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = 0;
+        window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ = 0;
         window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ = 0;
         pushObservation(
           createMarkerEvent(`reset:${window.__GHOSTIFY_CAPTURE_PHASE__}`)
@@ -3072,6 +3073,7 @@
             unsafeTransferBlocksSkipped: window.__GHOSTIFY_UNSAFE_TRANSFER_BLOCKS_SKIPPED__ || 0,
             blockedTypingExportCalls: window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
             blockedReadExportCalls: window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0,
+            blockedReadTaskEnqueues: window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__ || 0,
             sanitizedReadExportCalls: window.__GHOSTIFY_SANITIZED_READ_EXPORT_CALLS__ || 0,
             settings: window.__GHOSTIFY_SETTINGS__
           },
