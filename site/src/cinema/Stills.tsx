@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
-import { STATUS_DATA, formatStatusDate, getLastVerifiedAt } from '../app/statusData';
+import { formatStatusDate, getStatusCredit } from '../app/statusData';
 import { FOOTAGE } from './Clip';
 import { Ghost } from './Ghost';
 import { RealPopup, type RealPopupHandle } from './RealPopup';
@@ -10,8 +10,7 @@ import { GITHUB_URL, StoreButtons, type Store } from './Shell';
    cannot run: still frames from the real footage, one line each, normal
    scroll, no autoplay, and sound only if the visitor turns it on. */
 
-const ALL_WORKING = STATUS_DATA.summary.publicStatus === 'maintainer_verified';
-const LAST_VERIFIED = formatStatusDate(getLastVerifiedAt());
+const STATUS_CREDIT = getStatusCredit();
 
 const FRAMES = [
   {
@@ -98,11 +97,10 @@ export function Stills({ stores, base }: { stores: Store[]; base: string }) {
           </a>
         </p>
         <a
-          className={`local-credit ${ALL_WORKING ? 'is-ok' : 'is-review'}`}
+          className={`local-credit ${STATUS_CREDIT.verified ? 'is-ok' : 'is-review'}`}
           href={`${base}/status`}
         >
-          {ALL_WORKING ? 'Every switch verified working' : 'Some switches under review'} ·{' '}
-          {LAST_VERIFIED}
+          {STATUS_CREDIT.label} · {formatStatusDate(STATUS_CREDIT.updatedAt)}
         </a>
       </div>
 

@@ -1,9 +1,8 @@
 # Ghostify 2.1.0 store submission
 
-Prepared on October 15, 2026. The maintainer reported submitting version 2.1.0
-to Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons on the same
-date. All three submissions are awaiting review; approval and publication
-remain separate steps.
+Prepared on October 15, 2026. The maintainer confirms that Chrome Web Store,
+Microsoft Edge Add-ons, and Firefox Add-ons all approved version 2.1.0 on
+October 16, 2026. All three public listings now serve 2.1.0.
 
 ## Scope
 
@@ -15,7 +14,10 @@ remain separate steps.
 - Keep the shared runtime, permissions, permanent Firefox identity, and local
   privacy settings unchanged by this release-preparation change.
 
-The maintainer confirmed the Facebook sending fix. Account-switch behavior
+The maintainer confirms all supported controls are working, including Facebook
+Hide Seen. Facebook may temporarily show a conversation as read locally while
+Seen receipts remain blocked; reloading restores its unread appearance.
+Account-switch behavior
 from issue #197 and independent recipient-side Seen privacy have not been
 re-verified by these sending tests.
 
@@ -30,6 +32,18 @@ re-verified by these sending tests.
 These listings were checked on October 15, 2026. A public listing does not show
 unpublished submissions already pending in the owner's dashboard; confirm
 there is no conflicting pending 2.1.0 upload before submitting.
+
+## Approval and current verification
+
+- All three stores approved 2.1.0 on October 16, 2026, confirmed by the maintainer.
+- Public listings independently checked on October 17, 2026 Asia/Manila show
+  version 2.1.0 on Chrome, Edge, and Firefox. Each listing displays an updated
+  date of October 15; that listing date is distinct from the maintainer's
+  confirmed approval date.
+- The maintainer confirms all supported controls are working. This is a
+  maintainer confirmation, not a new automated live privacy test.
+- Canonical status dates use UTC: the October 17 Asia/Manila confirmation is
+  recorded on October 16 UTC.
 
 ## Files to upload
 
@@ -75,17 +89,15 @@ fields and reviewer notes. Supply any required dedicated test credentials
 privately through AMO, never in source files or public release notes.
 
 Record each store's upload time, submitted filename, checksum, review status,
-and eventual approval separately. Submission to all three stores has been
-reported by the maintainer; no store approval has been recorded.
+and eventual approval separately. The maintainer has confirmed approval of
+2.1.0 on all three stores on October 16, 2026.
 
 ## Status and publication
 
-The public status says 2.1.0 has been submitted to all three stores and is
-awaiting review, and explains the workaround for users still on 2.0.10.
-`release.publishedVersion` and
-`verificationVersion` remain 2.0.10 until the new Store build is actually live
-and its checks are recorded. This preparation does not mark all privacy
-controls newly verified.
+The public status records 2.1.0 as published and verified following the
+maintainer's confirmation. It notes Facebook's temporary local read appearance
+without marking Hide Seen as broken. The film, reduced-motion landing page,
+status page, and popup derive their status from the same canonical record.
 
 After Chrome Web Store approval, follow `RELEASE_CHECKLIST.md` section 11:
 confirm the public version, smoke-test the installed Store build, then run
