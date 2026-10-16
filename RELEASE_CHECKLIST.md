@@ -170,7 +170,7 @@ Test only with accounts and conversations you are allowed to use.
   - Hide Seen blocks read receipt writes.
   - Message requests open correctly.
 - `GH-FB-STORY-001`: Supported Facebook story-view writes are blocked and story media still loads.
-- `GH-FB-LOCAL-READ-001`: unread personal and group rows stay bold with the blue unread indicator after open/reopen, reload with an open or minimized composer, and a second-tab cross-check; chat switching, unsent drafts, and history loading do not produce `Couldn’t load chats`. Sender-side Seen proof is checked separately.
+- `GH-FB-LOCAL-READ-001`: record Facebook's temporary local read appearance with Hide Seen enabled, confirm reloading restores unread styling, and keep that observation separate from sender-side Seen proof. Chat switching, unsent drafts, and history loading must not produce `Couldn’t load chats`.
 - `GH-FB-MEDIA-001`: video and media playback still work on non-message surfaces.
 
 Record any platform limitation in the GitHub Release notes and, when user-facing,

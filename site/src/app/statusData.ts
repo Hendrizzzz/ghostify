@@ -136,6 +136,22 @@ export function getLastVerifiedAt(): string | null {
   );
 }
 
+export function getStatusCredit(data: StatusData = STATUS_DATA) {
+  const verifiedStatus =
+    data.summary.publicStatus === 'maintainer_verified' ||
+    data.summary.publicStatus === 'community_verified_reviewed';
+  const verified = verifiedStatus && data.release.matchesVerificationBuild;
+  const latestUpdate = data.history.find(
+    (entry) => entry.eventType !== 'release' && entry.eventType !== 'fix',
+  );
+
+  return {
+    label: verifiedStatus && !verified ? 'Under review' : data.summary.label,
+    updatedAt: latestUpdate?.date || data.generatedAt,
+    verified,
+  };
+}
+
 export function formatStatusDate(value: string | null): string {
   if (!value) return 'Not recorded';
   const date = new Date(value);

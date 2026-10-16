@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
-import { STATUS_DATA, formatStatusDate, getLastVerifiedAt } from '../app/statusData';
+import { formatStatusDate, getStatusCredit } from '../app/statusData';
 import { Clip, FOOTAGE, primeClip, runClip, type Footage } from './Clip';
 import { Ghost, GhostSilhouette } from './Ghost';
 import { RealPopup, type RealPopupHandle } from './RealPopup';
@@ -270,8 +270,7 @@ const MARKS: ReadonlyArray<readonly [MetaPlatform, string, number, number]> = [
   ['facebook', 'Facebook', 946, 318],
 ];
 
-const ALL_WORKING = STATUS_DATA.summary.publicStatus === 'maintainer_verified';
-const LAST_VERIFIED = formatStatusDate(getLastVerifiedAt());
+const STATUS_CREDIT = getStatusCredit();
 
 /* A line that rises out of a mask. */
 function Line({ children }: { children: ReactNode }) {
@@ -1584,11 +1583,10 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
               </a>
             </p>
             <a
-              className={`local-credit ${ALL_WORKING ? 'is-ok' : 'is-review'}`}
+              className={`local-credit ${STATUS_CREDIT.verified ? 'is-ok' : 'is-review'}`}
               href={`${base}/status`}
             >
-              {ALL_WORKING ? 'Every switch verified working' : 'Some switches under review'} ·{' '}
-              {LAST_VERIFIED}
+              {STATUS_CREDIT.label} · {formatStatusDate(STATUS_CREDIT.updatedAt)}
             </a>
           </div>
         </div>

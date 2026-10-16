@@ -49,6 +49,11 @@ uses this field so a fix or release never looks identical to a routine check.
    headline and update it together with `summary.message`. Store submission
    and approval updates must describe the rollout rather than imply a new
    check of the privacy controls.
+   The landing film and reduced-motion page use the same label and the date
+   of the latest status history record, excluding release/fix-only events.
+   The date identifies the recorded update; it does not advance just because
+   another day passes. The status page's separate Last checked field remains
+   the date of the latest maintainer verification.
 3. Update platform entries and structured evidence fields when checks change.
 4. Keep `release.publishedAt` as the original Store launch date.
 5. Run the site build and inspect `/status` and `/status/history` at desktop,

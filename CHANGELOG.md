@@ -45,6 +45,12 @@ grouped by version, with the most recent changes first.
 - Removed the Facebook/Messenger Hide Seen group-chat warning badge from the
   popup.
 
+### Known limitations
+
+- With Facebook Hide Seen enabled, a conversation may temporarily look read
+  in your own interface while Seen receipts remain blocked. Reloading restores
+  its unread appearance.
+
 ## [2.0.10] - 2026-08-29
 
 ### Added

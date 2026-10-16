@@ -15,7 +15,7 @@
     "test:popup:chromium": "node test/firefox-popup.test.js chromium",
     "test:popup:firefox": "node test/firefox-popup.test.js firefox",
     "test:validator": "node test/validate-extension-package.test.js",
-    "test:status": "node test/prepare-status-update.test.js && node test/daily-verification-git.test.js",
+    "test:status": "node test/prepare-status-update.test.js && node test/daily-verification-git.test.js && node test/status-presentation.test.js",
     "test:dependency-audit": "node test/dependency-audit-policy.test.js",
     "test:release-notes": "node test/extract-release-notes.test.js",
     "test:tag-integrity": "node test/version-tag-integrity.test.js",
