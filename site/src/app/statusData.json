@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.1.0",
-  "generatedAt": "2026-10-24T00:00:00Z",
+  "generatedAt": "2026-10-24T14:55:42Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
@@ -15,9 +15,9 @@
   "statusUrl": "https://ghostify-extension.vercel.app/status",
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
-    "publicStatus": "under_review",
-    "label": "Reports received",
-    "message": "A user reports that encrypted chats on messenger.com may fail to load with Hide Typing enabled in Zen, a Firefox-based browser. This has not yet been confirmed. We’ll share another update as we learn more."
+    "publicStatus": "maintainer_verified",
+    "label": "All supported controls operational",
+    "message": "All supported controls were checked on October 24, 2026 and are working normally."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -47,10 +47,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-IG-SEEN-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-IG-SEEN-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Instagram Hide Seen on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Instagram Hide Seen on October 24, 2026."
     },
     {
       "id": "instagram-hide-typing",
@@ -61,10 +61,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-IG-TYPING-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-IG-TYPING-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Instagram Hide Typing on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Instagram Hide Typing on October 24, 2026."
     },
     {
       "id": "instagram-hide-story-views",
@@ -75,10 +75,10 @@
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-IG-STORY-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-IG-STORY-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Instagram Hide Story Views on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Instagram Hide Story Views on October 24, 2026."
     },
     {
       "id": "messenger-hide-seen",
@@ -89,24 +89,24 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-MSG-SEEN-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-MSG-SEEN-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Messenger Hide Seen on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Messenger Hide Seen on October 24, 2026."
     },
     {
       "id": "messenger-hide-typing",
       "platform": "Messenger",
       "feature": "Hide Typing",
-      "publicStatus": "under_review",
-      "localEvidenceStatus": "manual_pending",
+      "publicStatus": "maintainer_verified",
+      "localEvidenceStatus": "verified",
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
-      "reviewer": "Hendrizzzz maintainer update",
-      "reviewRecord": "Reports recorded on 2026-10-24 for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
-      "relatedIssueUrl": "https://github.com/Hendrizzzz/Ghostify/issues/259",
-      "notes": "A user reports that encrypted chats on messenger.com may fail to load with Hide Typing enabled in Zen, a Firefox-based browser. This has not yet been confirmed. We’ll share another update as we learn more."
+      "reviewer": "Hendrizzzz maintainer verification",
+      "reviewRecord": "GH-MSG-TYPING-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
+      "relatedIssueUrl": null,
+      "notes": "Maintainer-confirmed verification for Messenger Hide Typing on October 24, 2026."
     },
     {
       "id": "messenger-hide-story-views",
@@ -117,10 +117,10 @@
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-MSG-STORY-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-MSG-STORY-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Messenger Hide Story Views on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Messenger Hide Story Views on October 24, 2026."
     },
     {
       "id": "facebook-hide-seen",
@@ -131,10 +131,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-SEEN-001: maintainer confirms Hide Seen works in 2.1.0, including the Facebook group-send fix. Confirmation received October 17, 2026 Asia/Manila (October 16 UTC). The local interface may temporarily show a conversation as read; reloading restores its unread appearance while Seen receipts remain blocked.",
-      "verifiedAt": "2026-10-16T00:00:00Z",
-      "relatedIssueUrl": "https://github.com/Hendrizzzz/Ghostify/issues/145",
-      "notes": "Hide Seen is working. Facebook may temporarily show a conversation as read in your own interface even though Seen receipts remain blocked. Reloading restores its unread appearance."
+      "reviewRecord": "GH-FB-SEEN-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
+      "relatedIssueUrl": null,
+      "notes": "Maintainer-confirmed verification for Facebook Hide Seen on October 24, 2026."
     },
     {
       "id": "facebook-hide-typing",
@@ -145,10 +145,10 @@
       "publicEvidenceType": "sender_side_no_signal",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-TYPING-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-FB-TYPING-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Facebook Hide Typing on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Facebook Hide Typing on October 24, 2026."
     },
     {
       "id": "facebook-hide-story-views",
@@ -159,13 +159,20 @@
       "publicEvidenceType": "story_owner_no_view",
       "sourceType": "maintainer",
       "reviewer": "Hendrizzzz maintainer verification",
-      "reviewRecord": "GH-FB-STORY-001 approved in the 2026-10-16 verification PR for v2.1.0",
-      "verifiedAt": "2026-10-16T00:00:00Z",
+      "reviewRecord": "GH-FB-STORY-001 approved in the 2026-10-24 verification PR for v2.1.0",
+      "verifiedAt": "2026-10-24T00:00:00Z",
       "relatedIssueUrl": null,
-      "notes": "Maintainer-confirmed verification for Facebook Hide Story Views on October 16, 2026."
+      "notes": "Maintainer-confirmed verification for Facebook Hide Story Views on October 24, 2026."
     }
   ],
   "history": [
+    {
+      "date": "2026-10-24",
+      "publicStatus": "maintainer_verified",
+      "eventType": "verification",
+      "title": "All supported controls operational",
+      "summary": "All supported controls were checked on October 24, 2026 and are working normally."
+    },
     {
       "date": "2026-10-24",
       "publicStatus": "under_review",
