@@ -5,6 +5,8 @@ Date: 2026-10-26. Base: the current 2.1.0 release on `main`.
 The development package is 2.1.1, marked Unreleased in the changelog. Clean CI
 fetched the existing `v2.1.0` tag and correctly required a new identity for the
 changed packaged code. This version advance does not create a tag or release.
+The source product-version metadata is synchronized; the published store version,
+verification version, and public status history remain on the existing release.
 
 ## Cause and relationship to PR 246
 
