@@ -91,5 +91,5 @@ three conversations explicitly authorized by the user.
 
 Do not treat entry-point suppression, sender-side counters, or the absence of a
 network event in the main frame as independent recipient-side privacy proof.
-Keep account-specific screenshots and captures outside Git. This change has
-not been pushed, merged, published, deployed, or released.
+Keep account-specific screenshots and captures outside Git. Release publication
+remains a separate maintainer action after additional live testing.
