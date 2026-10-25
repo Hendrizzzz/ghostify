@@ -71,6 +71,9 @@ in `site/`.
 - Fail-open error handling in content scripts is intentional: Ghostify must
   never break the host page. Keep `catch` blocks quiet unless behind debug flags.
 - Zero runtime dependencies; devDependencies only.
+- Use clear, natural English for public updates and release notes. Focus on
+  what changed for users. Keep implementation details in technical
+  documentation.
 
 ## Documentation map
 

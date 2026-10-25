@@ -15,6 +15,12 @@ not release notes, maintainer reminders, or instructions to ourselves.
 - Put internal evidence, reviewer, and release information in structured data,
   not in the public headline or summary.
 
+## Writing style
+
+Use clear, natural English for public updates and release notes. Focus on
+what changed for users. Keep implementation details in technical documentation.
+Preserve historical dates, facts, and testing scope when editing older updates.
+
 ## Calendar meaning
 
 The status calendar is an event ledger, not a claim that Ghostify was manually

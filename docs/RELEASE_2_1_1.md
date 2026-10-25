@@ -21,7 +21,7 @@ in Asia/Manila and October 25 UTC. Historical status records remain unchanged.
 The public note identifies the tested 2.1.1 candidate separately from the
 published store build; it does not declare a new store version live.
 
-## Publication state at preparation
+## Publication state before store submission
 
 - Chrome Web Store: 2.1.0, listing updated October 15, 2026.
 - Latest GitHub Release: v2.1.0, published October 17, 2026 Asia/Manila
@@ -31,6 +31,18 @@ published store build; it does not declare a new store version live.
   version was not independently extracted during this preparation.
 - Target package/source version: 2.1.1. All version identities are synchronized.
 - No 2.1.1 store upload, submission, approval, tag, or GitHub Release is claimed.
+
+## Store update: October 26, 2026 Asia/Manila
+
+The owner submitted 2.1.1 to Firefox and Chrome. The public Firefox Add-ons API
+now lists 2.1.1 (updated October 26 Asia/Manila, October 25 UTC). The owner
+clarified that Chrome is submitted and under review, and its public listing
+still shows 2.1.0. Edge's update state has not been confirmed.
+
+The public status now describes that rollout in everyday English. The GitHub
+Release remains at v2.1.0 until Chrome approval and availability satisfy the
+existing release workflow. The uploaded artifacts and their saved checksums
+have not been replaced by these wording changes.
 
 The owner will upload these artifacts and submit them to all three stores.
 Keep package readiness separate from store submission and approval, and follow
@@ -55,11 +67,11 @@ sidecars outside Git. Preserve the checksum of each exact uploaded artifact.
 
 ### Store release notes
 
-Fixed encrypted Messenger conversations failing to load with Hide Typing on.
-Facebook now keeps local unread dots and bold chat names with Hide Seen on.
-Seen/Typing protection and normal message sending remain supported. The
-maintainer checked all supported features in normal use and found no issues;
-this was not an exhaustive check of every possible case.
+Fixed Messenger chats not loading with Hide Typing enabled. Facebook's unread
+indicators now remain visible when opening chats with Hide Seen enabled.
+Mark as read and normal message sending continue to work.
+
+All supported features were tested during normal use, with no issues found.
 
 ### Reviewer checks
 

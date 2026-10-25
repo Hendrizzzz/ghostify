@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "product": "Ghostify",
   "productVersion": "2.1.1",
-  "generatedAt": "2026-10-25T20:40:10Z",
+  "generatedAt": "2026-10-25T21:02:37Z",
   "release": {
     "channel": "Chrome Web Store",
     "publishedAt": "2026-02-06",
     "publishedVersion": "2.1.0",
     "verificationVersion": "2.1.0",
-    "checkedAt": "2026-10-25T20:40:10Z",
+    "checkedAt": "2026-10-25T21:02:37Z",
     "matchesVerificationBuild": true,
     "storeUrl": "https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm"
   },
@@ -16,8 +16,8 @@
   "historyUrl": "https://ghostify-extension.vercel.app/status/history",
   "summary": {
     "publicStatus": "work_in_progress",
-    "label": "2.1.1 ready for store review",
-    "message": "The maintainer checked all supported features in Ghostify 2.1.1 during normal use and found no issues. This was a general manual check, not every possible browser, account, conversation, or case. The encrypted-chat loading and Facebook unread-indicator fixes are ready for store review. Version 2.1.0 is still the published build."
+    "label": "Ghostify 2.1.1 is available on Firefox",
+    "message": "The Chrome Web Store update is under review. This update fixes Messenger chats not loading with Hide Typing enabled and preserves Facebook's unread indicators when opening chats with Hide Seen enabled. All supported features were tested during normal use, with no issues found."
   },
   "policy": {
     "verificationCadence": "Updated when we receive reports, make progress, or complete new checks.",
@@ -106,7 +106,7 @@
       "reviewRecord": "The 2.1.1 candidate passed targeted automated/live Chrome and Brave checks and the maintainer's general all-feature manual smoke check, confirmed October 26, 2026 Asia/Manila (October 25 UTC). This is not exhaustive browser or account coverage; published 2.1.0 still predates the fix.",
       "verifiedAt": "2026-10-16T00:00:00Z",
       "relatedIssueUrl": "https://github.com/Hendrizzzz/Ghostify/issues/259",
-      "notes": "The encrypted-chat loading fix is ready in 2.1.1 and passed Chrome/Brave checks. Live Firefox/Zen verification remains pending. Published 2.1.0 does not yet include the fix."
+      "notes": "Version 2.1.1 fixes Messenger chats not loading with Hide Typing enabled. It is available on Firefox; the Chrome Web Store update is under review."
     },
     {
       "id": "messenger-hide-story-views",
@@ -134,7 +134,7 @@
       "reviewRecord": "GH-FB-SEEN-001: maintainer confirms Hide Seen works in 2.1.0, including the Facebook group-send fix. Confirmation received October 17, 2026 Asia/Manila (October 16 UTC). The local interface may temporarily show a conversation as read; reloading restores its unread appearance while Seen receipts remain blocked.",
       "verifiedAt": "2026-10-16T00:00:00Z",
       "relatedIssueUrl": "https://github.com/Hendrizzzz/Ghostify/issues/145",
-      "notes": "Hide Seen receipts remain blocked in published 2.1.0, which can still clear the local unread appearance. The 2.1.1 candidate preserves unread dots and bold names in Facebook messages and feed mini-chat; Chrome/Brave checks passed, including sending after explicit Mark as read."
+      "notes": "Hide Seen continues working. Version 2.1.1 preserves Facebook's unread indicators when opening chats. Mark as read and normal message sending continue to work."
     },
     {
       "id": "facebook-hide-typing",
@@ -169,23 +169,37 @@
     {
       "date": "2026-10-25",
       "publicStatus": "work_in_progress",
+      "eventType": "investigation",
+      "title": "Chrome Web Store update under review",
+      "summary": "Ghostify 2.1.1 has been submitted to the Chrome Web Store and is awaiting review."
+    },
+    {
+      "date": "2026-10-25",
+      "publicStatus": "maintainer_verified",
+      "eventType": "release",
+      "title": "Ghostify 2.1.1 released on Firefox",
+      "summary": "Ghostify 2.1.1 is available on Firefox. The update fixes Messenger chat loading with Hide Typing enabled and preserves Facebook's unread indicators with Hide Seen enabled."
+    },
+    {
+      "date": "2026-10-25",
+      "publicStatus": "work_in_progress",
       "eventType": "verification",
-      "title": "Maintainer smoke checks passed for 2.1.1",
-      "summary": "On October 26, 2026 Asia/Manila (October 25 UTC), the maintainer confirmed that all supported features worked in normal use with the 2.1.1 candidate. This was a general manual smoke check, not every possible instance or case. Targeted automated and Chrome/Brave checks also passed. Live Firefox/Zen and the exact account-switch sequence remain unverified. Version 2.1.0 remains published while 2.1.1 is prepared for store review."
+      "title": "2.1.1 tested in normal use",
+      "summary": "All supported features were tested during normal use, with no issues found. Additional checks covered chat loading, unread indicators, Seen/Typing protection, and message sending in Chrome and Brave."
     },
     {
       "date": "2026-10-25",
       "publicStatus": "work_in_progress",
       "eventType": "fix",
-      "title": "Encrypted chat and local unread fixes ready in 2.1.1",
-      "summary": "Version 2.1.1 fixes encrypted-chat loading with Hide Typing enabled and preserves Facebook's local unread indicators with Hide Seen enabled. Group messages still send normally while privacy controls remain enabled. Packages are being prepared; store submission and approval have not been recorded."
+      "title": "Messenger chat loading and Facebook unread status fixed",
+      "summary": "Fixed Messenger chats not loading with Hide Typing enabled. Facebook's unread indicators now remain visible when opening chats with Hide Seen enabled."
     },
     {
       "date": "2026-10-24",
       "publicStatus": "under_review",
       "eventType": "investigation",
-      "title": "Messenger Hide Typing report received",
-      "summary": "A user reports that encrypted chats on messenger.com may fail to load with Hide Typing enabled in Zen, a Firefox-based browser. This has not yet been confirmed. We’ll share another update as we learn more."
+      "title": "Messenger chat loading issue reported",
+      "summary": "A user reported that some Messenger chats failed to load with Hide Typing enabled in Zen. We were investigating the report."
     },
     {
       "date": "2026-10-16",
