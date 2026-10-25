@@ -67,11 +67,13 @@ sidecars outside Git. Preserve the checksum of each exact uploaded artifact.
 
 ### Store release notes
 
-Fixed encrypted Messenger conversations failing to load with Hide Typing on.
-Facebook now keeps local unread dots and bold chat names with Hide Seen on.
-Seen/Typing protection and normal message sending remain supported. The
-maintainer checked all supported features in normal use and found no issues;
-this was not an exhaustive check of every possible case.
+Fixed some Messenger chats not opening when Hide Typing is on. Facebook now
+keeps the blue unread dot and bold chat name when you open a chat with Hide
+Seen on. Choosing Mark as read still works, the other person still does not
+get a Seen notice, and you can send messages normally.
+
+We tried all supported features during normal use and found no issues. We did
+not try every possible situation.
 
 ### Reviewer checks
 
