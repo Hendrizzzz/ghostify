@@ -5,7 +5,7 @@ import {
 import { normalizePackagedConfig } from "./runtime-config.js";
 
 const FALLBACK_CONFIG = {
-    version: "2.1.0",
+    version: "2.1.1",
     killSwitch: [],
     patterns: {
         igTyping: [
