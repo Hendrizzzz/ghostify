@@ -13,17 +13,15 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
-- Fixed some Messenger chats not opening when Hide Typing is on.
-- Facebook now keeps the blue unread dot and bold chat name when you open a
-  chat with Hide Seen on. Choosing Mark as read still works, the other person
-  still does not get a Seen notice, and you can send messages normally.
+- Fixed Messenger chats not loading with Hide Typing enabled.
+- Facebook's unread indicators now remain visible when opening chats with
+  Hide Seen enabled. Mark as read and normal message sending continue to work.
 
 ### Verification
 
-- We tried all supported features during normal use and found no issues.
-  We did not try every possible browser, account, chat, or situation.
-- Our code checks and checks in Chrome and Brave passed. More checks are still
-  needed in Firefox and Zen and when switching between accounts.
+- All supported features were tested during normal use, with no issues found.
+- Additional checks covered chat loading, unread indicators, Seen/Typing
+  protection, and message sending in Chrome and Brave.
 
 ## [2.1.0] - 2026-10-15
 

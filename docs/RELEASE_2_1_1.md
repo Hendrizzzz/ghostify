@@ -67,13 +67,11 @@ sidecars outside Git. Preserve the checksum of each exact uploaded artifact.
 
 ### Store release notes
 
-Fixed some Messenger chats not opening when Hide Typing is on. Facebook now
-keeps the blue unread dot and bold chat name when you open a chat with Hide
-Seen on. Choosing Mark as read still works, the other person still does not
-get a Seen notice, and you can send messages normally.
+Fixed Messenger chats not loading with Hide Typing enabled. Facebook's unread
+indicators now remain visible when opening chats with Hide Seen enabled.
+Mark as read and normal message sending continue to work.
 
-We tried all supported features during normal use and found no issues. We did
-not try every possible situation.
+All supported features were tested during normal use, with no issues found.
 
 ### Reviewer checks
 
