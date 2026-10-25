@@ -16,6 +16,9 @@ grouped by version, with the most recent changes first.
 - Fixed encrypted Messenger conversations failing to load with Hide Typing
   enabled. Sender-ID normalization stays native while outgoing typing signals
   remain suppressed, preserving the existing Facebook read-receipt queue fix.
+- Preserved Facebook's local unread dot and bold chat name when opening a
+  conversation with Hide Seen enabled. Explicit Mark as read still works,
+  while outgoing Seen receipts remain suppressed and normal sends progress.
 
 This source build is available for additional testing. It has not been
 published to the browser stores or as a GitHub Release.

@@ -580,6 +580,8 @@
     const readReceiptWrapperMetadata = /* @__PURE__ */ new WeakMap();
     const readReceiptWrapperCache = /* @__PURE__ */ new WeakMap();
     const optimisticReadTaskWrappers = /* @__PURE__ */ new WeakMap();
+    const automaticReadHookWrappers = /* @__PURE__ */ new WeakMap();
+    const automaticReadCallbackWrappers = /* @__PURE__ */ new WeakMap();
     window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(
       window.__GHOSTIFY_SETTINGS__
     );
@@ -3037,6 +3039,55 @@
       const isTopFrame = window.top == null || window.top === window;
       return isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy && isTopFrame && normalizeReadOperationIdentity(moduleName) === "lsoptimisticmarkthreadreadv2";
     }
+    function shouldPatchAutomaticReadConsumer(moduleName) {
+      const isTopFrame = window.top == null || window.top === window;
+      return isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy && isTopFrame && normalizeReadOperationIdentity(moduleName) === "usemwpsafelymarkthreadasread";
+    }
+    function wrapAutomaticReadCallback(fn) {
+      const cached = automaticReadCallbackWrappers.get(fn);
+      if (cached) return cached;
+      const wrapped = new Proxy(fn, {
+        apply(target, thisArg, args) {
+          if (!window.__ghostify_shouldBlockMessengerSeen() || hasNativeMessageRequestBypass() || isCurrentMessageRequestSurface()) {
+            return Reflect.apply(target, thisArg, args);
+          }
+          window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ = (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
+          window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ = (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ || 0) + 1;
+          return void 0;
+        }
+      });
+      automaticReadCallbackWrappers.set(fn, wrapped);
+      automaticReadCallbackWrappers.set(wrapped, wrapped);
+      return wrapped;
+    }
+    function wrapAutomaticReadHook(fn) {
+      const cached = automaticReadHookWrappers.get(fn);
+      if (cached) return cached;
+      const wrapped = new Proxy(fn, {
+        apply(target, thisArg, args) {
+          if (typeof args[1] !== "function") {
+            return Reflect.apply(target, thisArg, args);
+          }
+          const nextArgs = args.slice();
+          nextArgs[1] = wrapAutomaticReadCallback(args[1]);
+          return Reflect.apply(target, thisArg, nextArgs);
+        }
+      });
+      automaticReadHookWrappers.set(fn, wrapped);
+      return wrapped;
+    }
+    function wrapAutomaticReadRequire(factoryArgs) {
+      [1, 2, 3].forEach((index) => {
+        const originalRequire = factoryArgs[index];
+        if (typeof originalRequire !== "function") return;
+        factoryArgs[index] = new Proxy(originalRequire, {
+          apply(target, thisArg, args) {
+            const required = Reflect.apply(target, thisArg, args);
+            return typeof args[0] === "string" && normalizeReadOperationIdentity(args[0]) === "usemwmarkthreadasreadwhennewmessagesarrive" && typeof required === "function" ? wrapAutomaticReadHook(required) : required;
+          }
+        });
+      });
+    }
     function isOptimisticReadTaskDependency(value) {
       return normalizeReadOperationIdentity(value) === "lsissuenewtask";
     }
@@ -3404,8 +3455,9 @@
     function shouldProcessModule(moduleName, dependencies) {
       const hasSendOpenMessageHook = shouldPatchSendOpenMessageHook(moduleName);
       const hasOptimisticMarkThreadReadConsumer = shouldPatchOptimisticMarkThreadReadConsumer(moduleName);
+      const hasAutomaticReadConsumer = shouldPatchAutomaticReadConsumer(moduleName);
       if (isFacebookDotCom && !isMessengerDotCom && !isFacebookMessengerProxy) {
-        return hasSendOpenMessageHook || hasOptimisticMarkThreadReadConsumer;
+        return hasSendOpenMessageHook || hasOptimisticMarkThreadReadConsumer || hasAutomaticReadConsumer;
       }
       if (shouldPatchOptimisticMarkThreadReadConsumer(moduleName))
         return false;
@@ -3460,13 +3512,16 @@
                 const optimisticMarkThreadReadConsumer = shouldPatchOptimisticMarkThreadReadConsumer(
                   moduleName
                 );
+                const automaticReadConsumer = shouldPatchAutomaticReadConsumer(moduleName);
                 const readReceiptMode = sendOpenMessageHook ? "force-disable-mark-read" : isLocalReadReceiptDependency(moduleName) ? getLocalReadReceiptMode(moduleName) : "block";
-                const needsReadReceiptExportWrap = shouldPatchReadReceiptModules() && (sendOpenMessageHook || isReadReceiptDependency(moduleName) || shouldPatchLocalReadReceiptModules() && isLocalReadReceiptDependency(
+                const needsReadReceiptExportWrap = !automaticReadConsumer && shouldPatchReadReceiptModules() && (sendOpenMessageHook || isReadReceiptDependency(moduleName) || shouldPatchLocalReadReceiptModules() && isLocalReadReceiptDependency(
                   moduleName
                 ));
                 const patchedFactory = originalFactory;
                 const factory = function(...factoryArgs) {
-                  if (!avoidFactoryMutation && !isSecureTypingStateDependency(moduleName)) {
+                  if (automaticReadConsumer) {
+                    wrapAutomaticReadRequire(factoryArgs);
+                  } else if (!avoidFactoryMutation && !isSecureTypingStateDependency(moduleName)) {
                     if (optimisticMarkThreadReadConsumer) {
                       wrapOptimisticMarkThreadReadRequire(
                         factoryArgs,
