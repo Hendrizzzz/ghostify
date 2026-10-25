@@ -9,6 +9,17 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
+## [2.1.1] - Unreleased
+
+### Fixed
+
+- Fixed encrypted Messenger conversations failing to load with Hide Typing
+  enabled. Sender-ID normalization stays native while outgoing typing signals
+  remain suppressed, preserving the existing Facebook read-receipt queue fix.
+
+This source build is available for additional testing. It has not been
+published to the browser stores or as a GitHub Release.
+
 ## [2.1.0] - 2026-10-15
 
 ### Added
