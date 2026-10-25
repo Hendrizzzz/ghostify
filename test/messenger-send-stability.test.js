@@ -4554,6 +4554,160 @@ function registerFacebookOptimisticMarkThreadReadFixture(
     };
 }
 
+function testFacebookAutomaticReadKeepsUnreadAndNativeHookExecution() {
+    const context = makeMessengerPatchPage(
+        {},
+        {
+            hostname: "www.facebook.com",
+            pathname: "/messages/e2ee/t/fixture-thread",
+        },
+    );
+    const fixture = registerFacebookOptimisticMarkThreadReadFixture(context);
+    const threadKey = Object.freeze([135791357, 246802468]);
+    const watermark = Object.freeze([1779530000, 417]);
+    const { runtime, runtimeResult } = fixture.createRuntime();
+    const hookResult = Object.freeze({ contract: "native-hook-result" });
+    const hookThis = Object.freeze({ contract: "native-hook-this" });
+    const callbackThis = Object.freeze({ contract: "native-callback-this" });
+    const thread = Object.freeze({ threadKey });
+    const hookCalls = [];
+    const callbackCalls = [];
+    const callback = function (...args) {
+        callbackCalls.push({ args, thisArg: this });
+        return fixture.module.exports(threadKey, watermark, runtime);
+    };
+    const nativeSibling = function useMAWMarkThreadAsRead() {};
+    const nativeHook = function (thread, callback, enabled, options) {
+        hookCalls.push({
+            args: [thread, callback, enabled, options],
+            thisArg: this,
+        });
+        return hookResult;
+    };
+    nativeHook.metadata = Object.freeze({ native: true });
+    let requiredSibling;
+    let requiredHook;
+    const consumer = registerMessengerModuleWithDependencies(
+        context,
+        "useMWPSafelyMarkThreadAsRead",
+        [
+            "useMWMarkThreadAsReadWhenNewMessagesArrive",
+            "useMAWMarkThreadAsRead",
+        ],
+        {
+            useMWMarkThreadAsReadWhenNewMessagesArrive: nativeHook,
+            useMAWMarkThreadAsRead: nativeSibling,
+        },
+        function (_a, _b, require, _d, moduleObject) {
+            requiredSibling = require("useMAWMarkThreadAsRead");
+            requiredHook = require("useMWMarkThreadAsReadWhenNewMessagesArrive");
+            moduleObject.exports = function (...args) {
+                return Reflect.apply(requiredHook, hookThis, args);
+            };
+        },
+    );
+    const options = Object.freeze({ native: true });
+    assert.strictEqual(
+        consumer.exports(thread, callback, true, options),
+        hookResult,
+    );
+    const guardedCallback = hookCalls[0].args[1];
+    assert.strictEqual(
+        Reflect.apply(guardedCallback, callbackThis, ["automatic"]),
+        undefined,
+    );
+    assert.strictEqual(
+        fixture.localReadCalls.length,
+        0,
+        "automatic reads must preserve the local unread state with Hide Seen enabled",
+    );
+    assert.strictEqual(fixture.parentReadCalls.length, 0);
+    assert.strictEqual(fixture.pendingTasks.length, 0);
+    assert.strictEqual(callbackCalls.length, 0);
+    assert.strictEqual(
+        hookCalls.length,
+        1,
+        "native React hooks must still execute",
+    );
+    assert.strictEqual(hookCalls[0].thisArg, hookThis);
+    assert.strictEqual(hookCalls[0].args[0], thread);
+    assert.strictEqual(hookCalls[0].args[2], true);
+    assert.strictEqual(hookCalls[0].args[3], options);
+    assert.strictEqual(requiredSibling, nativeSibling);
+    assert.strictEqual(requiredHook.metadata, nativeHook.metadata);
+    assert.strictEqual(
+        consumer.exports(thread, callback, true, options),
+        hookResult,
+    );
+    assert.strictEqual(hookCalls[1].args[1], guardedCallback);
+    fixture.enqueueSend(threadKey);
+    fixture.flushQueue(threadKey);
+    assert.strictEqual(fixture.forwardedSends.length, 1);
+
+    // Explicit Mark as read keeps its local mutation and the existing enqueue guard.
+    assert.strictEqual(
+        fixture.module.exports(threadKey, watermark, runtime),
+        runtimeResult,
+    );
+    assert.strictEqual(fixture.localReadCalls.length, 1);
+    assert.strictEqual(fixture.parentReadCalls.length, 1);
+    assert.strictEqual(fixture.nativeCalls.length, 0);
+    assert.strictEqual(
+        context.window.__GHOSTIFY_BLOCKED_READ_TASK_ENQUEUES__,
+        1,
+    );
+    fixture.enqueueSend(threadKey);
+    fixture.flushQueue(threadKey);
+    assert.strictEqual(fixture.forwardedSends.length, 2);
+
+    context.window.__GHOSTIFY_SETTINGS__.msgSeen = false;
+    assert.strictEqual(
+        Reflect.apply(guardedCallback, callbackThis, ["settings-off"]),
+        runtimeResult,
+    );
+    assert.deepStrictEqual(callbackCalls[0], {
+        args: ["settings-off"],
+        thisArg: callbackThis,
+    });
+    assert.strictEqual(fixture.localReadCalls.length, 2);
+    assert.strictEqual(fixture.nativeCalls.length, 1);
+
+    context.window.__GHOSTIFY_SETTINGS__.msgSeen = true;
+    context.window.location.pathname = "/messages/requests";
+    Reflect.apply(guardedCallback, callbackThis, ["request"]);
+    assert.strictEqual(fixture.localReadCalls.length, 3);
+    assert.strictEqual(fixture.nativeCalls.length, 2);
+
+    context.window.location.pathname = "/messages/e2ee/t/fixture-thread";
+    context.window.postMessage({
+        type: "GHOSTIFY_CONFIG_UPDATE",
+        source: "GHOSTIFY_EXTENSION",
+        config: { killSwitch: ["msgSeen"] },
+    });
+    Reflect.apply(guardedCallback, callbackThis, ["kill-switch"]);
+    assert.strictEqual(fixture.localReadCalls.length, 4);
+    assert.strictEqual(fixture.nativeCalls.length, 3);
+
+    context.window.postMessage({
+        type: "GHOSTIFY_CONFIG_UPDATE",
+        source: "GHOSTIFY_EXTENSION",
+        config: { killSwitch: [] },
+    });
+    context.window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ =
+        Date.now() + 5000;
+    Reflect.apply(guardedCallback, callbackThis, ["request-grace"]);
+    assert.strictEqual(fixture.localReadCalls.length, 5);
+    context.window.__GHOSTIFY_MESSAGE_REQUEST_NATIVE_UNTIL__ = Date.now() - 1;
+    Reflect.apply(guardedCallback, callbackThis, ["grace-expired"]);
+    assert.strictEqual(fixture.localReadCalls.length, 5);
+
+    assert.strictEqual(
+        consumer.exports(thread, undefined, true, options),
+        hookResult,
+    );
+    assert.strictEqual(hookCalls.at(-1).args[1], undefined);
+}
+
 async function testFacebookOptimisticReadReceiptEnqueueDoesNotStallSend() {
     const context = makeMessengerPatchPage(
         {},
@@ -4750,6 +4904,30 @@ function testFacebookTopFrameModuleInterceptorIsExactScopedForLoaderSafety() {
         exactFactory,
         "only the confirmed optimistic consumer may be wrapped",
     );
+
+    const automaticFactory = function nativeAutomaticReadFactory() {};
+    context.window.__d(
+        "useMWMarkThreadAsReadWhenNewMessagesArrive",
+        [],
+        automaticFactory,
+    );
+    assert.strictEqual(definitions[3].factory, automaticFactory);
+    context.window.__d(
+        "useMWPSafelyMarkThreadAsReadAnalytics",
+        ["useMWMarkThreadAsReadWhenNewMessagesArrive"],
+        automaticFactory,
+    );
+    assert.strictEqual(
+        definitions[4].factory,
+        automaticFactory,
+        "lookalike consumers must not receive an automatic-read guard",
+    );
+    context.window.__d(
+        "useMWPSafelyMarkThreadAsRead",
+        ["useMWMarkThreadAsReadWhenNewMessagesArrive"],
+        automaticFactory,
+    );
+    assert.notStrictEqual(definitions[5].factory, automaticFactory);
 }
 
 function testFacebookOptimisticMarkThreadReadPreservesNativeBypasses() {
@@ -13234,6 +13412,7 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMessengerPatchRequestRouteModulesHydrateUntouched();
     testMessengerPatchLocalReadModulesStayUntouchedAfterRequestSpaNavigation();
     testFacebookTopFrameModuleInterceptorIsExactScopedForLoaderSafety();
+    testFacebookAutomaticReadKeepsUnreadAndNativeHookExecution();
     await testFacebookOptimisticReadReceiptEnqueueDoesNotStallSend();
     testFacebookOptimisticMarkThreadReadPreservesNativeBypasses();
     testFacebookOptimisticMarkThreadReadShadowIsConsumerAndHostScoped();

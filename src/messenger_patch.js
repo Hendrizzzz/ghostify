@@ -122,6 +122,8 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
     const readReceiptWrapperMetadata = new WeakMap();
     const readReceiptWrapperCache = new WeakMap();
     const optimisticReadTaskWrappers = new WeakMap();
+    const automaticReadHookWrappers = new WeakMap();
+    const automaticReadCallbackWrappers = new WeakMap();
 
     window.__GHOSTIFY_SETTINGS__ = normalizePrivacySettings(
         window.__GHOSTIFY_SETTINGS__,
@@ -3762,6 +3764,80 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
         );
     }
 
+    function shouldPatchAutomaticReadConsumer(moduleName) {
+        const isTopFrame = window.top == null || window.top === window;
+        return (
+            isFacebookDotCom &&
+            !isMessengerDotCom &&
+            !isFacebookMessengerProxy &&
+            isTopFrame &&
+            normalizeReadOperationIdentity(moduleName) ===
+                "usemwpsafelymarkthreadasread"
+        );
+    }
+
+    function wrapAutomaticReadCallback(fn) {
+        const cached = automaticReadCallbackWrappers.get(fn);
+        if (cached) return cached;
+        const wrapped = new Proxy(fn, {
+            apply(target, thisArg, args) {
+                if (
+                    !window.__ghostify_shouldBlockMessengerSeen() ||
+                    hasNativeMessageRequestBypass() ||
+                    isCurrentMessageRequestSurface()
+                ) {
+                    return Reflect.apply(target, thisArg, args);
+                }
+                window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ =
+                    (window.__GHOSTIFY_BLOCKED_READ_EXPORT_CALLS__ || 0) + 1;
+                window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ =
+                    (window.__GHOSTIFY_BLOCKED_MARK_THREAD_AS_READ_CALLS__ ||
+                        0) + 1;
+                return undefined;
+            },
+        });
+        automaticReadCallbackWrappers.set(fn, wrapped);
+        automaticReadCallbackWrappers.set(wrapped, wrapped);
+        return wrapped;
+    }
+
+    function wrapAutomaticReadHook(fn) {
+        const cached = automaticReadHookWrappers.get(fn);
+        if (cached) return cached;
+        const wrapped = new Proxy(fn, {
+            apply(target, thisArg, args) {
+                if (typeof args[1] !== "function") {
+                    return Reflect.apply(target, thisArg, args);
+                }
+                // Execute every native React hook. Guard only its deferred read
+                // callback, before local unread state or a receipt task changes.
+                const nextArgs = args.slice();
+                nextArgs[1] = wrapAutomaticReadCallback(args[1]);
+                return Reflect.apply(target, thisArg, nextArgs);
+            },
+        });
+        automaticReadHookWrappers.set(fn, wrapped);
+        return wrapped;
+    }
+
+    function wrapAutomaticReadRequire(factoryArgs) {
+        [1, 2, 3].forEach((index) => {
+            const originalRequire = factoryArgs[index];
+            if (typeof originalRequire !== "function") return;
+            factoryArgs[index] = new Proxy(originalRequire, {
+                apply(target, thisArg, args) {
+                    const required = Reflect.apply(target, thisArg, args);
+                    return typeof args[0] === "string" &&
+                        normalizeReadOperationIdentity(args[0]) ===
+                            "usemwmarkthreadasreadwhennewmessagesarrive" &&
+                        typeof required === "function"
+                        ? wrapAutomaticReadHook(required)
+                        : required;
+                },
+            });
+        });
+    }
+
     function isOptimisticReadTaskDependency(value) {
         return normalizeReadOperationIdentity(value) === "lsissuenewtask";
     }
@@ -4273,6 +4349,8 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
             shouldPatchSendOpenMessageHook(moduleName);
         const hasOptimisticMarkThreadReadConsumer =
             shouldPatchOptimisticMarkThreadReadConsumer(moduleName);
+        const hasAutomaticReadConsumer =
+            shouldPatchAutomaticReadConsumer(moduleName);
         if (
             isFacebookDotCom &&
             !isMessengerDotCom &&
@@ -4280,9 +4358,11 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
         ) {
             // Facebook's thread-list hydration modules share broad read-watermark
             // dependencies. Wrapping those factories breaks the native chat loader.
-            // Keep the top-frame patch limited to the two confirmed open/read leaves.
+            // Keep the patch limited to the confirmed open/read consumers.
             return (
-                hasSendOpenMessageHook || hasOptimisticMarkThreadReadConsumer
+                hasSendOpenMessageHook ||
+                hasOptimisticMarkThreadReadConsumer ||
+                hasAutomaticReadConsumer
             );
         }
         if (shouldPatchOptimisticMarkThreadReadConsumer(moduleName))
@@ -4392,12 +4472,15 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
                                 shouldPatchOptimisticMarkThreadReadConsumer(
                                     moduleName,
                                 );
+                            const automaticReadConsumer =
+                                shouldPatchAutomaticReadConsumer(moduleName);
                             const readReceiptMode = sendOpenMessageHook
                                 ? "force-disable-mark-read"
                                 : isLocalReadReceiptDependency(moduleName)
                                   ? getLocalReadReceiptMode(moduleName)
                                   : "block";
                             const needsReadReceiptExportWrap =
+                                !automaticReadConsumer &&
                                 shouldPatchReadReceiptModules() &&
                                 (sendOpenMessageHook ||
                                     isReadReceiptDependency(moduleName) ||
@@ -4407,7 +4490,9 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
                                         )));
                             const patchedFactory = originalFactory;
                             const factory = function (...factoryArgs) {
-                                if (
+                                if (automaticReadConsumer) {
+                                    wrapAutomaticReadRequire(factoryArgs);
+                                } else if (
                                     !avoidFactoryMutation &&
                                     !isSecureTypingStateDependency(moduleName)
                                 ) {

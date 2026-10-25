@@ -170,7 +170,7 @@ Test only with accounts and conversations you are allowed to use.
   - Hide Seen blocks read receipt writes.
   - Message requests open correctly.
 - `GH-FB-STORY-001`: Supported Facebook story-view writes are blocked and story media still loads.
-- `GH-FB-LOCAL-READ-001`: record Facebook's temporary local read appearance with Hide Seen enabled, confirm reloading restores unread styling, and keep that observation separate from sender-side Seen proof. Chat switching, unsent drafts, and history loading must not produce `Couldn’t load chats`.
+- `GH-FB-LOCAL-READ-001`: with Hide Seen enabled, opening an unread chat in `/messages` and feed mini-chat must preserve its bold name and blue dot, including new incoming messages and conversation switching. Explicit Mark as read must clear the local indicator without sending a Seen receipt, and the next message must leave Sending. With Hide Seen disabled, automatic local reads must remain native. Keep local appearance separate from sender-side Seen proof. Chat switching, unsent drafts, and history loading must not produce `Couldn’t load chats`. The temporary local-read limitation belongs to published 2.1.0, not the 2.1.1 candidate's expected behavior.
 - `GH-FB-MEDIA-001`: video and media playback still work on non-message surfaces.
 
 Record any platform limitation in the GitHub Release notes and, when user-facing,
