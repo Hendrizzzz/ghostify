@@ -22,6 +22,7 @@ of the repository unless they are redacted and intentionally published.
 | `GH-IG-SEEN-001` | Instagram | With Hide Seen enabled, opening a DM blocks read-receipt writes while conversation navigation still works. |
 | `GH-IG-STORY-001` | Instagram | With Hide story-view signals enabled, viewing a story or reel blocks supported story-view writes and media still plays. |
 | `GH-MSG-TYPING-001` | Messenger | With Hide typing enabled, typing does not send a typing indicator and message sending still succeeds. |
+| `GH-MSG-E2EE-LOAD-001` | Messenger | With Hide Typing enabled, encrypted history loads on a fresh `/e2ee/t/` navigation and after switching between encrypted and group chats; sender-ID normalization stays native, outgoing typing remains suppressed, and sends still succeed. Repeat with Hide Seen enabled and disabled, including a Firefox-based browser. |
 | `GH-MSG-SEEN-001` | Messenger | With Hide Seen enabled, opening a conversation blocks read-receipt writes and normal sends still succeed. |
 | `GH-MSG-STORY-001` | Messenger | With Hide Story Views enabled, supported Messenger/Facebook story-view writes are blocked where the web surface exposes them, and normal navigation still works. |
 | `GH-MSG-REQUESTS-001` | Messenger | Message requests open, hydrate, and navigate without being blocked by privacy matchers. |
