@@ -9,7 +9,7 @@ section, and GitHub Releases should match the facts recorded here.
 The format follows the spirit of Keep a Changelog: human-written entries,
 grouped by version, with the most recent changes first.
 
-## [2.1.1] - Unreleased
+## [2.1.1] - 2026-10-26
 
 ### Fixed
 
@@ -20,8 +20,14 @@ grouped by version, with the most recent changes first.
   conversation with Hide Seen enabled. Explicit Mark as read still works,
   while outgoing Seen receipts remain suppressed and normal sends progress.
 
-This source build is available for additional testing. It has not been
-published to the browser stores or as a GitHub Release.
+### Verification
+
+- The maintainer manually checked all supported features in normal use and
+  reported no issues. This was a general smoke check, not exhaustive testing
+  of every browser, account, conversation, or scenario.
+- Automated regression checks and live Chrome/Brave checks cover encrypted
+  chat loading, unread indicators, Seen/Typing protection, and message sending.
+  Live Firefox/Zen and the complete account-switch matrix remain unverified.
 
 ## [2.1.0] - 2026-10-15
 

@@ -1,6 +1,6 @@
 # Facebook local unread indicators
 
-Date: 2026-10-26. Source build: 2.1.1 Unreleased.
+Date: 2026-10-26 (Asia/Manila). Source build: 2.1.1 release candidate.
 
 ## Confirmed cause
 
@@ -69,5 +69,7 @@ kill-switch bypasses are covered by the automated regression.
 Only authorized test accounts are used for the new live messages. The published
 store status and its historical local-display limitation remain unchanged until
 a separate release and verification update. Account-specific captures remain in
-ignored `tmp/`, outside Git. This follow-up is local to
-`fix/facebook-unread-indicators` and has not been pushed or merged.
+ignored `tmp/`, outside Git. This follow-up was developed on
+`fix/facebook-unread-indicators` and is included in the 2.1.1 release preparation.
+See `RELEASE_2_1_1.md` for the maintainer's subsequent smoke-test confirmation and
+the distinction between package readiness and store publication.
