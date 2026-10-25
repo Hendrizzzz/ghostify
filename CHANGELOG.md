@@ -13,21 +13,17 @@ grouped by version, with the most recent changes first.
 
 ### Fixed
 
-- Fixed encrypted Messenger conversations failing to load with Hide Typing
-  enabled. Sender-ID normalization stays native while outgoing typing signals
-  remain suppressed, preserving the existing Facebook read-receipt queue fix.
-- Preserved Facebook's local unread dot and bold chat name when opening a
-  conversation with Hide Seen enabled. Explicit Mark as read still works,
-  while outgoing Seen receipts remain suppressed and normal sends progress.
+- Fixed some Messenger chats not opening when Hide Typing is on.
+- Facebook now keeps the blue unread dot and bold chat name when you open a
+  chat with Hide Seen on. Choosing Mark as read still works, the other person
+  still does not get a Seen notice, and you can send messages normally.
 
 ### Verification
 
-- The maintainer manually checked all supported features in normal use and
-  reported no issues. This was a general smoke check, not exhaustive testing
-  of every browser, account, conversation, or scenario.
-- Automated regression checks and live Chrome/Brave checks cover encrypted
-  chat loading, unread indicators, Seen/Typing protection, and message sending.
-  Live Firefox/Zen and the complete account-switch matrix remain unverified.
+- We tried all supported features during normal use and found no issues.
+  We did not try every possible browser, account, chat, or situation.
+- Our code checks and checks in Chrome and Brave passed. More checks are still
+  needed in Firefox and Zen and when switching between accounts.
 
 ## [2.1.0] - 2026-10-15
 

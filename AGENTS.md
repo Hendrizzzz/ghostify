@@ -71,6 +71,13 @@ in `site/`.
 - Fail-open error handling in content scripts is intentional: Ghostify must
   never break the host page. Keep `catch` blocks quiet unless behind debug flags.
 - Zero runtime dependencies; devDependencies only.
+- Write public-facing text in plain, natural, everyday English. This includes
+  website updates, status/history notes, popup messages, store release notes,
+  and GitHub Release descriptions. Describe what people notice and what they
+  can do. Avoid code names, implementation details, and engineering shorthand
+  such as "sender-ID normalization", "local read state", "smoke matrix", or
+  "receipt enqueue". Keep those details in technical reports and reviewer
+  instructions. Simplifying an old update must preserve its dates and facts.
 
 ## Documentation map
 

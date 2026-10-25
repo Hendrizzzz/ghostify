@@ -15,6 +15,27 @@ not release notes, maintainer reminders, or instructions to ourselves.
 - Put internal evidence, reviewer, and release information in structured data,
   not in the public headline or summary.
 
+## Use everyday English
+
+Write as if explaining the update to a friend who does not work on software.
+Use short sentences and familiar words. Say what changed for the person using
+Ghostify; keep code names and technical explanations in the engineering report
+or reviewer instructions. This also applies to store notes, GitHub Releases,
+and future updates written by an agent.
+
+- Say "Some Messenger chats would not open", rather than describing encrypted
+  history loading or sender-ID normalization.
+- Say "Facebook keeps the blue unread dot", rather than "preserves local read
+  state" or "unread indicators".
+- Say "We tried all features during normal use and found no issues", rather
+  than "maintainer smoke checks passed". If the check was not exhaustive, say
+  "We did not try every possible situation".
+- Say which store has the update now and which store is still reviewing it.
+  Uploading a file does not mean the update is approved or available.
+
+Keep each old update true to what was known at the time. Wording may be made
+clearer, but do not change its date, outcome, or original testing scope.
+
 ## Calendar meaning
 
 The status calendar is an event ledger, not a claim that Ghostify was manually
