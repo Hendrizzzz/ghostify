@@ -74,6 +74,8 @@ in `site/`.
 - Use clear, natural English for public updates and release notes. Focus on
   what changed for users. Keep implementation details in technical
   documentation.
+- Group related rollout updates for the same version in one release entry.
+  Keep distinct incidents and testing records separate.
 
 ## Documentation map
 

@@ -20,6 +20,9 @@ not release notes, maintainer reminders, or instructions to ourselves.
 Use clear, natural English for public updates and release notes. Focus on
 what changed for users. Keep implementation details in technical documentation.
 Preserve historical dates, facts, and testing scope when editing older updates.
+Group related rollout updates for the same version in one release entry. Add
+newly approved stores to that entry, noting their approval date if different.
+Keep distinct incidents and testing records separate.
 
 ## Calendar meaning
 

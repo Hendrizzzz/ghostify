@@ -92,8 +92,9 @@ remained enabled in the protected Chrome session.
 | Facebook privacy and receipt queue | verified | A fresh controlled incoming message rendered in Facebook. Reading and replying produced no remote Seen update. Explicit Mark as read updated local unread state and incremented the blocked receipt-enqueue counter; the next send arrived in the independent account. Typing in the protected Facebook composer produced no observed remote typing indicator. |
 | Alternate-account messaging | verified | Both signed-in accounts successfully sent and received controlled test messages across Chrome and Brave with privacy enabled. |
 | Exact issue 197 account-switch sequence | manual-pending | Separate signed-in browser accounts do not reproduce switching accounts within one session; no claim is made that issue 197 is fully resolved. |
-| Zen/Firefox live encrypted-chat session | manual-pending | No live session was exercised; the user elected to continue with Chrome and Brave. Firefox packaging and shared-runtime tests pass. |
-| Instagram/story/media live smoke | manual-pending | Covered by existing automated regressions; live accounts and complete smoke scenarios have not been exercised for this patch. |
+| Firefox basic checks | maintainer-confirmed (basic) | The maintainer reports using Firefox and the Firefox Add-ons build for basic checks across all features, with no issues found. The agent's targeted live checks were in Chrome/Brave. |
+| Zen-specific session | manual-pending | Firefox and Zen are separate browsers. Reporter confirmation in Zen remains pending. |
+| Instagram/story/media checks | maintainer-confirmed (basic) | The maintainer reports basic checks across all features. The agent did not repeat the complete Instagram/story/media observer matrix. Existing automated regressions pass. |
 
 The positive controls changed only the current test page's in-memory settings,
 using the existing settings bridge. All six protections were restored afterward;

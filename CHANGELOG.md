@@ -22,6 +22,7 @@ grouped by version, with the most recent changes first.
 - All supported features were tested during normal use, with no issues found.
 - Additional checks covered chat loading, unread indicators, Seen/Typing
   protection, and message sending in Chrome and Brave.
+- Basic checks also passed with the Firefox Add-ons version.
 
 ## [2.1.0] - 2026-10-15
 
