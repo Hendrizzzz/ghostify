@@ -2971,11 +2971,10 @@
     }
     function isTypingExportName(exportName, allowDefault = false) {
       const name = String(exportName || "").toLowerCase();
-      return allowDefault && name === "default" || name.includes("sendtyping") || name.includes("send_typing") || name.includes("sendchatstate") || name.includes("send_chat_state") || name.includes("typingindicator");
+      return allowDefault && name === "default" || name.includes("sendchatstate") || name.includes("send_chat_state") || /send(?!er)[a-z0-9_]*typing/.test(name);
     }
     function isTypingDependency(moduleName) {
-      const name = String(moduleName || "").toLowerCase();
-      return name.includes("sendchatstatefromcomposer") || name.includes("sendtypingindicator") || name.includes("send_typing_indicator") || name.includes("typingindicatorstoredprocedure") || name.includes("sendchatstate") || name.includes("send_chat_state") || name.includes("typing") && name.includes("send");
+      return isTypingExportName(moduleName);
     }
     function isSecureTypingStateDependency(moduleName) {
       const name = String(moduleName || "").toLowerCase();

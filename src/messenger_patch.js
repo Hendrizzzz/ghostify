@@ -3639,25 +3639,16 @@ import { DIAGNOSTIC_VERSION } from "./utils/diagnostic-version.js";
         const name = String(exportName || "").toLowerCase();
         return (
             (allowDefault && name === "default") ||
-            name.includes("sendtyping") ||
-            name.includes("send_typing") ||
             name.includes("sendchatstate") ||
             name.includes("send_chat_state") ||
-            name.includes("typingindicator")
+            /send(?!er)[a-z0-9_]*typing/.test(name)
         );
     }
 
     function isTypingDependency(moduleName) {
-        const name = String(moduleName || "").toLowerCase();
-        return (
-            name.includes("sendchatstatefromcomposer") ||
-            name.includes("sendtypingindicator") ||
-            name.includes("send_typing_indicator") ||
-            name.includes("typingindicatorstoredprocedure") ||
-            name.includes("sendchatstate") ||
-            name.includes("send_chat_state") ||
-            (name.includes("typing") && name.includes("send"))
-        );
+        // Sender-ID helpers are also used to hydrate encrypted message history.
+        // Require an outgoing send operation, not just "typing" and "send(er)".
+        return isTypingExportName(moduleName);
     }
 
     function isSecureTypingStateDependency(moduleName) {

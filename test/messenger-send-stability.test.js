@@ -2984,6 +2984,145 @@ async function testMessengerTypingAndSeenProtectionsStillBlock() {
     );
 }
 
+function testTypingSenderIdNormalizationPreservesEncryptedChatHydration() {
+    for (const page of [
+        {
+            hostname: "www.messenger.com",
+            pathname: "/e2ee/t/123",
+        },
+        {
+            hostname: "www.facebook.com",
+            pathname: "/messages/e2ee/t/123",
+        },
+        {
+            hostname: "www.fbsbx.com",
+            pathname: "/maw_proxy_page/",
+        },
+    ]) {
+        for (const msgTyping of [true, false]) {
+            const context = makeMessengerPatchPage({ msgTyping }, page);
+            const senderId = Object.freeze([0, 123]);
+            const normalizerCalls = [];
+            const normalizeTypingIndicatorSenderId = function (value) {
+                normalizerCalls.push({ value, thisArg: this });
+                return senderId;
+            };
+            const helper = registerMessengerModule(
+                context,
+                "MAWBridgeTypingIndicatorSenderId",
+                function (_a, _b, _c, _d, _module, exports) {
+                    exports.normalizeTypingIndicatorSenderId =
+                        normalizeTypingIndicatorSenderId;
+                },
+            );
+            const nativeHelper = helper.exports;
+            const hydration = registerMessengerModuleWithDependencies(
+                context,
+                "MAWBridgeNewMsgHandler",
+                ["MAWBridgeTypingIndicatorSenderId", "LSSendTypingIndicator"],
+                {
+                    MAWBridgeTypingIndicatorSenderId: nativeHelper,
+                    LSSendTypingIndicator: { default() {} },
+                },
+                function (_a, require, _c, _d, _module, exports) {
+                    exports.load = function () {
+                        const helper = require("MAWBridgeTypingIndicatorSenderId");
+                        const id =
+                            helper.normalizeTypingIndicatorSenderId("123");
+                        // Native encrypted-message insertion consumes an I64 ID.
+                        return id[1];
+                    };
+                },
+            );
+
+            assert.strictEqual(
+                helper.exports.normalizeTypingIndicatorSenderId,
+                normalizeTypingIndicatorSenderId,
+                "an ID normalizer must never be classified as an outgoing typing operation",
+            );
+            assert.strictEqual(hydration.exports.load(), 123);
+            assert.strictEqual(normalizerCalls.length, 1);
+            assert.strictEqual(normalizerCalls[0].value, "123");
+            assert.strictEqual(normalizerCalls[0].thisArg, nativeHelper);
+            assert.strictEqual(
+                context.window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__ || 0,
+                0,
+            );
+        }
+    }
+}
+
+function testTypingWriteClassificationPreservesNonSendingExports() {
+    for (const hostname of ["www.messenger.com", "www.fbsbx.com"]) {
+        for (const name of [
+            "LSSendTypingIndicator",
+            "LSSendTypingIndicatorStoredProcedure",
+            "MWV2SendChatStateFromComposer",
+            "MW_send_chat_state",
+            "MAWSendSecureTypingNotification",
+            "MW_send_typing_indicator",
+        ]) {
+            const context = makeMessengerPatchPage(
+                {},
+                { hostname, pathname: "/maw_proxy_page/" },
+            );
+            let sends = 0;
+            const senderId = Object.freeze([0, 123]);
+            const normalizer = () => senderId;
+            const receiver = () => "incoming-state";
+            const nativeResult = Object.freeze({ sent: true });
+            const send = function () {
+                assert.strictEqual(this, module.exports);
+                sends++;
+                return nativeResult;
+            };
+            const module = registerMessengerModule(
+                context,
+                name,
+                function (_a, _b, _c, _d, _module, exports) {
+                    exports.default = send;
+                    exports.sendTypingIndicator = send;
+                    exports.normalizeTypingIndicatorSenderId = normalizer;
+                    exports.getTypingIndicator = receiver;
+                },
+            );
+
+            assert.strictEqual(
+                module.exports.normalizeTypingIndicatorSenderId,
+                normalizer,
+            );
+            assert.strictEqual(module.exports.getTypingIndicator, receiver);
+            assert.strictEqual(
+                module.exports.normalizeTypingIndicatorSenderId(),
+                senderId,
+            );
+            assert.strictEqual(
+                module.exports.getTypingIndicator(),
+                "incoming-state",
+            );
+            assert.strictEqual(module.exports.default(), undefined);
+            assert.strictEqual(module.exports.sendTypingIndicator(), undefined);
+            assert.strictEqual(
+                sends,
+                0,
+                `${name} must suppress outgoing typing`,
+            );
+            assert.strictEqual(
+                context.window.__GHOSTIFY_BLOCKED_TYPING_EXPORT_CALLS__,
+                2,
+            );
+
+            context.window.__GHOSTIFY_SETTINGS__.msgTyping = false;
+            assert.strictEqual(module.exports.default(), nativeResult);
+            assert.strictEqual(
+                module.exports.sendTypingIndicator(),
+                nativeResult,
+            );
+            assert.strictEqual(sends, 2);
+        }
+    }
+}
+
 async function testFacebookSecureTypingStateModulesPreserveReturnContract() {
     const context = makeMessengerPatchPage(
         {},
@@ -13083,6 +13222,8 @@ async function testMessageRequestClickGraceKeepsTransportAndBridgeNative() {
     testMessengerPatchMixedTransferBatchesSanitizePrivacyTasks();
     testMessengerPatchReferencedSendTransferIsPreserved();
     await testMessengerTypingAndSeenProtectionsStillBlock();
+    testTypingSenderIdNormalizationPreservesEncryptedChatHydration();
+    testTypingWriteClassificationPreservesNonSendingExports();
     await testFacebookSecureTypingStateModulesPreserveReturnContract();
     await testFacebookMawSecureTypingStateDependenciesPreserveSecureSend();
     await testFacebookMiniChatComposerSendDependenciesPreserveSecureSend();
