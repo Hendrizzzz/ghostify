@@ -14,10 +14,12 @@ const publishWorkflow = fs.readFileSync(
     "utf8",
 );
 
-assert(
-    notes.includes("### Added"),
-    "current release notes should include the Added section",
-);
+assert(notes.trim().length > 0, "current version should have release notes");
+const patchNotes = "### Fixed\n\n- Fixed encrypted chat loading.";
+const featureNotes = "### Added\n\n- Added privacy controls.";
+const patchChangelog = `## [1.2.4] - Unreleased\n\n${patchNotes}\n\n## [1.2.3] - 2026-07-20\n\n${featureNotes}\n`;
+assert.strictEqual(extractReleaseNotes(patchChangelog, "1.2.4"), patchNotes);
+assert.strictEqual(extractReleaseNotes(patchChangelog, "1.2.3"), featureNotes);
 assert(
     !notes.includes("## Historical Releases"),
     "release notes must stop at the next version heading",

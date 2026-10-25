@@ -2,6 +2,10 @@
 
 Date: 2026-10-26. Base: the current 2.1.0 release on `main`.
 
+The development package is 2.1.1, marked Unreleased in the changelog. Clean CI
+fetched the existing `v2.1.0` tag and correctly required a new identity for the
+changed packaged code. This version advance does not create a tag or release.
+
 ## Cause and relationship to PR 246
 
 Ghostify classified `MAWBridgeTypingIndicatorSenderId` as an outgoing typing
@@ -44,6 +48,11 @@ A separate development-dependency change advances only `undici` from 7.30.0 to
 7.30.1 in the lockfile. This clears a newly reported audit failure without
 extending the existing exception policy. There are no runtime dependencies.
 
+The merge checks also exposed an existing site build-tool audit failure. Vite
+was updated from 8.2.0 to 8.3.5 with its lockfile dependencies; site typechecking,
+production build, and the complete site dependency audit pass. The release-note
+test now covers fixes-only Unreleased entries without requiring an Added section.
+
 ## Automated evidence
 
 | Check | Status | Evidence |
@@ -52,7 +61,8 @@ extending the existing exception policy. There are no runtime dependencies.
 | Fixed hydration and typing selection | verified | Both new regression matrices pass against the rebuilt bundle. |
 | Existing messaging/privacy regressions | verified | Full send-stability harness passes, including mixed batches, workers, transferables, requests, settings, and Instagram guards. |
 | Issue 145 queue fix | verified | Existing tests preserve local read work, suppress only the receipt enqueue, complete the native transaction, and keep subsequent sends moving. |
-| Full repository gate | verified | `npm run ci` passes on the 2.1.0 base, including package tests, both browser validators, tag integrity, bundle consistency, Firefox lint, and governed dependency audit. |
+| Full repository gate | verified | `npm run ci` passes for the 2.1.1 source build with release tags fetched, including package tests, both browser validators, tag integrity, bundle consistency, Firefox lint, and governed dependency audit. |
+| Site build and audit | verified | Vite 8.3.5 passes the site typecheck/production build and complete dependency audit with zero vulnerabilities. |
 | Runtime dependency audit | verified | `npm run audit:runtime` reports zero vulnerabilities. |
 | JavaScript lint | verified | ESLint passes for all 57 tracked JavaScript files. |
 | Changed-file formatting | verified | Prettier passes for the changed source, regression tests, and lockfile. |
