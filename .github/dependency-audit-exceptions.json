@@ -1,22 +1,4 @@
 {
   "schemaVersion": 1,
-  "exceptions": [
-    {
-      "id": "node-forge-web-ext-dev-only-2026-10",
-      "package": "node-forge",
-      "version": "1.4.0",
-      "node": "node_modules/node-forge",
-      "advisories": [
-        "GHSA-86w9-cpqp-85rv"
-      ],
-      "dependencyPath": [
-        "web-ext",
-        "@devicefarmer/adbkit",
-        "node-forge"
-      ],
-      "scope": "development-only",
-      "expiresOn": "2026-12-15",
-      "reason": "Mozilla web-ext reaches node-forge only through adbkit, which it uses to drive Firefox for Android over ADB during manual `web-ext run` sessions. Ghostify's scripts and CI only run `web-ext lint`, which never loads adbkit. The advisory affects RSA PKCS#1 v1.5 signature verification and has no patched node-forge release as of 2026-10-15. Runtime dependency audits remain fully blocking."
-    }
-  ]
+  "exceptions": []
 }
