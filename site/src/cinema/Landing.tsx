@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Film } from './Film';
 import { Footer, Header, orderedStores } from './Shell';
 import { FilmSound, soundPreferred } from './sound';
@@ -37,15 +37,20 @@ const GLYPH = {
   ),
 };
 
-/* Always in the header. Live bars while sound is playing, a speaker while
-   it waits for the press that begins the film, a crossed speaker when the
-   visitor has muted it (remembered for next time). */
+/* How much each meter band is lifted: the drone fills the lowest band on its
+   own, the higher ones only move on a hit. */
+const METER_GAIN = [1.1, 2.5, 2.6, 3.5];
+
+/* Always in the header. A live meter of the actual sound while it plays, a
+   speaker while it waits for the press that begins the film, a crossed
+   speaker when the visitor has muted it (remembered for next time). */
 function SoundToggle({ sound }: { sound: FilmSound }) {
   // Still frames never start sound on their own: off until asked for.
   const [wanted, setWanted] = useState(
     () => soundPreferred() && !matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
   const [running, setRunning] = useState(false);
+  const meter = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     sound.onChange = setRunning;
@@ -53,6 +58,30 @@ function SoundToggle({ sound }: { sound: FilmSound }) {
       sound.onChange = undefined;
     };
   }, [sound]);
+
+  const live = wanted && running;
+
+  // The bars follow what is playing, frame by frame; still under reduced motion.
+  useEffect(() => {
+    const el = meter.current;
+    if (!live || !el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const bars = Array.from(el.children) as HTMLElement[];
+    const level = [0, 0, 0, 0];
+    let raf = 0;
+    const draw = () => {
+      raf = requestAnimationFrame(draw);
+      sound.levels(level);
+      bars.forEach((b, i) => {
+        const v = Math.min(1, level[i] * METER_GAIN[i]);
+        b.style.transform = `scaleY(${(0.2 + 0.8 * v).toFixed(3)})`;
+      });
+    };
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      bars.forEach((b) => (b.style.transform = ''));
+    };
+  }, [live, sound]);
 
   const toggle = () => {
     if (wanted) {
@@ -65,7 +94,6 @@ function SoundToggle({ sound }: { sound: FilmSound }) {
     }
   };
 
-  const live = wanted && running;
   return (
     <button
       type="button"
@@ -81,7 +109,7 @@ function SoundToggle({ sound }: { sound: FilmSound }) {
       onClick={toggle}
     >
       {live ? (
-        <span className="sound-bars" aria-hidden="true">
+        <span className="sound-bars" ref={meter} aria-hidden="true">
           <i />
           <i />
           <i />

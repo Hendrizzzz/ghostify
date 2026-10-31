@@ -391,13 +391,10 @@ html.is-film-page::-webkit-scrollbar {
   padding: 128px var(--edge) 96px;
 }
 
+/* The current status opens the page as plain type, not a card. */
 .st-now {
   display: grid;
   gap: 14px;
-  padding: clamp(24px, 4vw, 40px);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: rgba(244, 241, 234, 0.025);
 }
 
 .st-now h1,
@@ -626,10 +623,11 @@ html.is-film-page::-webkit-scrollbar {
   gap: 8px;
 }
 
+/* Each key is a short bar, the same shape as the days it explains. */
 .st-legend li::before {
   content: '';
-  width: 10px;
-  height: 10px;
+  width: 4px;
+  height: 14px;
   border-radius: 2px;
 }
 
@@ -698,22 +696,18 @@ html.is-film-page::-webkit-scrollbar {
   font-weight: 600;
 }
 
+/* What kind of update it is, as a quiet word before its title. */
 .st-tag {
-  padding: 2px 9px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--soft);
+  font-size: 14px;
   font-weight: 600;
 }
 
 .st-event.is-issue .st-tag {
-  border-color: rgba(226, 114, 91, 0.5);
   color: var(--issue);
 }
 
 .st-event.is-review .st-tag {
-  border-color: rgba(224, 166, 58, 0.5);
   color: var(--review);
 }
 
@@ -876,76 +870,48 @@ html.is-film-page::-webkit-scrollbar {
 
 /* ---------- Sound toggle ---------- */
 
+/* Sits with the nav links, no outline. While sound plays, four bars show
+   the actual level, low to high, set by the page each frame. */
 .sound {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
   gap: 9px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
+  padding: 0 4px;
+  border: 0;
   background: transparent;
   color: var(--muted);
   font: inherit;
   font-size: 15px;
   cursor: pointer;
-  transition:
-    color 150ms ease,
-    border-color 150ms ease;
+  transition: color 150ms ease;
 }
 
 .sound:hover,
 .sound.is-on {
   color: var(--fg);
-  border-color: rgba(244, 241, 234, 0.32);
 }
 
 .sound-bars {
   display: inline-flex;
+  width: 15px;
+  height: 13px;
   align-items: flex-end;
+  justify-content: center;
   gap: 2px;
-  height: 12px;
 }
 
 .sound-bars i {
   width: 2px;
-  height: 4px;
+  height: 100%;
   border-radius: 1px;
-  background: currentColor;
-}
-
-.sound.is-on .sound-bars i {
-  animation: eq 900ms ease-in-out infinite;
-}
-
-.sound.is-on .sound-bars i:nth-child(2) {
-  animation-delay: 150ms;
-}
-
-.sound.is-on .sound-bars i:nth-child(3) {
-  animation-delay: 300ms;
-}
-
-.sound.is-on .sound-bars i:nth-child(4) {
-  animation-delay: 450ms;
-}
-
-.sound.is-on {
-  border-color: rgba(185, 168, 255, 0.45);
-}
-
-.sound.is-on .sound-bars i {
   background: #b9a8ff;
+  transform: scaleY(0.2);
+  transform-origin: 50% 100%;
 }
 
 .sound-glyph {
   flex: none;
-}
-
-@keyframes eq {
-  50% {
-    height: 12px;
-  }
 }
 
 /* ---------- The film ----------
@@ -1201,13 +1167,6 @@ html.is-film-page::-webkit-scrollbar {
   margin-top: max(12px, calc(34 * var(--u)));
 }
 
-.begin::before {
-  content: '';
-  width: 1px;
-  height: max(18px, calc(28 * var(--u)));
-  background: linear-gradient(rgba(185, 168, 255, 0), rgba(185, 168, 255, 0.8));
-}
-
 .begin-press {
   display: inline-flex;
   min-height: 44px;
@@ -1230,36 +1189,10 @@ html.is-film-page::-webkit-scrollbar {
   color: #c9bcff;
 }
 
-.begin-keys {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(244, 241, 234, 0.46);
-  font-size: 13px;
-}
-
 @keyframes breathe {
   50% {
     opacity: 0.55;
   }
-}
-
-.kbd {
-  display: inline-flex;
-  min-width: 22px;
-  height: 22px;
-  box-sizing: border-box;
-  align-items: center;
-  justify-content: center;
-  padding: 0 7px;
-  border: 1px solid rgba(244, 241, 234, 0.26);
-  border-bottom-width: 2px;
-  border-radius: 6px;
-  color: rgba(244, 241, 234, 0.55);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1;
 }
 
 .on-touch {
@@ -1375,31 +1308,49 @@ html.is-film-page::-webkit-scrollbar {
   text-shadow: 0 2px 30px rgba(0, 0, 0, 0.8);
 }
 
-/* F3 · The dots */
+/* F3 · Typing: a reply typed out in the dark and taken back */
 
 .typing {
   height: auto;
   border-radius: calc(6 * var(--u));
 }
 
-.dots {
-  display: flex;
-  align-items: center;
-  gap: calc(26 * var(--u));
+.draft {
+  width: max-content;
+  min-height: 1em;
+  margin: 0;
+  color: #f4f1ea;
+  font-size: calc(52 * var(--u));
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  white-space: pre;
+  text-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.35);
   pointer-events: none;
 }
 
-.dot {
-  display: block;
-  flex: none;
-  width: calc(34 * var(--u));
-  height: calc(34 * var(--u));
-  border-radius: 50%;
-  background: #f4f1ea;
+/* A text caret in the ghost's light: still while keys go in, blinking
+   while nothing does. */
+.caret {
+  display: inline-block;
+  width: max(2px, 0.05em);
+  height: 0.9em;
+  margin-left: 0.04em;
+  vertical-align: -0.1em;
+  border-radius: 1px;
+  background: #c9bcff;
+  box-shadow: 0 0 calc(14 * var(--u)) rgba(185, 168, 255, 0.6);
+  animation: caret 1.06s steps(1) infinite;
 }
 
-.dot:first-child {
-  box-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.6);
+.draft.is-typing .caret {
+  animation: none;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
 }
 
 .lean {
@@ -1527,6 +1478,8 @@ html.is-film-page::-webkit-scrollbar {
   transform-origin: left center;
 }
 
+/* The floor fades out at both ends too, so pulled back the world has no
+   edge, only light falling off into the dark. */
 .floor {
   position: absolute;
   left: 0;
@@ -1534,6 +1487,8 @@ html.is-film-page::-webkit-scrollbar {
   top: calc(50% + (380 - 360) * var(--u));
   height: calc(160 * var(--u));
   background: linear-gradient(rgba(5, 5, 6, 0), rgba(30, 28, 44, 0.35), rgba(5, 5, 6, 0));
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
   pointer-events: none;
 }
 
@@ -1579,8 +1534,8 @@ html.is-film-page::-webkit-scrollbar {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
-/* F6b · In your browser. The wide, pulled back into one browser window:
-   a thin rounded outline and a top bar line, nothing else. */
+/* F6b · Privacy. The wide, pulled further back until the three screens are
+   a small pool of light. No frame is drawn around it. */
 
 .frame {
   position: absolute;
@@ -1588,36 +1543,9 @@ html.is-film-page::-webkit-scrollbar {
   transform-origin: 50% 50%;
 }
 
-.pane,
-.window {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--bar);
-  bottom: var(--bar);
-  border-radius: calc(20 * var(--u));
-}
-
 .pane {
-  overflow: hidden;
-}
-
-.window {
-  border: 1.75px solid rgba(244, 241, 234, 0.3);
-  box-shadow: 0 0 calc(140 * var(--u)) rgba(170, 152, 238, 0.1);
-  pointer-events: none;
-}
-
-.window::before {
-  content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: calc(46 * var(--u));
-  border-bottom: 1.75px solid rgba(244, 241, 234, 0.18);
-  border-radius: calc(18 * var(--u)) calc(18 * var(--u)) 0 0;
-  background: rgba(10, 10, 12, 0.9);
+  inset: var(--bar) 0;
 }
 
 /* The lines, set like subtitles. Only the links take the pointer. */
@@ -1668,9 +1596,11 @@ html.is-film-page::-webkit-scrollbar {
 
 .film .local-credit {
   display: inline-flex;
+  flex-wrap: wrap;
   min-height: 36px;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 0 0.6em;
   color: rgba(244, 241, 234, 0.68);
   font-size: max(14px, calc(16 * var(--u)));
   font-weight: 500;
@@ -1682,6 +1612,13 @@ html.is-film-page::-webkit-scrollbar {
 
 .film .local-credit:hover {
   color: var(--fg);
+}
+
+/* The date sits beside the credit, a step quieter, with space alone
+   between them. */
+.local-credit time {
+  color: rgba(244, 241, 234, 0.5);
+  white-space: nowrap;
 }
 
 /* A full 44px target that takes no more room than the line it sits on. */
@@ -1865,10 +1802,6 @@ html.is-film-page::-webkit-scrollbar {
   transition: opacity 800ms var(--ease);
 }
 
-.keys > span {
-  margin: 0 3px;
-}
-
 .film.has-keyed .keys {
   opacity: 0;
 }
@@ -1933,17 +1866,15 @@ html.is-film-page::-webkit-scrollbar {
   background: rgba(244, 241, 234, 0.7);
 }
 
+/* The shot's name over its tick, set as plain text on the letterbox. */
 .tick-tip {
   position: absolute;
-  bottom: calc(100% + 2px);
+  bottom: calc(100% - 4px);
   left: 50%;
-  padding: 6px 11px;
-  border: 1px solid rgba(244, 241, 234, 0.12);
-  border-radius: 8px;
-  background: #141317;
   color: rgba(244, 241, 234, 0.85);
   font-size: 13px;
   line-height: 1.2;
+  text-shadow: 0 1px 10px #000;
   white-space: nowrap;
   opacity: 0;
   transform: translate(-50%, 4px);
@@ -1974,10 +1905,6 @@ html.is-film-page::-webkit-scrollbar {
 
 .film-ui .skip:hover {
   color: var(--fg);
-}
-
-.film-ui .skip .kbd {
-  color: rgba(244, 241, 234, 0.45);
 }
 
 .film[data-shot='8'] .skip {
@@ -2084,7 +2011,6 @@ html.is-film-page::-webkit-scrollbar {
     justify-content: center;
   }
 
-  .film-ui .skip .kbd,
   .skip-long {
     display: none;
   }
@@ -2236,13 +2162,8 @@ html.is-film-page::-webkit-scrollbar {
     text-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.45);
   }
 
-  .dot {
-    width: calc(30 * var(--u));
-    height: calc(30 * var(--u));
-  }
-
-  .dots {
-    gap: calc(22 * var(--u));
+  .draft {
+    font-size: calc(42 * var(--u));
   }
 
   .fb {
@@ -2318,6 +2239,10 @@ html.is-film-page::-webkit-scrollbar {
     display: block;
     width: fit-content;
     margin: 0;
+  }
+
+  .film .local-credit {
+    justify-content: flex-start;
   }
 
   /* The end card is one column between the header and the controls: the
@@ -2460,11 +2385,6 @@ html.is-film-page::-webkit-scrollbar {
   .begin {
     flex-direction: row;
     margin-top: 0;
-  }
-
-  .begin::before,
-  .begin-keys {
-    display: none;
   }
 
   .g0 {

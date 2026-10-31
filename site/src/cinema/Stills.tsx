@@ -100,7 +100,10 @@ export function Stills({ stores, base }: { stores: Store[]; base: string }) {
           className={`local-credit ${STATUS_CREDIT.verified ? 'is-ok' : 'is-review'}`}
           href={`${base}/status`}
         >
-          {STATUS_CREDIT.label} · {formatStatusDate(STATUS_CREDIT.updatedAt)}
+          <span>{STATUS_CREDIT.label}</span>{' '}
+          <time dateTime={STATUS_CREDIT.updatedAt ?? undefined}>
+            {formatStatusDate(STATUS_CREDIT.updatedAt)}
+          </time>
         </a>
       </div>
 

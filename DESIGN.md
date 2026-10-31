@@ -107,13 +107,23 @@ status feed source.
   one shot (GSAP Observer + ScrollTrigger), with a cooldown that absorbs
   trackpad momentum. Native scroll is released before the first and after the
   last shot. Esc / Skip / End jump to the end card; each shot has a URL hash.
-- Shot order: opener ("Press anywhere to begin") → cold open → receipt → dots
-  → story → switches → wide (official platform marks) → privacy → end card.
+  The two shots that run straight on with no cut (receipt, privacy) are left
+  the way they came: stepping back plays them backwards, a little faster, so
+  the way back retraces the way in instead of cutting.
+- Shot order: opener ("Press anywhere to begin") → cold open → receipt →
+  typing (a reply typed in the dark and erased) → story → switches → wide
+  (official platform marks) → privacy → end card.
 - `Stills.tsx` — the film as still frames for `prefers-reduced-motion` or a
   film that cannot start. Sound stays off there.
 - `sound.ts` — procedural Web Audio score, no audio files. On by default, but
   only starts on a real user activation (press, key, tap); it never claims to
   be on before the context is running. Muting is remembered in localStorage.
+  Every effect is a cue on its shot's timeline (`sfx(at, …)` in `Film.tsx`);
+  the shot's cues are scheduled on the audio clock when it starts, so a sound
+  lands on the frame it belongs to. A shot cut short drops its sounds; one
+  that played out lets its tail ring under the next cut. Effects play at full
+  level at once; only the drone bed fades in. The header's meter reads the
+  real output level.
 - `Ghost.tsx` — the vector mark: SMIL hem, CSS blink, pointer-following eyes,
   plus the back-lit silhouette and poses.
 - `Landing.tsx` (film + FAQ as end credits), `Status.tsx` (current + history),
@@ -126,6 +136,9 @@ status feed source.
 - Letterbox bars, grain, a subtitle scrim and light spill from the footage are
   the whole material language. Do not add glass, gradients-as-decoration or
   beams.
+- No dots or boxes in the film: no keycap hints, chips, cards, dot separators,
+  outlined pills or drawn frames. Hints are plain text, separators are space,
+  and the world fades into the dark instead of sitting in a frame.
 - Inactive shots use `content-visibility` so only the live shot lays out.
 
 ### Accessibility and performance floor
