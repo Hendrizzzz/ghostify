@@ -15,7 +15,7 @@ import { Clip, FOOTAGE, primeClip, runClip, type Footage } from './Clip';
 import { Ghost, GhostSilhouette } from './Ghost';
 import { RealPopup, type RealPopupHandle } from './RealPopup';
 import { GITHUB_URL, StoreButtons, type Store } from './Shell';
-import { soundPreferred, type FilmSound } from './sound';
+import { soundPreferred, type Cue, type FilmSound } from './sound';
 import { Stills } from './Stills';
 
 gsap.registerPlugin(ScrollTrigger, Observer);
@@ -29,7 +29,8 @@ gsap.registerPlugin(ScrollTrigger, Observer);
    showing (660 tall); screens in between get a blend of the two, and taller
    ones (portrait tablets) get the short take, larger. The cut is picked by the
    screen's shape, not by device. Only transforms, opacity and clip-path
-   animate. */
+   animate. Every sound is a cue on its shot's timeline, scheduled on the
+   audio clock as the shot starts, so it lands on the frame it belongs to. */
 
 type R = readonly [x: number, y: number, w: number];
 
@@ -100,10 +101,10 @@ const AT = {
     [16, 132, 358],
     [16, 92, 358],
   ],
-  dots: [
-    [720, 330, 0],
-    [118, 486, 0],
-    [118, 412, 0],
+  draft: [
+    [676, 304, 0],
+    [24, 462, 0],
+    [24, 408, 0],
   ],
   lean: [
     [1010, 230, 340],
@@ -176,9 +177,9 @@ const AT = {
     [170, 168, 300],
   ],
   wGhost: [
-    [612, 444, 56],
-    [175, 418, 40],
-    [175, 386, 40],
+    [610, 462, 60],
+    [175, 432, 40],
+    [175, 400, 40],
   ],
   glow6: [
     [340, 0, 600],
@@ -211,14 +212,15 @@ const SHORT = 660;
 /* The widescreen cut stops growing here, so a 4K screen is not blown up. */
 const MAX_U = 2.5;
 
+/* The receipts on the wall, set apart by space alone. */
 const WALL_ROWS = [
-  'Seen 21:04 · typing… · Seen · viewed your story · ',
-  'typing… · Seen 9:41 · viewed your story · Seen · ',
-  'Seen · viewed your story · Seen 21:04 · typing… · ',
-  'viewed your story · typing… · Seen · Seen 9:41 · ',
-  'Seen 21:04 · Seen · typing… · viewed your story · ',
-  'typing… · viewed your story · Seen 9:41 · Seen · ',
-];
+  ['Seen 21:04', 'typing', 'Seen', 'viewed your story'],
+  ['typing', 'Seen 9:41', 'viewed your story', 'Seen'],
+  ['Seen', 'viewed your story', 'Seen 21:04', 'typing'],
+  ['viewed your story', 'typing', 'Seen', 'Seen 9:41'],
+  ['Seen 21:04', 'Seen', 'typing', 'viewed your story'],
+  ['typing', 'viewed your story', 'Seen 9:41', 'Seen'],
+].map((row) => row.map((w) => `${w}  `).join(''));
 const WALL_OFFSETS = [-60, -340, -120, -420, -200, -520, -20, -280];
 
 /* The shots, in order. `id` is the URL hash; `layer` the stage layer that
@@ -235,14 +237,41 @@ export const SHOTS = [
   { id: 'end', name: 'End card', layer: '.s6', ghost: '.s6 .g6' },
 ] as const;
 const LAST = SHOTS.length - 1;
-/* Shots that run straight on from the one before, with no cut. */
+/* Shots that run straight on from the one before, with no cut. Stepping
+   back out of one plays it backwards, so the way back is the exact reverse
+   of the way in, only a little faster. */
 const CONTINUOUS = new Set([2, 7]);
+const REWIND = 1.5;
 /* The rest after a shot before the next gesture is accepted (s). */
 const HOLD = 0.3;
 /* Trackpad momentum: a wheel stream that is still running when a shot ends
    is ignored for this long (ms). */
 const COOLDOWN = 1000;
 const SWITCH_COUNT = 6;
+
+/* The typing shot's draft, typed and then taken back, and when each key
+   lands (s into the shot): a little uneven, a beat longer at a space, and
+   erased faster than it was written. */
+const DRAFT = 'let me think';
+const TYPED: number[] = [];
+for (let i = 0, at = 0.5; i < DRAFT.length; i += 1) {
+  TYPED.push(at);
+  at += DRAFT[i] === ' ' ? 0.14 : 0.064 + ((i * 7) % 3) * 0.013;
+}
+const ERASED = Array.from(DRAFT, (_, i) => 1.86 + i * 0.044);
+
+/* The cold open's screen flicker: its opacity steps, and how long they take. */
+const FLICKER = [0, 0.75, 0.1, 0.95, 0.35, 1] as const;
+const FLICKER_TIME = 1;
+
+/* The receipt: when Seen starts to lift out of the chat, and when the ghost
+   stops it (s into the shot). */
+const LIFT = 0.55;
+const HIT = 1.8;
+/* Privacy: how long the camera takes to pull back from the wide (s). */
+const PULL = 1.4;
+/* The wide: one note for each platform as its name rises. */
+const MARK_NOTES = [329.63, 392, 493.88];
 
 const shotFromHash = () => {
   const id = decodeURIComponent(location.hash.slice(1));
@@ -279,10 +308,6 @@ function Line({ children }: { children: ReactNode }) {
       <span>{children}</span>
     </span>
   );
-}
-
-function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="kbd">{children}</kbd>;
 }
 
 function Speaker() {
@@ -501,7 +526,32 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
       tl.fromTo(q(`${layer} .scrim`), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, at - 0.2);
       rise(tl, `${layer} .sub .rise > span`, at);
     };
-    const cue = (tl: TL, fn: () => void, at: number) => tl.call(fn, undefined, at);
+    /* Something the picture does at a moment of the shot. */
+    const call = (tl: TL, fn: () => void, at: number) => tl.call(fn, undefined, at);
+    /* A sound at a moment of the shot. Collected while the shot is built and
+       handed to the sound as one score when it starts. */
+    const score: Cue[] = [];
+    const sfx = (at: number, play: (t: number) => void) => score.push([at, play]);
+
+    /* The typing shot's line: what is typed so far, and whether keys are
+       going in (the caret holds still while they do). */
+    const draftText = el.querySelector<HTMLElement>('.draft-text');
+    const draftLine = el.querySelector<HTMLElement>('.draft');
+    const setDraft = (text: string, typing: boolean) => {
+      if (draftText) draftText.textContent = text;
+      draftLine?.classList.toggle('is-typing', typing);
+    };
+
+    /* The wide's platform names rise from `at`, each on its own note, and a
+       fourth note resolves the phrase. */
+    const marksUp = (tl: TL, at: number) => {
+      tl.fromTo(q('.s5 .scrim'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, at - 0.2);
+      rise(tl, '.s5 .mark .rise > span', at, 0.3);
+      MARK_NOTES.forEach((f, i) => {
+        sfx(at + i * 0.3, (t) => sound.note(t, f, 0.045, 0.03, 1.8));
+      });
+      sfx(at + 1.05, (t) => sound.note(t, 587.33, 0.03, 0.2, 2.2));
+    };
 
     const SHOT: Array<(tl: TL) => void> = [
       /* The wall. The receipts settle, the lit ghost, the line, the stores. */
@@ -545,7 +595,9 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         tl.fromTo(q('.begin'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, 1.1);
       },
 
-      /* Cold open. The chat flickers on far away; the ghost rises into frame. */
+      /* Cold open. Through the cut it is dark; as the cut opens the chat
+         sparks on far away, the hum flickering with it, and the ghost rises
+         into frame. */
       (tl) => {
         bars(tl, false);
         gsap.set(q('.s1 .chat'), from('chat', 'chatFar'));
@@ -556,25 +608,26 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         gsap.set(q('.s1 .step'), { x: 0, y: 0 });
         gsap.set(q('.s1 .sub .rise > span'), { yPercent: 118 });
         gsap.set(q('.s1 .scrim'), { autoAlpha: 0 });
+        const spark = 0.55;
         tl.fromTo(
           q('.s1 .chat-glow'),
           { opacity: 0 },
-          { keyframes: { opacity: [0, 0.75, 0.1, 0.95, 0.35, 1] }, duration: 1.1 },
-          0.1,
+          { keyframes: { opacity: [...FLICKER] }, duration: FLICKER_TIME, ease: 'none' },
+          spark,
         );
-        cue(tl, () => sound.hum(), 0.15);
-        tl.fromTo(q('.s1 .reflect'), { opacity: 0 }, { opacity: 0.18, duration: 1.2 }, 0.4);
+        sfx(spark, (t) => sound.flicker(t, FLICKER_TIME, FLICKER));
+        tl.fromTo(q('.s1 .reflect'), { opacity: 0 }, { opacity: 0.18, duration: 1.2 }, spark + 0.4);
         tl.fromTo(
           q('.s1 .spill'),
           { opacity: 0, scale: 0.7 },
           { opacity: 0.2, scale: 0.8, duration: 1.6 },
-          0.3,
+          spark + 0.2,
         );
         tl.fromTo(
           q('.s1 .ghost-in'),
           { autoAlpha: 0, y: px(40) },
           { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power3.out' },
-          0.6,
+          0.75,
         );
         tl.fromTo(
           q('.s1 .haze'),
@@ -595,7 +648,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           { x: px(tall ? 2 : 4), duration: 2.4, ease: 'power1.out' },
           0,
         );
-        rise(tl, '.s1 .title .rise > span', 0.7);
+        rise(tl, '.s1 .title .rise > span', 0.95);
       },
 
       /* The receipt. The camera pushes in and Seen lifts out of the chat,
@@ -609,7 +662,13 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         gsap.set(q('.s1 .haze'), { autoAlpha: 1 });
         gsap.set(q('.seen i'), { opacity: 1, y: 0 });
         gsap.set(q('.seen-strike'), { scaleX: 0 });
-        tl.to(q('.s1 .title .rise > span'), { autoAlpha: 0, duration: 0.35 }, 0);
+        // From visible, stated outright, so the way back brings the title in.
+        tl.fromTo(
+          q('.s1 .title .rise > span'),
+          { autoAlpha: 1 },
+          { autoAlpha: 0, duration: 0.35 },
+          0,
+        );
         tl.fromTo(
           q('.s1 .chat'),
           from('chat', 'chatFar'),
@@ -635,71 +694,102 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           { x: px(tall ? 40 : 90), duration: 2.2, ease: 'power1.out' },
           0,
         );
+        const driftFrom = px(tall ? 6 : 14);
+        const driftTo = px(tall ? 10 : 24);
         tl.fromTo(
           q('.s1 .drift-ghost'),
-          { x: px(tall ? 6 : 14) },
-          { x: px(tall ? 10 : 24), duration: 2.2, ease: 'power1.out' },
+          { x: driftFrom },
+          { x: driftTo, duration: 2.2, ease: 'power1.out' },
           0,
         );
         subtitle(tl, '.s1', 0.2);
-        cue(tl, () => sound.rise(), 0.5);
-        // Seen lifts out of the chat and settles, whole.
+        // Seen lifts out of the chat and settles, whole, while a tone climbs
+        // under it.
+        const lift = LIFT;
+        const hit = HIT;
         tl.fromTo(
           q('.seen'),
           { ...from('seen', 'seenFrom'), autoAlpha: 0 },
           { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 0.95, ease: 'power3.out' },
-          0.55,
+          lift,
         );
-        // The ghost steps into its path; the word is stopped short.
+        sfx(lift, (t) => sound.rise(t, t + hit - lift));
+        // The ghost steps into its path and touches it on the hit: the tone
+        // is cut, the word is knocked back, and one clean stroke goes through
+        // it, all on the same frame. The step is measured from the layout so
+        // the ghost's near edge meets the word's near edge at that moment on
+        // any screen: from the left in the widescreen cut, from the right in
+        // the vertical one, allowing for where the ghost's plane has drifted.
+        const seenEl = q('.seen')[0] as HTMLElement | undefined;
+        const em = seenEl ? parseFloat(getComputedStyle(seenEl).fontSize) || 0 : 0;
+        const g = place('ghost');
+        const s = place('seen');
+        const p = hit / 2.2;
+        const drift = driftFrom + (driftTo - driftFrom) * (1 - (1 - p) * (1 - p));
+        // The silhouette's body spans 10% to 90% of its box; its lit rim
+        // reaches a little past the right side.
+        const edge = (tall ? g.x + 0.1 * g.w : g.x + 0.93 * g.w) + drift;
+        const meet = tall ? s.x + (seenEl?.offsetWidth ?? 0) - 0.02 * em : s.x + 0.06 * em;
+        const push = tall
+          ? Math.min(px(-6), Math.max(px(-120), meet - edge))
+          : Math.max(px(20), Math.min(px(160), meet - edge));
+        const step = 0.48;
         tl.fromTo(
           q('.s1 .step'),
           { x: 0, y: 0 },
-          { x: px(tall ? -12 : 34), y: px(-6), duration: 0.5, ease: 'power2.out' },
-          1.55,
+          { x: push, y: px(-6), duration: step, ease: 'power2.in' },
+          hit - step,
         );
         tl.to(
-          q('.seen'),
-          { keyframes: { x: [0, px(tall ? 0 : 10), 0] }, duration: 0.5, ease: 'power2.out' },
-          1.62,
+          q('.s1 .step'),
+          { x: push - Math.sign(push) * px(10), duration: 0.5, ease: 'power2.out' },
+          hit,
         );
-        cue(tl, () => sound.impact(), 1.8);
-        // One clean stroke through it, then it sinks back, still readable.
+        sfx(hit, (t) => sound.impact(t));
+        tl.to(q('.seen'), { x: px(tall ? -8 : 12), duration: 0.08, ease: 'power2.out' }, hit);
+        tl.to(q('.seen'), { x: 0, duration: 0.5, ease: 'power3.out' }, hit + 0.08);
         tl.fromTo(
           q('.seen-strike'),
           { scaleX: 0 },
-          { scaleX: 1, duration: 0.5, ease: 'power3.inOut' },
-          1.8,
+          { scaleX: 1, duration: 0.42, ease: 'expo.out' },
+          hit,
         );
+        // Then it sinks back into the dark, still readable, never delivered.
         tl.to(
           q('.seen i'),
           { opacity: 0.36, y: px(4), duration: 0.7, stagger: 0.05, ease: 'power2.out' },
-          1.95,
+          hit + 0.16,
         );
       },
 
-      /* The dots. Three rise, the third is swallowed, and none ever arrive. */
+      /* Typing. A reply is typed out in the dark, key by key, then taken
+         back just as fast; the other side never sees a thing. The caret is
+         left blinking. */
       (tl) => {
         bars(tl, false);
+        setDraft('', false);
         tl.fromTo(
           q('.s2 .typing'),
           { scale: 1, x: 0 },
-          { scale: 1.05, x: px(-14), duration: 2.4, ease: 'power1.out' },
+          { scale: 1.05, x: px(-14), duration: 2.6, ease: 'power1.out' },
           0,
         );
-        q('.dot').forEach((d, i) => {
-          tl.fromTo(
-            d,
-            { autoAlpha: 0, y: px(36), scale: 0.6 },
-            { autoAlpha: 1, y: 0, scale: 1, duration: 0.45, ease: 'back.out(2)' },
-            0.45 + i * 0.3,
-          );
-          cue(tl, () => sound.tap(i === 2), 0.45 + i * 0.3);
-          tl.to(
-            d,
-            { autoAlpha: 0, y: px(-14), scale: 0.7, duration: i === 2 ? 0.25 : 0.45 },
-            i === 2 ? 1.3 : 1.45 + i * 0.08,
-          );
+        tl.fromTo(
+          q('.s2 .draft'),
+          { autoAlpha: 0, y: px(10) },
+          { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out' },
+          0.2,
+        );
+        TYPED.forEach((at, i) => {
+          call(tl, () => setDraft(DRAFT.slice(0, i + 1), true), at);
+          sfx(at, (t) => sound.key(t, i));
         });
+        call(tl, () => setDraft(DRAFT, false), TYPED[TYPED.length - 1] + 0.12);
+        ERASED.forEach((at, i) => {
+          call(tl, () => setDraft(DRAFT.slice(0, DRAFT.length - 1 - i), true), at);
+          sfx(at, (t) => sound.key(t, i, true));
+        });
+        call(tl, () => setDraft('', false), ERASED[ERASED.length - 1] + 0.12);
         tl.fromTo(
           q('.s2 .lean'),
           { x: px(tall ? 240 : 380), rotation: -2 },
@@ -720,12 +810,15 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         );
         tl.fromTo(q('.s3 .fb'), { x: px(30) }, { x: px(-10), duration: 2.4, ease: 'none' }, 0);
         tl.fromTo(q('.s3 .spill'), { opacity: 0 }, { opacity: 1, duration: 0.8 }, 0);
+        // The ghost peeks in, with two soft notes as it looks.
         tl.fromTo(
           q('.s3 .peek'),
           tall ? { x: px(120), y: px(30), rotation: 0 } : { x: px(110), y: 0, rotation: 0 },
           { x: 0, y: 0, rotation: tall ? -12 : 10, duration: 1, ease: 'power3.out' },
           0.7,
         );
+        sfx(0.74, (t) => sound.note(t, 783.99, 0.028, 0.03, 1.3));
+        sfx(0.86, (t) => sound.note(t, 1174.66, 0.02, 0.03, 1.5));
         subtitle(tl, '.s3', 0.5);
       },
 
@@ -765,20 +858,23 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           0.7,
         );
         for (let i = 0; i < SWITCH_COUNT; i += 1) {
-          cue(
+          const at = 0.95 + i * 0.17;
+          call(
             tl,
             () => {
               popup.current?.setSwitches(Array.from({ length: SWITCH_COUNT }, (_, j) => j <= i));
               popup.current?.focusRow(i);
-              sound.tick();
             },
-            0.95 + i * 0.17,
+            at,
           );
+          // The tick lands as the knob ends its 180ms slide.
+          sfx(at + 0.12, (t) => sound.tick(t));
         }
-        cue(tl, () => popup.current?.focusRow(-1), 2.1);
+        call(tl, () => popup.current?.focusRow(-1), 2.1);
       },
 
-      /* The wide. Pull back from the three screens. */
+      /* The wide. Pull back from the three screens; each platform's name
+         rises on its own note, and a fourth resolves the phrase. */
       (tl) => {
         bars(tl, false);
         tl.fromTo(
@@ -787,19 +883,18 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           { scale: 1, y: 0, duration: 2.2, ease: 'power3.out' },
           0,
         );
-        cue(tl, () => sound.phrase(), 0.4);
-        tl.fromTo(q('.s5 .scrim'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 0.3);
-        rise(tl, '.s5 .mark .rise > span', 0.5, 0.12);
+        marksUp(tl, 0.5);
       },
 
-      /* Privacy. The camera keeps pulling back: the whole scene was one
-         browser window. Three lines, then the credit. */
+      /* Privacy. The camera keeps pulling back until the three screens are
+         a small pool of light in the dark. Three lines, each on a note, then
+         the credit. */
       (tl) => {
         bars(tl, false);
         let scale = H < 560 ? 0.5 : 0.58;
         let y = -40 * U;
         if (tall) {
-          // The window fits between the header and the lines, whatever the
+          // The screens fit between the header and the lines, whatever the
           // screen's height.
           const top = (document.querySelector('.bar')?.getBoundingClientRect().bottom ?? 64) + 8;
           const lines = q('.s7 .local')[0]?.getBoundingClientRect().top ?? H * 0.7;
@@ -813,21 +908,22 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
             // Short landscape screens pull back further to clear the lines.
             scale,
             y,
-            duration: 1.4,
+            duration: PULL,
             ease: 'power2.inOut',
           },
           0,
         );
-        tl.fromTo(q('.s7 .window'), { opacity: 0 }, { opacity: 1, duration: 0.9 }, 0.3);
         tl.fromTo(q('.s7 .scrim'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 0.5);
+        const NOTES = [659.25, 783.99, 987.77];
         q('.s7 .local-line').forEach((line, i) => {
+          const at = 0.9 + i * 0.25;
           tl.fromTo(
             line,
             { autoAlpha: 0, y: px(8) },
             { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' },
-            0.9 + i * 0.25,
+            at,
           );
-          cue(tl, () => sound.tap(), 0.9 + i * 0.25);
+          sfx(at, (t) => sound.note(t, NOTES[i] ?? 987.77, 0.03, 0.015, 0.9));
         });
         tl.fromTo(
           q('.s7 .local-credit'),
@@ -835,7 +931,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' },
           1.75,
         );
-        cue(tl, () => sound.tick(), 1.75);
+        sfx(1.75, (t) => sound.tick(t));
       },
 
       /* End card. The bars open on the ghost, smiling. */
@@ -848,7 +944,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           { scale: 1, y: 0, rotation: 6, duration: 1.3, ease: 'back.out(1.6)' },
           0.15,
         );
-        cue(tl, () => sound.chord(), 0.2);
+        sfx(0.15, (t) => sound.chord(t));
         rise(tl, '.s6 h2 .rise > span', 0.3, 0.12);
         tl.fromTo(
           q('.s6 .store'),
@@ -860,7 +956,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
     ];
 
     /* How loud and how open the score is in each shot: the wall is quiet,
-       the receipt lands, the dots are near silent, the story breathes, the
+       the receipt lands, the typing is near silent, the story breathes, the
        wide swells, the end card resolves. */
     const LEVEL = [0.1, 0.25, 0.9, 0.12, 0.45, 0.35, 0.8, 0.35, 0.25];
 
@@ -915,7 +1011,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
       tl.fromTo(out, { opacity: 1 }, { opacity: 0.32, duration: 0.35, ease: 'power1.out' }, 0);
       tl.fromTo(rim, { opacity: 0 }, { opacity: 0.85, duration: 0.15 }, 0);
       tl.to(rim, { opacity: 0, duration: 0.2 }, 0.45);
-      cue(
+      call(
         tl,
         () => {
           into.style.clipPath = '';
@@ -924,7 +1020,56 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         },
         0.76,
       );
-      cue(tl, () => sound.whoosh(), 0);
+      // The rush peaks as the mask's edge passes the frame's.
+      sfx(0, (t) => sound.whoosh(t, 0.68));
+    };
+
+    /* ---------- The way back ----------
+       Stepping back out of a shot that ran straight on from the one before
+       plays that shot backwards from its hold frame, so the way back retraces
+       the way in. Out of the receipt, Seen sinks back into the chat and the
+       camera drifts away again; out of privacy, the camera pushes back in
+       to the wide and the platform names rise once more. */
+    let rewound: TL | null = null;
+    const rewind = (tl: TL, from: number, into: HTMLElement, out: HTMLElement) => {
+      // A different layer waits at its own hold frame. Built first, because
+      // building a shot also queues its sounds, which are cleared below.
+      if (into !== out) {
+        const hold = gsap.timeline({ paused: true });
+        SHOT[from - 1](hold);
+        hold.progress(1, true);
+        hold.kill();
+      }
+      const back = gsap.timeline({ paused: true });
+      SHOT[from](back);
+      back.progress(1, true);
+      score.length = 0;
+      rewound = back;
+      const length = back.duration();
+      const end = length / REWIND;
+      // When a moment of the shot comes round on the way back.
+      const at = (f: number) => (length - f) / REWIND;
+      tl.to(back, { progress: 0, duration: end, ease: 'none' }, 0);
+      if (from === 2) {
+        // The tone that lifted Seen falls with it as it sinks back.
+        sfx(at(HIT), (t) => sound.fall(t, t + (HIT - LIFT) / REWIND));
+      }
+      if (from === 7) {
+        // Air gathers as the camera pushes in and stops as it lands; then
+        // the wide takes over and its names rise, each on its note.
+        sfx(at(PULL), (t) => sound.swell(t, PULL / REWIND));
+        gsap.set(q('.s5 .mark .rise > span'), { yPercent: 118 });
+        gsap.set(q('.s5 .scrim'), { autoAlpha: 0 });
+        call(
+          tl,
+          () => {
+            gsap.set(into, { autoAlpha: 1 });
+            gsap.set(out, { autoAlpha: 0 });
+          },
+          end,
+        );
+        marksUp(tl, end);
+      }
     };
 
     /* ---------- The director ---------- */
@@ -971,6 +1116,8 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
       const was = shot;
       if (to === was && !opts.instant) return;
       current?.kill();
+      rewound?.kill();
+      rewound = null;
       measure();
       shot = to;
       mark(to);
@@ -990,16 +1137,24 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
       if (out && out !== into) gsap.set(out, { autoAlpha: 1, opacity: 1 });
 
       const tl = gsap.timeline({ paused: true });
+      score.length = 0;
       const continuous = was === to - 1 && CONTINUOUS.has(to);
-      if (opts.instant || !out || out === into || continuous) {
-        gsap.set(into, { autoAlpha: 1, zIndex: '' });
-        if (out && out !== into) gsap.set(out, { autoAlpha: 0 });
+      const reverse = !opts.instant && !!out && was === to + 1 && CONTINUOUS.has(was);
+      if (reverse) {
+        gsap.set(out!, { autoAlpha: 1, zIndex: '' });
+        if (out !== into) gsap.set(into, { autoAlpha: 0, zIndex: '' });
+        rewind(tl, was, into, out!);
       } else {
-        matchCut(tl, out, into, SHOTS[was].ghost);
+        if (opts.instant || !out || out === into || continuous) {
+          gsap.set(into, { autoAlpha: 1, zIndex: '' });
+          if (out && out !== into) gsap.set(out, { autoAlpha: 0 });
+        } else {
+          matchCut(tl, out, into, SHOTS[was].ghost);
+        }
+        const shotTl = gsap.timeline();
+        SHOT[to](shotTl);
+        tl.add(shotTl, 0);
       }
-      const shotTl = gsap.timeline();
-      SHOT[to](shotTl);
-      tl.add(shotTl, 0);
       // The current tick fills across the shot; when it is full the next
       // gesture is accepted.
       const fill = ticks[to]?.querySelector('b');
@@ -1012,9 +1167,11 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         );
       }
 
-      media(to, !continuous);
+      media(to, !continuous && !reverse);
       sound.setIntensity(LEVEL[to]);
       if (opts.instant) {
+        // A shot laid out at its hold frame has no sounds.
+        sound.scene([]);
         tl.progress(1, true);
         tl.kill();
         if (to === 5) popup.current?.setSwitches(Array(SWITCH_COUNT).fill(true));
@@ -1023,8 +1180,14 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         return;
       }
       current = tl;
-      busyUntil = performance.now() + tl.duration() * 1000;
+      // Picture and sound start on the same instant. GSAP's clock still reads
+      // the last frame, before this shot was built, so a timeline played now
+      // would count from then and run ahead of its sounds by however long the
+      // build took (longer on a busy machine). One tick brings it up to now.
+      gsap.ticker.tick();
       tl.play();
+      sound.scene(score.slice());
+      busyUntil = performance.now() + tl.duration() * 1000;
     };
 
     /* ---------- Input ---------- */
@@ -1396,12 +1559,6 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
                 <span className="on-mouse">Press anywhere to begin</span>
                 <span className="on-touch">Tap anywhere to begin</span>
               </button>
-              <div className="begin-keys on-mouse" aria-hidden="true">
-                <Kbd>Space</Kbd>
-                <span>or</span>
-                <Kbd>Enter</Kbd>
-                <span>work too</span>
-              </div>
             </div>
           </div>
         </div>
@@ -1473,11 +1630,10 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
             alt="A real Messenger reply being typed with Hide Typing on"
             loading="lazy"
           />
-          <div className="dots at" style={at('dots')} aria-hidden="true">
-            <i className="dot" />
-            <i className="dot" />
-            <i className="dot" />
-          </div>
+          <p className="draft at" style={at('draft')} aria-hidden="true">
+            <span className="draft-text" />
+            <span className="caret" />
+          </p>
           <div className="lean at" style={at('lean')}>
             <GhostSilhouette rim="left" />
           </div>
@@ -1571,7 +1727,6 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
             <div className="pane">
               <World decor />
             </div>
-            <div className="window" aria-hidden="true" />
           </div>
           <div className="scrim" aria-hidden="true" />
           <div className="local">
@@ -1586,7 +1741,10 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
               className={`local-credit ${STATUS_CREDIT.verified ? 'is-ok' : 'is-review'}`}
               href={`${base}/status`}
             >
-              {STATUS_CREDIT.label} · {formatStatusDate(STATUS_CREDIT.updatedAt)}
+              <span>{STATUS_CREDIT.label}</span>{' '}
+              <time dateTime={STATUS_CREDIT.updatedAt ?? undefined}>
+                {formatStatusDate(STATUS_CREDIT.updatedAt)}
+              </time>
             </a>
           </div>
         </div>
@@ -1622,11 +1780,7 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
         </p>
         <div className="film-ui">
           <p className="keys" aria-hidden="true">
-            <Kbd>←</Kbd>
-            <Kbd>→</Kbd>
-            <span>or</span>
-            <Kbd>Space</Kbd>
-            <span>to step</span>
+            Space or → to continue
           </p>
           <nav className="ticks" aria-label="Shots">
             {SHOTS.map((s, i) => (
@@ -1649,7 +1803,6 @@ function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
           <a className="skip" href="#install" onClick={onSkip}>
             <span className="skip-long">Skip film</span>
             <span className="skip-short">Skip</span>
-            <Kbd>Esc</Kbd>
           </a>
         </div>
       </div>
