@@ -37,7 +37,7 @@ Dark-first, low-glare, fixed 320px shell.
 - Seasonal themes: `popup.js` sets `html[data-theme]` from the user's local
   date every time the popup opens, so the switchover is automatic and nothing
   is changed by hand. The calendar lives in `getSeasonalTheme()` (and is
-  pinned by `test/popup-theme.test.js`):
+  pinned by `test/popup/seasonal-theme.test.js`):
 
   | Dates (inclusive) | Look |
   | --- | --- |
