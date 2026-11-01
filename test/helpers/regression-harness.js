@@ -717,7 +717,6 @@ function createRequestClickTarget({ href = "", label = "" }) {
 }
 
 module.exports = {
-    ghostSource,
     SAFE_READ_WATERMARK,
     messengerSendWithWatermark,
     messengerSendWithReadReceiptFlag,
