@@ -37,7 +37,7 @@ Dark-first, low-glare, fixed 320px shell.
 - Seasonal themes: `popup.js` sets `html[data-theme]` from the user's local
   date every time the popup opens, so the switchover is automatic and nothing
   is changed by hand. The calendar lives in `getSeasonalTheme()` (and is
-  pinned by `test/popup-theme.test.js`):
+  pinned by `test/popup/seasonal-theme.test.js`):
 
   | Dates (inclusive) | Look |
   | --- | --- |
@@ -100,34 +100,46 @@ shot embeds the shipped `dist/popup.html` + `dist/css/popup.css` 1:1.
 
 ### Structure
 
-All site code lives in `site/src/cinema/`; `site/src/app/statusData.*` is the
-status feed source.
+All site code lives in `site/src/`; `site/src/app/statusData.*` is the status
+feed source. `Site.tsx` routes `/`, `/status` and `/status/history` and sets
+each page's meta tags; `pages/` holds the pages, `film/` the landing film,
+`components/` the pieces they share, `lib/links.ts` the store and GitHub
+links, and `styles/` the stylesheets.
 
-- `Film.tsx` — the stepped film: one wheel, swipe or key gesture moves exactly
-  one shot (GSAP Observer + ScrollTrigger), with a cooldown that absorbs
-  trackpad momentum. Native scroll is released before the first and after the
-  last shot. Esc / Skip / End jump to the end card; each shot has a URL hash.
-  The two shots that run straight on with no cut (receipt, privacy) are left
-  the way they came: stepping back plays them backwards, a little faster, so
-  the way back retraces the way in instead of cutting.
+- `film/Film.tsx` — the stepped film: one wheel, swipe or key gesture moves
+  exactly one shot (GSAP Observer + ScrollTrigger), with a cooldown that
+  absorbs trackpad momentum. Native scroll is released before the first and
+  after the last shot. Esc / Skip / End jump to the end card; each shot has a
+  URL hash. The two shots that run straight on with no cut (receipt, privacy)
+  are left the way they came: stepping back plays them backwards, a little
+  faster, so the way back retraces the way in instead of cutting. The shot
+  list and its timings are in `film/shots.ts`, canvas positions in
+  `film/layout.ts`, the match cut's ghost outline in `film/ghostPath.ts`, and
+  the small pieces the shots share in `film/parts.tsx`.
 - Shot order: opener ("Press anywhere to begin") → cold open → receipt →
   typing (a reply typed in the dark and erased) → story → switches → wide
   (official platform marks) → privacy → end card.
-- `Stills.tsx` — the film as still frames for `prefers-reduced-motion` or a
-  film that cannot start. Sound stays off there.
-- `sound.ts` — procedural Web Audio score, no audio files. On by default, but
-  only starts on a real user activation (press, key, tap); it never claims to
-  be on before the context is running. Muting is remembered in localStorage.
-  Every effect is a cue on its shot's timeline (`sfx(at, …)` in `Film.tsx`);
-  the shot's cues are scheduled on the audio clock when it starts, so a sound
-  lands on the frame it belongs to. A shot cut short drops its sounds; one
-  that played out lets its tail ring under the next cut. Effects play at full
-  level at once; only the drone bed fades in. The header's meter reads the
-  real output level.
-- `Ghost.tsx` — the vector mark: SMIL hem, CSS blink, pointer-following eyes,
-  plus the back-lit silhouette and poses.
-- `Landing.tsx` (film + FAQ as end credits), `Status.tsx` (current + history),
-  `Shell.tsx` (store links, header, footer).
+- `film/Stills.tsx` — the film as still frames for `prefers-reduced-motion` or
+  a film that cannot start. Sound stays off there.
+- `film/sound.ts` — procedural Web Audio score, no audio files. On by default,
+  but only starts on a real user activation (press, key, tap); it never claims
+  to be on before the context is running. Muting is remembered in
+  localStorage. Every effect is a cue on its shot's timeline (`sfx(at, …)` in
+  `film/Film.tsx`); the shot's cues are scheduled on the audio clock when it
+  starts, so a sound lands on the frame it belongs to. A shot cut short drops
+  its sounds; one that played out lets its tail ring under the next cut.
+  Effects play at full level at once; only the drone bed fades in. The
+  header's meter reads the real output level.
+- `components/Ghost.tsx` — the vector mark: SMIL hem, CSS blink,
+  pointer-following eyes, plus the back-lit silhouette and poses.
+- `pages/Landing.tsx` (film + FAQ as end credits), `pages/Status.tsx`
+  (current + history), `components/Header.tsx`, `components/Footer.tsx` and
+  `components/StoreButtons.tsx`.
+- `styles/base.css` holds the document-wide defaults. `styles/site.css`
+  imports the partials in `styles/site/` in cascade order: later partials
+  override earlier ones, and the responsive partials adjust rules from many
+  others, so keep that order and put a new rule in the partial that matches
+  its place in the cascade.
 
 ### Layout and motion
 

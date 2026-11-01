@@ -1,0 +1,1496 @@
+import { gsap } from 'gsap';
+import { Observer } from 'gsap/Observer';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import { PlatformLogo } from '../components/PlatformLogo';
+import { formatStatusDate, getStatusCredit } from '../app/statusData';
+import { Clip, FOOTAGE, primeClip, runClip, type Footage } from './Clip';
+import { Ghost, GhostSilhouette } from '../components/Ghost';
+import { RealPopup, type RealPopupHandle } from '../components/RealPopup';
+import { StoreButtons } from '../components/StoreButtons';
+import { GITHUB_URL, type Store } from '../lib/links';
+import { soundPreferred, type Cue, type FilmSound } from './sound';
+import { Stills } from './Stills';
+import { AT, MARKS, MAX_U, SHORT, TALL, at, type Key } from './layout';
+import {
+  CONTINUOUS,
+  COOLDOWN,
+  DRAFT,
+  ERASED,
+  FLICKER,
+  FLICKER_TIME,
+  HIT,
+  HOLD,
+  LAST,
+  LIFT,
+  MARK_NOTES,
+  PULL,
+  REWIND,
+  SHOTS,
+  SWITCH_COUNT,
+  TYPED,
+  WALL_OFFSETS,
+  WALL_ROWS,
+  shotFromHash,
+} from './shots';
+import { OUTLINE, ghostPath } from './ghostPath';
+import { Glow, Line, Speaker, World } from './parts';
+
+gsap.registerPlugin(ScrollTrigger, Observer);
+
+/* The landing film, cut into shots. One gesture plays exactly one shot: a
+   fixed-length timeline that runs on its own clock (enter, action, beat,
+   hold), never scrubbed to the wheel. Each shot is composed on a fixed canvas,
+   1280 × 720 for the widescreen cut and 390 wide for the vertical cut, and
+   scaled into the screen by one unit, --u. The vertical cut is composed twice,
+   for a full-height phone (844 tall) and for a phone with its browser bars
+   showing (660 tall); screens in between get a blend of the two, and taller
+   ones (portrait tablets) get the short take, larger. The cut is picked by the
+   screen's shape, not by device. Only transforms, opacity and clip-path
+   animate. Every sound is a cue on its shot's timeline, scheduled on the
+   audio clock as the shot starts, so it lands on the frame it belongs to. */
+
+const STATUS_CREDIT = getStatusCredit();
+
+type Props = { stores: Store[]; sound: FilmSound; base: string };
+
+/* Reduced motion, or a film that could not start, gets the still frames. */
+export function Film(props: Props) {
+  const [still, setStill] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  useEffect(() => {
+    const m = matchMedia('(prefers-reduced-motion: reduce)');
+    const on = () => setStill(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
+
+  return still ? <Stills {...props} /> : <Reel {...props} onFail={() => setStill(true)} />;
+}
+
+function Reel({ stores, sound, base, onFail }: Props & { onFail: () => void }) {
+  const root = useRef<HTMLElement>(null);
+  const fail = useRef(onFail);
+  fail.current = onFail;
+  const popup = useRef<RealPopupHandle>(null);
+  const chatVideo = useRef<HTMLVideoElement>(null);
+  const igVideo = useRef<HTMLVideoElement>(null);
+  const spill1 = useRef<HTMLCanvasElement>(null);
+  const spill3 = useRef<HTMLCanvasElement>(null);
+  /* Set by the effect: lets the controls drive the director. */
+  const api = useRef<{ start: () => void; jump: (i: number) => void; skip: () => void }>(null);
+
+  useEffect(() => {
+    const el = root.current!;
+    const stage = el.querySelector<HTMLElement>('.film-stage')!;
+    const rim = el.querySelector<HTMLElement>('.cut-rim')!;
+    const q = gsap.utils.selector(el);
+    const ticks = q('.tick') as HTMLAnchorElement[];
+    let U = 1;
+    let tall = false;
+    let W = 0;
+    let H = 0;
+
+    /* Mirrors the CSS: the unit, and in the vertical cut how far the screen
+       is from the short take towards the full-height one (0 to 1, in px per
+       canvas unit of difference) plus any extra height, split above and
+       below. */
+    let blend = 0;
+    let extra = 0;
+    const measure = () => {
+      tall = !matchMedia('(min-aspect-ratio: 1/1)').matches;
+      W = stage.clientWidth;
+      H = stage.clientHeight;
+      U = tall
+        ? Math.min(W / 390, H / SHORT)
+        : Math.min(H / 720, Math.max(W / 1280, Math.min(W / 1160, H / 830)), MAX_U);
+      blend = tall ? Math.min(Math.max(H - SHORT * U, 0), (TALL - SHORT) * U) / (TALL - SHORT) : 0;
+      extra = tall ? Math.max(0, (H - TALL * U) / 2) : 0;
+      el.style.setProperty('--uk', String(U));
+      el.style.setProperty('--pz', (place('popup').w / 320).toFixed(4));
+    };
+
+    /* Where a resting place sits on screen, in px, as `.at` lays it out. */
+    const place = (key: Key) => {
+      if (!tall) {
+        const [x, y, w] = AT[key][0];
+        return { x: W / 2 + (x - 640) * U, y: H / 2 + (y - 360) * U, w: w * U };
+      }
+      const [px, py, pw] = AT[key][1];
+      const [qx, qy, qw] = AT[key][2];
+      return {
+        x: W / 2 + (qx - 195) * U + (px - qx) * blend,
+        y: qy * U + (py - qy) * blend + extra,
+        w: qw * U + (pw - qw) * blend,
+      };
+    };
+
+    // Start each light spill from a still of its footage.
+    const seed = (c: HTMLCanvasElement | null, src: string) => {
+      const img = new Image();
+      img.onload = () => c?.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
+      img.src = src;
+    };
+
+    /* The pointer: wipes receipts off the wall, leans the popup, and the
+       lit ghosts' eyes follow it. One rAF, transforms and two variables. */
+    const wipe = el.querySelector<HTMLElement>('.wipe');
+    const tilt = el.querySelector<HTMLElement>('.tilt');
+    const eyes = q('.ghost.eyes-follow') as HTMLElement[];
+    const pointer = { x: -9999, y: -9999, tx: -9999, ty: -9999, nx: 0, ny: 0 };
+    let praf = 0;
+    const steer = () => {
+      praf = 0;
+      pointer.x += (pointer.tx - pointer.x) * 0.35;
+      pointer.y += (pointer.ty - pointer.y) * 0.35;
+      if (wipe) wipe.style.transform = `translate3d(${pointer.x}px, ${pointer.y}px, 0)`;
+      const gx = pointer.nx.toFixed(2);
+      const gy = pointer.ny.toFixed(2);
+      eyes.forEach((g) => {
+        g.style.setProperty('--gx', gx);
+        g.style.setProperty('--gy', gy);
+      });
+      tilt?.style.setProperty('--lx', gx);
+      tilt?.style.setProperty('--ly', gy);
+      if (Math.abs(pointer.tx - pointer.x) + Math.abs(pointer.ty - pointer.y) > 0.5) {
+        praf = requestAnimationFrame(steer);
+      }
+    };
+    const onPoint = (x: number, y: number) => {
+      const r = stage.getBoundingClientRect();
+      if (pointer.x < -9000) {
+        pointer.x = x - r.left;
+        pointer.y = y - r.top;
+      }
+      pointer.tx = x - r.left;
+      pointer.ty = y - r.top;
+      pointer.nx = Math.max(-1, Math.min(1, (x - r.left) / r.width - 0.5) * 2);
+      pointer.ny = Math.max(-1, Math.min(1, (y - r.top) / r.height - 0.5) * 2);
+      if (!praf) praf = requestAnimationFrame(steer);
+    };
+    const onMove = (e: PointerEvent) => onPoint(e.clientX, e.clientY);
+
+    /* The first sign of a visitor (a pointer, a key, a touch, a wheel) starts
+       fetching the cold open's footage, ahead of the press that plays it. */
+    const INTENT = ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'] as const;
+    const intent = () => {
+      INTENT.forEach((t) => removeEventListener(t, intent, true));
+      primeClip(chatVideo.current);
+    };
+
+    /* ---------- The shots ---------- */
+
+    /* A resting place expressed as a transform away from another one. */
+    const from = (rest: Key, there: Key) => {
+      const a = place(rest);
+      const b = place(there);
+      return { x: b.x - a.x, y: b.y - a.y, scale: a.w ? b.w / a.w : 0.3 };
+    };
+    const px = (n: number) => n * U;
+    type TL = gsap.core.Timeline;
+
+    /* The line rises out of its mask. */
+    const rise = (tl: TL, sel: string, at: number, stagger = 0.1) =>
+      tl.fromTo(
+        q(sel),
+        { yPercent: 118, autoAlpha: 1 },
+        { yPercent: 0, duration: 0.9, ease: 'power4.out', stagger },
+        at,
+      );
+    const bars = (tl: TL, open: boolean) =>
+      tl.to(
+        q('.bar-top, .bar-bottom'),
+        {
+          yPercent: (i: number) => (open ? (i ? 100 : -100) : 0),
+          duration: 0.8,
+          ease: 'power3.inOut',
+        },
+        0,
+      );
+    const subtitle = (tl: TL, layer: string, at = 0.45) => {
+      tl.fromTo(q(`${layer} .scrim`), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, at - 0.2);
+      rise(tl, `${layer} .sub .rise > span`, at);
+    };
+    /* Something the picture does at a moment of the shot. */
+    const call = (tl: TL, fn: () => void, at: number) => tl.call(fn, undefined, at);
+    /* A sound at a moment of the shot. Collected while the shot is built and
+       handed to the sound as one score when it starts. */
+    const score: Cue[] = [];
+    const sfx = (at: number, play: (t: number) => void) => score.push([at, play]);
+
+    /* The typing shot's line: what is typed so far, and whether keys are
+       going in (the caret holds still while they do). */
+    const draftText = el.querySelector<HTMLElement>('.draft-text');
+    const draftLine = el.querySelector<HTMLElement>('.draft');
+    const setDraft = (text: string, typing: boolean) => {
+      if (draftText) draftText.textContent = text;
+      draftLine?.classList.toggle('is-typing', typing);
+    };
+
+    /* The wide's platform names rise from `at`, each on its own note, and a
+       fourth note resolves the phrase. */
+    const marksUp = (tl: TL, at: number) => {
+      tl.fromTo(q('.s5 .scrim'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, at - 0.2);
+      rise(tl, '.s5 .mark .rise > span', at, 0.3);
+      MARK_NOTES.forEach((f, i) => {
+        sfx(at + i * 0.3, (t) => sound.note(t, f, 0.045, 0.03, 1.8));
+      });
+      sfx(at + 1.05, (t) => sound.note(t, 587.33, 0.03, 0.2, 2.2));
+    };
+
+    const SHOT: Array<(tl: TL) => void> = [
+      /* The wall. The receipts settle, the lit ghost, the line, the stores. */
+      (tl) => {
+        bars(tl, true);
+        // The receipts are already faintly there on the first frame, so the
+        // page paints its largest text at once and brightens from there.
+        tl.fromTo(
+          q('.wall'),
+          { opacity: 0.35 },
+          { opacity: 1, duration: 1.2, ease: 'power1.out' },
+          0,
+        );
+        q('.wall-row').forEach((row, i) => {
+          tl.fromTo(
+            row,
+            { x: px(i % 2 ? 70 : -70) },
+            { x: 0, duration: 2.2, ease: 'power3.out' },
+            0,
+          );
+        });
+        tl.fromTo(
+          q('.g0'),
+          { autoAlpha: 0, y: px(24) },
+          { autoAlpha: 1, y: 0, duration: 1, ease: 'power3.out' },
+          0.15,
+        );
+        rise(tl, '.hero h1 .rise > span', 0.3);
+        tl.fromTo(
+          q('.hero p'),
+          { autoAlpha: 0, y: px(10) },
+          { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' },
+          0.6,
+        );
+        tl.fromTo(
+          q('.hero .store'),
+          { autoAlpha: 0, y: px(12) },
+          { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power2.out' },
+          0.75,
+        );
+        tl.fromTo(q('.begin'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, 1.1);
+      },
+
+      /* Cold open. Through the cut it is dark; as the cut opens the chat
+         sparks on far away, the hum flickering with it, and the ghost rises
+         into frame. */
+      (tl) => {
+        bars(tl, false);
+        gsap.set(q('.s1 .chat'), from('chat', 'chatFar'));
+        gsap.set(q('.s1 .ghost-rig'), from('ghost', 'ghostFar'));
+        gsap.set(q('.seen'), { autoAlpha: 0 });
+        gsap.set(q('.seen i'), { opacity: 1, y: 0 });
+        gsap.set(q('.seen-strike'), { scaleX: 0 });
+        gsap.set(q('.s1 .step'), { x: 0, y: 0 });
+        gsap.set(q('.s1 .sub .rise > span'), { yPercent: 118 });
+        gsap.set(q('.s1 .scrim'), { autoAlpha: 0 });
+        const spark = 0.55;
+        tl.fromTo(
+          q('.s1 .chat-glow'),
+          { opacity: 0 },
+          { keyframes: { opacity: [...FLICKER] }, duration: FLICKER_TIME, ease: 'none' },
+          spark,
+        );
+        sfx(spark, (t) => sound.flicker(t, FLICKER_TIME, FLICKER));
+        tl.fromTo(q('.s1 .reflect'), { opacity: 0 }, { opacity: 0.18, duration: 1.2 }, spark + 0.4);
+        tl.fromTo(
+          q('.s1 .spill'),
+          { opacity: 0, scale: 0.7 },
+          { opacity: 0.2, scale: 0.8, duration: 1.6 },
+          spark + 0.2,
+        );
+        tl.fromTo(
+          q('.s1 .ghost-in'),
+          { autoAlpha: 0, y: px(40) },
+          { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power3.out' },
+          0.75,
+        );
+        tl.fromTo(
+          q('.s1 .haze'),
+          { autoAlpha: 0, x: 0 },
+          { autoAlpha: 1, x: px(tall ? 24 : 56), duration: 2.4, ease: 'power1.out' },
+          0,
+        );
+        // Three planes drift at three speeds: haze, ghost, screen.
+        tl.fromTo(
+          q('.s1 .drift-ghost'),
+          { x: 0 },
+          { x: px(tall ? 6 : 14), duration: 2.4, ease: 'power1.out' },
+          0,
+        );
+        tl.fromTo(
+          q('.s1 .drift-screen'),
+          { x: 0 },
+          { x: px(tall ? 2 : 4), duration: 2.4, ease: 'power1.out' },
+          0,
+        );
+        rise(tl, '.s1 .title .rise > span', 0.95);
+      },
+
+      /* The receipt. The camera pushes in and Seen lifts out of the chat,
+         whole and readable. It holds; the ghost steps into its path, a line
+         strikes through it and the word sinks back into the dark, still
+         legible, never delivered. */
+      (tl) => {
+        bars(tl, false);
+        gsap.set(q('.s1 .chat-glow'), { opacity: 1 });
+        gsap.set(q('.s1 .ghost-in'), { autoAlpha: 1, y: 0 });
+        gsap.set(q('.s1 .haze'), { autoAlpha: 1 });
+        gsap.set(q('.seen i'), { opacity: 1, y: 0 });
+        gsap.set(q('.seen-strike'), { scaleX: 0 });
+        // From visible, stated outright, so the way back brings the title in.
+        tl.fromTo(
+          q('.s1 .title .rise > span'),
+          { autoAlpha: 1 },
+          { autoAlpha: 0, duration: 0.35 },
+          0,
+        );
+        tl.fromTo(
+          q('.s1 .chat'),
+          from('chat', 'chatFar'),
+          { x: 0, y: 0, scale: 1, duration: 1.6, ease: 'power2.inOut' },
+          0,
+        );
+        tl.fromTo(
+          q('.s1 .ghost-rig'),
+          from('ghost', 'ghostFar'),
+          { x: 0, y: 0, scale: 1, duration: 1.6, ease: 'power2.inOut' },
+          0,
+        );
+        tl.fromTo(q('.s1 .reflect'), { opacity: 0.18 }, { opacity: 0, duration: 0.8 }, 0);
+        tl.fromTo(
+          q('.s1 .spill'),
+          { opacity: 0.2, scale: 0.8 },
+          { opacity: 0.3, scale: 1.05, duration: 1.6 },
+          0,
+        );
+        tl.fromTo(
+          q('.s1 .haze'),
+          { x: px(tall ? 24 : 56) },
+          { x: px(tall ? 40 : 90), duration: 2.2, ease: 'power1.out' },
+          0,
+        );
+        const driftFrom = px(tall ? 6 : 14);
+        const driftTo = px(tall ? 10 : 24);
+        tl.fromTo(
+          q('.s1 .drift-ghost'),
+          { x: driftFrom },
+          { x: driftTo, duration: 2.2, ease: 'power1.out' },
+          0,
+        );
+        subtitle(tl, '.s1', 0.2);
+        // Seen lifts out of the chat and settles, whole, while a tone climbs
+        // under it.
+        const lift = LIFT;
+        const hit = HIT;
+        tl.fromTo(
+          q('.seen'),
+          { ...from('seen', 'seenFrom'), autoAlpha: 0 },
+          { x: 0, y: 0, scale: 1, autoAlpha: 1, duration: 0.95, ease: 'power3.out' },
+          lift,
+        );
+        sfx(lift, (t) => sound.rise(t, t + hit - lift));
+        // The ghost steps into its path and touches it on the hit: the tone
+        // is cut, the word is knocked back, and one clean stroke goes through
+        // it, all on the same frame. The step is measured from the layout so
+        // the ghost's near edge meets the word's near edge at that moment on
+        // any screen: from the left in the widescreen cut, from the right in
+        // the vertical one, allowing for where the ghost's plane has drifted.
+        const seenEl = q('.seen')[0] as HTMLElement | undefined;
+        const em = seenEl ? parseFloat(getComputedStyle(seenEl).fontSize) || 0 : 0;
+        const g = place('ghost');
+        const s = place('seen');
+        const p = hit / 2.2;
+        const drift = driftFrom + (driftTo - driftFrom) * (1 - (1 - p) * (1 - p));
+        // The silhouette's body spans 10% to 90% of its box; its lit rim
+        // reaches a little past the right side.
+        const edge = (tall ? g.x + 0.1 * g.w : g.x + 0.93 * g.w) + drift;
+        const meet = tall ? s.x + (seenEl?.offsetWidth ?? 0) - 0.02 * em : s.x + 0.06 * em;
+        const push = tall
+          ? Math.min(px(-6), Math.max(px(-120), meet - edge))
+          : Math.max(px(20), Math.min(px(160), meet - edge));
+        const step = 0.48;
+        tl.fromTo(
+          q('.s1 .step'),
+          { x: 0, y: 0 },
+          { x: push, y: px(-6), duration: step, ease: 'power2.in' },
+          hit - step,
+        );
+        tl.to(
+          q('.s1 .step'),
+          { x: push - Math.sign(push) * px(10), duration: 0.5, ease: 'power2.out' },
+          hit,
+        );
+        sfx(hit, (t) => sound.impact(t));
+        tl.to(q('.seen'), { x: px(tall ? -8 : 12), duration: 0.08, ease: 'power2.out' }, hit);
+        tl.to(q('.seen'), { x: 0, duration: 0.5, ease: 'power3.out' }, hit + 0.08);
+        tl.fromTo(
+          q('.seen-strike'),
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.42, ease: 'expo.out' },
+          hit,
+        );
+        // Then it sinks back into the dark, still readable, never delivered.
+        tl.to(
+          q('.seen i'),
+          { opacity: 0.36, y: px(4), duration: 0.7, stagger: 0.05, ease: 'power2.out' },
+          hit + 0.16,
+        );
+      },
+
+      /* Typing. A reply is typed out in the dark, key by key, then taken
+         back just as fast; the other side never sees a thing. The caret is
+         left blinking. */
+      (tl) => {
+        bars(tl, false);
+        setDraft('', false);
+        tl.fromTo(
+          q('.s2 .typing'),
+          { scale: 1, x: 0 },
+          { scale: 1.05, x: px(-14), duration: 2.6, ease: 'power1.out' },
+          0,
+        );
+        tl.fromTo(
+          q('.s2 .draft'),
+          { autoAlpha: 0, y: px(10) },
+          { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out' },
+          0.2,
+        );
+        TYPED.forEach((at, i) => {
+          call(tl, () => setDraft(DRAFT.slice(0, i + 1), true), at);
+          sfx(at, (t) => sound.key(t, i));
+        });
+        call(tl, () => setDraft(DRAFT, false), TYPED[TYPED.length - 1] + 0.12);
+        ERASED.forEach((at, i) => {
+          call(tl, () => setDraft(DRAFT.slice(0, DRAFT.length - 1 - i), true), at);
+          sfx(at, (t) => sound.key(t, i, true));
+        });
+        call(tl, () => setDraft('', false), ERASED[ERASED.length - 1] + 0.12);
+        tl.fromTo(
+          q('.s2 .lean'),
+          { x: px(tall ? 240 : 380), rotation: -2 },
+          { x: 0, rotation: -12, duration: 1.1, ease: 'power3.out' },
+          0.25,
+        );
+        subtitle(tl, '.s2', 0.5);
+      },
+
+      /* The story. The footage plays; the ghost peeks in from the side. */
+      (tl) => {
+        bars(tl, false);
+        tl.fromTo(
+          q('.s3 .ig'),
+          { scale: 1.08 },
+          { scale: 1, duration: 2.4, ease: 'power2.out' },
+          0,
+        );
+        tl.fromTo(q('.s3 .fb'), { x: px(30) }, { x: px(-10), duration: 2.4, ease: 'none' }, 0);
+        tl.fromTo(q('.s3 .spill'), { opacity: 0 }, { opacity: 1, duration: 0.8 }, 0);
+        // The ghost peeks in, with two soft notes as it looks.
+        tl.fromTo(
+          q('.s3 .peek'),
+          tall ? { x: px(120), y: px(30), rotation: 0 } : { x: px(110), y: 0, rotation: 0 },
+          { x: 0, y: 0, rotation: tall ? -12 : 10, duration: 1, ease: 'power3.out' },
+          0.7,
+        );
+        sfx(0.74, (t) => sound.note(t, 783.99, 0.028, 0.03, 1.3));
+        sfx(0.86, (t) => sound.note(t, 1174.66, 0.02, 0.03, 1.5));
+        subtitle(tl, '.s3', 0.5);
+      },
+
+      /* The switches. The bars open; the popup takes the light; each switch
+         turns on with a tick. */
+      (tl) => {
+        bars(tl, true);
+        popup.current?.setSwitches(Array(SWITCH_COUNT).fill(false));
+        popup.current?.focusRow(-1);
+        // On a narrow phone the copy can run longer than composed: the popup
+        // keeps clear of it.
+        const slot = q('.s4 .popup-slot')[0] as HTMLElement | undefined;
+        if (slot) {
+          slot.style.marginTop = '';
+          const copy = q('.s4 .copy')[0]?.getBoundingClientRect();
+          const push = tall && copy ? copy.bottom + 14 - slot.getBoundingClientRect().top : 0;
+          if (push > 0) slot.style.marginTop = `${push}px`;
+        }
+        tl.fromTo(q('.s4 .glow4'), { opacity: 0 }, { opacity: 1, duration: 1 }, 0);
+        tl.fromTo(
+          q('.s4 .popup-in'),
+          { autoAlpha: 0, y: px(60), rotationY: -26 },
+          { autoAlpha: 1, y: 0, rotationY: 0, duration: 1.1, ease: 'power3.out' },
+          0.1,
+        );
+        rise(tl, '.s4 .copy h2 .rise > span', 0.2, 0.12);
+        tl.fromTo(
+          q('.s4 .copy p'),
+          { autoAlpha: 0, y: px(14) },
+          { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' },
+          0.55,
+        );
+        tl.fromTo(
+          q('.s4 .peek4'),
+          { x: px(tall ? 60 : 110), rotation: 0 },
+          { x: 0, rotation: -14, duration: 1, ease: 'power3.out' },
+          0.7,
+        );
+        for (let i = 0; i < SWITCH_COUNT; i += 1) {
+          const at = 0.95 + i * 0.17;
+          call(
+            tl,
+            () => {
+              popup.current?.setSwitches(Array.from({ length: SWITCH_COUNT }, (_, j) => j <= i));
+              popup.current?.focusRow(i);
+            },
+            at,
+          );
+          // The tick lands as the knob ends its 180ms slide.
+          sfx(at + 0.12, (t) => sound.tick(t));
+        }
+        call(tl, () => popup.current?.focusRow(-1), 2.1);
+      },
+
+      /* The wide. Pull back from the three screens; each platform's name
+         rises on its own note, and a fourth resolves the phrase. */
+      (tl) => {
+        bars(tl, false);
+        tl.fromTo(
+          q('.s5 .world'),
+          { scale: 1.4, y: px(-30) },
+          { scale: 1, y: 0, duration: 2.2, ease: 'power3.out' },
+          0,
+        );
+        marksUp(tl, 0.5);
+      },
+
+      /* Privacy. The camera keeps pulling back until the three screens are
+         a small pool of light in the dark. Three lines, each on a note, then
+         the credit. */
+      (tl) => {
+        bars(tl, false);
+        let scale = H < 560 ? 0.5 : 0.58;
+        let y = -40 * U;
+        if (tall) {
+          // The screens fit between the header and the lines, whatever the
+          // screen's height.
+          const top = (document.querySelector('.bar')?.getBoundingClientRect().bottom ?? 64) + 8;
+          const lines = q('.s7 .local')[0]?.getBoundingClientRect().top ?? H * 0.7;
+          scale = Math.min(0.6, Math.max(0.3, (lines - 16 - top) / H));
+          y = top - (H * (1 - scale)) / 2;
+        }
+        tl.fromTo(
+          q('.s7 .frame'),
+          { scale: 1, y: 0 },
+          {
+            // Short landscape screens pull back further to clear the lines.
+            scale,
+            y,
+            duration: PULL,
+            ease: 'power2.inOut',
+          },
+          0,
+        );
+        tl.fromTo(q('.s7 .scrim'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 0.5);
+        const NOTES = [659.25, 783.99, 987.77];
+        q('.s7 .local-line').forEach((line, i) => {
+          const at = 0.9 + i * 0.25;
+          tl.fromTo(
+            line,
+            { autoAlpha: 0, y: px(8) },
+            { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' },
+            at,
+          );
+          sfx(at, (t) => sound.note(t, NOTES[i] ?? 987.77, 0.03, 0.015, 0.9));
+        });
+        tl.fromTo(
+          q('.s7 .local-credit'),
+          { autoAlpha: 0, y: px(6) },
+          { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' },
+          1.75,
+        );
+        sfx(1.75, (t) => sound.tick(t));
+      },
+
+      /* End card. The bars open on the ghost, smiling. */
+      (tl) => {
+        bars(tl, true);
+        tl.fromTo(q('.s6 .glow6'), { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0);
+        tl.fromTo(
+          q('.s6 .g6'),
+          { scale: 0.8, y: px(30), rotation: -4 },
+          { scale: 1, y: 0, rotation: 6, duration: 1.3, ease: 'back.out(1.6)' },
+          0.15,
+        );
+        sfx(0.15, (t) => sound.chord(t));
+        rise(tl, '.s6 h2 .rise > span', 0.3, 0.12);
+        tl.fromTo(
+          q('.s6 .store'),
+          { autoAlpha: 0, y: px(16) },
+          { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power2.out' },
+          0.7,
+        );
+      },
+    ];
+
+    /* How loud and how open the score is in each shot: the wall is quiet,
+       the receipt lands, the typing is near silent, the story breathes, the
+       wide swells, the end card resolves. */
+    const LEVEL = [0.1, 0.25, 0.9, 0.12, 0.45, 0.35, 0.8, 0.35, 0.25];
+
+    /* ---------- The ghost match cut ----------
+       The outgoing shot holds; the ghost silhouette grows into a mask with
+       the next shot already playing inside it, then opens past the frame. */
+    const matchCut = (tl: TL, out: HTMLElement, into: HTMLElement, anchor: string) => {
+      const W = stage.clientWidth;
+      const H = stage.clientHeight;
+      const sr = stage.getBoundingClientRect();
+      const r = anchor ? el.querySelector(anchor)?.getBoundingClientRect() : null;
+      const a =
+        r && r.width > 12 && r.right > sr.left && r.left < sr.right && r.bottom > sr.top ? r : null;
+      const s0 = a ? a.width / 200 : (H * 0.22) / 250;
+      const m = {
+        x: a ? a.left - sr.left : W / 2 - 100 * s0,
+        y: a ? a.top - sr.top : H / 2 - 125 * s0,
+        s: s0,
+      };
+      const sM = Math.max(s0 * 1.5, (H * 0.55) / 250);
+      const sF = Math.max((W * 1.2) / 160, (H * 1.2) / 94);
+      const paint = () => {
+        into.style.clipPath = ghostPath(m.x, m.y, m.s);
+        rim.style.transform = `translate3d(${m.x}px, ${m.y}px, 0) scale(${m.s})`;
+      };
+      gsap.set(into, { autoAlpha: 1, zIndex: 2 });
+      paint();
+      tl.to(
+        m,
+        {
+          x: (W / 2 + (m.x + 100 * s0)) / 2 - 100 * sM,
+          y: H * 0.47 - 125 * sM,
+          s: sM,
+          duration: 0.4,
+          ease: 'power3.out',
+          onUpdate: paint,
+        },
+        0,
+      );
+      tl.to(
+        m,
+        {
+          x: W / 2 - 100 * sF,
+          y: H / 2 - 149 * sF,
+          s: sF,
+          duration: 0.35,
+          ease: 'power3.in',
+          onUpdate: paint,
+        },
+        0.4,
+      );
+      tl.fromTo(out, { opacity: 1 }, { opacity: 0.32, duration: 0.35, ease: 'power1.out' }, 0);
+      tl.fromTo(rim, { opacity: 0 }, { opacity: 0.85, duration: 0.15 }, 0);
+      tl.to(rim, { opacity: 0, duration: 0.2 }, 0.45);
+      call(
+        tl,
+        () => {
+          into.style.clipPath = '';
+          gsap.set(into, { zIndex: '' });
+          gsap.set(out, { autoAlpha: 0 });
+        },
+        0.76,
+      );
+      // The rush peaks as the mask's edge passes the frame's.
+      sfx(0, (t) => sound.whoosh(t, 0.68));
+    };
+
+    /* ---------- The way back ----------
+       Stepping back out of a shot that ran straight on from the one before
+       plays that shot backwards from its hold frame, so the way back retraces
+       the way in. Out of the receipt, Seen sinks back into the chat and the
+       camera drifts away again; out of privacy, the camera pushes back in
+       to the wide and the platform names rise once more. */
+    let rewound: TL | null = null;
+    const rewind = (tl: TL, from: number, into: HTMLElement, out: HTMLElement) => {
+      // A different layer waits at its own hold frame. Built first, because
+      // building a shot also queues its sounds, which are cleared below.
+      if (into !== out) {
+        const hold = gsap.timeline({ paused: true });
+        SHOT[from - 1](hold);
+        hold.progress(1, true);
+        hold.kill();
+      }
+      const back = gsap.timeline({ paused: true });
+      SHOT[from](back);
+      back.progress(1, true);
+      score.length = 0;
+      rewound = back;
+      const length = back.duration();
+      const end = length / REWIND;
+      // When a moment of the shot comes round on the way back.
+      const at = (f: number) => (length - f) / REWIND;
+      tl.to(back, { progress: 0, duration: end, ease: 'none' }, 0);
+      if (from === 2) {
+        // The tone that lifted Seen falls with it as it sinks back.
+        sfx(at(HIT), (t) => sound.fall(t, t + (HIT - LIFT) / REWIND));
+      }
+      if (from === 7) {
+        // Air gathers as the camera pushes in and stops as it lands; then
+        // the wide takes over and its names rise, each on its note.
+        sfx(at(PULL), (t) => sound.swell(t, PULL / REWIND));
+        gsap.set(q('.s5 .mark .rise > span'), { yPercent: 118 });
+        gsap.set(q('.s5 .scrim'), { autoAlpha: 0 });
+        call(
+          tl,
+          () => {
+            gsap.set(into, { autoAlpha: 1 });
+            gsap.set(out, { autoAlpha: 0 });
+          },
+          end,
+        );
+        marksUp(tl, end);
+      }
+    };
+
+    /* ---------- The director ---------- */
+
+    let shot = -1;
+    let started = false;
+    let locked = false;
+    let busyUntil = 0;
+    let current: TL | null = null;
+    let wheelLast = 0;
+    let wheelPrev = 0;
+    let wheelDelta = 0;
+    let wheelDeltaPrev = 0;
+    let soundAsked = false;
+
+    const layerOf = (i: number) => q(SHOTS[i].layer)[0] as HTMLElement;
+
+    const media = (i: number, fresh: boolean) => {
+      runClip(chatVideo.current, i === 1 || i === 2, fresh && i === 1);
+      runClip(igVideo.current, i === 4, fresh && i === 4);
+      // Preload only the next shot's footage.
+      // The opener's clip waits for the visitor's first sign of intent (see
+      // `intent`), so it never competes with the first paint.
+      if (i === 3) primeClip(igVideo.current);
+    };
+
+    const mark = (i: number) => {
+      el.dataset.shot = String(i);
+      ticks.forEach((t, j) => {
+        t.classList.toggle('is-current', j === i);
+        t.classList.toggle('is-past', j < i);
+        if (j === i) t.setAttribute('aria-current', 'step');
+        else t.removeAttribute('aria-current');
+      });
+    };
+
+    const setHash = (i: number) => {
+      const hash = `#${SHOTS[i].id}`;
+      if (location.hash !== hash) history.pushState(null, '', hash);
+    };
+
+    /* Build shot `to` and cut to it from the shot on screen. */
+    const go = (to: number, opts: { instant?: boolean; push?: boolean } = {}) => {
+      const was = shot;
+      if (to === was && !opts.instant) return;
+      current?.kill();
+      rewound?.kill();
+      rewound = null;
+      measure();
+      shot = to;
+      mark(to);
+      if (opts.push !== false && started) setHash(to);
+
+      const into = layerOf(to);
+      const out = was >= 0 ? layerOf(was) : null;
+      SHOTS.forEach((s) => {
+        const l = q(s.layer)[0] as HTMLElement;
+        const live = l === into || l === out;
+        if (!live) gsap.set(l, { autoAlpha: 0, zIndex: '' });
+        // Layers off screen skip style, layout and paint entirely.
+        l.style.contentVisibility = live ? 'visible' : 'hidden';
+        l.style.clipPath = '';
+      });
+      gsap.set(rim, { opacity: 0 });
+      if (out && out !== into) gsap.set(out, { autoAlpha: 1, opacity: 1 });
+
+      const tl = gsap.timeline({ paused: true });
+      score.length = 0;
+      const continuous = was === to - 1 && CONTINUOUS.has(to);
+      const reverse = !opts.instant && !!out && was === to + 1 && CONTINUOUS.has(was);
+      if (reverse) {
+        gsap.set(out!, { autoAlpha: 1, zIndex: '' });
+        if (out !== into) gsap.set(into, { autoAlpha: 0, zIndex: '' });
+        rewind(tl, was, into, out!);
+      } else {
+        if (opts.instant || !out || out === into || continuous) {
+          gsap.set(into, { autoAlpha: 1, zIndex: '' });
+          if (out && out !== into) gsap.set(out, { autoAlpha: 0 });
+        } else {
+          matchCut(tl, out, into, SHOTS[was].ghost);
+        }
+        const shotTl = gsap.timeline();
+        SHOT[to](shotTl);
+        tl.add(shotTl, 0);
+      }
+      // The current tick fills across the shot; when it is full the next
+      // gesture is accepted.
+      const fill = ticks[to]?.querySelector('b');
+      if (fill) {
+        tl.fromTo(
+          fill,
+          { scaleX: 0 },
+          { scaleX: 1, duration: tl.duration() + HOLD, ease: 'none' },
+          0,
+        );
+      }
+
+      media(to, !continuous && !reverse);
+      sound.setIntensity(LEVEL[to]);
+      if (opts.instant) {
+        // A shot laid out at its hold frame has no sounds.
+        sound.scene([]);
+        tl.progress(1, true);
+        tl.kill();
+        if (to === 5) popup.current?.setSwitches(Array(SWITCH_COUNT).fill(true));
+        busyUntil = 0;
+        current = null;
+        return;
+      }
+      current = tl;
+      // Picture and sound start on the same instant. GSAP's clock still reads
+      // the last frame, before this shot was built, so a timeline played now
+      // would count from then and run ahead of its sounds by however long the
+      // build took (longer on a busy machine). One tick brings it up to now.
+      gsap.ticker.tick();
+      tl.play();
+      sound.scene(score.slice());
+      busyUntil = performance.now() + tl.duration() * 1000;
+    };
+
+    /* ---------- Input ---------- */
+
+    const lock = () => {
+      if (locked) return;
+      locked = true;
+      el.classList.add('is-locked');
+      obs.enable();
+    };
+    const unlock = () => {
+      if (!locked) return;
+      locked = false;
+      el.classList.remove('is-locked');
+      obs.disable();
+    };
+
+    /* Native scroll takes over past the last shot. */
+    const release = () => {
+      unlock();
+      const credits = document.querySelector<HTMLElement>('.credits');
+      const top = credits ? credits.getBoundingClientRect().top + scrollY - 72 : innerHeight;
+      // A short landscape screen scrolls the film fully away, so nothing of
+      // the end card is left under the header.
+      const to = innerHeight < 520 ? innerHeight : Math.min(top, innerHeight * 0.9);
+      window.scrollTo({ top: to, behavior: 'smooth' });
+    };
+
+    /* Sound starts inside the visitor's first press, in the same event. */
+    const ensureSound = () => {
+      try {
+        if (!soundAsked) {
+          soundAsked = true;
+          if (soundPreferred()) sound.arm();
+        } else if (sound.on && !sound.running) {
+          sound.arm();
+        }
+      } catch {
+        /* No audio here: the film still runs. */
+      }
+    };
+
+    const start = () => {
+      if (started) return;
+      started = true;
+      el.classList.add('is-started');
+      lock();
+      go(1);
+    };
+
+    const step = (dir: 1 | -1) => {
+      if (!started) {
+        if (dir > 0) start();
+        return;
+      }
+      const to = shot + dir;
+      if (to < 0) return;
+      if (to > LAST) {
+        release();
+        return;
+      }
+      go(to);
+    };
+
+    const jump = (i: number) => {
+      if (!locked) {
+        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+        lock();
+      }
+      if (!started) {
+        started = true;
+        el.classList.add('is-started');
+      }
+      go(i);
+    };
+
+    const skip = () => {
+      jump(LAST);
+      el.querySelector<HTMLElement>('.s6 .store')?.focus({ preventScroll: true });
+    };
+
+    api.current = {
+      start: () => {
+        ensureSound();
+        start();
+      },
+      jump: (i) => {
+        ensureSound();
+        jump(i);
+      },
+      skip: () => {
+        ensureSound();
+        skip();
+      },
+    };
+
+    const isWheel = (e: Event | undefined) => e?.type === 'wheel';
+    const isTouch = (e: Event | undefined) =>
+      !!e && (e.type.startsWith('touch') || (e as PointerEvent).pointerType === 'touch');
+    const gesture = (dir: 1 | -1, e?: Event) => {
+      const now = performance.now();
+      if (now < busyUntil) return;
+      // A trackpad's momentum keeps sending wheel events after the swipe; a
+      // stream still running when the shot ends is the same gesture, unless,
+      // after the cooldown, its delta rises again: a new swipe on top of it.
+      if (isWheel(e) && wheelLast - wheelPrev < 160) {
+        const rising = wheelDelta > Math.max(8, wheelDeltaPrev * 1.5);
+        if (now < busyUntil + COOLDOWN || !rising) return;
+      }
+      if (isTouch(e)) el.classList.add('has-swiped');
+      ensureSound();
+      step(dir);
+    };
+
+    const obs = Observer.create({
+      target: window,
+      type: 'wheel,touch,pointer',
+      wheelSpeed: -1,
+      tolerance: 10,
+      dragMinimum: 6,
+      preventDefault: true,
+      ignore: '.bar',
+      onUp: (self) => gesture(1, self.event),
+      onDown: (self) => gesture(-1, self.event),
+    });
+    obs.disable();
+
+    const onWheelStamp = (e: WheelEvent) => {
+      wheelPrev = wheelLast;
+      wheelLast = performance.now();
+      wheelDeltaPrev = wheelDelta;
+      wheelDelta = Math.abs(e.deltaY) + Math.abs(e.deltaX);
+    };
+
+    const excluded = (t: EventTarget | null) =>
+      !!(t as Element | null)?.closest?.('a, button, input, select, textarea, .bar');
+
+    /* The first press anywhere begins the film, with sound. */
+    let pressedAt = 0;
+    const press = (e: Event) => {
+      if (excluded(e.target)) return;
+      const now = performance.now();
+      if (now - pressedAt < 500) return;
+      pressedAt = now;
+      ensureSound();
+      if (!started && locked && scrollY < 4) start();
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      onMove(e);
+      if (e.pointerType === 'mouse' || e.pointerType === 'pen') press(e);
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') press(e);
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as Element | null;
+      if (t?.closest?.('input, select, textarea, [contenteditable="true"]')) return;
+      const onControl = !!t?.closest?.('a, button, summary, [role="button"]');
+      const k = e.key;
+      const space = k === ' ' || k === 'Spacebar';
+      const next = ['ArrowDown', 'ArrowRight', 'PageDown'].includes(k) || (space && !e.shiftKey);
+      const prev = ['ArrowUp', 'ArrowLeft', 'PageUp'].includes(k) || (space && e.shiftKey);
+      const skipKey = k === 'Escape' || k === 'End';
+      const enter = k === 'Enter';
+      if (!locked || (!next && !prev && !skipKey && !enter && k !== 'Home')) return;
+      if ((space || enter) && onControl) return;
+      e.preventDefault();
+      ensureSound();
+      if (enter) {
+        if (!started) start();
+        return;
+      }
+      if (skipKey) {
+        if (started && shot < LAST) skip();
+        else if (!started) jump(LAST);
+        return;
+      }
+      if (k === 'Home') {
+        if (started) jump(0);
+        return;
+      }
+      if (e.repeat || performance.now() < busyUntil) return;
+      if (started) el.classList.add('has-keyed');
+      step(next ? 1 : -1);
+    };
+
+    /* While the film holds the screen the page stays put. */
+    const onScroll = () => {
+      if (locked && scrollY > 0) window.scrollTo(0, 0);
+    };
+
+    /* Tabbing past the film hands the page back to native scroll. */
+    const onFocusIn = (e: FocusEvent) => {
+      const t = e.target as Element | null;
+      if (!locked || !t?.getBoundingClientRect || el.contains(t)) return;
+      if (t.getBoundingClientRect().top >= el.getBoundingClientRect().bottom - 1) unlock();
+    };
+
+    const onPop = () => {
+      const i = shotFromHash();
+      // Other fragments (skip links) are not shots.
+      if (i < 0 && location.hash.length > 1) return;
+      jump(i < 0 ? 0 : i);
+    };
+
+    // Footage plays only in its shot; the light follows it.
+    let raf = 0;
+    let frame = 0;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      frame += 1;
+      if (frame % 3 || (shot !== 1 && shot !== 2 && shot !== 4)) return;
+      const paint = (v: HTMLVideoElement | null, c: HTMLCanvasElement | null, f: Footage) => {
+        if (!v || !c || v.readyState < 2 || v.paused) return;
+        const k = v.videoWidth / f.size[0];
+        const [x, y, w, h] = f.crop;
+        c.getContext('2d')?.drawImage(v, x * k, y * k, w * k, h * k, 0, 0, c.width, c.height);
+      };
+      if (shot === 4) paint(igVideo.current, spill3.current, FOOTAGE.instagram);
+      else paint(chatVideo.current, spill1.current, FOOTAGE.messenger);
+    };
+
+    /* Resizing or rotating re-lays the shot on screen at its hold frame;
+       a shot still playing is re-laid once it has played. A phone's browser
+       bars coming and going leave the stage (100svh) as it was, so nothing
+       restarts. */
+    let resizeTimer = 0;
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        const was = [W, H, tall];
+        measure();
+        if (was[0] === W && was[1] === H && was[2] === tall) return;
+        if (shot < 0) return;
+        const wait = busyUntil - performance.now();
+        if (wait <= 0) go(shot, { instant: true, push: false });
+        else
+          resizeTimer = window.setTimeout(() => {
+            if (performance.now() >= busyUntil) go(shot, { instant: true, push: false });
+          }, wait + 60);
+      }, 160);
+    };
+
+    let st: ScrollTrigger | null = null;
+    try {
+      measure();
+      seed(spill1.current, FOOTAGE.messenger.glow);
+      seed(spill3.current, FOOTAGE.instagram.glow);
+      el.classList.add('is-live');
+
+      const linked = shotFromHash();
+      if (linked > 0) {
+        started = true;
+        el.classList.add('is-started');
+        go(linked, { instant: true, push: false });
+      } else {
+        go(0, { push: false });
+        // The opener's entrance never holds back the first gesture.
+        busyUntil = 0;
+      }
+      if (scrollY <= 2) lock();
+
+      /* Native scroll before and after the film; the film takes over when
+         the page is back at its top. */
+      st = ScrollTrigger.create({
+        trigger: el,
+        start: 'top top',
+        end: '+=2',
+        onEnterBack: () => {
+          lock();
+          busyUntil = Math.max(busyUntil, performance.now() + 400);
+        },
+        onRefreshInit: measure,
+      });
+
+      INTENT.forEach((t) => addEventListener(t, intent, { capture: true, passive: true }));
+      stage.addEventListener('pointermove', onMove, { passive: true });
+      addEventListener('wheel', onWheelStamp, { capture: true, passive: true });
+      addEventListener('pointerdown', onPointerDown, true);
+      addEventListener('pointerup', onPointerUp, true);
+      addEventListener('touchend', press, true);
+      addEventListener('keydown', onKey);
+      addEventListener('scroll', onScroll, { passive: true });
+      addEventListener('focusin', onFocusIn);
+      addEventListener('popstate', onPop);
+      addEventListener('resize', onResize);
+      raf = requestAnimationFrame(loop);
+    } catch {
+      fail.current();
+    }
+
+    return () => {
+      current?.kill();
+      st?.kill();
+      obs.kill();
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(praf);
+      window.clearTimeout(resizeTimer);
+      INTENT.forEach((t) => removeEventListener(t, intent, true));
+      stage.removeEventListener('pointermove', onMove);
+      removeEventListener('wheel', onWheelStamp, true);
+      removeEventListener('pointerdown', onPointerDown, true);
+      removeEventListener('pointerup', onPointerUp, true);
+      removeEventListener('touchend', press, true);
+      removeEventListener('keydown', onKey);
+      removeEventListener('scroll', onScroll);
+      removeEventListener('focusin', onFocusIn);
+      removeEventListener('popstate', onPop);
+      removeEventListener('resize', onResize);
+      runClip(chatVideo.current, false);
+      runClip(igVideo.current, false);
+      el.classList.remove('is-live', 'is-locked', 'is-started');
+      api.current = null;
+    };
+  }, [sound]);
+
+  const onTick = (i: number) => (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!api.current) return;
+    e.preventDefault();
+    api.current.jump(i);
+  };
+
+  const onSkip = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!api.current) return;
+    e.preventDefault();
+    api.current.skip();
+  };
+
+  return (
+    <section className="film" ref={root} aria-label="Ghostify, a short film" data-shot="0">
+      <div className="film-stage">
+        {/* The wall: the opener. */}
+        <div className="layer s0">
+          <div className="wall" aria-hidden="true">
+            {WALL_OFFSETS.concat(WALL_OFFSETS).map((o, i) => (
+              <div className="wall-row" key={i} style={{ '--o': o } as CSSProperties}>
+                {WALL_ROWS[i % WALL_ROWS.length].repeat(2)}
+              </div>
+            ))}
+          </div>
+          <div className="wipe" aria-hidden="true" />
+          <div className="clear at" style={at('clear')} aria-hidden="true" />
+          <div className="g0 at" style={at('g0')}>
+            <Ghost label="The Ghostify ghost" />
+          </div>
+          <div className="hero">
+            <div className="hero-text">
+              <h1>
+                <Line>Read without sending Seen.</Line>
+              </h1>
+              <p>
+                A free browser extension that hides your Seen, Typing, and Story View signals on
+                Instagram, Messenger, and Facebook.
+              </p>
+            </div>
+            <StoreButtons stores={stores} />
+            <div className="begin">
+              <button
+                type="button"
+                className="begin-press"
+                aria-label="Begin the film, with sound"
+                onClick={() => api.current?.start()}
+              >
+                <span className="begin-glyph">
+                  <Speaker />
+                </span>
+                <span className="on-mouse">Press anywhere to begin</span>
+                <span className="on-touch">Tap anywhere to begin</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Cold open, and the receipt that never arrives. */}
+        <div className="layer s1">
+          <canvas
+            className="spill at"
+            style={at('spill1')}
+            ref={spill1}
+            width={32}
+            height={32}
+            aria-hidden="true"
+          />
+          <div className="drift-screen">
+            <img
+              className="reflect at"
+              style={at('reflect')}
+              src={FOOTAGE.messenger.still}
+              alt=""
+              aria-hidden="true"
+            />
+            <div className="chat mover at" style={at('chat')}>
+              <div className="chat-glow">
+                <Clip
+                  ref={chatVideo}
+                  footage={FOOTAGE.messenger}
+                  play
+                  className="screen"
+                  label="A real Messenger chat, read with Ghostify on"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="fade" aria-hidden="true" />
+          <div className="seen at" style={at('seen')} aria-hidden="true">
+            <i>S</i>
+            <i>e</i>
+            <i>e</i>
+            <i>n</i>
+            <b className="seen-strike" />
+          </div>
+          <div className="drift-ghost">
+            <div className="ghost-rig mover at" style={at('ghost')}>
+              <div className="ghost-in">
+                <div className="step">
+                  <GhostSilhouette />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="haze at" style={at('haze')} aria-hidden="true" />
+          <p className="title" aria-hidden="true">
+            <Line>Read without sending Seen.</Line>
+          </p>
+          <div className="scrim" aria-hidden="true" />
+          <p className="sub">
+            <Line>You read it. They never get a Seen.</Line>
+          </p>
+        </div>
+
+        {/* The dots. */}
+        <div className="layer s2">
+          <Glow at="glow2" src="/media/messenger-typing-glow.webp" />
+          <img
+            className="typing screen at"
+            style={at('typing')}
+            src="/media/messenger-typing.webp"
+            alt="A real Messenger reply being typed with Hide Typing on"
+            loading="lazy"
+          />
+          <p className="draft at" style={at('draft')} aria-hidden="true">
+            <span className="draft-text" />
+            <span className="caret" />
+          </p>
+          <div className="lean at" style={at('lean')}>
+            <GhostSilhouette rim="left" />
+          </div>
+          <div className="scrim" aria-hidden="true" />
+          <p className="sub">
+            <Line>Type, delete, rethink. No dots.</Line>
+          </p>
+        </div>
+
+        {/* The story. */}
+        <div className="layer s3">
+          <canvas
+            className="spill at"
+            style={at('glow3')}
+            ref={spill3}
+            width={32}
+            height={32}
+            aria-hidden="true"
+          />
+          <img
+            className="fb screen at"
+            style={at('fb')}
+            src="/media/facebook-story-soft.webp"
+            alt="A real Facebook story, further back"
+            loading="lazy"
+          />
+          <div className="peek at" style={at('peek')}>
+            <Ghost eyes="right" light="cool" />
+          </div>
+          <Clip
+            ref={igVideo}
+            footage={FOOTAGE.instagram}
+            play
+            className="ig screen at"
+            style={at('ig')}
+            label="A real Instagram story, watched with Ghostify on"
+          />
+          <div className="fade" aria-hidden="true" />
+          <div className="scrim" aria-hidden="true" />
+          <p className="sub">
+            <Line>Watch the story. Your name stays off the list.</Line>
+          </p>
+        </div>
+
+        {/* The switches. */}
+        <div className="layer s4">
+          <div className="glow4 at" style={at('glow4')} aria-hidden="true" />
+          <div className="peek4 at" style={at('peek4')}>
+            <Ghost eyes="left" />
+          </div>
+          <div className="popup-slot at" style={at('popup')}>
+            <div className="tilt">
+              <div className="popup-in">
+                <RealPopup className="popup" ref={popup} />
+              </div>
+            </div>
+          </div>
+          <div className="copy">
+            <h2>
+              <Line>Pick what</Line> <Line>to hide.</Line>
+            </h2>
+            <p>Instagram gets its own switches. Messenger and Facebook share theirs.</p>
+          </div>
+        </div>
+
+        {/* The wide. */}
+        <div className="layer s5">
+          <World />
+          <div className="scrim" aria-hidden="true" />
+          <ul className="marks" aria-label="Works on">
+            {MARKS.map(([platform, name, x, px]) => (
+              <li
+                key={platform}
+                className="mark"
+                style={{ '--mx': x, '--pmx': px } as CSSProperties}
+              >
+                <span className="rise">
+                  <span>
+                    <PlatformLogo platform={platform} className="mark-logo" />
+                    <span className="mark-name">{name}</span>
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Privacy: in your browser. Only the two links take the pointer. */}
+        <div className="layer s7">
+          <div className="frame">
+            <div className="pane">
+              <World decor />
+            </div>
+          </div>
+          <div className="scrim" aria-hidden="true" />
+          <div className="local">
+            <p className="local-lines">
+              <span className="local-line">No account.</span>{' '}
+              <span className="local-line">No servers.</span>{' '}
+              <a className="local-line" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                Open source.
+              </a>
+            </p>
+            <a
+              className={`local-credit ${STATUS_CREDIT.verified ? 'is-ok' : 'is-review'}`}
+              href={`${base}/status`}
+            >
+              <span>{STATUS_CREDIT.label}</span>{' '}
+              <time dateTime={STATUS_CREDIT.updatedAt ?? undefined}>
+                {formatStatusDate(STATUS_CREDIT.updatedAt)}
+              </time>
+            </a>
+          </div>
+        </div>
+
+        {/* End card. */}
+        <div className="layer s6" id="install">
+          <div className="glow6 at" style={at('glow6')} aria-hidden="true" />
+          <div className="end">
+            <div className="end-text">
+              <div className="g6">
+                <Ghost eyes="happy" label="The ghost, eyes closed and smiling" />
+              </div>
+              <h2>
+                <Line>Read now.</Line>
+                <Line>Reply when you’re ready.</Line>
+              </h2>
+            </div>
+            <StoreButtons stores={stores} />
+          </div>
+        </div>
+
+        <svg className="cut-rim" viewBox="0 0 200 250" aria-hidden="true">
+          <path d={OUTLINE} />
+        </svg>
+        <div className="grain" aria-hidden="true" />
+        <div className="bar-top" aria-hidden="true" />
+        <div className="bar-bottom" aria-hidden="true" />
+        <p className="swipe-hint" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="m6 15 6-6 6 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Swipe up for the next shot
+        </p>
+        <div className="film-ui">
+          <p className="keys" aria-hidden="true">
+            Space or → to continue
+          </p>
+          <nav className="ticks" aria-label="Shots">
+            {SHOTS.map((s, i) => (
+              <a
+                key={s.id}
+                className={`tick${i === 0 ? ' is-current' : ''}`}
+                href={`#${s.id}`}
+                aria-label={s.name}
+                onClick={onTick(i)}
+              >
+                <i aria-hidden="true">
+                  <b />
+                </i>
+                <span className="tick-tip" aria-hidden="true">
+                  {s.name}
+                </span>
+              </a>
+            ))}
+          </nav>
+          <a className="skip" href="#install" onClick={onSkip}>
+            <span className="skip-long">Skip film</span>
+            <span className="skip-short">Skip</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}

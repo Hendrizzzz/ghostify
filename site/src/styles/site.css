@@ -1,0 +1,18 @@
+/* The site's stylesheet, in cascade order. Each partial is one contiguous
+   stretch of what was a single sheet: later partials override earlier ones
+   and the responsive ones adjust rules from many of the others, so keep
+   the imports in this order. */
+
+@import './site/global.css';
+@import './site/ghost.css';
+@import './site/header-footer.css';
+@import './site/store-buttons.css';
+@import './site/credits.css';
+@import './site/status.css';
+@import './site/responsive.css';
+@import './site/sound-toggle.css';
+@import './site/film.css';
+@import './site/film-vertical.css';
+@import './site/film-responsive.css';
+@import './site/stills.css';
+@import './site/ghost-poses.css';

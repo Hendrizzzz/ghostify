@@ -24,12 +24,15 @@ in `site/`.
    `FALLBACK_CONFIG.version`, and `CHANGELOG.md`. The Firefox overlay carries no
    version field; it inherits one from `dist/manifest.json` during packaging.
    `validate:tag-integrity` blocks identity-path changes under existing tags.
+   esbuild writes source paths into the bundles, so even moving or renaming a
+   file under `src/` changes `dist/` and needs the next version once the
+   current one is tagged.
 4. **Pattern vocabulary lockstep.** `dist/config/patterns.json`,
    `src/content.js` `FALLBACK_CONFIG`, and the term lists in
    `src/utils/network.js` / `src/messenger_patch.js` must stay semantically in
    sync. Changing one means reviewing all of them.
 5. **Never commit `tmp/`.** It is throwaway staging for Firefox packaging.
-6. **Tests pin exact strings.** `test/messenger-send-stability.test.js` asserts
+6. **Tests pin exact strings.** `test/regression/popup-contracts.test.js` asserts
    literal popup CSS/HTML fragments (tooltip widths, status colors, z-index,
    absence of `title=` attributes, no red status tones). Read the pinned
    assertions before restyling the popup; update tests deliberately, never
@@ -48,6 +51,7 @@ in `site/`.
 | --- | --- |
 | Build extension bundles | `npm run build` |
 | Full test suite | `npm test` |
+| One test area | `npm run test:regression` (also `test:modules:shared`, `test:popup`, `test:status`) |
 | Lint + format check | `npm run lint` / `npm run format:check` |
 | Format | `npm run format` |
 | Site typecheck/dev/build | `cd site && npm run typecheck` / `dev` / `build` |
@@ -71,6 +75,13 @@ in `site/`.
 - Fail-open error handling in content scripts is intentional: Ghostify must
   never break the host page. Keep `catch` blocks quiet unless behind debug flags.
 - Zero runtime dependencies; devDependencies only.
+- Tests are plain Node scripts grouped by area under `test/`, with shared
+  harnesses in `test/helpers/`. `npm test` runs every area. New `*.test.js`
+  files in `unit/` and `regression/` run automatically in both PR CI jobs, and
+  those in `status/` in the Chromium job. A new `popup/` test runs only under
+  `npm test` and the daily verification run unless a `ci:*` script names it,
+  and each `tooling/` test needs its own `package.json` script.
+  `test/regression/archived/` is never executed.
 - Use clear, natural English for public updates and release notes. Focus on
   what changed for users. Keep implementation details in technical
   documentation.
@@ -79,7 +90,8 @@ in `site/`.
 
 ## Documentation map
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — runtime design, manifest model, build flow
+- [ARCHITECTURE.md](ARCHITECTURE.md) — runtime design, manifest model, build flow, test layout
+- [docs/README.md](docs/README.md) — index of guides, release records, and verification evidence
 - [CONTRIBUTING.md](CONTRIBUTING.md) — scope policy, change-risk tiers, PR expectations
 - [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) + [docs/FIREFOX_RELEASE_CHECKLIST.md](docs/FIREFOX_RELEASE_CHECKLIST.md)
 - [docs/QA_FIXTURES.md](docs/QA_FIXTURES.md) — smoke IDs (`GH-IG-TYPING-001`, ...)

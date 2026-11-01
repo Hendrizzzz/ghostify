@@ -1,0 +1,103 @@
+/* ---------- Header & footer ---------- */
+
+.bar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  padding: 0 var(--edge);
+  background: linear-gradient(rgba(12, 11, 10, 0.94) 55%, rgba(12, 11, 10, 0));
+}
+
+.wordmark {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.wordmark img {
+  border-radius: 6px;
+}
+
+.bar nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.6vw, 32px);
+}
+
+.bar nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 15px;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.bar nav a:hover {
+  color: var(--fg);
+}
+
+.bar nav .bar-cta {
+  min-height: 38px;
+  padding: 0 16px;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.bar nav .bar-cta:hover {
+  color: var(--bg);
+  background: #fff;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 40px var(--edge) 48px;
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+  font-size: 15px;
+}
+
+.foot .wordmark {
+  color: var(--fg);
+  font-size: 16px;
+}
+
+.foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
+.foot nav a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.foot nav a:hover {
+  color: var(--fg);
+}
+
+.foot p {
+  margin-left: auto;
+}

@@ -1,0 +1,1015 @@
+/* ---------- The film ----------
+   Every shot is composed on a fixed canvas (1280 × 720 widescreen, 390 wide
+   vertical) and scaled into the screen by --u. `.at` places an element at
+   canvas coordinates; the vertical cut has its own coordinates. Which cut
+   plays depends on the screen's shape alone. A near-square landscape screen
+   (4:3, 5:4) may lose up to 60 units of empty margin at each side so the
+   picture is not left small in the middle; 16:10 and wider are untouched.
+   The widescreen unit stops at 2.5px so a 4K screen is not blown up. The bars frame the picture the same
+   way on every screen: a 2.39:1 scope frame of the canvas, never thinner
+   than 36px nor thicker than 13% of the height. */
+
+.film {
+  --u: min(
+    calc(100svh / 720),
+    max(calc(100vw / 1280), min(calc(100vw / 1160), calc(100svh / 830))),
+    2.5px
+  );
+  --cx: 640;
+  --cy: 360;
+  --bar: clamp(36px, calc((100svh - 535.6 * var(--u)) / 2), 13svh);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  position: relative;
+  height: 100svh;
+  min-height: 320px;
+}
+
+.film-stage {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #050506;
+}
+
+/* While the film holds the screen, a swipe on it never pans the page. */
+.film.is-locked .film-stage {
+  touch-action: pinch-zoom;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.s1,
+.s2,
+.s3,
+.s4,
+.s5,
+.s6,
+.s7 {
+  visibility: hidden;
+  opacity: 0;
+  /* Until the film shows a layer, the browser does no work on it. */
+  content-visibility: hidden;
+}
+
+.at {
+  --X: var(--x);
+  --Y: var(--y);
+  --W: var(--w);
+  position: absolute;
+  left: var(--at-x, calc(50% + (var(--X) - var(--cx)) * var(--u)));
+  top: var(--at-y, calc(50% + (var(--Y) - var(--cy)) * var(--u)));
+  width: var(--at-w, calc(var(--W) * var(--u)));
+}
+
+.mover {
+  transform-origin: 0 0;
+}
+
+.screen {
+  display: block;
+  /* Real footage is a white app; held down a touch so it sits in the dark. */
+  filter: brightness(0.86);
+  border-radius: calc(4 * var(--u));
+  box-shadow: 0 0 calc(80 * var(--u)) rgba(225, 220, 255, 0.24);
+}
+
+.clip {
+  overflow: hidden;
+  background-color: #101012;
+  background-size: cover;
+}
+
+.clip:not(.at) {
+  position: relative;
+}
+
+.clip video {
+  position: absolute;
+  max-width: none;
+  opacity: 0;
+}
+
+.clip video.is-playing {
+  opacity: 1;
+}
+
+/* Light thrown by a screen: its own picture, tiny and soft, blown up. */
+.spill,
+.glow {
+  display: block;
+  aspect-ratio: 1;
+  height: auto;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent);
+  mask-image: radial-gradient(closest-side, #000 30%, transparent);
+  pointer-events: none;
+}
+
+.glow {
+  background-size: 100% 100%;
+  opacity: 0.4;
+}
+
+/* Subtitles sit on a dark scrim at the foot of the picture. */
+.scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--bar);
+  height: calc(210 * var(--u));
+  min-height: 120px;
+  background: linear-gradient(rgba(5, 5, 6, 0), rgba(5, 5, 6, 0.92));
+  pointer-events: none;
+}
+
+.sub {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: calc(var(--bar) + 28 * var(--u));
+  margin: 0;
+  color: #fff;
+  font-size: max(17px, calc(28 * var(--u)));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+}
+
+/* A line that rises out of a mask: the mask is the line's own box, open
+   above and at the sides so shadows and ascenders are never cut. */
+.rise {
+  display: block;
+  margin-bottom: -0.14em;
+  padding-bottom: 0.14em;
+  clip-path: inset(-1em -2em 0 -2em);
+}
+
+.rise > span {
+  display: block;
+}
+
+/* F0 · The wall */
+
+.s0 {
+  background: #070607;
+}
+
+.wall {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(4 * var(--u));
+  overflow: hidden;
+  color: rgba(244, 241, 234, 0.1);
+  font-size: calc(104 * var(--u));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.wall-row {
+  flex: none;
+  margin-left: calc(50% + (var(--o) - 780) * var(--u));
+}
+
+/* The pointer or finger wipes receipts away: one soft dark disc that
+   follows it, moved by transform only. */
+.wipe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(380 * var(--u));
+  height: calc(380 * var(--u));
+  margin: calc(-190 * var(--u)) 0 0 calc(-190 * var(--u));
+  border-radius: 50%;
+  background: radial-gradient(circle, #070607 34%, rgba(7, 6, 7, 0) 70%);
+  transform: translate3d(-9999px, 0, 0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.clear {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #070607 0%, #070607 42%, rgba(7, 6, 7, 0) 68%);
+  pointer-events: none;
+}
+
+.hero {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  top: calc(50% + (300 - 360) * var(--u));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(18px, calc(22 * var(--u)));
+  text-align: center;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(12px, calc(18 * var(--u)));
+}
+
+.hero h1 {
+  font-size: max(34px, calc(72 * var(--u)));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.hero p {
+  max-width: max(300px, calc(600 * var(--u)));
+  color: rgba(244, 241, 234, 0.7);
+  font-size: max(15px, calc(19 * var(--u)));
+  line-height: 1.45;
+}
+
+.film .stores {
+  justify-content: center;
+}
+
+/* The invitation under the opener: one press begins the film and its sound. */
+.begin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: max(12px, calc(34 * var(--u)));
+}
+
+.begin-press {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  animation: breathe 3.2s ease-in-out infinite;
+}
+
+.begin-glyph {
+  display: inline-flex;
+  color: #c9bcff;
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.on-touch {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .on-mouse {
+    display: none !important;
+  }
+
+  .on-touch {
+    display: inline;
+  }
+}
+
+.film.is-started .begin {
+  display: none;
+}
+
+.film .store {
+  min-height: max(48px, calc(52 * var(--u)));
+  font-size: max(15px, calc(16 * var(--u)));
+}
+
+.film .store:not(.is-primary) {
+  background: rgba(7, 6, 7, 0.6);
+}
+
+/* F1 + F2 · Cold open, the receipt */
+
+.chat-glow {
+  will-change: opacity;
+}
+
+.reflect {
+  display: block;
+  opacity: 0.18;
+  transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+  mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+}
+
+.step {
+  position: relative;
+  aspect-ratio: 200 / 250;
+}
+
+.step svg,
+.lean svg,
+.w-ghost svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lean,
+.w-ghost {
+  aspect-ratio: 200 / 250;
+}
+
+.haze {
+  aspect-ratio: 2 / 1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse closest-side, rgba(200, 195, 230, 0.1), rgba(5, 5, 6, 0));
+  pointer-events: none;
+}
+
+.seen {
+  width: max-content;
+  transform-origin: 0 0;
+  color: #f4f1ea;
+  font-size: calc(168 * var(--u));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 0 calc(40 * var(--u)) rgba(220, 210, 255, 0.45);
+  pointer-events: none;
+}
+
+.seen i {
+  display: inline-block;
+  font-style: normal;
+}
+
+/* The stroke through the word: drawn from the left, in the ghost's light. */
+.seen-strike {
+  position: absolute;
+  left: -0.06em;
+  right: -0.02em;
+  top: 0.58em;
+  height: max(3px, 0.045em);
+  border-radius: 999px;
+  background: #c9bcff;
+  box-shadow: 0 0 calc(24 * var(--u)) rgba(185, 168, 255, 0.55);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.title {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: calc(var(--bar) + 30 * var(--u));
+  margin: 0;
+  font-size: max(28px, calc(54 * var(--u)));
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.8);
+}
+
+/* F3 · Typing: a reply typed out in the dark and taken back */
+
+.typing {
+  height: auto;
+  border-radius: calc(6 * var(--u));
+}
+
+.draft {
+  width: max-content;
+  min-height: 1em;
+  margin: 0;
+  color: #f4f1ea;
+  font-size: calc(52 * var(--u));
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  white-space: pre;
+  text-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.35);
+  pointer-events: none;
+}
+
+/* A text caret in the ghost's light: still while keys go in, blinking
+   while nothing does. */
+.caret {
+  display: inline-block;
+  width: max(2px, 0.05em);
+  height: 0.9em;
+  margin-left: 0.04em;
+  vertical-align: -0.1em;
+  border-radius: 1px;
+  background: #c9bcff;
+  box-shadow: 0 0 calc(14 * var(--u)) rgba(185, 168, 255, 0.6);
+  animation: caret 1.06s steps(1) infinite;
+}
+
+.draft.is-typing .caret {
+  animation: none;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.lean {
+  transform-origin: 50% 100%;
+}
+
+/* F4 · The story */
+
+.fb {
+  height: auto;
+  opacity: 0.5;
+}
+
+.peek {
+  transform-origin: 50% 90%;
+}
+
+.ig {
+  box-shadow: 0 0 calc(110 * var(--u)) rgba(190, 215, 255, 0.28);
+}
+
+/* F5 · The switches */
+
+.glow4 {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle closest-side,
+    rgba(136, 115, 207, 0.22),
+    rgba(136, 115, 207, 0)
+  );
+}
+
+.peek4 {
+  transform-origin: 50% 90%;
+}
+
+.popup-slot {
+  perspective: calc(1800 * var(--u));
+}
+
+.tilt {
+  transform: rotateY(calc(-12deg + var(--lx, 0) * 6deg)) rotateX(calc(4deg - var(--ly, 0) * 4deg));
+  transform-style: preserve-3d;
+  transition: transform 600ms var(--ease);
+}
+
+.popup-in {
+  overflow: hidden;
+  border-radius: calc(16 * var(--u));
+  box-shadow:
+    0 calc(60 * var(--u)) calc(140 * var(--u)) rgba(0, 0, 0, 0.7),
+    0 0 calc(60 * var(--u)) rgba(185, 168, 255, 0.12);
+}
+
+.popup {
+  width: 320px;
+  /* The popup's own 320px, scaled to fill its slot (set by the film). */
+  zoom: var(--pz, calc(var(--uk, 1) * 390 / 320));
+}
+
+.copy {
+  position: absolute;
+  left: calc(50% + (96 - 640) * var(--u));
+  top: calc(50% + (250 - 360) * var(--u));
+  width: max(280px, calc(520 * var(--u)));
+}
+
+.copy h2 {
+  max-width: 5.4em;
+  font-size: max(36px, calc(76 * var(--u)));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+
+.copy p {
+  max-width: max(260px, calc(380 * var(--u)));
+  margin-top: max(12px, calc(18 * var(--u)));
+  color: rgba(244, 241, 234, 0.7);
+  font-size: max(15px, calc(20 * var(--u)));
+  line-height: 1.45;
+}
+
+/* F6 · The wide */
+
+.world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 60%;
+  perspective: calc(1300 * var(--u));
+}
+
+/* Each screen carries a real mirrored copy as its floor reflection, so every
+   browser (Firefox included) shows the same picture. */
+.far > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(4 * var(--u));
+}
+
+.far > .far-reflect {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 3px);
+  opacity: 0.16;
+  transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+  mask-image: linear-gradient(rgba(0, 0, 0, 0) 62%, #000);
+  pointer-events: none;
+}
+
+.w0 {
+  transform: rotateY(26deg);
+  transform-origin: right center;
+}
+
+.w1 {
+  box-shadow: 0 0 calc(60 * var(--u)) rgba(225, 220, 255, 0.2);
+}
+
+.w2 {
+  transform: rotateY(-26deg);
+  transform-origin: left center;
+}
+
+/* The floor fades out at both ends too, so pulled back the world has no
+   edge, only light falling off into the dark. */
+.floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + (380 - 360) * var(--u));
+  height: calc(160 * var(--u));
+  background: linear-gradient(rgba(5, 5, 6, 0), rgba(30, 28, 44, 0.35), rgba(5, 5, 6, 0));
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  pointer-events: none;
+}
+
+/* The platform marks, each centred under its own screen on the floor. */
+.marks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--bar) + 18 * var(--u));
+  height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mark {
+  --MX: var(--mx);
+  position: absolute;
+  bottom: 0;
+  left: calc(50% + (var(--MX) - var(--cx)) * var(--u));
+  transform: translateX(-50%);
+}
+
+.mark .rise > span {
+  display: flex;
+  align-items: center;
+  gap: max(8px, calc(10 * var(--u)));
+}
+
+.mark-logo {
+  flex: none;
+  width: clamp(28px, calc(36 * var(--u)), 44px);
+  height: auto;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.6));
+}
+
+.mark-name {
+  color: rgba(244, 241, 234, 0.78);
+  font-size: max(13px, calc(15 * var(--u)));
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+
+/* F6b · Privacy. The wide, pulled further back until the three screens are
+   a small pool of light. No frame is drawn around it. */
+
+.frame {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.pane {
+  position: absolute;
+  inset: var(--bar) 0;
+}
+
+/* The lines, set like subtitles. Only the links take the pointer. */
+.local {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: max(calc(var(--bar) + 24 * var(--u)), 60px);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(6px, calc(10 * var(--u)));
+  text-align: center;
+  pointer-events: none;
+}
+
+.local-lines {
+  color: #fff;
+  font-size: max(17px, calc(28 * var(--u)));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+}
+
+.local-line {
+  display: inline-block;
+  margin: 0 0.28em;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.local a {
+  pointer-events: auto;
+}
+
+.site .local-lines a {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.34);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.site .local-lines a:hover {
+  text-decoration-color: #fff;
+}
+
+.film .local-credit {
+  display: inline-flex;
+  flex-wrap: wrap;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 0 0.6em;
+  color: rgba(244, 241, 234, 0.68);
+  font-size: max(14px, calc(16 * var(--u)));
+  font-weight: 500;
+  text-decoration: none;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
+  visibility: hidden;
+  opacity: 0;
+}
+
+.film .local-credit:hover {
+  color: var(--fg);
+}
+
+/* The date sits beside the credit, a step quieter, with space alone
+   between them. */
+.local-credit time {
+  color: rgba(244, 241, 234, 0.5);
+  white-space: nowrap;
+}
+
+/* A full 44px target that takes no more room than the line it sits on. */
+.film .local-credit {
+  min-height: 44px;
+  margin: -4px 0;
+}
+
+/* F7 · End card */
+
+.s6 {
+  background: #070607;
+}
+
+.glow6 {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, rgba(200, 190, 255, 0.14), rgba(7, 6, 7, 0));
+}
+
+.end {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: max(28px, calc(40 * var(--u)));
+  padding: calc(24 * var(--u)) var(--edge) 0;
+  text-align: center;
+}
+
+.end-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: max(16px, calc(26 * var(--u)));
+}
+
+.g6 {
+  width: max(88px, calc(176 * var(--u)));
+}
+
+.end h2 {
+  font-size: max(34px, calc(76 * var(--u)));
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+/* Grain, letterbox, progress */
+
+.grain {
+  position: absolute;
+  inset: -50%;
+  z-index: 3;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='220' height='220' filter='url(%23n)'/></svg>");
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  animation: grain 700ms steps(4) infinite;
+}
+
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-4%, 3%);
+  }
+  50% {
+    transform: translate(3%, -4%);
+  }
+  75% {
+    transform: translate(-2%, -5%);
+  }
+  100% {
+    transform: translate(5%, 3%);
+  }
+}
+
+.bar-top,
+.bar-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  height: var(--bar);
+  background: #000;
+}
+
+.bar-top {
+  top: 0;
+}
+
+.bar-bottom {
+  bottom: 0;
+}
+
+/* Until the film is running the bars wait off screen; GSAP takes over. */
+.film:not(.is-live) .bar-top {
+  transform: translateY(-100%);
+}
+
+.film:not(.is-live) .bar-bottom {
+  transform: translateY(100%);
+}
+
+/* Planes that drift as one: full-size so their children keep the stage
+   as their frame of reference. */
+.drift-screen,
+.drift-ghost {
+  position: absolute;
+  inset: 0;
+}
+
+/* The match cut's rim: the ghost's outline in the accent, riding the mask. */
+.cut-rim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 200px;
+  height: 250px;
+  overflow: visible;
+  opacity: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.cut-rim path {
+  fill: none;
+  stroke: #c9bcff;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The film's controls: key hint, one tick per shot, Skip. They sit in the
+   bottom letterbox once the film has begun. */
+.film-ui {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: max(var(--bar), 64px);
+  padding: 0 var(--edge) var(--safe-b);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 600ms var(--ease),
+    visibility 0s linear 600ms;
+}
+
+.film.is-started .film-ui {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 600ms var(--ease) 300ms;
+}
+
+/* Once the page scrolls on past the film, its controls stay out from under
+   the header. */
+.film.is-started:not(.is-locked) .film-ui {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.keys {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: rgba(244, 241, 234, 0.46);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: opacity 800ms var(--ease);
+}
+
+.film.has-keyed .keys {
+  opacity: 0;
+}
+
+.ticks {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.site .tick {
+  position: relative;
+  display: inline-flex;
+  width: 30px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: width 400ms var(--ease);
+}
+
+.tick i {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(244, 241, 234, 0.2);
+  transition:
+    width 400ms var(--ease),
+    background-color 300ms ease;
+}
+
+.tick b {
+  position: absolute;
+  inset: 0;
+  background: #f4f1ea;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.tick.is-past i {
+  background: rgba(244, 241, 234, 0.5);
+}
+
+.site .tick.is-current {
+  width: 52px;
+}
+
+.tick.is-current i {
+  width: 40px;
+  background: rgba(244, 241, 234, 0.22);
+}
+
+.tick:not(.is-current) b {
+  transform: scaleX(0) !important;
+}
+
+.tick:hover i {
+  background: rgba(244, 241, 234, 0.7);
+}
+
+/* The shot's name over its tick, set as plain text on the letterbox. */
+.tick-tip {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  left: 50%;
+  color: rgba(244, 241, 234, 0.85);
+  font-size: 13px;
+  line-height: 1.2;
+  text-shadow: 0 1px 10px #000;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  pointer-events: none;
+}
+
+.tick:hover .tick-tip,
+.tick:focus-visible .tick-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.film-ui .skip {
+  display: inline-flex;
+  flex: 1 1 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.66);
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.film-ui .skip:hover {
+  color: var(--fg);
+}
+
+.film[data-shot='8'] .skip {
+  visibility: hidden;
+}
+
+.skip-short {
+  display: none;
+}
+
+/* Phones: one line, on the first shot only, gone after the first swipe. */
+.swipe-hint {
+  display: none;
+}
+
+/* The vertical cut darkens the top for the header and the foot of a
+   full-height screen, so titles never sit on bright footage. */
+.fade {
+  display: none;
+}
+
+.copy h2 .rise {
+  white-space: nowrap;
+}

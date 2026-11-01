@@ -5,6 +5,11 @@ node_modules/
 tmp/
 output/
 
+# Local agent and browser-automation state
+.opencode/
+.playwright-mcp/
+.claude/worktrees/
+
 *.zip
 *.zip.sha256
 
