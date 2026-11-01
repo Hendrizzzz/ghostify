@@ -2,8 +2,6 @@ const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
 
-const { ghostSource } = require("../helpers/regression-harness");
-
 const pkg = require("../../package.json");
 
 function testPopupMessengerSeenWarningRemoved() {
