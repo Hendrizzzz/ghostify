@@ -8,9 +8,9 @@ const {
     getVerificationProposalState,
     parseArgs,
     prepareStatusUpdate,
-} = require("../scripts/prepare-status-update");
+} = require("../../scripts/prepare-status-update");
 
-const repoRoot = path.resolve(__dirname, "..");
+const repoRoot = path.resolve(__dirname, "..", "..");
 const source = JSON.parse(
     fs.readFileSync(
         path.join(repoRoot, "site", "src", "app", "statusData.json"),

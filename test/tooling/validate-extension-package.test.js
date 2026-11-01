@@ -4,9 +4,9 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const repoRoot = path.resolve(__dirname, "..");
-const pkg = require("../package.json");
-const { prepareStatusUpdate } = require("../scripts/prepare-status-update");
+const repoRoot = path.resolve(__dirname, "..", "..");
+const pkg = require("../../package.json");
+const { prepareStatusUpdate } = require("../../scripts/prepare-status-update");
 
 function copyFixture() {
     const fixtureRoot = fs.mkdtempSync(

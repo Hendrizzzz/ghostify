@@ -3,7 +3,7 @@ const Module = require("node:module");
 const path = require("node:path");
 const { buildSync } = require("esbuild");
 
-const root = path.resolve(__dirname, "..");
+const root = path.resolve(__dirname, "..", "..");
 const result = buildSync({
     entryPoints: [path.join(root, "site/src/app/statusData.ts")],
     bundle: true,

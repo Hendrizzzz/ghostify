@@ -94,7 +94,7 @@ assert(
         packageJson.scripts["audit:high"] ===
             "node scripts/audit-development-dependencies.js" &&
         packageJson.scripts["test:dependency-audit"] ===
-            "node test/dependency-audit-policy.test.js" &&
+            "node test/tooling/dependency-audit-policy.test.js" &&
         packageJson.scripts["ci:chromium:checks"].includes(
             "test:dependency-audit",
         ) &&

@@ -5,8 +5,8 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const repoRoot = path.resolve(__dirname, "..");
-const pkg = require("../package.json");
+const repoRoot = path.resolve(__dirname, "..", "..");
+const pkg = require("../../package.json");
 
 function findEndOfCentralDirectory(buffer) {
     for (let offset = buffer.length - 22; offset >= 0; offset -= 1) {

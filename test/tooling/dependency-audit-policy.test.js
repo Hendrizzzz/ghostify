@@ -2,7 +2,7 @@ const assert = require("assert");
 const {
     evaluateAudit,
     validateExceptionContext,
-} = require("../scripts/audit-development-dependencies");
+} = require("../../scripts/audit-development-dependencies");
 
 const exception = {
     id: "image-size-web-ext-dev-only-2026-08",

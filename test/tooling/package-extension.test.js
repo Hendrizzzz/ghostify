@@ -5,8 +5,8 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const repoRoot = path.resolve(__dirname, "..");
-const pkg = require("../package.json");
+const repoRoot = path.resolve(__dirname, "..", "..");
+const pkg = require("../../package.json");
 const staticPopupAssets = new Set([
     "css/popup.css",
     "icons/icon32.png",

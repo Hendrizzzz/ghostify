@@ -1,7 +1,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
-const { loadSrcModule } = require("./helpers/load-src-module");
+const { loadSrcModule } = require("../helpers/load-src-module");
 
 const {
     DEFAULT_MODULE_FLAGS,

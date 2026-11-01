@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
 
-const pkg = require("../package.json");
+const pkg = require("../../package.json");
 const popupSource = fs.readFileSync("dist/js/popup.js", "utf8");
 const chromeStoreReviewUrl =
     "https://chromewebstore.google.com/detail/ghostify-hide-seen-typing/flpnibonbhdmnpgflnbemgghghhblmpm/reviews";

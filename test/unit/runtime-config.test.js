@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { loadSrcModule } = require("./helpers/load-src-module");
+const { loadSrcModule } = require("../helpers/load-src-module");
 
 const { normalizePackagedConfig } = loadSrcModule("src/runtime-config.js");
 

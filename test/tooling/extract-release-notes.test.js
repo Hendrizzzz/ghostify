@@ -4,10 +4,10 @@ const fs = require("fs");
 const {
     assertDatedReleaseHeading,
     extractReleaseNotes,
-} = require("../scripts/extract-release-notes");
+} = require("../../scripts/extract-release-notes");
 
 const changelog = fs.readFileSync("CHANGELOG.md", "utf8");
-const pkg = require("../package.json");
+const pkg = require("../../package.json");
 const notes = extractReleaseNotes(changelog, pkg.version);
 const publishWorkflow = fs.readFileSync(
     ".github/workflows/publish-release.yml",

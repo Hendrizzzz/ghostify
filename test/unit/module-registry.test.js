@@ -1,6 +1,6 @@
 const assert = require("assert");
 const fs = require("fs");
-const { loadSrcModule } = require("./helpers/load-src-module");
+const { loadSrcModule } = require("../helpers/load-src-module");
 
 const { DEFAULT_PRIVACY_SETTINGS, FREE_PRIVACY_SETTING_KEYS } = loadSrcModule(
     "src/settings/defaults.js",

@@ -6,7 +6,7 @@ const path = require("path");
 
 const {
     validateVersionTagIntegrity,
-} = require("../scripts/validate-version-tag-integrity");
+} = require("../../scripts/validate-version-tag-integrity");
 
 function git(cwd, args) {
     const result = childProcess.spawnSync("git", args, {

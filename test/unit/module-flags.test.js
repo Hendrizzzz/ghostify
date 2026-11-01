@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { loadSrcModule } = require("./helpers/load-src-module");
+const { loadSrcModule } = require("../helpers/load-src-module");
 
 const { assertFreeCoreRemotePolicy, validateFreeCoreRemotePolicy } =
     loadSrcModule("src/modules/registry.js");
