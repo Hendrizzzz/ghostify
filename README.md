@@ -159,7 +159,8 @@ Firefox linting, generated bundle drift check, and high-severity dependency audi
 
 ## Documentation
 
-- [Architecture](ARCHITECTURE.md) — runtime design, manifest model, build flow, debugging flags
+- [Architecture](ARCHITECTURE.md) — runtime design, manifest model, build flow, debugging flags, tests
+- [Documentation index](docs/README.md) — guides, release records, and verification evidence
 - [Changelog](CHANGELOG.md) — release notes (source of truth for every release)
 - [Contributing](CONTRIBUTING.md) — scope policy, change-risk tiers, PR expectations
 - [QA fixtures](docs/QA_FIXTURES.md) — smoke IDs used across release checklists
@@ -173,16 +174,25 @@ Firefox linting, generated bundle drift check, and high-severity dependency audi
 
 ```text
 Ghostify/
-|-- src/                  Source modules and platform logic
-|-- dist/                 Chromium extension and shared packaged assets
-|-- browser-targets/      Browser-specific manifest overlays
-|-- test/                 Regression tests
-|-- docs/                 QA fixtures and maintainer references
+|-- .github/              CI workflows, issue forms, PR template, Dependabot
+|-- browser-targets/      Browser-specific manifest overlays (Firefox)
+|-- dist/                 Chromium extension: generated bundles and popup assets
+|-- docs/                 Guides, release records, and verification evidence
+|-- scripts/              Packaging, validation, and status tooling
+|-- site/                 Public website (React + Vite)
+|-- src/                  Extension runtime source bundled into dist/
+|-- test/                 Automated tests
+|   |-- helpers/          Shared test harnesses and loaders
+|   |-- popup/            Popup runtime and theme behavior
+|   |-- regression/       Privacy-engine regression suites on built bundles
+|   |-- status/           Public status feed and verification workflow
+|   |-- tooling/          Packaging, validation, and release tooling
+|   `-- unit/             Shared settings, config, and module contracts
 |-- tmp/                  Ignored generated staging directories
-|-- site/                 Public website
-|-- build.js              ESBuild build script
+|-- build.js              esbuild bundling entry point
 |-- AGENTS.md             Guidance for AI coding agents and contributors
 |-- ARCHITECTURE.md       Runtime design and build flow
+|-- CHANGELOG.md          Release notes
 |-- CONTRIBUTING.md       Contribution guide
 |-- MAINTAINERS.md        Maintainer roles and decision process
 |-- PRIVACY.md            Privacy policy

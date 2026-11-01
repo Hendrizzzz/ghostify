@@ -61,7 +61,7 @@ Brave's local copy was subsequently reloaded with the user's authorized Computer
 Use workflow. Raw CDP diagnostics remained unavailable for Chrome. Brave provided
 the additional runtime-counter evidence alongside visible UI, DOM styling, and
 the independent recipient account. Seen/Typing positive controls and the wider #145,
-#197, and #259 checks are recorded in `ISSUE_259_VERIFICATION.md`; this follow-up
+#197, and #259 checks are recorded in [issue-259.md](issue-259.md); this follow-up
 repeated the affected Facebook flows rather than claiming a new complete live
 Instagram/Messenger/story matrix. The Brave page-only control additionally
 confirmed native local-read behavior with Hide Seen disabled; request and
@@ -72,5 +72,5 @@ store status and its historical local-display limitation remain unchanged until
 a separate release and verification update. Account-specific captures remain in
 ignored `tmp/`, outside Git. This follow-up was developed on
 `fix/facebook-unread-indicators` and is included in the 2.1.1 release preparation.
-See `RELEASE_2_1_1.md` for the maintainer's subsequent smoke-test confirmation and
+See [v2.1.1.md](../releases/v2.1.1.md) for the maintainer's subsequent smoke-test confirmation and
 the distinction between package readiness and store publication.

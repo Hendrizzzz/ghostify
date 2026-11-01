@@ -213,26 +213,30 @@ The root test command is:
 npm test
 ```
 
-That command builds the bundled extension scripts and runs the full regression
-suite in `test/`:
+That command builds the bundled extension scripts and runs every suite in
+`test/`. Tests are plain Node scripts that exit non-zero on failure. Each
+directory runs through `node --test` (or a dedicated npm script) one file at a
+time:
 
-- `messenger-send-stability.test.js` — the large Node VM harness with fake
-  browser primitives exercising the built `dist/js/ghost.js` and
-  `dist/js/messenger_patch.js` bundles, plus popup asset contracts and
-  GitHub issue-template behavior
-- `firefox-popup.test.js` — popup status/rating-link runtime behavior for
-  Chromium and Firefox targets
-- `settings-defaults.test.js`, `runtime-config.test.js`,
-  `module-registry.test.js`, `module-flags.test.js` — shared settings/config/
-  module contracts
-- `package-extension.test.js`, `package-firefox.test.js` — release ZIP dry-run
-  tests for both stores
-- `validate-extension-package.test.js` — the extension package validator
-- `prepare-status-update.test.js`, `daily-verification-git.test.js` — public
-  status feed generation
-- `dependency-audit-policy.test.js` — governed audit exceptions
-- `extract-release-notes.test.js` — CHANGELOG-driven release notes
-- `version-tag-integrity.test.js` — release identity-path protection
+- `test/unit/` — shared settings, runtime config, module registry, and module
+  flag contracts; source modules load through
+  `test/helpers/load-src-module.js`
+- `test/regression/` — Node VM suites with fake browser primitives that
+  exercise the built `dist/js/ghost.js` and `dist/js/messenger_patch.js`
+  bundles: send preservation, typing, read state, realtime bridges and workers,
+  message requests, focus and visibility, media and stories, host scope, plus
+  popup asset contracts, GitHub issue-form links, and release-doc smoke IDs.
+  Shared fakes and page factories live in
+  `test/helpers/regression-harness.js`. `test/regression/archived/` keeps
+  archived scenarios for reference; they are not executed.
+- `test/popup/` — popup status/rating-link behavior for Chromium and Firefox
+  targets (`browser-targets.test.js`, which accepts `chromium` or `firefox`)
+  and the seasonal theme calendar
+- `test/status/` — public status feed generation, the daily verification
+  workflow contract, and landing-page status presentation
+- `test/tooling/` — release ZIP dry runs for both stores, the extension package
+  validator, release identity-path protection, CHANGELOG-driven release notes,
+  and governed dependency-audit exceptions
 
 These tests protect important regression paths, but they are not a substitute
 for manual browser smoke tests on Instagram, Messenger, and Facebook before a
