@@ -184,7 +184,7 @@ Ghostify/
 |-- test/                 Automated tests
 |   |-- helpers/          Shared test harnesses and loaders
 |   |-- popup/            Popup runtime and theme behavior
-|   |-- regression/       Privacy-engine regression suites on built bundles
+|   |-- regression/       Suites on built bundles, plus pinned popup/doc contracts
 |   |-- status/           Public status feed and verification workflow
 |   |-- tooling/          Packaging, validation, and release tooling
 |   `-- unit/             Shared settings, config, and module contracts

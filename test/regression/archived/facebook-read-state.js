@@ -1,5 +1,6 @@
-// Archived Facebook read-state scenarios. These functions are kept for
-// reference and are intentionally not executed by any test runner.
+// Archived Facebook read-state scenarios for behavior Ghostify has since
+// replaced. Most fail against the current bundles, and no runner executes them
+// (the previous single-file suite never invoked them either).
 
 const assert = require("assert");
 const vm = require("vm");

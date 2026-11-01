@@ -26,10 +26,10 @@ for the runtime design, manifest model, build flow, and test layout.
 
 Some documents stay in the repository root on purpose:
 
-- [`RELEASE_CHECKLIST.md`](../RELEASE_CHECKLIST.md),
-  [`FIREFOX_REVIEW_BUILD.md`](../FIREFOX_REVIEW_BUILD.md), and
-  [`ARCHITECTURE.md`](../ARCHITECTURE.md) are copied to the root of the Firefox
-  reviewer source package by `scripts/package-firefox.js`.
+- `scripts/package-firefox.js` copies `ARCHITECTURE.md`, `CHANGELOG.md`,
+  `CONTRIBUTING.md`, `FIREFOX_REVIEW_BUILD.md`, `LICENSE`, `PRIVACY.md`,
+  `README.md`, and `RELEASE_CHECKLIST.md` from the root into the Firefox
+  reviewer source package, along with the whole `docs/` folder.
 - [`PRIVACY.md`](../PRIVACY.md) is the published privacy policy. Store listings
   and the website link to its `main` branch URL.
 - [`PRODUCT.md`](../PRODUCT.md), [`DESIGN.md`](../DESIGN.md), and

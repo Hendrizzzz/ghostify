@@ -214,9 +214,12 @@ npm test
 ```
 
 That command builds the bundled extension scripts and runs every suite in
-`test/`. Tests are plain Node scripts that exit non-zero on failure. Each
-directory runs through `node --test` (or a dedicated npm script) one file at a
-time:
+`test/`. Tests are plain Node scripts that exit non-zero on failure.
+`test/unit/`, `test/regression/`, `test/popup/`, and `test/status/` run as
+folders through `node --test`, one file at a time; each `test/tooling/` suite
+has its own npm script. PR CI runs per-browser subsets (`ci:chromium:checks`,
+`ci:firefox:checks`), while `npm test` and the daily verification run cover
+every suite:
 
 - `test/unit/` — shared settings, runtime config, module registry, and module
   flag contracts; source modules load through
@@ -228,7 +231,8 @@ time:
   popup asset contracts, GitHub issue-form links, and release-doc smoke IDs.
   Shared fakes and page factories live in
   `test/helpers/regression-harness.js`. `test/regression/archived/` keeps
-  archived scenarios for reference; they are not executed.
+  scenarios for superseded Facebook read-state behavior; they are not executed
+  and most fail against the current bundles.
 - `test/popup/` — popup status/rating-link behavior for Chromium and Firefox
   targets (`browser-targets.test.js`, which accepts `chromium` or `firefox`)
   and the seasonal theme calendar

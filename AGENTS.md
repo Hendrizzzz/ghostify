@@ -75,10 +75,13 @@ in `site/`.
 - Fail-open error handling in content scripts is intentional: Ghostify must
   never break the host page. Keep `catch` blocks quiet unless behind debug flags.
 - Zero runtime dependencies; devDependencies only.
-- Tests are plain Node scripts grouped by area under `test/` (`unit/`,
-  `regression/`, `popup/`, `status/`, `tooling/`), with shared harnesses in
-  `test/helpers/`. Add new suites to the matching folder as `*.test.js` so
-  `node --test` picks them up. `test/regression/archived/` is never executed.
+- Tests are plain Node scripts grouped by area under `test/`, with shared
+  harnesses in `test/helpers/`. `npm test` runs every area. New `*.test.js`
+  files in `unit/` and `regression/` run automatically in both PR CI jobs, and
+  those in `status/` in the Chromium job. A new `popup/` test runs only under
+  `npm test` and the daily verification run unless a `ci:*` script names it,
+  and each `tooling/` test needs its own `package.json` script.
+  `test/regression/archived/` is never executed.
 - Use clear, natural English for public updates and release notes. Focus on
   what changed for users. Keep implementation details in technical
   documentation.
