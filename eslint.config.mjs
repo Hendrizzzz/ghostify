@@ -1,16 +1,14 @@
+import path from "node:path";
+import { includeIgnoreFile } from "@eslint/compat";
 import js from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 
-export default [
-    {
-        ignores: [
-            "dist/**",
-            "tmp/**",
-            "site/**",
-            "browser-targets/**",
-            "screenshots/**",
-        ],
-    },
+const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+
+export default defineConfig([
+    includeIgnoreFile(gitignorePath, "Imported .gitignore patterns"),
+    globalIgnores(["dist/**", "site/**", "browser-targets/**"]),
     js.configs.recommended,
     {
         files: ["src/**/*.js", "scripts/**/*.js", "test/**/*.js", "build.js"],
@@ -40,4 +38,4 @@ export default [
             "no-loss-of-precision": "off",
         },
     },
-];
+]);

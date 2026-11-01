@@ -74,6 +74,7 @@
   },
   "homepage": "https://github.com/Hendrizzzz/Ghostify#readme",
   "devDependencies": {
+    "@eslint/compat": "^2.1.1",
     "@eslint/js": "^9.39.5",
     "esbuild": "^0.28.1",
     "eslint": "^9.39.5",
