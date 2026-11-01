@@ -48,6 +48,11 @@ function copyFixture() {
         path.join(repoRoot, "scripts", "validate-extension-package.js"),
         path.join(fixtureRoot, "scripts", "validate-extension-package.js"),
     );
+    fs.cpSync(
+        path.join(repoRoot, "scripts", "lib", "validation"),
+        path.join(fixtureRoot, "scripts", "lib", "validation"),
+        { recursive: true },
+    );
 
     return fixtureRoot;
 }
