@@ -1,0 +1,64 @@
+/* ---------- Ghost ---------- */
+
+.ghost {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.ghost-body {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ghost-float 5s ease-in-out infinite;
+}
+
+.ghost-floor {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ghost-floor 5s ease-in-out infinite;
+}
+
+.ghost-eyes {
+  transform: translate(calc(var(--gx, 0) * 5px), calc(var(--gy, 0) * 4px));
+  transition: transform 260ms ease-out;
+}
+
+.ghost-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ghost-blink 5.4s infinite;
+}
+
+.ghost-eye + .ghost-eye {
+  animation-delay: 0.02s;
+}
+
+@keyframes ghost-float {
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes ghost-floor {
+  50% {
+    transform: scale(0.84);
+    opacity: 0.65;
+  }
+}
+
+@keyframes ghost-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.08);
+  }
+}
+
+.ghost.is-still *,
+.ghost.is-still {
+  animation: none;
+}

@@ -35,8 +35,9 @@ replace it with green. Manual dispatch supports `reported`, `in-progress`,
 `known-issue`, and `verified` updates. Green proposals also require the recorded
 Store version to match the verification build.
 
-The site lives in `src/cinema/` (see DESIGN.md). It plays cropped Ghostify
-recordings from `public/media/` as real feature evidence rather than
+The site's code lives in `src/`: `pages/`, `film/` (the landing film),
+`components/`, `lib/`, and `styles/` (see DESIGN.md). The site plays cropped
+Ghostify recordings from `public/media/` as real feature evidence rather than
 reconstructing the Meta interfaces, and embeds the shipped popup from the
 repository's `dist/` 1:1, so the site build needs the whole repository, not
 just `site/`. Keep the recordings current and avoid replacing them with

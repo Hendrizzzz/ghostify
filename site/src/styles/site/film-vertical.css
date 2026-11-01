@@ -1,0 +1,336 @@
+/* ---------- The vertical cut: phones and portrait tablets ---------- */
+
+@media not all and (min-aspect-ratio: 1/1) {
+  /* The canvas is 390 wide. A full-height phone shows 844 units of it, a
+     phone with its browser bars showing about 660; anything shorter, or
+     wider (a portrait tablet), is fitted by height to the 660 take. --k is
+     how far the screen is from the 660 take towards the 844 one (0 to 184
+     units, in px); --c centres anything taller than 844. */
+  .film {
+    --u: min(calc(100vw / 390), calc(100svh / 660));
+    --cx: 195;
+    --cy: 422;
+    --bar: 0px;
+    --k: clamp(0px, 100svh - 660 * var(--u), 184 * var(--u));
+    --c: max(0px, (100svh - 844 * var(--u)) / 2);
+    /* Text lines up with the composed canvas, not the screen edge, so a
+       portrait tablet keeps one column with the picture. */
+    --gut: max(24px, calc(50vw - 171 * var(--u)));
+  }
+
+  .at {
+    --at-x: calc(50% + (var(--qx) - 195) * var(--u) + (var(--px) - var(--qx)) / 184 * var(--k));
+    --at-y: calc(var(--qy) * var(--u) + (var(--py) - var(--qy)) / 184 * var(--k) + var(--c));
+    --at-w: calc(var(--qw) * var(--u) + (var(--pw) - var(--qw)) / 184 * var(--k));
+  }
+
+  .bar-top,
+  .bar-bottom {
+    display: none;
+  }
+
+  /* The ticks become a thin segmented bar at the foot of the screen. */
+  .film-ui {
+    bottom: calc(10px + var(--safe-b));
+    height: 56px;
+    padding: 0 max(12px, calc(var(--gut) - 12px)) 0 var(--gut);
+    gap: 14px;
+  }
+
+  .keys {
+    display: none;
+  }
+
+  .ticks {
+    flex: 1;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .site .tick,
+  .site .tick.is-current {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  .site .tick.is-current {
+    flex: 1.8;
+  }
+
+  .tick i,
+  .tick.is-current i {
+    width: 100%;
+    height: 3px;
+    background: rgba(244, 241, 234, 0.18);
+  }
+
+  .tick.is-past i {
+    background: rgba(244, 241, 234, 0.55);
+  }
+
+  .tick-tip {
+    display: none;
+  }
+
+  .film-ui .skip {
+    flex: none;
+    min-width: 52px;
+    justify-content: center;
+  }
+
+  .skip-long {
+    display: none;
+  }
+
+  .skip-short {
+    display: inline;
+  }
+
+  .swipe-hint {
+    position: absolute;
+    left: var(--gut);
+    bottom: calc(70px + var(--safe-b));
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(244, 241, 234, 0.5);
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 500ms var(--ease);
+    pointer-events: none;
+  }
+
+  .film.is-started[data-shot='1']:not(.has-swiped) .swipe-hint {
+    opacity: 1;
+    transition-delay: 1.2s;
+  }
+
+  .scrim {
+    bottom: 0;
+    height: max(260px, 34%);
+    background: linear-gradient(rgba(5, 5, 6, 0), rgba(5, 5, 6, 0.95) 55%);
+  }
+
+  .sub {
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(100px + var(--safe-b));
+    font-size: max(19px, calc(22 * var(--u)));
+    text-align: left;
+  }
+
+  .wall {
+    gap: calc(2 * var(--u));
+    font-size: calc(64 * var(--u));
+    line-height: 1.02;
+  }
+
+  .wall-row {
+    margin-left: calc(50% + (var(--o) * 0.6 - 395) * var(--u));
+  }
+
+  /* The phone opener: the line, then the stores, and the invitation at the
+     foot of the screen. */
+  .hero {
+    left: var(--gut);
+    right: var(--gut);
+    top: calc(156 * var(--u) + 80 / 184 * var(--k) + var(--c));
+    bottom: calc(20px + var(--safe-b));
+    gap: 16px;
+  }
+
+  .hero .begin {
+    margin-top: auto;
+  }
+
+  .hero h1 {
+    font-size: max(34px, calc(50 * var(--u)));
+  }
+
+  .hero p {
+    font-size: max(15px, calc(17 * var(--u)));
+  }
+
+  .fade {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0) 120px),
+      linear-gradient(rgba(5, 5, 6, 0) 38%, rgba(5, 5, 6, 0.9) 58%, #050506 68%);
+    pointer-events: none;
+  }
+
+  .s3 .fade {
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0) 120px),
+      linear-gradient(rgba(5, 5, 6, 0) 56%, #050506 82%);
+  }
+
+  .s3 .sub {
+    z-index: 3;
+  }
+
+  /* On the phone the ghost peeks in from the right, looking back at the
+     story. */
+  .peek .ghost.eyes-right .ghost-eyes {
+    transform: translate(-15px, -4px);
+  }
+
+  .film .stores {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* The stores grow with the picture on a portrait tablet. */
+  .film .stores {
+    max-width: max(520px, calc(342 * var(--u)));
+  }
+
+  .film .store {
+    justify-content: center;
+    gap: 8px;
+    min-height: max(50px, calc(46 * var(--u)));
+    padding: 0 8px;
+    font-size: max(15px, calc(14 * var(--u)));
+    white-space: nowrap;
+  }
+
+  .film .store.is-primary {
+    grid-column: 1 / -1;
+    min-height: max(54px, calc(50 * var(--u)));
+    font-size: max(17px, calc(16 * var(--u)));
+  }
+
+  .film .store img {
+    width: max(22px, calc(20 * var(--u)));
+    height: auto;
+  }
+
+  .begin-press {
+    font-size: max(17px, calc(15 * var(--u)));
+  }
+
+  .title {
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(108px + var(--safe-b));
+    font-size: max(32px, calc(40 * var(--u)));
+    text-align: left;
+  }
+
+  .seen {
+    font-size: calc(96 * var(--u));
+    text-shadow: 0 0 calc(30 * var(--u)) rgba(220, 210, 255, 0.45);
+  }
+
+  .draft {
+    font-size: calc(42 * var(--u));
+  }
+
+  .fb {
+    display: none;
+  }
+
+  .peek {
+    z-index: 2;
+  }
+
+  .ig {
+    border-radius: 0;
+  }
+
+  .copy {
+    left: var(--gut);
+    right: var(--gut);
+    top: max(76px, calc(80 * var(--u) + 12 / 184 * var(--k) + var(--c)));
+    width: auto;
+  }
+
+  .copy h2 {
+    max-width: none;
+    font-size: max(36px, calc(48 * var(--u)));
+  }
+
+  .copy p {
+    font-size: max(15px, calc(16 * var(--u)));
+  }
+
+  .tilt {
+    transform: rotateY(calc(-10deg + var(--lx, 0) * 4deg)) rotateX(calc(3deg - var(--ly, 0) * 3deg));
+  }
+
+  .w0 {
+    transform: rotateY(22deg);
+  }
+
+  .w2 {
+    transform: rotateY(-22deg);
+  }
+
+  .floor {
+    top: calc(400 * var(--u) + 30 / 184 * var(--k) + var(--c));
+  }
+
+  .marks {
+    bottom: calc(100px + var(--safe-b));
+  }
+
+  .mark {
+    --MX: var(--pmx);
+  }
+
+  .mark .rise > span {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .local {
+    left: var(--gut);
+    right: var(--gut);
+    bottom: calc(96px + var(--safe-b));
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .local-lines {
+    font-size: max(19px, calc(22 * var(--u)));
+  }
+
+  .local-line {
+    display: block;
+    width: fit-content;
+    margin: 0;
+  }
+
+  .film .local-credit {
+    justify-content: flex-start;
+  }
+
+  /* The end card is one column between the header and the controls: the
+     ghost and the line centred in the space the stores leave. */
+  .end {
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 20px;
+    padding: 76px var(--gut) calc(84px + var(--safe-b));
+  }
+
+  .end-text {
+    margin: auto 0;
+  }
+
+  .g6 {
+    width: min(max(96px, calc(144 * var(--u))), 17svh);
+  }
+
+  .end h2 {
+    font-size: max(34px, calc(46 * var(--u)));
+  }
+}

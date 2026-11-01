@@ -1,0 +1,8 @@
+/* Ghost eye poses. */
+.ghost.eyes-right .ghost-eyes {
+  transform: translate(17px, -4px);
+}
+
+.ghost.eyes-left .ghost-eyes {
+  transform: translate(-13px, -4px);
+}

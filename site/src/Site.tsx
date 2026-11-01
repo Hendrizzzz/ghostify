@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import Landing from './Landing';
-import Status from './Status';
-import './site.css';
+import Landing from './pages/Landing';
+import Status from './pages/Status';
+import './styles/site.css';
 
 const ORIGIN = 'https://ghostify-extension.vercel.app';
 

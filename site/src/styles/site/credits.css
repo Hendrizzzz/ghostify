@@ -1,0 +1,91 @@
+/* ---------- End credits ----------
+   After the film: one centered column, questions bright, answers dim. The
+   footer runs on as the last credit lines in the same column. */
+
+.credits {
+  max-width: calc(620px + 2 * var(--edge));
+  margin: 0 auto;
+  padding: clamp(120px, 16vw, 200px) var(--edge) 0;
+  text-align: center;
+}
+
+.credits h2 {
+  font-size: clamp(26px, 2.6vw, 34px);
+  letter-spacing: -0.03em;
+}
+
+.credits dl {
+  display: grid;
+  gap: clamp(56px, 7vw, 88px);
+  margin: clamp(56px, 7vw, 88px) 0 0;
+}
+
+.credits dl > div {
+  display: grid;
+  gap: 12px;
+}
+
+.credits dt {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.credits dd {
+  margin: 0;
+  color: var(--muted);
+  text-wrap: balance;
+}
+
+.foot.is-credits {
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  max-width: calc(620px + 2 * var(--edge));
+  margin-top: clamp(120px, 16vw, 200px);
+  padding-top: 56px;
+  padding-bottom: 72px;
+  border-top: 0;
+  text-align: center;
+}
+
+.foot.is-credits::before {
+  content: '';
+  width: 48px;
+  height: 1px;
+  margin-bottom: 24px;
+  background: var(--line);
+}
+
+.foot.is-credits nav {
+  justify-content: center;
+}
+
+.foot.is-credits p {
+  margin-left: 0;
+}
+
+/* Each credit fades up as it scrolls in; without scroll-driven animations
+   the credits simply stand still. */
+@supports (animation-timeline: view()) {
+  .credits h2,
+  .credits dl > div,
+  .foot.is-credits > * {
+    animation: credit-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 100%;
+  }
+}
+
+@keyframes credit-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -6,7 +6,9 @@ import {
   type PublicVerificationStatus,
   type VerificationEntry,
 } from '../app/statusData';
-import { Footer, GITHUB_URL, Header, orderedStores } from './Shell';
+import { Footer } from '../components/Footer';
+import { Header } from '../components/Header';
+import { GITHUB_URL, orderedStores } from '../lib/links';
 
 type Tone = 'ok' | 'review' | 'issue' | 'none';
 type HistoryEvent = (typeof STATUS_DATA.history)[number];

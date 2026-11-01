@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Film } from './Film';
-import { Footer, Header, orderedStores } from './Shell';
-import { FilmSound, soundPreferred } from './sound';
+import { Film } from '../film/Film';
+import { Footer } from '../components/Footer';
+import { Header } from '../components/Header';
+import { orderedStores } from '../lib/links';
+import { FilmSound, soundPreferred } from '../film/sound';
 
 const FAQ = [
   {

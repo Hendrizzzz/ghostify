@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
+import { PlatformLogo, type MetaPlatform } from '../components/PlatformLogo';
 import { formatStatusDate, getStatusCredit } from '../app/statusData';
 import { FOOTAGE } from './Clip';
-import { Ghost } from './Ghost';
-import { RealPopup, type RealPopupHandle } from './RealPopup';
-import { GITHUB_URL, StoreButtons, type Store } from './Shell';
+import { Ghost } from '../components/Ghost';
+import { RealPopup, type RealPopupHandle } from '../components/RealPopup';
+import { StoreButtons } from '../components/StoreButtons';
+import { GITHUB_URL, type Store } from '../lib/links';
 
 /* The film as a plain stacked page, for reduced motion or when the film
    cannot run: still frames from the real footage, one line each, normal

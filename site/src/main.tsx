@@ -1,8 +1,8 @@
 import { Analytics } from '@vercel/analytics/react';
 import { createRoot } from 'react-dom/client';
-import Site from './cinema';
-import { ErrorBoundary } from './cinema/ErrorBoundary';
-import './cinema/base.css';
+import Site from './Site';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import './styles/base.css';
 
 createRoot(document.getElementById('root')!).render(
   <>

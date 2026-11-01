@@ -1,0 +1,173 @@
+/* ---------- Reduced motion: the film as still frames ---------- */
+
+.stills {
+  max-width: calc(560px + 2 * var(--edge));
+  margin: 0 auto;
+  padding: 120px var(--edge) 0;
+  text-align: center;
+}
+
+.stills-hero,
+.stills-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.stills-ghost {
+  width: 88px;
+}
+
+.stills h1 {
+  font-size: clamp(40px, 7vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+}
+
+.stills-hero > p {
+  color: rgba(244, 241, 234, 0.7);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.stills .stores {
+  justify-content: center;
+}
+
+.stills-frames {
+  display: grid;
+  gap: 72px;
+  margin-top: 96px;
+}
+
+.stills figure {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  margin: 0;
+}
+
+.stills figure img {
+  display: block;
+  width: min(100%, 340px);
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 60px rgba(225, 220, 255, 0.16);
+}
+
+.stills-popup {
+  width: 320px;
+  max-width: 100%;
+}
+
+.stills figcaption {
+  display: grid;
+  gap: 6px;
+}
+
+.stills figcaption span:first-child {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.stills figcaption span + span {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.stills-local {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 96px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.stills-marks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 32px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.stills-marks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.78);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.stills-marks svg {
+  flex: none;
+}
+
+.stills-local a:not(.local-credit) {
+  text-decoration-color: rgba(255, 255, 255, 0.34);
+  text-underline-offset: 0.2em;
+}
+
+.stills .local-credit {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  color: rgba(244, 241, 234, 0.68);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.stills-end {
+  margin-top: 120px;
+}
+
+.stills-end h2 {
+  font-size: clamp(34px, 6vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+@media (max-width: 640px) {
+  .stills {
+    padding-top: 96px;
+  }
+
+  .stills-marks {
+    gap: 28px;
+  }
+
+  .stills-marks li {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .stills-marks svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .stills .stores {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stills .store.is-primary {
+    grid-column: 1 / -1;
+  }
+
+  .stills .store {
+    padding: 0 8px;
+    font-size: 15px;
+  }
+}

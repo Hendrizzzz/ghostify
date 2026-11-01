@@ -1,0 +1,174 @@
+/* A full-height phone has room to stack the end card's stores. */
+@media (max-aspect-ratio: 39/76) {
+  .s6 .stores {
+    grid-template-columns: 1fr;
+  }
+
+  .s6 .store {
+    min-height: max(54px, calc(50 * var(--u)));
+    font-size: max(17px, calc(16 * var(--u)));
+  }
+}
+
+/* Phones: a compact header with 44px targets. */
+@media (max-width: 640px) {
+  .bar {
+    height: 64px;
+    padding: 0 max(16px, calc(var(--safe-x) + 8px));
+  }
+
+  .bar nav {
+    gap: 8px;
+  }
+
+  .bar nav .sound {
+    width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .bar nav .bar-cta {
+    min-height: 44px;
+  }
+}
+
+/* A folded phone's cover screen keeps the mark and drops the name. */
+@media (max-width: 300px) {
+  .bar .wordmark-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* The narrowest phones keep the header on one line. */
+@media (max-width: 360px) {
+  .bar {
+    padding: 0 12px;
+  }
+
+  .bar nav .bar-cta {
+    padding: 0 13px;
+    font-size: 14px;
+  }
+}
+
+@media (pointer: coarse) {
+  .bar nav .bar-cta,
+  .sound {
+    min-height: 44px;
+  }
+}
+
+/* Short landscape screens: a slimmer header over the letterbox. */
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  .bar {
+    height: 52px;
+  }
+
+  .film-ui {
+    height: max(var(--bar), 48px);
+  }
+
+  /* The opener packs into the space under the slim header: the ghost, the
+     line, the stores on one row, the invitation. */
+  .hero {
+    top: 112px;
+    bottom: 8px;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .hero-text {
+    gap: 6px;
+  }
+
+  .hero h1 {
+    font-size: max(28px, calc(72 * var(--u)));
+  }
+
+  .hero p {
+    max-width: 560px;
+    font-size: max(14px, calc(19 * var(--u)));
+    line-height: 1.4;
+  }
+
+  .film .stores {
+    display: flex;
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .film .store {
+    min-height: 44px;
+    gap: 8px;
+    padding: 0 16px 0 12px;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .begin {
+    flex-direction: row;
+    margin-top: 0;
+  }
+
+  .g0 {
+    top: 56px;
+    left: calc(50% - 22px);
+    width: 44px;
+  }
+
+  /* The end card sits between the header and the controls. */
+  .end {
+    gap: 14px;
+    padding: 56px var(--edge) calc(max(var(--bar), 48px) + 6px);
+  }
+
+  .end-text {
+    gap: 10px;
+  }
+
+  .g6 {
+    width: min(max(64px, calc(176 * var(--u))), 18svh);
+  }
+
+  .end h2 {
+    font-size: max(28px, calc(76 * var(--u)));
+  }
+}
+
+/* Large, high screens (a 27" 1440p, 4K) see the same picture as a 1080p one,
+   only larger: the header and the film's controls grow with it. */
+@media (min-width: 2400px) and (min-height: 1300px) and (min-aspect-ratio: 1/1) {
+  .is-film-page .bar,
+  .film-ui > *,
+  .begin,
+  .credits,
+  .foot.is-credits {
+    zoom: 1.3333;
+  }
+}
+
+@media (min-width: 3200px) and (min-height: 1800px) and (min-aspect-ratio: 1/1) {
+  .is-film-page .bar,
+  .film-ui > *,
+  .begin,
+  .credits,
+  .foot.is-credits {
+    zoom: 1.6667;
+  }
+}
+
+/* Touch screens have no keys to hint at; the hint keeps its place so the
+   ticks stay centred. */
+@media (min-aspect-ratio: 1/1) and (hover: none) and (pointer: coarse) {
+  .keys {
+    visibility: hidden;
+  }
+}

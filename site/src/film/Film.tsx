@@ -1,22 +1,40 @@
 import { gsap } from 'gsap';
 import { Observer } from 'gsap/Observer';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent,
-  type ReactNode,
-} from 'react';
-import { PlatformLogo, type MetaPlatform } from './PlatformLogo';
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import { PlatformLogo } from '../components/PlatformLogo';
 import { formatStatusDate, getStatusCredit } from '../app/statusData';
 import { Clip, FOOTAGE, primeClip, runClip, type Footage } from './Clip';
-import { Ghost, GhostSilhouette } from './Ghost';
-import { RealPopup, type RealPopupHandle } from './RealPopup';
-import { GITHUB_URL, StoreButtons, type Store } from './Shell';
+import { Ghost, GhostSilhouette } from '../components/Ghost';
+import { RealPopup, type RealPopupHandle } from '../components/RealPopup';
+import { StoreButtons } from '../components/StoreButtons';
+import { GITHUB_URL, type Store } from '../lib/links';
 import { soundPreferred, type Cue, type FilmSound } from './sound';
 import { Stills } from './Stills';
+import { AT, MARKS, MAX_U, SHORT, TALL, at, type Key } from './layout';
+import {
+  CONTINUOUS,
+  COOLDOWN,
+  DRAFT,
+  ERASED,
+  FLICKER,
+  FLICKER_TIME,
+  HIT,
+  HOLD,
+  LAST,
+  LIFT,
+  MARK_NOTES,
+  PULL,
+  REWIND,
+  SHOTS,
+  SWITCH_COUNT,
+  TYPED,
+  WALL_OFFSETS,
+  WALL_ROWS,
+  shotFromHash,
+} from './shots';
+import { OUTLINE, ghostPath } from './ghostPath';
+import { Glow, Line, Speaker, World } from './parts';
 
 gsap.registerPlugin(ScrollTrigger, Observer);
 
@@ -32,340 +50,7 @@ gsap.registerPlugin(ScrollTrigger, Observer);
    animate. Every sound is a cue on its shot's timeline, scheduled on the
    audio clock as the shot starts, so it lands on the frame it belongs to. */
 
-type R = readonly [x: number, y: number, w: number];
-
-/* Where things sit, in canvas units: [widescreen, vertical, short vertical]. */
-const AT = {
-  g0: [
-    [576, 118, 128],
-    [159, 128, 72],
-    [167, 84, 56],
-  ],
-  clear: [
-    [140, -150, 1000],
-    [-185, -60, 760],
-    [-185, -110, 760],
-  ],
-  spill1: [
-    [560, -110, 880],
-    [-160, 40, 710],
-    [-160, -20, 710],
-  ],
-  chat: [
-    [900, 104, 300],
-    [0, 0, 390],
-    [0, 0, 390],
-  ],
-  chatFar: [
-    [720, 166, 210],
-    [120, 190, 170],
-    [140, 100, 150],
-  ],
-  reflect: [
-    [720, 488, 210],
-    [120, 451, 170],
-    [140, 331, 150],
-  ],
-  ghost: [
-    [96, 172, 300],
-    [246, 514, 120],
-    [250, 330, 110],
-  ],
-  ghostFar: [
-    [262, 262, 236],
-    [24, 446, 140],
-    [36, 300, 120],
-  ],
-  haze: [
-    [-200, 380, 640],
-    [-160, 560, 460],
-    [-160, 400, 460],
-  ],
-  seen: [
-    [470, 236, 0],
-    [24, 542, 0],
-    [24, 372, 0],
-  ],
-  seenFrom: [
-    [930, 400, 0],
-    [190, 450, 0],
-    [190, 300, 0],
-  ],
-  glow2: [
-    [20, -60, 840],
-    [-150, 20, 690],
-    [-150, -10, 690],
-  ],
-  typing: [
-    [150, 110, 500],
-    [16, 132, 358],
-    [16, 92, 358],
-  ],
-  draft: [
-    [676, 304, 0],
-    [24, 462, 0],
-    [24, 408, 0],
-  ],
-  lean: [
-    [1010, 230, 340],
-    [226, 556, 220],
-    [236, 392, 200],
-  ],
-  glow3: [
-    [230, -130, 960],
-    [-160, -40, 710],
-    [-160, -60, 710],
-  ],
-  fb: [
-    [900, 160, 222],
-    [250, 140, 150],
-    [250, 100, 150],
-  ],
-  ig: [
-    [580, 96, 262],
-    [0, 0, 390],
-    [0, -16, 390],
-  ],
-  peek: [
-    [434, 244, 220],
-    [262, 466, 160],
-    [266, 318, 140],
-  ],
-  glow4: [
-    [560, 60, 640],
-    [-40, 250, 470],
-    [-40, 180, 470],
-  ],
-  popup: [
-    [730, 100, 390],
-    [88, 270, 280],
-    [120, 254, 230],
-  ],
-  peek4: [
-    [600, 230, 190],
-    [4, 370, 130],
-    [8, 300, 112],
-  ],
-  w0: [
-    [250, 178, 169],
-    [20, 300, 104],
-    [20, 268, 104],
-  ],
-  w1: [
-    [528, 150, 224],
-    [133, 268, 124],
-    [133, 236, 124],
-  ],
-  w2: [
-    [862, 180, 168],
-    [266, 300, 104],
-    [266, 268, 104],
-  ],
-  wGlow0: [
-    [120, 100, 440],
-    [-80, 200, 300],
-    [-80, 168, 300],
-  ],
-  wGlow1: [
-    [430, 60, 420],
-    [40, 170, 310],
-    [40, 138, 310],
-  ],
-  wGlow2: [
-    [740, 100, 440],
-    [170, 200, 300],
-    [170, 168, 300],
-  ],
-  wGhost: [
-    [610, 462, 60],
-    [175, 432, 40],
-    [175, 400, 40],
-  ],
-  glow6: [
-    [340, 0, 600],
-    [-60, 80, 510],
-    [-60, 40, 510],
-  ],
-} as const satisfies Record<string, readonly [R, R, R]>;
-
-type Key = keyof typeof AT;
-
-function at(key: Key, extra?: CSSProperties): CSSProperties {
-  const [w, t, s] = AT[key];
-  return {
-    ...extra,
-    '--x': w[0],
-    '--y': w[1],
-    '--w': w[2],
-    '--px': t[0],
-    '--py': t[1],
-    '--pw': t[2],
-    '--qx': s[0],
-    '--qy': s[1],
-    '--qw': s[2],
-  } as CSSProperties;
-}
-
-/* The vertical cut's two takes: a phone 844 units tall and one 660 tall. */
-const TALL = 844;
-const SHORT = 660;
-/* The widescreen cut stops growing here, so a 4K screen is not blown up. */
-const MAX_U = 2.5;
-
-/* The receipts on the wall, set apart by space alone. */
-const WALL_ROWS = [
-  ['Seen 21:04', 'typing', 'Seen', 'viewed your story'],
-  ['typing', 'Seen 9:41', 'viewed your story', 'Seen'],
-  ['Seen', 'viewed your story', 'Seen 21:04', 'typing'],
-  ['viewed your story', 'typing', 'Seen', 'Seen 9:41'],
-  ['Seen 21:04', 'Seen', 'typing', 'viewed your story'],
-  ['typing', 'viewed your story', 'Seen 9:41', 'Seen'],
-].map((row) => row.map((w) => `${w}  `).join(''));
-const WALL_OFFSETS = [-60, -340, -120, -420, -200, -520, -20, -280];
-
-/* The shots, in order. `id` is the URL hash; `layer` the stage layer that
-   holds the shot; `ghost` the ghost a match cut grows out of. */
-export const SHOTS = [
-  { id: 'wall', name: 'The wall', layer: '.s0', ghost: '.g0' },
-  { id: 'cold-open', name: 'Cold open', layer: '.s1', ghost: '.s1 .ghost-in' },
-  { id: 'receipt', name: 'The receipt', layer: '.s1', ghost: '.s1 .step' },
-  { id: 'dots', name: 'The dots', layer: '.s2', ghost: '.s2 .lean' },
-  { id: 'story', name: 'The story', layer: '.s3', ghost: '.s3 .peek' },
-  { id: 'switches', name: 'The switches', layer: '.s4', ghost: '.s4 .peek4' },
-  { id: 'wide', name: 'The wide', layer: '.s5', ghost: '.s5 .w-ghost' },
-  { id: 'privacy', name: 'Privacy', layer: '.s7', ghost: '' },
-  { id: 'end', name: 'End card', layer: '.s6', ghost: '.s6 .g6' },
-] as const;
-const LAST = SHOTS.length - 1;
-/* Shots that run straight on from the one before, with no cut. Stepping
-   back out of one plays it backwards, so the way back is the exact reverse
-   of the way in, only a little faster. */
-const CONTINUOUS = new Set([2, 7]);
-const REWIND = 1.5;
-/* The rest after a shot before the next gesture is accepted (s). */
-const HOLD = 0.3;
-/* Trackpad momentum: a wheel stream that is still running when a shot ends
-   is ignored for this long (ms). */
-const COOLDOWN = 1000;
-const SWITCH_COUNT = 6;
-
-/* The typing shot's draft, typed and then taken back, and when each key
-   lands (s into the shot): a little uneven, a beat longer at a space, and
-   erased faster than it was written. */
-const DRAFT = 'let me think';
-const TYPED: number[] = [];
-for (let i = 0, at = 0.5; i < DRAFT.length; i += 1) {
-  TYPED.push(at);
-  at += DRAFT[i] === ' ' ? 0.14 : 0.064 + ((i * 7) % 3) * 0.013;
-}
-const ERASED = Array.from(DRAFT, (_, i) => 1.86 + i * 0.044);
-
-/* The cold open's screen flicker: its opacity steps, and how long they take. */
-const FLICKER = [0, 0.75, 0.1, 0.95, 0.35, 1] as const;
-const FLICKER_TIME = 1;
-
-/* The receipt: when Seen starts to lift out of the chat, and when the ghost
-   stops it (s into the shot). */
-const LIFT = 0.55;
-const HIT = 1.8;
-/* Privacy: how long the camera takes to pull back from the wide (s). */
-const PULL = 1.4;
-/* The wide: one note for each platform as its name rises. */
-const MARK_NOTES = [329.63, 392, 493.88];
-
-const shotFromHash = () => {
-  const id = decodeURIComponent(location.hash.slice(1));
-  if (id === 'install') return LAST;
-  return SHOTS.findIndex((s) => s.id === id);
-};
-
-/* The ghost's outline in its 200 × 250 box, as coordinate pairs, for the
-   match cut's mask. */
-const OUTLINE =
-  'M20 196 L20 102 C20 54 56 18 100 18 C144 18 180 54 180 102 L180 196 C180 222 173 226 160 226 C147 226 143 215 140 207 C137 215 133 222 120 222 C107 222 103 215 100 207 C97 215 93 227 80 227 C67 227 63 215 60 207 C57 215 53 223 40 223 C27 223 20 219 20 196 Z';
-const PAIR = /(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g;
-const ghostPath = (x: number, y: number, s: number) =>
-  `path('${OUTLINE.replace(
-    PAIR,
-    (_, a: string, b: string) =>
-      `${(x + Number(a) * s).toFixed(1)} ${(y + Number(b) * s).toFixed(1)}`,
-  )}')`;
-
-/* The wide's platform marks, each centred under its own screen: canvas x for
-   [widescreen, vertical]. */
-const MARKS: ReadonlyArray<readonly [MetaPlatform, string, number, number]> = [
-  ['instagram', 'Instagram', 334, 72],
-  ['messenger', 'Messenger', 640, 195],
-  ['facebook', 'Facebook', 946, 318],
-];
-
 const STATUS_CREDIT = getStatusCredit();
-
-/* A line that rises out of a mask. */
-function Line({ children }: { children: ReactNode }) {
-  return (
-    <span className="rise">
-      <span>{children}</span>
-    </span>
-  );
-}
-
-function Speaker() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M11 5 6 9H3v6h3l5 4V5Z" />
-      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-      <path d="M18.5 5.5a9 9 0 0 1 0 13" />
-    </svg>
-  );
-}
-
-/* Light thrown by a screen: a tiny still of it, stretched and masked soft.
-   Painted as a background so the browser never treats it as a picture. */
-function Glow({ at: key, src }: { at: Key; src: string }) {
-  return (
-    <div
-      className="glow at"
-      style={at(key, { backgroundImage: `url(${src})` })}
-      aria-hidden="true"
-    />
-  );
-}
-
-/* The wide: three real screens on a floor. `decor` is the second take used
-   inside the browser window, hidden from assistive tech. */
-function World({ decor = false }: { decor?: boolean }) {
-  const far = (key: 'w0' | 'w1' | 'w2', f: Footage, name: string) => (
-    <div className={`far ${key} at`} style={at(key)}>
-      <img src={f.still} alt={decor ? '' : name} loading="lazy" />
-      <img className="far-reflect" src={f.still} alt="" aria-hidden="true" loading="lazy" />
-    </div>
-  );
-  return (
-    <div className="world" aria-hidden={decor || undefined}>
-      <Glow at="wGlow0" src={FOOTAGE.instagram.glow} />
-      <Glow at="wGlow1" src={FOOTAGE.messenger.glow} />
-      <Glow at="wGlow2" src={FOOTAGE.facebook.glow} />
-      {far('w0', FOOTAGE.instagram, 'Instagram')}
-      {far('w1', FOOTAGE.messenger, 'Messenger')}
-      {far('w2', FOOTAGE.facebook, 'Facebook')}
-      <div className="floor" aria-hidden="true" />
-      <div className="w-ghost at" style={at('wGhost')}>
-        <GhostSilhouette rim="top" />
-      </div>
-    </div>
-  );
-}
 
 type Props = { stores: Store[]; sound: FilmSound; base: string };
 

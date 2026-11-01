@@ -1,0 +1,82 @@
+/* Rebuilt site. One typeface (the system UI face, the same one the extension
+   popup uses), one weight scale, no decorative labels. The landing film steps
+   one shot per gesture and hands the page back to native scroll before and
+   after it; everything animates on transforms, opacity and clip-path. */
+
+:root {
+  --bg: #0c0b0a;
+  --fg: #f4f1ea;
+  --muted: rgba(244, 241, 234, 0.64);
+  --soft: rgba(244, 241, 234, 0.56);
+  --line: rgba(244, 241, 234, 0.12);
+  --violet: #aa98ee;
+  --ok: #4fb487;
+  --review: #e0a63a;
+  --issue: #e2725b;
+  /* The page runs edge to edge on notched phones (viewport-fit=cover); text
+     keeps clear of the notch and rounded corners. */
+  --safe-x: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --edge: max(clamp(20px, 4.5vw, 72px), calc(var(--safe-x) + 8px));
+  --max: 1200px;
+  --sys:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display',
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.is-site,
+html.is-site body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* The homepage hides its scrollbar; scrolling itself is unchanged. The
+   status pages keep theirs, since they are long reading pages. */
+html.is-film-page {
+  scrollbar-width: none;
+}
+
+html.is-film-page::-webkit-scrollbar {
+  display: none;
+}
+
+.site {
+  font-family: var(--sys);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.site h1,
+.site h2,
+.site h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.site p {
+  margin: 0;
+}
+
+.site a {
+  color: inherit;
+}
+
+.site a:focus-visible,
+.site button:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.site .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

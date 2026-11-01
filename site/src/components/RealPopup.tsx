@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import popupHtml from '../../../dist/popup.html?raw';
 import popupCss from '../../../dist/css/popup.css?raw';
-import mark from './mark.svg';
+import mark from '../assets/mark.svg';
 import { STATUS_DATA } from '../app/statusData';
 
 /* The shipped extension popup, embedded 1:1: the same markup and stylesheet
